@@ -96,27 +96,27 @@ public final class CoordinatorRemoteCli implements Closeable {
 
         remote = initRemote();
 
-        if ("download".equals(cmd)) {
+        if (DownloadCli.NAME.equals(cmd)) {
             new DownloadCli().run(subArgs);
-        } else if ("install".equals(cmd)) {
+        } else if (InstallCli.NAME.equals(cmd)) {
             new InstallCli().run(subArgs);
-        } else if ("print-layout".equals(cmd)) {
+        } else if (PrintClusterLayoutCli.NAME.equals(cmd)) {
             new PrintClusterLayoutCli().run(subArgs);
-        } else if ("stop".equals(cmd)) {
-            new ExitCli().run(subArgs);
-        } else if ("test-run".equals(cmd)) {
+        } else if (StopCli.NAME.equals(cmd)) {
+            new StopCli().run(subArgs);
+        } else if (TestRunCli.NAME.equals(cmd)) {
             new TestRunCli().run(subArgs);
-        } else if ("test-start".equals(cmd)) {
+        } else if (TestStartCli.NAME.equals(cmd)) {
             new TestStartCli().run(subArgs);
-        } else if ("test-status".equals(cmd)) {
+        } else if (TestStatusCli.NAME.equals(cmd)) {
             new TestStatusCli().run(subArgs);
-        } else if ("test-stop".equals(cmd)) {
+        } else if (TestStopCli.NAME.equals(cmd)) {
             new TestStopCli().run(subArgs);
-        } else if ("worker-kill".equals(cmd)) {
-            new WorkerKill().run(subArgs);
-        } else if ("worker-script".equals(cmd)) {
+        } else if (WorkerKillCli.NAME.equals(cmd)) {
+            new WorkerKillCli().run(subArgs);
+        } else if (WorkerScriptCli.NAME.equals(cmd)) {
             new WorkerScriptCli().run(subArgs);
-        } else if ("worker-start".equals(cmd)) {
+        } else if (WorkerStartCli.NAME.equals(cmd)) {
             new WorkerStartCli().run(subArgs);
         } else {
             printHelpAndExit();
@@ -181,6 +181,8 @@ public final class CoordinatorRemoteCli implements Closeable {
 
         protected abstract OptionSet newOptions(String[] args);
 
+        protected abstract String name();
+
         protected void run(String[] args) {
             this.options = newOptions(args);
 
@@ -189,13 +191,14 @@ public final class CoordinatorRemoteCli implements Closeable {
                 System.out.println(result == null ? "success" : result);
             } catch (Exception e) {
                 throw new CommandLineExitException(
-                        format("Could not process command: message [%s]", e.getMessage()));
+                        format("Could not process command %s: message [%s]", name(), e.getMessage()));
             }
         }
     }
 
     private class InstallCli extends AbstractCli {
 
+        static final String NAME = "install";
         private final String help
                 = "The 'install' command installs Hazelcast on the agents. By default the coordinator will upload to\n"
                 + "the agents what has been configured on the simulator.properties. But in case of testing multiple\n"
@@ -219,6 +222,11 @@ public final class CoordinatorRemoteCli implements Closeable {
                 .nonOptions("version specification").ofType(String.class);
 
         @Override
+        protected String name() {
+            return NAME;
+        }
+
+        @Override
         protected OptionSet newOptions(String[] args) {
             return initOptionsWithHelp(parser, help, args);
         }
@@ -237,6 +245,8 @@ public final class CoordinatorRemoteCli implements Closeable {
     }
 
     private class TestStatusCli extends AbstractCli {
+
+        static final String NAME = "test-status";
 
         private final String help =
                 "Returns the status of a test\n"
@@ -263,6 +273,11 @@ public final class CoordinatorRemoteCli implements Closeable {
                 .nonOptions("test address").ofType(String.class);
 
         @Override
+        protected String name() {
+            return NAME;
+        }
+
+        @Override
         protected OptionSet newOptions(String[] args) {
             return initOptionsWithHelp(parser, help, args);
         }
@@ -281,6 +296,8 @@ public final class CoordinatorRemoteCli implements Closeable {
 
     private class TestStopCli extends AbstractCli {
 
+        static final String NAME = "test-stop";
+
         private final String help =
                 "Ask a test to stop its warmup or running phase. It is especially useful for tests that run without a\n"
                         + "duration.\n"
@@ -293,6 +310,11 @@ public final class CoordinatorRemoteCli implements Closeable {
 
         private final NonOptionArgumentSpec<String> argumentSpec = parser
                 .nonOptions("test address").ofType(String.class);
+
+        @Override
+        protected String name() {
+            return NAME;
+        }
 
         @Override
         protected OptionSet newOptions(String[] args) {
@@ -313,8 +335,15 @@ public final class CoordinatorRemoteCli implements Closeable {
 
     private class DownloadCli extends AbstractCli {
 
+        static final String NAME = "download";
+
         private final String help = ""
                 + "The download command downloads all artifacts from the workers.\n";
+
+        @Override
+        protected String name() {
+            return NAME;
+        }
 
         @Override
         protected OptionSet newOptions(String[] args) {
@@ -385,6 +414,7 @@ public final class CoordinatorRemoteCli implements Closeable {
 
     private class WorkerScriptCli extends WorkerQueryableCli {
 
+        static final String NAME = "worker-script";
         private final String help
                 = "The 'worker-script' commands executes a Bash-script or Javascript on workers\n"
                 + "\n"
@@ -424,6 +454,11 @@ public final class CoordinatorRemoteCli implements Closeable {
                 "If the command is a fire and forget and no waiting for a response.");
 
         @Override
+        protected String name() {
+            return NAME;
+        }
+
+        @Override
         protected OptionSet newOptions(String[] args) {
             workerTypeSpec.defaultsTo("member");
             return initOptionsWithHelp(parser, help, args);
@@ -444,8 +479,9 @@ public final class CoordinatorRemoteCli implements Closeable {
         }
     }
 
-    private class WorkerKill extends WorkerQueryableCli {
+    private class WorkerKillCli extends WorkerQueryableCli {
 
+        static final String NAME = "worker-kill";
         private final String help
                 = "The 'worker-kill' command kills one or more workers. The killing can be done based using an exact\n"
                 + "worker address or using various filters like versionSpec, etc.\n"
@@ -493,6 +529,11 @@ public final class CoordinatorRemoteCli implements Closeable {
         }
 
         @Override
+        protected String name() {
+            return NAME;
+        }
+
+        @Override
         protected SimulatorOperation newOperation() {
             String command = loadCommand();
 
@@ -517,8 +558,14 @@ public final class CoordinatorRemoteCli implements Closeable {
 
     private class PrintClusterLayoutCli extends AbstractCli {
 
+        static final String NAME = "print-layout";
         private final String help
                 = "Prints the cluster layout on the coordinator.\n";
+
+        @Override
+        protected String name() {
+            return NAME;
+        }
 
         @Override
         protected OptionSet newOptions(String[] args) {
@@ -531,10 +578,16 @@ public final class CoordinatorRemoteCli implements Closeable {
         }
     }
 
-    private class ExitCli extends AbstractCli {
+    private class StopCli extends AbstractCli {
 
+        static final String NAME = "stop";
         private final String help
                 = "Terminates the the coordinator session.\n";
+
+        @Override
+        protected String name() {
+            return NAME;
+        }
 
         @Override
         protected OptionSet newOptions(String[] args) {
@@ -550,6 +603,7 @@ public final class CoordinatorRemoteCli implements Closeable {
 
     private class WorkerStartCli extends AbstractCli {
 
+        static final String NAME = "worker-start";
         private final String help
                 = "The 'worker-start' command starts one or more workers.\n"
                 + "\n"
@@ -619,6 +673,11 @@ public final class CoordinatorRemoteCli implements Closeable {
                 .withRequiredArg().ofType(String.class);
 
         @Override
+        protected String name() {
+            return NAME;
+        }
+
+        @Override
         protected OptionSet newOptions(String[] args) {
             return initOptionsOnlyWithHelp(parser, help, args);
         }
@@ -659,7 +718,7 @@ public final class CoordinatorRemoteCli implements Closeable {
         final OptionSpec<String> warmupSpec = parser.accepts("warmup",
                 "Amount of time to execute the warmup per test, e.g. 10s, 1m, 2h or 3d. If warmup is set to 0, "
                         + "the test will warmup until the test decides to stop.")
-                .withRequiredArg().ofType(String.class);
+                .withRequiredArg().ofType(String.class).defaultsTo(format("%ds", 0));
 
         final OptionSpec<TargetType> targetTypeSpec = parser.accepts("targetType",
                 format("Defines the type of Workers which execute the RUN phase."
@@ -727,6 +786,7 @@ public final class CoordinatorRemoteCli implements Closeable {
 
     private class TestRunCli extends TestRunStartCli {
 
+        public static final String NAME = "test-run";
         private final String help
                 = "The 'test-run' command runs a test suite and waits for its completion.\n"
                 + "\n"
@@ -739,20 +799,24 @@ public final class CoordinatorRemoteCli implements Closeable {
                 + "\n"
                 + "Examples\n"
                 + "# runs a file 'test.properties' for 1 minute\n"
-                + "coordinator-remote run\n\n"
+                + "coordinator-remote test-run\n\n"
                 + "# runs atomiclong.properties for 1 minute\n"
-                + "coordinator-remote run atomiclong.properties\n\n"
+                + "coordinator-remote test-run atomiclong.properties\n\n"
                 + "# runs a test with a warmup period of 5 minute and a duration of 1 hour\n"
-                + "coordinator-remote run --warmup 5m --duration 1h\n\n"
+                + "coordinator-remote test-run --warmup 5m --duration 1h\n\n"
                 + "# runs a test by running all tests in the suite in parallel for 10m.\n"
-                + "coordinator-remote run --duration 10m --parallel suite.properties\n\n"
+                + "coordinator-remote test-run --duration 10m --parallel suite.properties\n\n"
                 + "# run a test but disable the verification\n"
-                + "coordinator-remote run --verify false\n\n"
+                + "coordinator-remote test-run --verify false\n\n"
                 + "# run a test but disable the fail fast mechanism\n"
-                + "coordinator-remote run --failFast \n\n"
+                + "coordinator-remote test-run --failFast \n\n"
                 + "# runs a test on 3 members no matter if there are clients or more than 3 members in the cluster.\n"
-                + "coordinator-remote run --targetType member --targetCount 3 \n\n";
+                + "coordinator-remote test-run --targetType member --targetCount 3 \n\n";
 
+        @Override
+        protected String name() {
+            return NAME;
+        }
 
         @Override
         protected OptionSet newOptions(String[] args) {
@@ -767,6 +831,7 @@ public final class CoordinatorRemoteCli implements Closeable {
 
     private class TestStartCli extends TestRunStartCli {
 
+        static final String NAME = "test-start";
         private final String help
                 = "The 'test=start' command runs a test suite asynchronously and returns the id's of the created tests.\n"
                 + "\n"
@@ -792,6 +857,11 @@ public final class CoordinatorRemoteCli implements Closeable {
                 + "coordinator-remote test-start --failFast \n\n"
                 + "# runs a test on 3 members no matter if there are clients or more than 3 members in the cluster.\n"
                 + "coordinator-remote test-start --targetType member --targetCount 3 \n\n";
+
+        @Override
+        protected String name() {
+            return NAME;
+        }
 
         @Override
         protected OptionSet newOptions(String[] args) {
