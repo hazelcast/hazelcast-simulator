@@ -235,7 +235,7 @@ public class Coordinator implements Closeable {
 
     }
 
-    public void exit() throws Exception {
+    public void stop() throws Exception {
         LOGGER.info("Shutting down...");
 
         new Thread(new Runnable() {

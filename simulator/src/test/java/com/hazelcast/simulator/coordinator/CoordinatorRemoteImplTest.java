@@ -71,7 +71,7 @@ public class CoordinatorRemoteImplTest {
         String result = remote.execute(op);
 
         assertNull(result);
-        verify(coordinator).close();
+        verify(coordinator).stop();
     }
 
     @Test

@@ -50,7 +50,7 @@ public class CoordinatorRemoteImpl implements CoordinatorRemote {
         } else if (op instanceof RcPrintLayoutOperation) {
             return coordinator.printLayout();
         } else if (op instanceof RcStopCoordinatorOperation) {
-            coordinator.close();
+            coordinator.stop();
         } else if (op instanceof RcTestRunOperation) {
             return coordinator.testRun((RcTestRunOperation) op);
         } else if (op instanceof RcTestStatusOperation) {
