@@ -22,7 +22,7 @@ import static java.util.concurrent.TimeUnit.HOURS;
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
 
 /**
- * Measures the latency distribution of a test.
+ * HDR-Histogram implementation of the {@link Probe}.
  */
 public class HdrProbe implements Probe {
 
