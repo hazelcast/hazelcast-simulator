@@ -43,6 +43,7 @@ import static java.lang.reflect.Modifier.isStatic;
 
 public class TimeStepModel {
 
+    public static final String PROB = "Prob";
     private final Class testClass;
 
     private final Map<String, ExecutionGroup> executionGroups = new HashMap<String, ExecutionGroup>();
@@ -56,8 +57,40 @@ public class TimeStepModel {
         loadBeforeRunMethods();
         loadAfterRunMethods();
 
+        probabilitySanityCheck();
+
         for (ExecutionGroup executionGroup : executionGroups.values()) {
             executionGroup.init();
+        }
+    }
+
+    // Checks if every probability has a matching timestep method. Otherwise you get confusing messages about total probability
+    // not being 1.
+    private void probabilitySanityCheck() {
+        Set<String> unmatchedProbabilities = new HashSet<String>();
+
+        Set<String> timestepMethodNames = new HashSet<String>();
+        for (ExecutionGroup executionGroup : executionGroups.values()) {
+            for (Method method : executionGroup.timeStepMethods) {
+                timestepMethodNames.add(method.getName());
+            }
+        }
+
+        for (String propertyName : propertyBinding.getTestCase().getProperties().keySet()) {
+            if (!propertyName.endsWith(PROB)) {
+                continue;
+            }
+
+            String methodName = propertyName.substring(0, propertyName.length() - PROB.length());
+            if (!timestepMethodNames.contains(methodName)) {
+                unmatchedProbabilities.add(propertyName);
+            }
+        }
+
+        if (!unmatchedProbabilities.isEmpty()) {
+            throw new IllegalTestException(
+                    "The test contains probabilities without matching timestep method. "
+                            + "Unmatched probabilities " + unmatchedProbabilities);
         }
     }
 
@@ -457,7 +490,7 @@ public class TimeStepModel {
         }
 
         private Probability loadProbability(Method method) {
-            String propertyName = method.getName() + "Prob";
+            String propertyName = method.getName() + PROB;
             String valueString = propertyBinding.load(propertyName);
 
             double value;

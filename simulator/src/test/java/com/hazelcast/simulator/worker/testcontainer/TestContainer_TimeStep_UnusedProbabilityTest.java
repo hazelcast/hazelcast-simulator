@@ -13,7 +13,7 @@ import static org.mockito.Mockito.mock;
 
 public class TestContainer_TimeStep_UnusedProbabilityTest extends TestContainer_AbstractTest {
 
-    @Test(expected = BindException.class)
+    @Test(expected = IllegalTestException.class)
     public void test() throws Exception {
         UnusedProbabilityTest testInstance = new UnusedProbabilityTest();
         TestCase testCase = new TestCase("stopRun")

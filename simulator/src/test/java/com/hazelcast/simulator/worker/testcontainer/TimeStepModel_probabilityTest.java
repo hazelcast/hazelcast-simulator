@@ -11,8 +11,25 @@ import java.util.UUID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 public class TimeStepModel_probabilityTest {
+
+    @Test
+    public void test_probability_unusedProbability() {
+        HashMap<String, Double> probs = new HashMap<String, Double>();
+        probs.put("nonexistingProb", 1.0);
+
+        try {
+            loadModel("public class CLAZZ{\n"
+                    + "@TimeStep public void timeStep1(){}\n"
+                    + "}\n", probs);
+            fail();
+        } catch (IllegalTestException e) {
+            assertEquals(
+                    "The test contains probabilities without matching timestep method. Unmatched probabilities [nonexistingProb]", e.getMessage());
+        }
+    }
 
     @Test
     public void test_probability_singleMethod() {
@@ -213,7 +230,6 @@ public class TimeStepModel_probabilityTest {
         assertProbability(model, "timeStep2", 0.0);
         assertNull(model.getTimeStepProbabilityArray(""));
     }
-
 
 
     @Test

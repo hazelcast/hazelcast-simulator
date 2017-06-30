@@ -275,6 +275,10 @@ public class PropertyBinding {
         return probe;
     }
 
+    public TestCase getTestCase() {
+        return testCase;
+    }
+
     public TestContextImpl getTestContext() {
         return testContext;
     }
