@@ -55,6 +55,7 @@ import static com.hazelcast.simulator.utils.CliUtils.initOptionsOnlyWithHelp;
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
+import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static java.lang.String.format;
 import static java.lang.System.arraycopy;
@@ -183,12 +184,16 @@ public final class CoordinatorRemoteCli implements Closeable {
 
         protected abstract String name();
 
+        protected void afterRun() {
+        }
+
         protected void run(String[] args) {
             this.options = newOptions(args);
 
             try {
                 String result = remote.execute(newOperation());
                 System.out.println(result == null ? "success" : result);
+                afterRun();
             } catch (Exception e) {
                 throw new CommandLineExitException(
                         format("Could not process command %s: message [%s]", name(), e.getMessage()));
@@ -319,6 +324,12 @@ public final class CoordinatorRemoteCli implements Closeable {
         @Override
         protected OptionSet newOptions(String[] args) {
             return initOptionsWithHelp(parser, help, args);
+        }
+
+        @Override
+        protected void afterRun() {
+            sleepSeconds(1);
+            System.exit(0);
         }
 
         @Override
