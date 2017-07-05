@@ -86,5 +86,13 @@
                 <include>com.hazelcast.simulator:tests-memcached</include>
             </includes>
         </dependencySet>
+
+        <dependencySet>
+            <outputDirectory>test-lib/jet</outputDirectory>
+            <useProjectArtifact>false</useProjectArtifact>
+            <includes>
+                <include>com.hazelcast.simulator:tests-jet</include>
+            </includes>
+        </dependencySet>
     </dependencySets>
 </assembly>
