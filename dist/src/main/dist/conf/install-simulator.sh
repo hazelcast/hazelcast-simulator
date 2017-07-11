@@ -84,6 +84,5 @@ fi
 # upload remaining files
 uploadToRemoteSimulatorDir "$SIMULATOR_HOME/bin/" "bin"
 uploadToRemoteSimulatorDir "$SIMULATOR_HOME/conf/" "conf"
-uploadToRemoteSimulatorDir "$SIMULATOR_HOME/jdk-install/" "jdk-install"
 uploadToRemoteSimulatorDir "$SIMULATOR_HOME/test-lib/" "test-lib/"
 uploadToRemoteSimulatorDir "$SIMULATOR_HOME/user-lib/" "user-lib/"
