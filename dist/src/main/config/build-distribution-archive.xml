@@ -32,7 +32,7 @@
         </dependencySet>
 
         <dependencySet>
-            <outputDirectory>test-lib/hz</outputDirectory>
+            <outputDirectory>test-lib/tests-hz</outputDirectory>
             <useProjectArtifact>false</useProjectArtifact>
             <includes>
                 <include>com.hazelcast.simulator:tests-hz</include>
@@ -40,7 +40,7 @@
         </dependencySet>
 
         <dependencySet>
-            <outputDirectory>test-lib/hz-37</outputDirectory>
+            <outputDirectory>test-lib/tests-hz37</outputDirectory>
             <useProjectArtifact>false</useProjectArtifact>
             <includes>
                 <include>com.hazelcast.simulator:tests-hz37</include>
@@ -48,7 +48,7 @@
         </dependencySet>
 
         <dependencySet>
-            <outputDirectory>test-lib/hz-38</outputDirectory>
+            <outputDirectory>test-lib/tests-hz38</outputDirectory>
             <useProjectArtifact>false</useProjectArtifact>
             <includes>
                 <include>com.hazelcast.simulator:tests-hz38</include>
@@ -56,7 +56,7 @@
         </dependencySet>
 
         <dependencySet>
-            <outputDirectory>test-lib/hz-39</outputDirectory>
+            <outputDirectory>test-lib/tests-hz39</outputDirectory>
             <useProjectArtifact>false</useProjectArtifact>
             <includes>
                 <include>com.hazelcast.simulator:tests-hz39</include>
@@ -64,7 +64,7 @@
         </dependencySet>
 
         <dependencySet>
-            <outputDirectory>test-lib/ignite</outputDirectory>
+            <outputDirectory>test-lib/tests-ignite</outputDirectory>
             <useProjectArtifact>false</useProjectArtifact>
             <includes>
                 <include>com.hazelcast.simulator:tests-ignite</include>
@@ -72,7 +72,7 @@
         </dependencySet>
 
         <dependencySet>
-            <outputDirectory>test-lib/infinispan</outputDirectory>
+            <outputDirectory>test-lib/tests-infinispan</outputDirectory>
             <useProjectArtifact>false</useProjectArtifact>
             <includes>
                 <include>com.hazelcast.simulator:tests-infinispan</include>
@@ -80,7 +80,7 @@
         </dependencySet>
 
         <dependencySet>
-            <outputDirectory>test-lib/couchbase</outputDirectory>
+            <outputDirectory>test-lib/tests-couchbase</outputDirectory>
             <useProjectArtifact>false</useProjectArtifact>
             <includes>
                 <include>com.hazelcast.simulator:tests-couchbase</include>

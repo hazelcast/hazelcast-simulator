@@ -216,10 +216,31 @@ public class WorkerProcessLauncher {
 
     private String getClasspath(File workerHome) {
         String simulatorHome = getSimulatorHome().getAbsolutePath();
-        String hzVersionDirectory = directoryForVersionSpec(parameters.get("VERSION_SPEC"));
-        String testJarVersion = getHazelcastVersionFromJAR(simulatorHome + "/vendor-lib/hz-" + hzVersionDirectory + "/*");
-        LOGGER.info(format("Adding Hazelcast %s and test JARs %s to classpath", hzVersionDirectory, testJarVersion));
+        String classpath = new File(getSessionDirectory(), "lib/*").getAbsolutePath()
+                + CLASSPATH_SEPARATOR + workerHome.getAbsolutePath() + "/upload/*"
+                + CLASSPATH_SEPARATOR + simulatorHome + "/user-lib/*"
+                + uploadDirToClassPath(workerHome)
+                + CLASSPATH_SEPARATOR + CLASSPATH;
 
+        String vendor = parameters.get("VENDOR");
+        if ("hazelcast".equals(vendor) || "hazelcast-enterprise".equals(vendor)) {
+            String hzVersionDirectory = directoryForVersionSpec(parameters.get("VERSION_SPEC"));
+            String testJarVersion = getHazelcastVersionFromJAR(simulatorHome + "/vendor-lib/tests-hz"
+                    + hzVersionDirectory + "/*");
+            classpath += CLASSPATH_SEPARATOR + simulatorHome + "/vendor-lib/" + hzVersionDirectory + "/*";
+            // the version specific tests need to be loaded in front of the 'common' one since classpath respects
+            // the order of classpath elements
+            classpath += CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/tests-hz" + testJarVersion + "/*";
+            // the common test classes.
+            classpath += CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/tests-hz/*";
+        } else {
+            classpath += CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/tests-" + vendor + "/*";
+        }
+
+        return classpath;
+    }
+
+    private String uploadDirToClassPath(File workerHome) {
         String uploadClassPath = "";
         File uploadDirectory = new File(workerHome, "upload").getAbsoluteFile();
         if (uploadDirectory.exists() && uploadDirectory.isDirectory()) {
@@ -229,19 +250,7 @@ public class WorkerProcessLauncher {
                 LOGGER.info(format("Adding upload directory %s to classpath", uploadClassPath));
             }
         }
-
-        // we have to reverse the classpath to monkey patch version specific classes
-        return new File(getSessionDirectory(), "lib/*").getAbsolutePath()
-                + CLASSPATH_SEPARATOR + workerHome.getAbsolutePath() + "/upload/*"
-                + CLASSPATH_SEPARATOR + simulatorHome + "/user-lib/*"
-                + CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/hz-" + testJarVersion + "/*"
-                + CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/hz/*"
-                + CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/ignite/*"
-                + CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/infinispan/*"
-                + CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/couchbase/*"
-                + CLASSPATH_SEPARATOR + simulatorHome + "/vendor-lib/" + hzVersionDirectory + "/*"
-                + uploadClassPath
-                + CLASSPATH_SEPARATOR + CLASSPATH;
+        return uploadClassPath;
     }
 
     private static String directoryForVersionSpec(String versionSpec) {
