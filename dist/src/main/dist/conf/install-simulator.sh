@@ -45,7 +45,7 @@ uploadLibraryJar "junit*"
 uploadLibraryJar "log4j*"
 uploadLibraryJar "slf4j-log4j12-*"
 
-#hack to get hz enterprise working
+# hack to get hz enterprise working
 if [ "$VENDOR" = "hazelcast-enterprise" ]; then
     uploadLibraryJar "netty-buffer-*"
     uploadLibraryJar "netty-codec-*"
@@ -55,7 +55,7 @@ if [ "$VENDOR" = "hazelcast-enterprise" ]; then
     uploadLibraryJar "netty-tcnative-boringssl-static-*"
 fi
 
-#hack to get ignite working
+# hack to get ignite working
 if [ "$VENDOR" = "ignite" ]; then
     uploadLibraryJar "ignite-*"
     uploadLibraryJar "spring-*"
@@ -63,7 +63,7 @@ if [ "$VENDOR" = "ignite" ]; then
     uploadLibraryJar "h2-*"
 fi
 
-#hack to get infinispan working
+# hack to get infinispan working
 if [ "$VENDOR" = "infinispan" ]; then
     uploadLibraryJar "infinispan-*"
     uploadLibraryJar "jboss*"
@@ -74,7 +74,7 @@ if [ "$VENDOR" = "infinispan" ]; then
     uploadLibraryJar "javassist*"
 fi
 
-#hack to get couchbase working
+# hack to get couchbase working
 if [ "$VENDOR" = "couchbase" ]; then
     uploadLibraryJar "java-client-*"
     uploadLibraryJar "core-io-*"
