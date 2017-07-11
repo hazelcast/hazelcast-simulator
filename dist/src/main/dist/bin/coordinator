@@ -4,9 +4,17 @@ if [ -z "${SIMULATOR_HOME}" ] ; then
     export SIMULATOR_HOME=$(cd $(dirname $(readlink -f $0 2> /dev/null || readlink $0 2> /dev/null || echo $0))/.. && pwd)
 fi
 
-export JAVA_OPTS="-server -Xmx1g -Xms256m ${JAVA_EXTRA_OPTS}"
+export JAVA_OPTS="-server -Xms256m -Xmx1g ${JAVA_EXTRA_OPTS}"
 
-java -cp "${SIMULATOR_HOME}/lib/*:${SIMULATOR_HOME}/test-lib/ignite/*:${SIMULATOR_HOME}/test-lib/infinispan/*:${SIMULATOR_HOME}/test-lib/couchbase/*" ${JAVA_OPTS} \
+classpath="${SIMULATOR_HOME}/lib/*"
+# automatically add all directories from tests-lib to the classpath
+for path in ${SIMULATOR_HOME}/test-lib/*/; do
+    if [ -d "$path" ]; then
+        classpath="$classpath:$path/*"
+    fi
+done
+
+java -cp $classpath ${JAVA_OPTS} \
     -DSIMULATOR_HOME=${SIMULATOR_HOME} \
     -Dhazelcast.logging.type=log4j \
     -Dfile.encoding=UTF8 \
