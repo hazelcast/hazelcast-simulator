@@ -320,11 +320,13 @@ public class CoordinatorClient implements Closeable {
         private final MessageConsumer replyQueueConsumer;
         private final MessageConsumer coordinatorConsumer;
         private final SimulatorAddress agentAddress;
+        private boolean connected;
 
         private RemoteBroker(String ip, SimulatorAddress agentAddress) throws JMSException {
             this.agentAddress = agentAddress;
 
             connection = connectionFactory.newConnection("tcp://" + ip + ":" + remoteBrokerPort, this);
+            connected = true;
             session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
             agentProducer = session.createProducer(session.createTopic("agents"));
@@ -342,10 +344,16 @@ public class CoordinatorClient implements Closeable {
         }
 
         @Override
-        public void onException(JMSException exception) {
+        public void onException(JMSException e) {
             close();
 
-            LOGGER.fatal("Lost connection to remote broker [" + agentAddress + "]", exception);
+            if (connected) {
+                LOGGER.fatal("Lost connection to agent [" + agentAddress + "], cause [" + e.getMessage() + "]");
+            } else {
+                LOGGER.fatal("Failed to connect to agent [" + agentAddress + "], cause [" + e.getMessage() + "]");
+            }
+            LOGGER.debug(e.getMessage(), e);
+
             remoteBrokers.remove(agentAddress.getAgentIndex());
 
             FailureOperation failureOperation = new FailureOperation(
@@ -353,7 +361,7 @@ public class CoordinatorClient implements Closeable {
                     FailureType.MESSAGING_EXCEPTION,
                     null,
                     agentAddress.toString(),
-                    exception);
+                    e);
 
             if (failureCollector != null) {
                 failureCollector.notify(failureOperation);

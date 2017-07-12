@@ -36,11 +36,13 @@ import com.hazelcast.simulator.coordinator.tasks.StartWorkersTask;
 import com.hazelcast.simulator.coordinator.tasks.TerminateWorkersTask;
 import com.hazelcast.simulator.protocol.CoordinatorClient;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.CommonUtils;
 import com.hazelcast.simulator.vendors.VendorDriver;
 import com.hazelcast.simulator.worker.operations.ExecuteScriptOperation;
 import org.apache.log4j.Logger;
 
+import javax.jms.JMSException;
 import java.io.Closeable;
 import java.io.File;
 import java.rmi.AlreadyBoundException;
@@ -221,7 +223,13 @@ public class Coordinator implements Closeable {
     private void startClient() throws Exception {
         // todo: should be async to speed things up
         for (AgentData agent : registry.getAgents()) {
-            client.connectToAgentBroker(agent.getAddress(), agent.getPublicAddress());
+            try {
+                client.connectToAgentBroker(agent.getAddress(), agent.getPublicAddress());
+            } catch (Exception e) {
+                LOGGER.debug(e.getMessage(), e);
+                throw new CommandLineExitException("Failed to connect to agent [" + agent.getPublicAddress() + "], "
+                        + "cause [" + e.getMessage() + "]");
+            }
         }
 
         LOGGER.info("Remote client started successfully!");
