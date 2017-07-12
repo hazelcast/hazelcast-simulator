@@ -160,11 +160,13 @@ final class CoordinatorCli {
             "Prevents downloading of the created worker artifacts.");
 
     private final OptionSpec downloadSpec = parser.accepts("download",
-            "Downloads all the session directories and applies a postprocessing. If '--sessionId' is set, only that session "
-                    + "is downloaded/postprocessed.");
+            "Downloads all the session directories and applies a postprocessing. "
+                    + "If this option is set, no other tasks are executed."
+                    + "If '--sessionId' is set, only that session is downloaded/postprocessed.");
 
     private final OptionSpec cleanSpec = parser.accepts("clean",
-            "Cleans the remote Worker directories on the provisioned machines.");
+            "Cleans the remote Worker directories on the provisioned machines. "
+                    + "If this option is set, no other tasks are executed");
 
     private final OptionSet options;
 
