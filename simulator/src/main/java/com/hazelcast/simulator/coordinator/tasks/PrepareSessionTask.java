@@ -25,20 +25,22 @@ import static com.hazelcast.simulator.utils.FileUtils.getConfigurationFile;
 import static com.hazelcast.simulator.utils.FormatUtils.join;
 
 /**
- * Uploads the 'upload' directory
+ * Prepares the session on the remote machines.
  *
- * The real work is done by the 'upload.sh' script.
+ * This includes creating the session directory, uploading the 'uploads' directory.
+ *
+ * The real work is done by the 'prepare_session.sh' script.
  */
-public class InstallUploadDirTask {
+public class PrepareSessionTask {
     private final List<String> agents;
     private final Map<String, String> simulatorProperties;
     private final File uploadDir;
     private final String sessionId;
 
-    public InstallUploadDirTask(List<String> agents,
-                                Map<String, String> simulatorProperties,
-                                File uploadDir,
-                                String sessionId) {
+    public PrepareSessionTask(List<String> agents,
+                              Map<String, String> simulatorProperties,
+                              File uploadDir,
+                              String sessionId) {
         this.agents = agents;
         this.simulatorProperties = simulatorProperties;
         this.uploadDir = uploadDir;
@@ -46,7 +48,7 @@ public class InstallUploadDirTask {
     }
 
     public void run() {
-        String installFile = getConfigurationFile("upload.sh").getAbsolutePath();
+        String installFile = getConfigurationFile("prepare_session.sh").getAbsolutePath();
         String agentIps = join(agents, ",");
         new BashCommand(installFile)
                 .addEnvironment(simulatorProperties)

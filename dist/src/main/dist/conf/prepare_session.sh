@@ -1,6 +1,7 @@
 #!/bin/bash
 
-# script that uploads the 'upload' directory.
+# script prepares the 'session' directory. So in the 'workers' directory on the 'remote' Simulator installation, a directory
+# is made with the session id, e.g. 2017-07-11__15_37_01. In this directory the 'upload' directory is copied if it exists.
 
 # exit on failure
 set -e
@@ -11,11 +12,14 @@ session_id=$2
 agents=$3
 target_dir=hazelcast-simulator-$SIMULATOR_VERSION/workers/${session_id}
 
-upload_remote(){
+prepare_session_remote(){
     agent=$1
     agent_index=$2
 
     echo "[INFO]    Upload [A$agent_index] $agent starting..."
+
+    # we remove the session directory first; in case of multiple executions with the same session-id
+    ssh ${SSH_OPTIONS} ${SIMULATOR_USER}@${agent} "rm -fr $target_dir"
 
     # if the local upload directory exist, it needs to be uploaded
     echo "Uploading upload directory $src_dir to $agent:$target_dir"
@@ -25,10 +29,13 @@ upload_remote(){
     echo "[INFO]    Upload [A$agent_index] $agent completed"
 }
 
-upload_local(){
+prepare_session_local(){
     echo "[INFO]Upload local agent [A1] starting..."
 
     local_target_dir=${SIMULATOR_HOME}/workers/${session_id}
+
+    # we remove the session directory first; in case of multiple executions with the same session-id
+    rm -fr local_target_dir
 
     mkdir -p $local_target_dir
     cp -rfv $src_dir $local_target_dir
@@ -42,18 +49,17 @@ if [ ! -d ${src_dir} ]; then
 fi
 
 if [ "$CLOUD_PROVIDER" = "local" ]; then
-    upload_local
+    prepare_session_local
 else
-    echo "[INFO]Upload 'upload' directory starting"
+    echo "[INFO]Upload 'upload' directory starting..."
     agent_index=1
     for agent in ${agents//,/ } ; do
-        upload_remote $agent $agent_index &
+        prepare_session_remote $agent $agent_index &
         ((agent_index++))
     done
 
-    # todo: no feedback if the agent was actually started.
     wait
-    echo "[INFO]Remote agents started"
+    echo "[INFO]Upload completed"
 fi
 
 
