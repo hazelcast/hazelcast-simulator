@@ -29,7 +29,7 @@ import com.hazelcast.simulator.coordinator.registry.TestData;
 import com.hazelcast.simulator.coordinator.registry.WorkerData;
 import com.hazelcast.simulator.coordinator.registry.WorkerQuery;
 import com.hazelcast.simulator.coordinator.tasks.DownloadTask;
-import com.hazelcast.simulator.coordinator.tasks.InstallUploadDirTask;
+import com.hazelcast.simulator.coordinator.tasks.PrepareSessionTask;
 import com.hazelcast.simulator.coordinator.tasks.KillWorkersTask;
 import com.hazelcast.simulator.coordinator.tasks.RunTestSuiteTask;
 import com.hazelcast.simulator.coordinator.tasks.StartWorkersTask;
@@ -113,7 +113,7 @@ public class Coordinator implements Closeable {
 
         startClient();
 
-        new InstallUploadDirTask(
+        new PrepareSessionTask(
                 publicAddresses(registry.getAgents()),
                 simulatorProperties.asMap(),
                 new File(System.getProperty("user.dir"), "upload").getAbsoluteFile(),
