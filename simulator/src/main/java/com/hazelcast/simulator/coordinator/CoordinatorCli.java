@@ -160,7 +160,8 @@ final class CoordinatorCli {
             "Prevents downloading of the created worker artifacts.");
 
     private final OptionSpec downloadSpec = parser.accepts("download",
-            "Downloads all worker artifacts and applies a postprocessing.");
+            "Downloads all the session directories and applies a postprocessing. If '--sessionId' is set, only that session "
+                    + "is downloaded/postprocessed.");
 
     private final OptionSpec cleanSpec = parser.accepts("clean",
             "Cleans the remote Worker directories on the provisioned machines.");
@@ -202,7 +203,8 @@ final class CoordinatorCli {
 
     void run() throws Exception {
         if (options.has(downloadSpec)) {
-            new DownloadTask(publicAddresses(registry.getAgents()), simulatorProperties.asMap(), getUserDir(), "*").run();
+            String sessionId = options.has(sessionIdSpec) ? options.valueOf(sessionIdSpec) : "*";
+            new DownloadTask(publicAddresses(registry.getAgents()), simulatorProperties.asMap(), getUserDir(), sessionId).run();
         } else if (options.has(cleanSpec)) {
             new ArtifactCleanTask(registry, simulatorProperties).run();
         } else {

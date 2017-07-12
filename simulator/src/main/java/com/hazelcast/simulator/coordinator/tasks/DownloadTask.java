@@ -49,7 +49,7 @@ public class DownloadTask {
     }
 
     public void run() {
-        LOGGER.info("Downloading...");
+        LOGGER.info("Downloading sessions [" + sessionId + "]");
 
         String installFile = getConfigurationFile("download.sh").getAbsolutePath();
         String agentIps = join(agents, ",");
