@@ -42,7 +42,6 @@ import com.hazelcast.simulator.vendors.VendorDriver;
 import com.hazelcast.simulator.worker.operations.ExecuteScriptOperation;
 import org.apache.log4j.Logger;
 
-import javax.jms.JMSException;
 import java.io.Closeable;
 import java.io.File;
 import java.rmi.AlreadyBoundException;
