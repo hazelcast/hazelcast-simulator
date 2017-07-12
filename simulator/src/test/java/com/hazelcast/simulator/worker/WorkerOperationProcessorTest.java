@@ -1,10 +1,10 @@
 package com.hazelcast.simulator.worker;
 
 
-import com.hazelcast.simulator.protocol.StubPromise;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.coordinator.operations.FailureOperation;
+import com.hazelcast.simulator.protocol.StubPromise;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.exception.ProcessException;
 import com.hazelcast.simulator.utils.ExceptionReporter;

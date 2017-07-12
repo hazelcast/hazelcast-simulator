@@ -16,9 +16,9 @@
 
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.simulator.coordinator.operations.FailureOperation;
 import com.hazelcast.simulator.common.FailureType;
 import com.hazelcast.simulator.common.TestPhase;
+import com.hazelcast.simulator.coordinator.operations.FailureOperation;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.apache.log4j.Logger;
 

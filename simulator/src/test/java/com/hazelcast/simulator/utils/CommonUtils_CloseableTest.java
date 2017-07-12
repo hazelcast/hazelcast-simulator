@@ -2,8 +2,6 @@ package com.hazelcast.simulator.utils;
 
 import org.junit.Test;
 
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamWriter;
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.Socket;

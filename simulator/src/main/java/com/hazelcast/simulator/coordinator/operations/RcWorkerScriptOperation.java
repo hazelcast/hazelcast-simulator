@@ -15,8 +15,8 @@
  */
 package com.hazelcast.simulator.coordinator.operations;
 
-import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.coordinator.registry.WorkerQuery;
+import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 
 public class RcWorkerScriptOperation implements SimulatorOperation {
 

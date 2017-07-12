@@ -1,10 +1,10 @@
 package com.hazelcast.simulator.worker.testcontainer;
 
 import com.hazelcast.simulator.common.TestCase;
-import com.hazelcast.simulator.protocol.Server;
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.probes.impl.EmptyProbe;
 import com.hazelcast.simulator.probes.impl.HdrProbe;
+import com.hazelcast.simulator.protocol.Server;
 import com.hazelcast.simulator.test.StopException;
 import com.hazelcast.simulator.test.annotations.StartNanos;
 import com.hazelcast.simulator.test.annotations.TimeStep;

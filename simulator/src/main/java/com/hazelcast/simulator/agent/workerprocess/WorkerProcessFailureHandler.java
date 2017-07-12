@@ -16,9 +16,9 @@
 package com.hazelcast.simulator.agent.workerprocess;
 
 import com.hazelcast.simulator.common.FailureType;
+import com.hazelcast.simulator.coordinator.operations.FailureOperation;
 import com.hazelcast.simulator.protocol.Server;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.coordinator.operations.FailureOperation;
 import org.apache.log4j.Logger;
 
 import static java.lang.String.format;

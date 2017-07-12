@@ -3,7 +3,6 @@ package com.hazelcast.simulator.worker.testcontainer;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.protocol.Server;
 import com.hazelcast.simulator.test.annotations.TimeStep;
-import com.hazelcast.simulator.utils.BindException;
 import org.junit.Test;
 
 import java.util.concurrent.atomic.AtomicLong;

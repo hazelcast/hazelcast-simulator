@@ -1,7 +1,6 @@
 package com.hazelcast.simulator.vendors;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
-import com.hazelcast.simulator.coordinator.registry.AgentData;
 
 import java.io.IOException;
 

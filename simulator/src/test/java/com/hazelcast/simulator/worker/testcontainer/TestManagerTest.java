@@ -1,11 +1,11 @@
 package com.hazelcast.simulator.worker.testcontainer;
 
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.simulator.protocol.StubPromise;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.protocol.Promise;
 import com.hazelcast.simulator.protocol.Server;
+import com.hazelcast.simulator.protocol.StubPromise;
 import com.hazelcast.simulator.tests.FailingTest;
 import com.hazelcast.simulator.tests.StoppingTest;
 import com.hazelcast.simulator.tests.SuccessTest;
