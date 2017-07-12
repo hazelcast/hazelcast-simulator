@@ -174,7 +174,7 @@ final class CoordinatorCli {
         this.options = initOptionsWithHelp(parser, args);
         this.simulatorProperties = loadSimulatorProperties()
                 .setIfNotNull("LICENCE_KEY", options.valueOf(licenseKeySpec));
-        this.registry = newComponentRegistry(simulatorProperties);
+        this.registry = newRegistry(simulatorProperties);
 
         onlineCheckAgents(simulatorProperties, registry);
 
@@ -240,25 +240,21 @@ final class CoordinatorCli {
     }
 
     private String loadMemberArgs() {
-        String args;
         if (options.has(workerVmOptionsSpec)) {
-            args = options.valueOf(workerVmOptionsSpec);
-            LOGGER.warn("'workerVmOptions' is deprecated, use 'memberArgs' instead.");
+            LOGGER.warn("'--workerVmOptions' is deprecated, use '--memberArgs' instead.");
+            return options.valueOf(workerVmOptionsSpec);
         } else {
-            args = options.valueOf(memberArgsSpec);
+            return options.valueOf(memberArgsSpec);
         }
-        return args;
     }
 
     private String loadClientArgs() {
-        String args;
         if (options.has(clientWorkerVmOptionsSpec)) {
-            args = options.valueOf(clientWorkerVmOptionsSpec);
-            LOGGER.warn("'clientWorkerVmOptions' is deprecated, use 'clientArgs' instead.");
+            LOGGER.warn("'--clientWorkerVmOptions' is deprecated, use '--clientArgs' instead.");
+            return options.valueOf(clientWorkerVmOptionsSpec);
         } else {
-            args = options.valueOf(clientArgsSpec);
+            return options.valueOf(clientArgsSpec);
         }
-        return args;
     }
 
     private TestSuite loadTestSuite() {
@@ -355,7 +351,7 @@ final class CoordinatorCli {
         return (int) timeUnit.toSeconds(Integer.parseInt(sub));
     }
 
-    private Registry newComponentRegistry(SimulatorProperties simulatorProperties) {
+    private Registry newRegistry(SimulatorProperties simulatorProperties) {
         Registry registry;
         if (isLocal(simulatorProperties)) {
             registry = new Registry();
