@@ -32,7 +32,8 @@ function download_remote(){
     fi
 
     # copy the files
-    rsync --copy-links -avv -e "ssh ${SSH_OPTIONS}" $SIMULATOR_USER@$agent:$download_path $root_dir
+    # we exclude the uploads directory because it could be very big e.g jars
+    rsync --copy-links -avv -e "ssh ${SSH_OPTIONS}" --exclude 'upload' $SIMULATOR_USER@$agent:$download_path $root_dir
 
     # delete the files on the agent (no point in keeping them around if they are already copied locally)
     if [ "$session_id" = "*" ] ; then
@@ -57,7 +58,12 @@ function download_local(){
         then
             target_dir="$root_dir/$worker_dir_name"
             mkdir -p $target_dir
+
             mv "$worker_dir"/* $target_dir
+
+            # since we filter out the upload for a remote worker, lets do the same for local.
+            rm -fr $target_dir/upload/
+
             mv ./agent.err $target_dir || true
             mv ./agent.out $target_dir || true
         fi
