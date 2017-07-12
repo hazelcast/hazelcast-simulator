@@ -161,7 +161,7 @@ final class CoordinatorCli {
 
     private final OptionSpec downloadSpec = parser.accepts("download",
             "Downloads all the session directories and applies a postprocessing. "
-                    + "If this option is set, no other tasks are executed."
+                    + "If this option is set, no other tasks are executed. "
                     + "If '--sessionId' is set, only that session is downloaded/postprocessed.");
 
     private final OptionSpec cleanSpec = parser.accepts("clean",
