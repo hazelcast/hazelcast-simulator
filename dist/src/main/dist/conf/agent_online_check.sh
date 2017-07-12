@@ -26,16 +26,16 @@ ssh_test(){
 
     if [ "$status" -ne "0" ]; then
         ((ssh_test_errors+=1))
-        echo "[ERROR]  Agent $agent offline!"
+        echo "[ERROR]  Agent-machine $agent offline!"
     else
-        echo "[INFO]    Agent $agent online"
+        echo "[INFO]    Agent-machine $agent online"
     fi
 }
 
-echo "[INFO]Checking agents online status..."
+echo "[INFO]Checking agent-machine SSH reachable status..."
 
 if [ "$CLOUD_PROVIDER" = "local" ]; then
-    echo "[INFO]All agents are reachable."
+    echo "[INFO]All agent-machines are SSH reachable."
     exit 0
 fi
 
@@ -44,8 +44,8 @@ for agent in ${agents//,/ } ; do
 done
 
 if [ "$ssh_test_errors" -ne 0 ] ; then
-    echo "[ERROR]Not all agents are online!"
+    echo "[ERROR]Not all agent-machines are SSH reachable!"
     exit 1
 fi
 
-echo "[INFO]All agents are online."
+echo "[INFO]All agent-machines are SSH reachable."
