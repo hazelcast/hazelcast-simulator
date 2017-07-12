@@ -184,7 +184,6 @@ public class HazelcastDriver extends VendorDriver<HazelcastInstance> {
 
     @Override
     public void install() {
-
         String cloud = get("CLOUD_PROVIDER");
         if ("embedded".equals(cloud)) {
             return;
