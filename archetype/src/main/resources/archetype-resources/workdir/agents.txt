@@ -1,0 +1,2 @@
+# Agents go here. In case of a static configuration, add the ip address of each machine on a seperate line.
+# For a local setup nothing needs

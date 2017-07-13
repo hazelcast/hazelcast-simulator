@@ -7,7 +7,7 @@
   * [Preparations to Setup Remote Machines](#preparations-to-setup-remote-machines)
 * [Setting up for Static Setup](#setting-up-for-static-setup)
 * [Setting up for Amazon EC2](#setting-up-for-amazon-ec2)
-* [Setting up for Google Compute Engine](#setting-up-for-google-compute-engine)
+* [Using the Simulator Archetype](#using-simulator-archtype)
 * [Customizing your Simulator Setup](#customizing-your-simulator-setup)
   * [TestSuite](#testsuite)
   * [Simulator Properties](#simulator-properties)
@@ -329,6 +329,20 @@ access key ID and secret access key in the `simulator.properties` file is for se
  credentials with the outside world. Now you can safely add the `simulator.properties` file in your source repository or 
  share it with other people.*
 
+# Using the Simulator Archetype
+
+The Simulator archetype can be used to generate a project for external tests to be executed on the simulator.
+
+```
+mvn archetype:generate \
+   -DarchetypeGroupId=com.hazelcast.simulator \
+   -DarchetypeArtifactId=archetype \
+   -DarchetypeVersion=0.9
+```
+
+Please update archetypeVersion to the Simulator version you are using.
+
+Once the project is created and you have updated the generated test to do something more sensible, go to the workDir. 
 # Customizing your Simulator Setup
 
 After you installed Hazelcast Simulator for your environment and did a first run, it is time to learn more about the setup and customize it.

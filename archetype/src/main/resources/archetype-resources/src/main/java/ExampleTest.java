@@ -52,7 +52,6 @@ public class ExampleTest extends HazelcastTest {
     public void put(BaseThreadState state) {
         int key = state.randomInt(maxKeys);
         map.put(key, "value" + key);
-
     }
 
     @TimeStep(prob = 0.5)
