@@ -331,7 +331,7 @@ access key ID and secret access key in the `simulator.properties` file is for se
 
 # Using the Simulator Archetype
 
-The Simulator archetype can be used to generate a project for external tests to be executed on the simulator.
+The Simulator archetype can be used to generate a project for external tests to be executed with the Simulator.
 
 ```
 mvn archetype:generate \
@@ -343,24 +343,22 @@ mvn archetype:generate \
 Please update archetypeVersion to the Simulator version you are using.
 
 Once the project is created and you have updated the generated test to do something more sensible, execute:
-
 ```
 mvn clean install
 ```
 
-And go to the workDir. The 'run.sh' script will copy the jars from your project from the '../target/' directory
-into the 'workDir/upload'. The coordinator will then automatically copy the jars to the remote agent(s) when 
-a test is executed.
+And go to the `workdir` where you will find a `run.sh` The `run.sh` script will copy the jars from your project from the 
+`../target/` directory into the 'workDir/upload' and then calls the coordinator to run the test. The coordinator will then 
+automatically copy the jars to the remote agent(s) when a test is executed.
 
-After the 'run.sh' script is executed, a directory with timestamp like '2017-07-13__09_18_26' is created. This directory
-contains all the logging and performance related information from the tests executed. 
+After the `run.sh` script is executed, a directory with timestamp like `2017-07-13__09_18_26` is created. This directory
+contains all the logging and performance related information from the test(s) executed. 
 
-To generate a performance diagrams, execute
-
+To generate the performance diagrams, execute:
 ```
 benchmark-report 2017-07-13__09_18_26
 ```
-And a report directory is created with many diagrams.
+And a `report` directory is created, containing many diagrams.
  
  
 # Customizing your Simulator Setup
