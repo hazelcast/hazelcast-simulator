@@ -112,6 +112,11 @@ public class OptionsBuilder {
         return this;
     }
 
+    public OptionsBuilder performanceMonitorIntervalSeconds(long seconds) {
+        options.simulatorProperties.set("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS", "" + seconds);
+        return this;
+    }
+
     public OptionsBuilder duration(long duration, TimeUnit timeUnit) {
         if (duration < 0) {
             throw new IllegalArgumentException("duration can't be smaller than 0");

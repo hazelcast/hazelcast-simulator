@@ -35,7 +35,6 @@ public class CoordinatorParameters {
     private boolean skipDownload;
     private boolean skipShutdownHook;
     private int workerVmStartupDelayMs;
-    private int performanceMonitorIntervalSeconds;
 
     public String getSessionId() {
         return sessionId;
@@ -88,15 +87,6 @@ public class CoordinatorParameters {
 
     public CoordinatorParameters setWorkerVmStartupDelayMs(int workerVmStartupDelayMs) {
         this.workerVmStartupDelayMs = workerVmStartupDelayMs;
-        return this;
-    }
-
-    public int getPerformanceMonitorIntervalSeconds() {
-        return performanceMonitorIntervalSeconds;
-    }
-
-    public CoordinatorParameters setPerformanceMonitorIntervalSeconds(int performanceMonitorIntervalSeconds) {
-        this.performanceMonitorIntervalSeconds = performanceMonitorIntervalSeconds;
         return this;
     }
 }
