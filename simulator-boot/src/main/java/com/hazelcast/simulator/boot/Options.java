@@ -23,15 +23,16 @@ import com.hazelcast.simulator.common.TestCase;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadSimulatorProperties;
 
 public class Options {
     final SimulatorProperties simulatorProperties = loadSimulatorProperties();
     final Set<String> ignoredClasspath = new HashSet<String>();
-    int memberCount;
+    int memberCount = 1;
     int clientCount;
-    long durationSeconds;
+    long durationSeconds = TimeUnit.MINUTES.toSeconds(1);
     long warmupSeconds;
     String memberArgs = "";
     String clientArgs = "";

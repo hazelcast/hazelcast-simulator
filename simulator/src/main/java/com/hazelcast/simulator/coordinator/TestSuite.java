@@ -47,7 +47,7 @@ public class TestSuite implements Serializable {
     private static final Pattern VALID_FILE_NAME_PATTERN = Pattern.compile("^[a-zA-Z0-9-]+$");
 
     private final List<TestCase> testCaseList = new LinkedList<TestCase>();
-    private int durationSeconds;
+    private long durationSeconds;
     private boolean failFast;
     private boolean parallel;
     // a 'select all' workerQuery by default
@@ -151,12 +151,12 @@ public class TestSuite implements Serializable {
         return testCaseList;
     }
 
-    public TestSuite setDurationSeconds(int durationSeconds) {
+    public TestSuite setDurationSeconds(long durationSeconds) {
         this.durationSeconds = durationSeconds;
         return this;
     }
 
-    public int getDurationSeconds() {
+    public long getDurationSeconds() {
         return durationSeconds;
     }
 

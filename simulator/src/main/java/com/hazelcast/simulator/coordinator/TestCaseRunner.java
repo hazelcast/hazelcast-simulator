@@ -244,7 +244,7 @@ public final class TestCaseRunner {
 
         long startMs = currentTimeMillis();
 
-        int durationSeconds = testSuite.getDurationSeconds();
+        long durationSeconds = testSuite.getDurationSeconds();
         long durationMs;
         long timeoutMs;
         if (durationSeconds == 0) {
