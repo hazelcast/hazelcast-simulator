@@ -39,6 +39,7 @@ public final class AgentUtils {
         String startScript = getConfigurationFile("agent_start.sh").getAbsolutePath();
 
         new BashCommand(startScript)
+                .ensureJavaOnPath()
                 .addParams(publicAddressesString(registry))
                 .addEnvironment(properties.asMap())
                 .execute();

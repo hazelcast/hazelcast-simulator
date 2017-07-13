@@ -26,12 +26,12 @@ import com.hazelcast.simulator.coordinator.operations.RcTestRunOperation;
 import com.hazelcast.simulator.coordinator.operations.RcWorkerStartOperation;
 import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.coordinator.registry.WorkerQuery;
-import com.hazelcast.simulator.utils.FileUtils;
 
 import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
 
+import static com.hazelcast.simulator.utils.FileUtils.copyDirectory;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadComponentRegister;
 
 public class Runner {
@@ -73,11 +73,11 @@ public class Runner {
             return;
         }
 
-        File uploadDir = new File("upload/lib");
+        File uploadDir = new File("upload");
         uploadDir.mkdirs();
 
         for (File file : workerClassPath) {
-            FileUtils.copyDirectory(file, uploadDir);
+            copyDirectory(file, uploadDir);
         }
     }
 
