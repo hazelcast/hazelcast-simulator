@@ -327,6 +327,9 @@ public final class FileUtils {
             closeQuietly(out);
         }
 
+        if (from.canExecute()) {
+            to.setExecutable(true);
+        }
     }
 
     public static File getUserDir() {
@@ -409,23 +412,9 @@ public final class FileUtils {
         }
     }
 
-    public static void copyFilesToDirectory(File[] sourceFiles, File targetDirectory) {
-        for (File sourceFile : sourceFiles) {
-            copyFileToDirectory(sourceFile, targetDirectory);
-        }
-    }
-
     public static void copyFileToDirectory(File sourceFile, File targetDirectory) {
-//        File targetFile = newFile(targetDirectory, sourceFile.getName());
-//        try {
-//            Files.copy(sourceFile, targetFile);
-//            if (sourceFile.canExecute()) {
-//                targetFile.setExecutable(true);
-//            }
-//        } catch (IOException e) {
-//            throw new UncheckedIOException(format("Error while copying file from %s to %s", sourceFile.getAbsolutePath(),
-//                    targetFile.getAbsolutePath()), e);
-//        }
+        File targetFile = newFile(targetDirectory, sourceFile.getName());
+        copy(sourceFile, targetFile);
     }
 
     public static File getConfigurationFile(String filename) {

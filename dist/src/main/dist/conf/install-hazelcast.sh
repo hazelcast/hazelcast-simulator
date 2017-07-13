@@ -39,6 +39,8 @@ prepare()
         prepare_using_git ${git_branch} ${git_build_dir}/hazelcast-os https://github.com/hazelcast/hazelcast.git
     elif [[ ${version_spec} == bringmyown ]] ; then
         echo "Bring my own"
+        # todo: is nasty; should not be needed
+        mkdir -p ${local_install_dir}
         # we don't need to do anything
     elif [[ ${version_spec} == outofthebox ]] ; then
         echo "Out of the box"
