@@ -349,7 +349,7 @@ mvn clean install
 
 And go to the `workdir` where you will find a `run.sh` The `run.sh` script will copy the jars from your project from the 
 `../target/` directory into the `upload` directory and then calls the coordinator to run the test. The coordinator will then 
-automatically copies all content of the `upload` directory to the remote agent(s) when a test is executed. The upload directory
+automatically copy the content of the `upload` directory to the remote agent(s) before a test is executed. The upload directory
 can also be used to upload other artifacts like e.g. keystores/truststores etc.
 
 After the `run.sh` script is executed, a directory with timestamp like `2017-07-13__09_18_26` is created. This directory
