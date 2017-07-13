@@ -30,7 +30,7 @@ import static org.junit.Assert.assertEquals;
 public class ExampleTest extends HazelcastTest {
 
     // properties
-    public int maxKeys = 1000;
+    public int keyCount = 1000;
 
     private IMap<Integer, String> map;
 
@@ -46,13 +46,13 @@ public class ExampleTest extends HazelcastTest {
 
     @TimeStep(prob = 0.5)
     public void put(BaseThreadState state) {
-        int key = state.randomInt(maxKeys);
+        int key = state.randomInt(keyCount);
         map.put(key, "value" + key);
     }
 
     @TimeStep(prob = 0.5)
     public void get(BaseThreadState state) {
-        int key = state.randomInt(maxKeys);
+        int key = state.randomInt(keyCount);
         map.get(key);
     }
 
@@ -60,7 +60,7 @@ public class ExampleTest extends HazelcastTest {
     public void verify() {
         logger.info("Map size is: " + map.size());
 
-        for (int i = 0; i < maxKeys; i++) {
+        for (int i = 0; i < keyCount; i++) {
             String actualValue = map.get(i);
             if (actualValue != null) {
                 String expectedValue = "value" + i;
