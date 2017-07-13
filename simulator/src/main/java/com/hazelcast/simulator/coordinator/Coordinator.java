@@ -160,7 +160,8 @@ public class Coordinator implements Closeable {
         log("Total number of agents: %s", registry.agentCount());
         log("Output directory: " + outputDirectory.getAbsolutePath());
 
-        int performanceIntervalSeconds = parameters.getPerformanceMonitorIntervalSeconds();
+        int performanceIntervalSeconds
+                = parameters.getSimulatorProperties().getInt("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS");
 
         if (performanceIntervalSeconds > 0) {
             log("Performance monitor enabled (%d seconds interval)", performanceIntervalSeconds);

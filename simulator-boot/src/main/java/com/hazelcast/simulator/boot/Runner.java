@@ -36,8 +36,6 @@ import static com.hazelcast.simulator.utils.SimulatorUtils.loadComponentRegister
 
 public class Runner {
 
-    private static final int PERFORMANCE_MONITOR_INTERVAL_SECONDS = 1;
-
     private final Options options;
 
     public Runner(OptionsBuilder optionsBuilder) {
@@ -85,7 +83,6 @@ public class Runner {
 
     private Coordinator newCoordinator() {
         CoordinatorParameters parameters = new CoordinatorParameters()
-                .setPerformanceMonitorIntervalSeconds(PERFORMANCE_MONITOR_INTERVAL_SECONDS)
                 .setSimulatorProperties(options.simulatorProperties);
 
         if (options.sessionId != null) {

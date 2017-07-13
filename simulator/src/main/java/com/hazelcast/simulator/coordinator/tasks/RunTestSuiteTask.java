@@ -131,7 +131,7 @@ public class RunTestSuiteTask {
                     failureCollector,
                     registry,
                     performanceStatsCollector,
-                    coordinatorParameters.getPerformanceMonitorIntervalSeconds());
+                    coordinatorParameters.getSimulatorProperties().getInt("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS"));
             runners.add(runner);
         }
 

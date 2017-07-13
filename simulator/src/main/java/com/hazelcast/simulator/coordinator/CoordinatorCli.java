@@ -228,9 +228,7 @@ final class CoordinatorCli {
                 .setSimulatorProperties(simulatorProperties)
                 .setLastTestPhaseToSync(options.valueOf(syncToTestPhaseSpec))
                 .setSkipDownload(options.has(skipDownloadSpec))
-                .setWorkerVmStartupDelayMs(options.valueOf(workerVmStartupDelayMsSpec))
-                .setPerformanceMonitorIntervalSeconds(
-                        Integer.parseInt(simulatorProperties.get("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS")));
+                .setWorkerVmStartupDelayMs(options.valueOf(workerVmStartupDelayMsSpec));
 
         if (options.has(sessionIdSpec)) {
             coordinatorParameters.setSessionId(options.valueOf(sessionIdSpec));
@@ -285,7 +283,7 @@ final class CoordinatorCli {
                 .setWorkerQuery(workerQuery);
 
         // if the coordinator is not monitoring performance, we don't care for measuring latencies
-        if (coordinatorParameters.getPerformanceMonitorIntervalSeconds() == 0) {
+        if (coordinatorParameters.getSimulatorProperties().getInt("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS") == 0) {
             for (TestCase testCase : testSuite.getTestCaseList()) {
                 testCase.setProperty("measureLatency", "false");
             }
