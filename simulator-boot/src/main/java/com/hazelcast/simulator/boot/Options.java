@@ -32,6 +32,7 @@ public class Options {
     int memberCount;
     int clientCount;
     long durationSeconds;
+    long warmupSeconds;
     String memberArgs = "";
     String clientArgs = "";
     Config memberConfig;

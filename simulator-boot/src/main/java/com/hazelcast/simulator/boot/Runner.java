@@ -181,6 +181,7 @@ public class Runner {
 
     private TestSuite newTestSuite() {
         return new TestSuite()
+                .setWarmupSeconds((int) options.warmupSeconds)
                 .setDurationSeconds((int) options.durationSeconds)
                 .addTest(options.testCase);
     }

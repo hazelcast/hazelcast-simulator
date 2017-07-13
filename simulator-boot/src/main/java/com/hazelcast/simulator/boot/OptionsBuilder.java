@@ -125,6 +125,19 @@ public class OptionsBuilder {
         return duration(durationMinutes, MINUTES);
     }
 
+    public OptionsBuilder warmup(long warmupDuration, TimeUnit timeUnit) {
+        if (warmupDuration < 0) {
+            throw new IllegalArgumentException("warmupDuration can't be smaller than 0");
+        }
+
+        this.options.warmupSeconds = timeUnit.toSeconds(warmupDuration);
+        return this;
+    }
+
+    public OptionsBuilder warmupMinutes(long warmupMinutes) {
+        return warmup(warmupMinutes, TimeUnit.MINUTES);
+    }
+
     public OptionsBuilder memberCount(int memberCount) {
         if (memberCount < 0) {
             throw new IllegalArgumentException("memberCount can't be smaller than 0");
