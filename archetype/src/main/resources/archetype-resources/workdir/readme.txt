@@ -1,5 +1,5 @@
-To get started:
+To get started execute the following command:
 
-execute ./run.sh
+./run.sh
 
 This will run a basic test on your local machine.
