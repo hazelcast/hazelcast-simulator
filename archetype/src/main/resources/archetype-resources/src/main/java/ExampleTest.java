@@ -36,15 +36,11 @@ public class ExampleTest extends HazelcastTest {
 
     @Setup
     public void setUp() {
-        logger.info("======== SETUP =========");
-        map = targetInstance.getMap("exampleMap");
-
-        logger.info("Map name is: " + map.getName());
+        this.map = targetInstance.getMap(name);
     }
 
     @Prepare
     public void prepare() {
-        logger.info("======== WARMUP =========");
         logger.info("Map size is: " + map.size());
     }
 
@@ -62,7 +58,6 @@ public class ExampleTest extends HazelcastTest {
 
     @Verify
     public void verify() {
-        logger.info("======== VERIFYING =========");
         logger.info("Map size is: " + map.size());
 
         for (int i = 0; i < maxKeys; i++) {
@@ -76,8 +71,6 @@ public class ExampleTest extends HazelcastTest {
 
     @Teardown
     public void tearDown() {
-        logger.info("======== TEAR DOWN =========");
         map.destroy();
-        logger.info("======== THE END =========");
     }
 }

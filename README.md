@@ -342,7 +342,27 @@ mvn archetype:generate \
 
 Please update archetypeVersion to the Simulator version you are using.
 
-Once the project is created and you have updated the generated test to do something more sensible, go to the workDir. 
+Once the project is created and you have updated the generated test to do something more sensible, execute:
+
+```
+mvn clean install
+```
+
+And go to the workDir. The 'run.sh' script will copy the jars from your project from the '../target/' directory
+into the 'workDir/upload'. The coordinator will then automatically copy the jars to the remote agent(s) when 
+a test is executed.
+
+After the 'run.sh' script is executed, a directory with timestamp like '2017-07-13__09_18_26' is created. This directory
+contains all the logging and performance related information from the tests executed. 
+
+To generate a performance diagrams, execute
+
+```
+benchmark-report 2017-07-13__09_18_26
+```
+And a report directory is created with many diagrams.
+ 
+ 
 # Customizing your Simulator Setup
 
 After you installed Hazelcast Simulator for your environment and did a first run, it is time to learn more about the setup and customize it.
