@@ -135,7 +135,7 @@ public class OptionsBuilder {
     }
 
     public OptionsBuilder warmupMinutes(long warmupMinutes) {
-        return warmup(warmupMinutes, TimeUnit.MINUTES);
+        return warmup(warmupMinutes, MINUTES);
     }
 
     public OptionsBuilder memberCount(int memberCount) {
@@ -203,6 +203,10 @@ public class OptionsBuilder {
     }
 
     public Options build() {
+        if (options.testCase.getClassname() == null) {
+            throw new IllegalStateException("No test has been defined");
+        }
+
         // at the moment no validations are done; will be added in the future.
         return options;
     }
