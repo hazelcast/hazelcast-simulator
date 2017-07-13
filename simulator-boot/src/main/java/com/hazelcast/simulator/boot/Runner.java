@@ -52,15 +52,9 @@ public class Runner {
         Coordinator coordinator = newCoordinator();
         try {
             startMembers(coordinator);
-
             startClients(coordinator);
 
-            TestSuite suite = newTestSuite()
-                    .setWarmupSeconds(options.warmupSeconds)
-                    .setDurationSeconds(options.durationSeconds)
-                    .setWorkerQuery(new WorkerQuery()
-                            .setTargetType(TargetType.PREFER_CLIENT));
-
+            TestSuite suite = newTestSuite();
             coordinator.testRun(new RcTestRunOperation(suite));
         } finally {
             coordinator.close();
@@ -83,6 +77,7 @@ public class Runner {
 
     private Coordinator newCoordinator() {
         CoordinatorParameters parameters = new CoordinatorParameters()
+                .setSkipShutdownHook(true)
                 .setSimulatorProperties(options.simulatorProperties);
 
         if (options.sessionId != null) {
@@ -180,9 +175,11 @@ public class Runner {
 
     private TestSuite newTestSuite() {
         return new TestSuite()
+                .addTest(options.testCase)
                 .setWarmupSeconds((int) options.warmupSeconds)
                 .setDurationSeconds((int) options.durationSeconds)
-                .addTest(options.testCase);
+                .setWorkerQuery(new WorkerQuery()
+                        .setTargetType(TargetType.PREFER_CLIENT));
     }
 
     private List<File> getWorkerClassPath() {
