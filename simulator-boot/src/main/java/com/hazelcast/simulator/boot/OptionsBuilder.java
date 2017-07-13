@@ -26,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 import static java.lang.reflect.Modifier.isStatic;
 import static java.util.concurrent.TimeUnit.MINUTES;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class OptionsBuilder {
 
@@ -132,6 +133,10 @@ public class OptionsBuilder {
         return duration(durationMinutes, MINUTES);
     }
 
+    public OptionsBuilder durationSeconds(long durationSeconds) {
+        return duration(durationSeconds, SECONDS);
+    }
+
     public OptionsBuilder warmup(long warmupDuration, TimeUnit timeUnit) {
         if (warmupDuration < 0) {
             throw new IllegalArgumentException("warmupDuration can't be smaller than 0");
@@ -141,8 +146,8 @@ public class OptionsBuilder {
         return this;
     }
 
-    public OptionsBuilder warmupMinutes(long warmupMinutes) {
-        return warmup(warmupMinutes, MINUTES);
+    public OptionsBuilder warmupSeconds(long warmupSeconds) {
+        return warmup(warmupSeconds, SECONDS);
     }
 
     public OptionsBuilder memberCount(int memberCount) {
