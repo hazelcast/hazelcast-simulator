@@ -107,6 +107,7 @@
         <module>dist</module>
         <module>simulator</module>
         <module>tests</module>
+        <module>simulator-boot</module>
     </modules>
 
     <scm>

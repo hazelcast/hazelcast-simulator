@@ -59,7 +59,7 @@ import static java.lang.String.format;
 import static java.util.concurrent.Executors.newFixedThreadPool;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
-class Provisioner {
+public class Provisioner {
 
     private static final int EXECUTOR_TERMINATION_TIMEOUT_SECONDS = 10;
     private static final String INDENTATION = "    ";
@@ -184,7 +184,7 @@ class Provisioner {
         scaleDown(Integer.MAX_VALUE);
     }
 
-    void scale(int size, Map<String, String> tags) {
+    public void scale(int size, Map<String, String> tags) {
         ensureIsCloudProviderSetup(properties, "scale");
 
         int agentSize = registry.agentCount();

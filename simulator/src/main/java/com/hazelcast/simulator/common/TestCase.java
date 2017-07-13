@@ -71,6 +71,9 @@ public class TestCase implements Serializable {
     }
 
     public TestCase setProperty(String name, String value) {
+        checkNotNull(name, "name can't be null");
+        checkNotNull(value, "value can't be null");
+
         if ("basename".equals(name)) {
             LOGGER.warn("Property 'basename' is deprecated, use 'name' instead. Property has been automatically upgraded.");
             name = "name";
