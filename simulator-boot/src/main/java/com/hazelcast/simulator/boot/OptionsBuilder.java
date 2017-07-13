@@ -62,6 +62,7 @@ public class OptionsBuilder {
     public OptionsBuilder test(Object testInstance) {
         checkNotNull(testInstance, "testInstance can't be null");
 
+        options.testCase.setId(testInstance.getClass().getSimpleName());
         options.testCase.setProperty("class", testInstance.getClass().getName());
 
         for (Field field : testInstance.getClass().getFields()) {
@@ -85,6 +86,7 @@ public class OptionsBuilder {
     public OptionsBuilder test(Class testClass) {
         checkNotNull(testClass, "testClass can't be null");
 
+        options.testCase.setId(testClass.getSimpleName());
         options.testCase.setProperty("class", testClass.getName());
         return this;
     }

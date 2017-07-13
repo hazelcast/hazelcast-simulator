@@ -54,6 +54,7 @@ public class DownloadTask {
         String installFile = getConfigurationFile("download.sh").getAbsolutePath();
         String agentIps = join(agents, ",");
         new BashCommand(installFile)
+                .ensureJavaOnPath()
                 .addEnvironment(simulatorProperties)
                 .addParams(rootDir.getAbsolutePath(), sessionId, agentIps)
                 .execute();
