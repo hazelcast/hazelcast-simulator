@@ -36,7 +36,7 @@ import static com.hazelcast.simulator.utils.SimulatorUtils.loadComponentRegister
 
 public class Runner {
 
-    private static final int PERFORMANCE_MONITOR_INTERVAL_SECONDS = 10;
+    private static final int PERFORMANCE_MONITOR_INTERVAL_SECONDS = 1;
 
     private final Options options;
 
@@ -58,6 +58,8 @@ public class Runner {
             startClients(coordinator);
 
             TestSuite suite = newTestSuite()
+                    .setWarmupSeconds(options.warmupSeconds)
+                    .setDurationSeconds(options.durationSeconds)
                     .setWorkerQuery(new WorkerQuery()
                             .setTargetType(TargetType.PREFER_CLIENT));
 

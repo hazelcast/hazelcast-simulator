@@ -143,10 +143,10 @@ public class RunTestSuiteTask {
     }
 
     private void echoTestSuiteDuration(boolean isParallel) {
-        int testDuration = testSuite.getDurationSeconds();
+        long testDuration = testSuite.getDurationSeconds();
         if (testDuration > 0) {
             LOGGER.info(format("Running time per test: %s", secondsToHuman(testDuration)));
-            int totalDuration = isParallel ? testDuration : testDuration * testSuite.size();
+            long totalDuration = isParallel ? testDuration : testDuration * testSuite.size();
             LOGGER.info(format("Testsuite will run until tests are finished for a maximum time of: %s",
                     secondsToHuman(totalDuration)));
         } else {
