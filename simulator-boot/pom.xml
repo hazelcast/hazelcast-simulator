@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>simulator-boot</artifactId>
-    <name>Simulator boot</name>
+    <name>Hazelcast Simulator boot</name>
 
     <parent>
         <groupId>com.hazelcast.simulator</groupId>

@@ -32,8 +32,8 @@ public class Options {
     int memberCount;
     int clientCount;
     long durationSeconds;
-    String memberVmOptions = "";
-    String clientVmOptions = "";
+    String memberArgs = "";
+    String clientArgs = "";
     Config memberConfig;
     TestCase testCase = new TestCase("");
     String sessionId;

@@ -143,17 +143,17 @@ public class OptionsBuilder {
         return this;
     }
 
-    public OptionsBuilder memberVmOptionsAppend(String jvmArgs) {
+    public OptionsBuilder memberArgsAppend(String jvmArgs) {
         checkNotNull(jvmArgs, "jvmArgs can't be null");
 
-        this.options.memberVmOptions = this.options.memberVmOptions + jvmArgs + " ";
+        this.options.memberArgs = this.options.memberArgs + jvmArgs + " ";
         return this;
     }
 
-    public OptionsBuilder clientVmOptionsAppend(String jvmArgs) {
+    public OptionsBuilder clientArgsAppend(String jvmArgs) {
         checkNotNull(jvmArgs, "jvmArgs can't be null");
 
-        this.options.clientVmOptions = this.options.clientVmOptions + jvmArgs + " ";
+        this.options.clientArgs = this.options.clientArgs + jvmArgs + " ";
         return this;
     }
 

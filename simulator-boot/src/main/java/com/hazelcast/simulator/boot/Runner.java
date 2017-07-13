@@ -58,7 +58,8 @@ public class Runner {
             startClients(coordinator);
 
             TestSuite suite = newTestSuite()
-                    .setWorkerQuery(new WorkerQuery().setTargetType(TargetType.PREFER_CLIENT));
+                    .setWorkerQuery(new WorkerQuery()
+                            .setTargetType(TargetType.PREFER_CLIENT));
 
             coordinator.testRun(new RcTestRunOperation(suite));
         } finally {
@@ -112,7 +113,7 @@ public class Runner {
         String configString = createConfig();
 
         RcWorkerStartOperation op = new RcWorkerStartOperation()
-                .setVmOptions(options.memberVmOptions)
+                .setVmOptions(options.memberArgs)
                 .setHzConfig(configString)
                 .setCount(options.memberCount);
 
@@ -172,7 +173,7 @@ public class Runner {
         }
 
         RcWorkerStartOperation op = new RcWorkerStartOperation()
-                .setVmOptions(options.clientVmOptions)
+                .setVmOptions(options.clientArgs)
                 .setCount(options.clientCount)
                 .setWorkerType("javaclient");
         System.out.println("Started members: " + coordinator.workerStart(op));
