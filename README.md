@@ -7,7 +7,7 @@
   * [Preparations to Setup Remote Machines](#preparations-to-setup-remote-machines)
 * [Setting up for Static Setup](#setting-up-for-static-setup)
 * [Setting up for Amazon EC2](#setting-up-for-amazon-ec2)
-* [Using the Simulator Archetype](#using-the-simulator-archtype)
+* [Using the Simulator Archetype](#using-the-simulator-archetype)
 * [Customizing your Simulator Setup](#customizing-your-simulator-setup)
   * [TestSuite](#testsuite)
   * [Simulator Properties](#simulator-properties)
