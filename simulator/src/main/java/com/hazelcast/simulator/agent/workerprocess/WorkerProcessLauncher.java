@@ -246,8 +246,13 @@ public class WorkerProcessLauncher {
         if (uploadDirectory.exists() && uploadDirectory.isDirectory()) {
             File[] files = uploadDirectory.listFiles();
             if (files != null && files.length > 0) {
+                // this adds all jars in the directory
                 uploadClassPath = CLASSPATH_SEPARATOR + uploadDirectory.getAbsolutePath() + "/*";
                 LOGGER.info(format("Adding upload directory %s to classpath", uploadClassPath));
+
+                // this adds directory with classes to classpath
+                // this is a bit of a hack we need to address in the future
+                uploadClassPath = CLASSPATH_SEPARATOR + uploadDirectory.getAbsolutePath() + "/";
             }
         }
         return uploadClassPath;
