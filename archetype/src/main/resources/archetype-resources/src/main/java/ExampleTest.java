@@ -30,7 +30,7 @@ import static org.junit.Assert.assertEquals;
 public class ExampleTest extends HazelcastTest {
 
     // properties
-    public int keyCount = 1000;
+    public int keyDomain = 1000;
 
     private IMap<Integer, String> map;
 
@@ -39,28 +39,33 @@ public class ExampleTest extends HazelcastTest {
         this.map = targetInstance.getMap(name);
     }
 
-    @Prepare
+    @Prepare(global = true)
     public void prepare() {
-        logger.info("Map size is: " + map.size());
+        for (int key = 0; key < keyDomain; key++) {
+            map.put(key, "value" + key);
+        }
     }
 
     @TimeStep(prob = 0.5)
     public void put(BaseThreadState state) {
-        int key = state.randomInt(keyCount);
-        map.put(key, "value" + key);
+        int key = state.randomInt(keyDomain);
+        map.set(key, "value" + key);
     }
 
     @TimeStep(prob = 0.5)
     public void get(BaseThreadState state) {
-        int key = state.randomInt(keyCount);
+        int key = state.randomInt(keyDomain);
         map.get(key);
     }
 
+    // this method can be removed if you don't care about verification.
     @Verify
     public void verify() {
-        logger.info("Map size is: " + map.size());
+        assertEquals(keyDomain, map.size());
 
-        for (int i = 0; i < keyCount; i++) {
+        // the verification is pretty meanginless since the value never changed; but it serves as an example to
+        // create more complex logic.
+        for (int i = 0; i < keyDomain; i++) {
             String actualValue = map.get(i);
             if (actualValue != null) {
                 String expectedValue = "value" + i;
@@ -69,6 +74,7 @@ public class ExampleTest extends HazelcastTest {
         }
     }
 
+    // this method can be removed; in most cases the workers will be destroyed after the test completes
     @Teardown
     public void tearDown() {
         map.destroy();
