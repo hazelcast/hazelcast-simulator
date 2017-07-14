@@ -91,7 +91,7 @@ public class WorkerTest {
 
     @Test
     public void testStartWorker() throws Exception {
-        worker = new Worker(parameters.asMap());
+        worker = new Worker(parameters);
         worker.start();
         assertEquals(PUBLIC_ADDRESS, worker.getPublicIpAddress());
     }

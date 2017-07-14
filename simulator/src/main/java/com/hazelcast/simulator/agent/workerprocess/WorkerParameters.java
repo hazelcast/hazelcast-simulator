@@ -15,9 +15,15 @@
  */
 package com.hazelcast.simulator.agent.workerprocess;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
+
+import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 
 /**
  * Parameters for a (single) Simulator Worker Process.
@@ -25,6 +31,14 @@ import java.util.Set;
 public class WorkerParameters {
 
     private final Map<String, String> map = new HashMap<String, String>();
+
+    public WorkerParameters() {
+    }
+
+    public WorkerParameters(Map<String, String> map) {
+        this.map.putAll(map);
+    }
+
 
     public Map<String, String> asMap() {
         return map;
@@ -59,5 +73,16 @@ public class WorkerParameters {
     @Override
     public String toString() {
         return "WorkerParameters" + map;
+    }
+
+    public static WorkerParameters loadParameters(File parametersFile) throws IOException {
+        Properties p = new Properties();
+        p.load(new StringReader(fileAsText(parametersFile)));
+
+        Map<String, String> properties = new HashMap<String, String>();
+        for (Map.Entry<Object, Object> entry : p.entrySet()) {
+            properties.put("" + entry.getKey(), "" + entry.getValue());
+        }
+        return new WorkerParameters(properties);
     }
 }

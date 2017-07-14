@@ -33,6 +33,7 @@ import java.util.concurrent.ScheduledExecutorService;
 
 import static com.hazelcast.simulator.common.FailureType.WORKER_CREATE_ERROR;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.workerAddress;
+import static com.hazelcast.simulator.utils.NativeUtils.getPID;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.apache.log4j.Level.DEBUG;
@@ -66,8 +67,13 @@ public class WorkerProcessManager {
 
     // launching is done asynchronous so we don't block the calling thread (messaging thread)
     public void launch(CreateWorkerOperation op, Promise promise) throws Exception {
-        WorkerProcessLauncher launcher = new WorkerProcessLauncher(WorkerProcessManager.this, op.getWorkerParameters());
-        LaunchSingleWorkerTask task = new LaunchSingleWorkerTask(launcher, op.getWorkerParameters(), promise);
+        WorkerParameters workerParameters = op.getWorkerParameters();
+
+        // we add the pid to the worker-parameters so the worker can check if the agent is still alive.
+        workerParameters.set("agent.pid", getPID());
+
+        WorkerProcessLauncher launcher = new WorkerProcessLauncher(WorkerProcessManager.this, workerParameters);
+        LaunchSingleWorkerTask task = new LaunchSingleWorkerTask(launcher, workerParameters, promise);
         executorService.schedule(task, op.getDelayMs(), MILLISECONDS);
     }
 
