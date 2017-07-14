@@ -102,7 +102,7 @@ function postprocess_hdr(){
         echo "Merging $probe"
 
         hdr_files=($(find ${session_dir} | grep ${probe}))
-
+        echo "[INFO]          $probe"
         java -cp "${SIMULATOR_HOME}/lib/*" com.hazelcast.simulator.utils.HistogramLogMerger \
             "${session_dir}/${probe}" "${hdr_files[@]}"
     done
@@ -128,6 +128,8 @@ function postprocess_hdr(){
             -o ${file_name} \
             -outputValueUnitRatio 1000
 
+        echo "[INFO]          $hdr_file"
+
         mv "${file_name}.hgrm.bak" "${file_name}.hgrm"
     done
 
@@ -147,6 +149,8 @@ function postprocess_gclog(){
         gc_csv="$dir/gc.csv"
 
         java -jar "${SIMULATOR_HOME}/lib//gcviewer-1.35-SNAPSHOT.jar"  $gc_log $gc_csv -t CSV_FULL
+
+        echo "[INFO]          $gc_log"
     done
 
     echo "[INFO]     Postprocessing GC-logs completed"
