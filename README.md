@@ -399,7 +399,7 @@ for a public field, its default value will be used.
 ## Simulator Properties
 
 You can configure Simulator itself using the file `simulator.properties` in your working directory. The default properties are
- always loaded from the `${SIMULATOR_HOME}/simulator-tests/simulator.properties` file. Your local properties are overriding the
+ always loaded from the `${SIMULATOR_HOME}/conf/simulator.properties` file. Your local properties are overriding the
   defaults. You can compare your `simulator.properties` with the default values with the following command.
 
 ```
