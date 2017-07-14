@@ -18,6 +18,7 @@ package com.hazelcast.simulator.boot;
 
 import com.hazelcast.config.Config;
 import com.hazelcast.config.ConfigXmlGenerator;
+import com.hazelcast.config.NetworkConfig;
 import com.hazelcast.simulator.coordinator.Coordinator;
 import com.hazelcast.simulator.coordinator.CoordinatorParameters;
 import com.hazelcast.simulator.coordinator.TargetType;
@@ -35,6 +36,9 @@ import static com.hazelcast.simulator.utils.FileUtils.copyDirectory;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadComponentRegister;
 
 public class Runner {
+
+    public static final int PORT_COUNT = 200;
+    public static final int PORT = 5701;
 
     private final Options options;
 
@@ -124,30 +128,24 @@ public class Runner {
 
         memberConfig.setProperty("hazelcast.phone.home.enabled", "false");
 
-        ConfigXmlGenerator generator = new ConfigXmlGenerator(true);
-        String generated = generator.generate(memberConfig);
+        NetworkConfig networkConfig = memberConfig.getNetworkConfig();
+        networkConfig.setPortAutoIncrement(true);
+        networkConfig.setPort(PORT);
+        networkConfig.setPortCount(PORT_COUNT);
+        networkConfig.getJoin().getMulticastConfig().setEnabled(false);
+        networkConfig.getJoin().getTcpIpConfig().setEnabled(true);
 
-        String configString = fixNetwork(generated);
+        ConfigXmlGenerator generator = new ConfigXmlGenerator(true);
+
+        String configString = generator.generate(memberConfig);
+
+        if (networkConfig.getJoin().getTcpIpConfig().getMembers().isEmpty()) {
+            configString = configString.replace("<member-list/>", "<!--MEMBERS-->");
+        }
+
         configString = fixGroup(configString);
 
         System.out.println("HZ Configuration:\n" + configString);
-        return configString;
-    }
-
-    private String fixNetwork(String generated) {
-        int startIndex = generated.indexOf("<network>");
-        int endIndex = generated.indexOf("</network>");
-
-        String configString = generated.substring(0, startIndex);
-        configString += "  <network>\n"
-                + "        <port port-count=\"200\" auto-increment=\"true\">5701</port>\n"
-                + "        <join>\n" + "            <multicast enabled=\"false\"/>\n"
-                + "            <tcp-ip enabled=\"true\">\n"
-                + "                <!--MEMBERS-->\n"
-                + "            </tcp-ip>\n"
-                + "        </join>\n"
-                + "    </network>";
-        configString += generated.substring(endIndex + "</network>".length());
         return configString;
     }
 
