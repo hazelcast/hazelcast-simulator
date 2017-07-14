@@ -33,8 +33,7 @@ import static com.hazelcast.simulator.protocol.core.SimulatorAddress.agentAddres
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
-import static com.hazelcast.simulator.utils.FileUtils.writeText;
-import static com.hazelcast.simulator.utils.NativeUtils.getPID;
+import static com.hazelcast.simulator.utils.NativeUtils.writePid;
 import static com.hazelcast.simulator.utils.SimulatorUtils.localIp;
 
 public class Agent implements Closeable {
@@ -80,10 +79,6 @@ public class Agent implements Closeable {
         Runtime.getRuntime().addShutdownHook(new AgentShutdownThread(true));
     }
 
-    private void createPidFile() {
-        deleteQuiet(pidFile);
-        writeText("" + getPID(), pidFile);
-    }
 
     public String getPublicAddress() {
         return publicAddress;
@@ -108,7 +103,7 @@ public class Agent implements Closeable {
 
         LOGGER.info("Agent started!");
 
-        createPidFile();
+        writePid(pidFile);
     }
 
     @Override

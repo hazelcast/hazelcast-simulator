@@ -17,9 +17,13 @@ package com.hazelcast.simulator.utils;
 
 import org.apache.log4j.Logger;
 
+import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.util.List;
+
+import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
+import static com.hazelcast.simulator.utils.FileUtils.writeText;
 
 public final class NativeUtils {
 
@@ -88,7 +92,7 @@ public final class NativeUtils {
 
     static Integer getPidViaReflection() {
         try {
-            java.lang.management.RuntimeMXBean runtime = java.lang.management.ManagementFactory.getRuntimeMXBean();
+            RuntimeMXBean runtime = java.lang.management.ManagementFactory.getRuntimeMXBean();
             java.lang.reflect.Field jvm = runtime.getClass().getDeclaredField("jvm");
             jvm.setAccessible(true);
             sun.management.VMManagement management = (sun.management.VMManagement) jvm.get(runtime);
@@ -100,5 +104,11 @@ public final class NativeUtils {
             LOGGER.warn(e);
             return null;
         }
+    }
+
+    public static File writePid(File pidFile) {
+        deleteQuiet(pidFile);
+        writeText("" + getPID(), pidFile);
+        return pidFile;
     }
 }
