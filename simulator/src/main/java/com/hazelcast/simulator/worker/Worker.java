@@ -16,10 +16,10 @@
 package com.hazelcast.simulator.worker;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
+import com.hazelcast.simulator.common.ProcessSuicideThread;
 import com.hazelcast.simulator.common.ShutdownThread;
 import com.hazelcast.simulator.protocol.Server;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.utils.BashCommand;
 import com.hazelcast.simulator.utils.ExceptionReporter;
 import com.hazelcast.simulator.vendors.VendorDriver;
 import com.hazelcast.simulator.worker.operations.TerminateWorkerOperation;
@@ -35,7 +35,6 @@ import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
-import static com.hazelcast.simulator.utils.EmptyStatement.ignore;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.FormatUtils.fillString;
@@ -46,7 +45,6 @@ import static com.hazelcast.simulator.utils.SimulatorUtils.localIp;
 import static com.hazelcast.simulator.vendors.VendorDriver.loadVendorDriver;
 import static java.lang.Integer.parseInt;
 import static java.lang.String.format;
-import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class Worker {
 
@@ -96,7 +94,7 @@ public class Worker {
 
         vendorDriver.startVendorInstance();
 
-        new WorkerSuicideThread().start();
+        new ProcessSuicideThread(parameters.get("agent.pid"), parameters.intGet("WORKER_ORPHAN_INTERVAL_SECONDS")).start();
 
         // we need to signal start after everything has completed. Otherwise messages could be send on the agent topic
         // without the agent being subscribed.
@@ -190,44 +188,4 @@ public class Worker {
         }
     }
 
-    // if the agent of the worker has terminated, the worker should terminate. This prevents orphan workers
-    private final class WorkerSuicideThread extends Thread {
-
-        private final String agentPid;
-        private final int workerOrphanIntervalSeconds;
-
-        WorkerSuicideThread() {
-            super("WorkerSuicideThread");
-            setDaemon(true);
-            this.agentPid = parameters.get("agent.pid");
-            this.workerOrphanIntervalSeconds = parameters.intGet("WORKER_ORPHAN_INTERVAL_SECONDS");
-        }
-
-        @Override
-        public void run() {
-            if (agentPid == null || workerOrphanIntervalSeconds == 0) {
-                return;
-            }
-
-            try {
-                for (; ; ) {
-                    SECONDS.sleep(workerOrphanIntervalSeconds);
-                    BashCommand bashCommand = new BashCommand("ps -p " + agentPid);
-                    bashCommand.setThrowsException(true);
-
-                    try {
-                        bashCommand.execute();
-                    } catch (Exception e) {
-                        String msg = "Worker terminating; agent with pid [" + agentPid + "] is not alive";
-                        ExceptionReporter.report(null, new Exception(msg));
-                        LOGGER.error(msg);
-                        System.err.println(msg);
-                        System.exit(1);
-                    }
-                }
-            } catch (InterruptedException e) {
-                ignore(e);
-            }
-        }
-    }
 }
