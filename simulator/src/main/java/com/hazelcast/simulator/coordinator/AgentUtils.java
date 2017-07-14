@@ -18,6 +18,7 @@ package com.hazelcast.simulator.coordinator;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.utils.BashCommand;
+import com.hazelcast.simulator.utils.NativeUtils;
 
 import static com.hazelcast.simulator.coordinator.registry.AgentData.publicAddressesString;
 import static com.hazelcast.simulator.utils.FileUtils.getConfigurationFile;
@@ -42,6 +43,7 @@ public final class AgentUtils {
                 .ensureJavaOnPath()
                 .addParams(publicAddressesString(registry))
                 .addEnvironment(properties.asMap())
+                .addEnvironment("parentPid", NativeUtils.getPID())
                 .execute();
     }
 

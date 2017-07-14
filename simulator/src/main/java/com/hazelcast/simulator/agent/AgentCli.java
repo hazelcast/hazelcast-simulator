@@ -54,6 +54,11 @@ public final class AgentCli {
             "Timeout value for worker timeout detection.")
             .withRequiredArg().ofType(Integer.class).defaultsTo(DEFAULT_WORKER_LAST_SEEN_TIMEOUT_SECONDS);
 
+    private final OptionSpec<String> parentPidSpec = parser.accepts("parentPid",
+            "The parentPid. Useful if the agent needs to terminate itself when the parent process has terminated. "
+                    + "Only makes sense to be used for local instance.")
+            .withRequiredArg().ofType(String.class);
+
     private final OptionSet options;
 
     AgentCli(String[] args) {
@@ -76,7 +81,10 @@ public final class AgentCli {
         }
         int port = options.valueOf(portSpec);
         int workerLastSeenTimeoutSeconds = options.valueOf(workerLastSeenTimeoutSecondsSpec);
-        this.agent = new Agent(addressIndex, publicAddress, port, workerLastSeenTimeoutSeconds);
+
+        String parentPid = options.valueOf(parentPidSpec);
+
+        this.agent = new Agent(addressIndex, publicAddress, port, workerLastSeenTimeoutSeconds, parentPid);
     }
 
     private static void logHeader() {

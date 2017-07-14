@@ -52,7 +52,7 @@ start_local(){
     rm agent.out || true
     rm agent.err || true
 
-    args="--addressIndex 1 --publicAddress 127.0.0.1 --port $AGENT_PORT"
+    args="--addressIndex 1 --publicAddress 127.0.0.1 --port $AGENT_PORT --parentPid $parentPid"
 
     nohup $SIMULATOR_HOME/bin/agent $args > agent.out 2> agent.err < /dev/null &
 

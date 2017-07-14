@@ -18,6 +18,7 @@ package com.hazelcast.simulator.agent;
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessFailureHandler;
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessFailureMonitor;
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessManager;
+import com.hazelcast.simulator.common.ProcessSuicideThread;
 import com.hazelcast.simulator.common.ShutdownThread;
 import com.hazelcast.simulator.protocol.Broker;
 import com.hazelcast.simulator.protocol.Server;
@@ -49,15 +50,17 @@ public class Agent implements Closeable {
     private final Server server;
     private final Broker broker;
     private final WorkerSniffer workerSniffer;
+    private final String parentPid;
 
     public Agent(int addressIndex,
                  String publicAddress,
                  int port,
-                 int workerLastSeenTimeoutSeconds) {
+                 int workerLastSeenTimeoutSeconds,
+                 String parentPid) {
         SimulatorAddress agentAddress = agentAddress(addressIndex);
 
         this.publicAddress = publicAddress;
-
+        this.parentPid = parentPid;
         this.broker = new Broker()
                 .setBrokerAddress(localIp(), port);
 
@@ -79,7 +82,6 @@ public class Agent implements Closeable {
         Runtime.getRuntime().addShutdownHook(new AgentShutdownThread(true));
     }
 
-
     public String getPublicAddress() {
         return publicAddress;
     }
@@ -100,6 +102,8 @@ public class Agent implements Closeable {
                 .start();
 
         workerProcessFailureMonitor.start();
+
+        new ProcessSuicideThread(parentPid, 1).start();
 
         LOGGER.info("Agent started!");
 

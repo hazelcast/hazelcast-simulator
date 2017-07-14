@@ -47,7 +47,7 @@ public class CoordinatorRunMonolithTest {
                 .setSimulatorProperties(simulatorProperties)
                 .setSkipShutdownHook(true);
 
-        agent = new Agent(1, "127.0.0.1", simulatorProperties.getAgentPort(), 60);
+        agent = new Agent(1, "127.0.0.1", simulatorProperties.getAgentPort(), 60, null);
         agent.start();
 
         registry = new Registry();

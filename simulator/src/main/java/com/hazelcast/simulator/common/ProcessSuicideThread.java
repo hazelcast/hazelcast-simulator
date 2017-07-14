@@ -55,7 +55,7 @@ public final class ProcessSuicideThread extends Thread {
                 try {
                     bashCommand.execute();
                 } catch (Exception e) {
-                    String msg = "Worker terminating; agent with pid [" + parentPid + "] is not alive";
+                    String msg = "Process terminating; parent process with pid [" + parentPid + "] is not alive";
                     LOGGER.error(msg);
                     System.err.println(msg);
                     System.exit(1);
