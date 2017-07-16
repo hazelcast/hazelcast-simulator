@@ -115,7 +115,7 @@ class TimeStepRunStrategy extends RunStrategy {
                     }
                     runners = createRunners();
                     onRunStarted();
-                    ThreadSpawner spawner = spawnThreads(runners, false);
+                    ThreadSpawner spawner = spawnThreads(runners);
                     spawner.awaitCompletion();
 
                     return null;
@@ -126,7 +126,7 @@ class TimeStepRunStrategy extends RunStrategy {
         };
     }
 
-    private ThreadSpawner spawnThreads(TimeStepRunner[] runners, boolean warmup) {
+    private ThreadSpawner spawnThreads(TimeStepRunner[] runners) {
         ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
 
         for (TimeStepRunner runner : runners) {
@@ -135,8 +135,7 @@ class TimeStepRunStrategy extends RunStrategy {
             if (!executionGroup.equals("")) {
                 name += "-" + executionGroup;
             }
-            name += warmup ? "-warmup" : "-run";
-            name += "Thread";
+            name += "-runThread";
             spawner.spawn(name, runner);
         }
 
