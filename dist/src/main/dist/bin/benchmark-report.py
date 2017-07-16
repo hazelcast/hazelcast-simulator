@@ -21,10 +21,9 @@
 
 import argparse
 import csv
+import os
 import re
 import tempfile
-
-import os
 
 parser = argparse.ArgumentParser(description='Creating a benchmark report from one or more benchmarks.')
 parser.add_argument('benchmarks', metavar='B', nargs='+',
@@ -60,6 +59,16 @@ def dump(obj):
 def ensure_dir(file_path):
     if not os.path.exists(file_path):
         os.makedirs(file_path)
+
+# Returns the name of the agent this worker belongs to
+def agent_for_worker(worker_name):
+    if worker_name.startswith("C_"):
+        # for compatibility with old benchmarks
+        index = worker_name.index("_", 3)
+        return worker_name[0:index]
+    else:
+        index = worker_name.index("_")
+        return worker_name[0:index]
 
 
 # ================ plotting =========================
@@ -503,61 +512,8 @@ class Worker:
         refs.append(SeriesHandle("throughput", "throughput_" + name, "Throughput", "Operations/sec",
                                  self.__load_throughput))
 
-        refs.append(SeriesHandle("dstat", "memory_used", "Memory Used", "Memory used",
-                                 self.__load_dstat, args=[1], is_bytes=True))
-        refs.append(SeriesHandle("dstat", "memory_buffered", "Memory Buffered", "Memory Buffered",
-                                 self.__load_dstat, args=[2], is_bytes=True))
-        refs.append(SeriesHandle("dstat", "memory_cached", "Memory Cached", "Memory Cached",
-                                 self.__load_dstat, args=[3], is_bytes=True))
-        refs.append(SeriesHandle("dstat", "memory_free", "Memory Free", "Memory Free",
-                                 self.__load_dstat, args=[4], is_bytes=True))
-
-        refs.append(SeriesHandle("dstat", "cpu_user", "CPU User", "CPU User %",
-                                 self.__load_dstat, args=[5]))
-        refs.append(SeriesHandle("dstat", "cpu_system", "CPU System", "CPU System %",
-                                 self.__load_dstat, args=[6]))
-        refs.append(SeriesHandle("dstat", "cpu_idle", "CPU Idle", "CPU Idle %",
-                                 self.__load_dstat, args=[7]))
-        refs.append(SeriesHandle("dstat", "cpu_wait", "CPU Wait", "CPU Wait %",
-                                 self.__load_dstat, args=[8]))
-        refs.append(SeriesHandle("dstat", "cpu_total", "CPU Total", "CPU Total %",
-                                 self.__load_dstat_cpu_total_ts))
-
-        refs.append(SeriesHandle("dstat", "cpu_hardware_interrupts", "CPU Hardware Interrupts", "CPU Hardware Interrupts/sec",
-                                 self.__load_dstat, args=[9]))
-        refs.append(SeriesHandle("dstat", "cpu_software_interrupts", "CPU Software Interrupts", "CPU Software Interrupts/sec",
-                                 self.__load_dstat, args=[10]))
-
-        refs.append(SeriesHandle("dstat", "disk_read", "Disk Reads", "Disk Reads/sec",
-                                 self.__load_dstat, args=[11], is_bytes=True))
-        refs.append(SeriesHandle("dstat", "disk_write", "Disk Writes", "Disk writes/sec",
-                                 self.__load_dstat, args=[12], is_bytes=True))
-
-        refs.append(SeriesHandle("dstat", "net_receive", "Net Receive", "Receiving/sec",
-                                 self.__load_dstat, args=[13], is_bytes=True))
-        refs.append(SeriesHandle("dstat", "net_send", "Net Send", "Sending/sec",
-                                 self.__load_dstat, args=[14], is_bytes=True))
-
-        refs.append(SeriesHandle("dstat", "page_in", "Page in", "Pages/sec",
-                                 self.__load_dstat, args=[15]))
-        refs.append(SeriesHandle("dstat", "page_out", "Page out", "Pages/sec",
-                                 self.__load_dstat, args=[16]))
-
-        refs.append(SeriesHandle("dstat", "system_interrupts", "System Interrupts", "System Interrupts/sec",
-                                 self.__load_dstat, args=[17]))
-        refs.append(SeriesHandle("dstat", "system_context_switches", "System Context Switches", "System Context Switches/sec",
-                                 self.__load_dstat, args=[18]))
-
-        refs.append(SeriesHandle("dstat", "load_average_1m", "Load Average 1 Minute", "Load",
-                                 self.__load_dstat, args=[19]))
-        refs.append(SeriesHandle("dstat", "load_average_5m", "Load Average 5 Minutes", "Load",
-                                 self.__load_dstat, args=[20]))
-        refs.append(SeriesHandle("dstat", "load_average_15m", "Load Average 15 Minute", "Load",
-                                 self.__load_dstat, args=[21]))
-
         refs.append(SeriesHandle("gc", "pause_time", "Pause time", "seconds",
                                  self.__load_gc, args=[1, True], is_points=True))
-
         refs.append(SeriesHandle("gc", "young_size_before_gc", "Young size before gc", "Size",
                                  self.__load_gc, args=[5, True], is_bytes=True))
         refs.append(SeriesHandle("gc", "young_size_after_gc", "Young size after gc", "Size",
@@ -604,15 +560,6 @@ class Worker:
 
         LatencyLoader(self.directory, refs)
 
-    # Returns the name of the agent this worker belongs to
-    def agent(self):
-        if self.name.startswith("C_"):
-            # for compatibility with old benchmarks
-            index = self.name.index("_", 3)
-            return self.name[0:index]
-        else:
-            index = self.name.index("_")
-            return self.name[0:index]
 
     def is_driver(self):
         return os.path.exists(self.performance_csv)
@@ -630,20 +577,6 @@ class Worker:
                     result.append(KeyValue(row[0], row[4]))
         return result
 
-    def __load_dstat(self, column):
-        dstat_csv = os.path.join(self.directory, "dstat.csv")
-
-        result = []
-        if os.path.exists(dstat_csv):
-            with open(dstat_csv, 'rb') as csvfile:
-                csvreader = csv.reader(csvfile, delimiter=',', quotechar='|')
-                # we need to skip the first 7 lines
-                for x in range(0, 8):
-                    next(csvreader)
-                for row in csvreader:
-                    if column < len(row):  # protection if column doesn't exist
-                        result.append(KeyValue(row[0], row[column]))
-        return result
 
     def __load_gc(self, column, filter_minus_one):
         gc_csv = os.path.join(self.directory, "gc.csv")
@@ -660,22 +593,6 @@ class Worker:
                     value = row[column]
                     if value != "-1" or not filter_minus_one:
                         result.append(KeyValue(key, value))
-        return result
-
-    # total cpu usage isn't explicitly provided by dstat, so we just sum the user+system
-    def __load_dstat_cpu_total_ts(self):
-        dstat_csv = os.path.join(self.directory, "dstat.csv")
-
-        result = []
-        if os.path.exists(dstat_csv):
-            with open(dstat_csv, 'rb') as csvfile:
-                csvreader = csv.reader(csvfile, delimiter=',', quotechar='|')
-                # we need to skip the first 7 lines
-                for x in range(0, 8):
-                    next(csvreader)
-                for row in csvreader:
-                    if len(row) > 6:  # protection if column doesn't exist
-                        result.append(KeyValue(row[0], float(row[5]) + float(row[6])))
         return result
 
 
@@ -710,19 +627,95 @@ class Benchmark:
 
         refs.append(SeriesHandle("throughput", "throughput", "Throughput", "Operations/sec", self.aggregated_throughput))
 
+        # Load the dstat data
+        for file_name in os.listdir(src_dir):
+            if not file_name.endswith("_dstat.csv"):
+                continue
+
+            agent_name = agent_for_worker(file_name)
+            dstat_file = os.path.join(src_dir, file_name)
+
+            refs.append(
+                SeriesHandle("dstat", "memory_used_" + agent_name, "Memory Used", "Memory used",
+                             self.__load_dstat, args=[1, dstat_file], is_bytes=True))
+            refs.append(
+                SeriesHandle("dstat", "memory_buffered_" + agent_name, "Memory Buffered", "Memory Buffered",
+                             self.__load_dstat, args=[2, dstat_file], is_bytes=True))
+            refs.append(
+                SeriesHandle("dstat", "memory_cached_" + agent_name, "Memory Cached", "Memory Cached",
+                             self.__load_dstat, args=[3, dstat_file], is_bytes=True))
+            refs.append(
+                SeriesHandle("dstat", "memory_free_" + agent_name, "Memory Free", "Memory Free",
+                             self.__load_dstat, args=[4, dstat_file], is_bytes=True))
+
+            refs.append(
+                SeriesHandle("dstat", "cpu_user_" + agent_name, "CPU User", "CPU User %",
+                             self.__load_dstat, args=[5, dstat_file]))
+            refs.append(
+                SeriesHandle("dstat", "cpu_system_" + agent_name, "CPU System", "CPU System %",
+                             self.__load_dstat, args=[6, dstat_file]))
+            refs.append(
+                SeriesHandle("dstat", "cpu_idle_" + agent_name, "CPU Idle", "CPU Idle %",
+                             self.__load_dstat, args=[7, dstat_file]))
+            refs.append(
+                SeriesHandle("dstat", "cpu_wait_" + agent_name, "CPU Wait", "CPU Wait %",
+                             self.__load_dstat, args=[8, dstat_file]))
+            refs.append(
+                SeriesHandle("dstat", "cpu_total_" + agent_name, "CPU Total", "CPU Total %",
+                             self.__load_dstat_cpu_total_ts, args=[dstat_file]))
+
+            refs.append(
+                SeriesHandle("dstat", "cpu_hardware_interrupts_" + agent_name, "CPU Hardware Interrupts", "CPU Hardware Interrupts/sec",
+                             self.__load_dstat, args=[9, dstat_file]))
+            refs.append(
+                SeriesHandle("dstat", "cpu_software_interrupts_" + agent_name, "CPU Software Interrupts", "CPU Software Interrupts/sec",
+                             self.__load_dstat, args=[10, dstat_file]))
+
+            refs.append(
+                SeriesHandle("dstat", "disk_read_" + agent_name, "Disk Reads", "Disk Reads/sec",
+                             self.__load_dstat, args=[11, dstat_file], is_bytes=True))
+            refs.append(
+                SeriesHandle("dstat", "disk_write_" + agent_name, "Disk Writes", "Disk writes/sec",
+                             self.__load_dstat, args=[12, dstat_file], is_bytes=True))
+
+            refs.append(
+                SeriesHandle("dstat", "net_receive_" + agent_name, "Net Receive", "Receiving/sec",
+                             self.__load_dstat, args=[13, dstat_file], is_bytes=True))
+            refs.append(
+                SeriesHandle("dstat", "net_send_" + agent_name, "Net Send", "Sending/sec",
+                             self.__load_dstat, args=[14, dstat_file], is_bytes=True))
+
+            refs.append(
+                SeriesHandle("dstat", "page_in_" + agent_name, "Page in", "Pages/sec",
+                             self.__load_dstat, args=[15, dstat_file]))
+            refs.append(
+                SeriesHandle("dstat", "page_out_" + agent_name, "Page out", "Pages/sec",
+                             self.__load_dstat, args=[16, dstat_file]))
+
+            refs.append(
+                SeriesHandle("dstat", "system_interrupts_" + agent_name, "System Interrupts", "System Interrupts/sec",
+                             self.__load_dstat, args=[17, dstat_file]))
+            refs.append(
+                SeriesHandle("dstat", "system_context_switches_" + agent_name, "System Context Switches", "System Context Switches/sec",
+                             self.__load_dstat, args=[18, dstat_file]))
+
+            refs.append(
+                SeriesHandle("dstat", "load_average_1m_" + agent_name, "Load Average 1 Minute", "Load",
+                             self.__load_dstat, args=[19, dstat_file]))
+            refs.append(
+                SeriesHandle("dstat", "load_average_5m_" + agent_name, "Load Average 5 Minutes", "Load",
+                             self.__load_dstat, args=[20, dstat_file]))
+            refs.append(
+                SeriesHandle("dstat", "load_average_15m_" + agent_name, "Load Average 15 Minute", "Load",
+                             self.__load_dstat, args=[21, dstat_file]))
+
         LatencyLoader(src_dir, refs)
 
         agents = {}
         for worker in self.workers:
-            agent = worker.agent()
+            agent = agent_for_worker(worker.name)
             if not agents.get(agent):
                 agents[agent] = worker
-
-        for agent, worker in agents.iteritems():
-            for ref in worker.ts_references:
-                if ref.src == "dstat":
-                    refs.append(SeriesHandle("dstat", ref.name + "_" + agent, ref.title, ref.ylabel, self.x, args=[ref],
-                                             is_bytes=ref.is_bytes))
 
     def x(self, ref):
         return ref.load().items
@@ -735,6 +728,33 @@ class Benchmark:
                     list.append(ref.load())
 
         return Series("", "", False, False, ts_list=list).items
+
+    def __load_dstat(self, column, dstat_csv):
+        result = []
+        if os.path.exists(dstat_csv):
+            with open(dstat_csv, 'rb') as csvfile:
+                csvreader = csv.reader(csvfile, delimiter=',', quotechar='|')
+                # we need to skip the first 7 lines
+                for x in range(0, 8):
+                    next(csvreader)
+                for row in csvreader:
+                    if column < len(row):  # protection if column doesn't exist
+                        result.append(KeyValue(row[0], row[column]))
+        return result
+
+    # total cpu usage isn't explicitly provided by dstat, so we just sum the user+system
+    def __load_dstat_cpu_total_ts(self, dstat_csv):
+        result = []
+        if os.path.exists(dstat_csv):
+            with open(dstat_csv, 'rb') as csvfile:
+                csvreader = csv.reader(csvfile, delimiter=',', quotechar='|')
+                # we need to skip the first 7 lines
+                for x in range(0, 8):
+                    next(csvreader)
+                for row in csvreader:
+                    if len(row) > 6:  # protection if column doesn't exist
+                        result.append(KeyValue(row[0], float(row[5]) + float(row[6])))
+        return result
 
 
 class Comparison:
@@ -811,8 +831,6 @@ class Comparison:
                                 plot.add(ref.load(), benchmark.name + "_" + worker.name)
                             else:
                                 plot.add(ref.load(), worker.name)
-                        elif ref.src == "dstat":
-                            continue  # dstat is already plotted
                         else:
                             name = ref.name + "_" + worker.name
                             plot = plots.get(name)
