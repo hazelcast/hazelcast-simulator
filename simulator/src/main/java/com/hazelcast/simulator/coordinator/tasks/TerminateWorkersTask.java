@@ -74,7 +74,7 @@ public class TerminateWorkersTask {
 
         LOGGER.info(format("Terminating %d Workers...", currentWorkerCount));
 
-        client.invokeAll(registry.getAgents(), new StopTimeoutDetectionOperation(), MINUTES.toMillis(1));
+        client.invokeOnAllAgents(new StopTimeoutDetectionOperation(), MINUTES.toMillis(1));
 
         // prevent any failures from being printed due to killing the members.
         Set<WorkerData> clients = new HashSet<WorkerData>();

@@ -85,7 +85,7 @@ public class StartWorkersTask {
         // then create all clients
         startWorkers(clientDeploymentPlan);
 
-        client.invokeAll(registry.getAgents(), new StartTimeoutDetectionOperation(), MINUTES.toMillis(1));
+        client.invokeOnAllAgents(new StartTimeoutDetectionOperation(), MINUTES.toMillis(1));
 
         echoStartComplete();
         return result;
