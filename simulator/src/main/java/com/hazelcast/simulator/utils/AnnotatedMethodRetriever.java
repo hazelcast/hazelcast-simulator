@@ -29,7 +29,6 @@ public class AnnotatedMethodRetriever {
 
     private final Class clazz;
     private final Class annotationClazz;
-
     private Class returnType;
     private boolean mustBePublic;
     private boolean mustBeNotStatic;
