@@ -15,14 +15,11 @@
  */
 package com.hazelcast.simulator.worker.testcontainer;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.probes.impl.EmptyProbe;
 import com.hazelcast.simulator.probes.impl.HdrProbe;
 import com.hazelcast.simulator.test.TestContext;
-import com.hazelcast.simulator.test.annotations.InjectHazelcastInstance;
-import com.hazelcast.simulator.test.annotations.InjectProbe;
 import com.hazelcast.simulator.test.annotations.InjectTestContext;
 import com.hazelcast.simulator.test.annotations.InjectVendor;
 import com.hazelcast.simulator.utils.BindException;
@@ -35,8 +32,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getProbeName;
-import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.isPartOfTotalThroughput;
 import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 import static com.hazelcast.simulator.utils.PropertyBindingSupport.bindAll;
 import static com.hazelcast.simulator.utils.PropertyBindingSupport.removeUnderscores;
@@ -49,7 +44,6 @@ import static java.lang.String.format;
  * <li>values in public fields</li>
  * <li>TestContext in fields annotated with {@link InjectTestContext}</li>
  * <li>HazelcastInstance in fields annotated with @{@link InjectVendor}</li>
- * <li>Probe instance in fields annotated with {@link InjectProbe}</li>
  * </ol>
  * <p>
  * The {@link PropertyBinding} also keeps track of all used properties. This makes it possible to detect if there are any unused
@@ -224,9 +218,6 @@ public class PropertyBinding {
         if (field.isAnnotationPresent(InjectTestContext.class)) {
             assertFieldType(fieldType, TestContext.class, InjectTestContext.class);
             setFieldValue(object, field, testContext);
-        } else if (field.isAnnotationPresent(InjectHazelcastInstance.class)) {
-            assertFieldType(fieldType, HazelcastInstance.class, InjectHazelcastInstance.class);
-            setFieldValue(object, field, vendorInstance);
         } else if (field.isAnnotationPresent(InjectVendor.class)) {
             if (vendorInstance == null) {
                 throw new IllegalTestException("No vendor found");
@@ -235,10 +226,6 @@ public class PropertyBinding {
             Class vendorType = vendorInstance.getClass();
             assertFieldType(vendorType, fieldType, InjectVendor.class);
             setFieldValue(object, field, vendorInstance);
-        } else if (field.isAnnotationPresent(InjectProbe.class)) {
-            assertFieldType(fieldType, Probe.class, InjectProbe.class);
-            Probe probe = getOrCreateProbe(getProbeName(field), isPartOfTotalThroughput(field));
-            setFieldValue(object, field, probe);
         }
     }
 
