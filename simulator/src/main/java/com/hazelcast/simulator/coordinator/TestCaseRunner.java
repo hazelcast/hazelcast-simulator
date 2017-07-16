@@ -70,24 +70,19 @@ public final class TestCaseRunner {
     private static final int RUN_PHASE_LOG_INTERVAL_SECONDS = 30;
     private static final int WAIT_FOR_PHASE_COMPLETION_LOG_INTERVAL_SECONDS = 30;
     private static final int WAIT_FOR_PHASE_COMPLETION_LOG_VERBOSE_DELAY_SECONDS = 300;
-
     private static final Logger LOGGER = Logger.getLogger(TestCaseRunner.class);
 
     private final TestData test;
     private final TestCase testCase;
     private final TestSuite testSuite;
-
     private final CoordinatorClient client;
     private final FailureCollector failureCollector;
     private final PerformanceStatsCollector performanceStatsCollector;
-
     private final String prefix;
     private final Map<TestPhase, CountDownLatch> testPhaseSyncMap;
-
     private final boolean isVerifyEnabled;
     private final TargetType targetType;
     private final int targetCount;
-
     private final int performanceMonitorIntervalSeconds;
     private final int logRunPhaseIntervalSeconds;
     private final List<WorkerData> targets;
@@ -105,21 +100,16 @@ public final class TestCaseRunner {
         this.test = test;
         this.testCase = test.getTestCase();
         this.testSuite = test.getTestSuite();
-
         this.client = client;
         this.failureCollector = failureCollector;
         this.performanceStatsCollector = performanceStatsCollector;
-
         this.prefix = padRight(testCase.getId(), testSuite.getMaxTestCaseIdLength() + 1);
-
         this.testPhaseSyncMap = testPhaseSyncMap;
-
         this.targets = targets;
         this.globalTarget = targets.iterator().next();
         this.isVerifyEnabled = testSuite.isVerifyEnabled();
         this.targetType = testSuite.getWorkerQuery().getTargetType().resolvePreferClient(registry.hasClientWorkers());
         this.targetCount = targets.size();
-
         this.performanceMonitorIntervalSeconds = performanceMonitorIntervalSeconds;
         if (performanceMonitorIntervalSeconds > 0) {
             this.logRunPhaseIntervalSeconds = min(performanceMonitorIntervalSeconds, RUN_PHASE_LOG_INTERVAL_SECONDS);
