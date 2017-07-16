@@ -34,9 +34,7 @@ public class WorkerOperationProcessor implements OperationProcessor {
     private final Worker worker;
     private final ScriptExecutor scriptExecutor;
 
-    public WorkerOperationProcessor(Worker worker,
-                                    TestManager testManager,
-                                    ScriptExecutor scriptExecutor) {
+    public WorkerOperationProcessor(Worker worker, TestManager testManager, ScriptExecutor scriptExecutor) {
         this.worker = worker;
         this.testManager = testManager;
         this.scriptExecutor = scriptExecutor;

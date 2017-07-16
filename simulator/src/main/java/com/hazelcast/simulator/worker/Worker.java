@@ -66,18 +66,14 @@ public class Worker {
         this.parameters = parameters;
         this.publicAddress = parameters.get("PUBLIC_ADDRESS");
         this.workerAddress = SimulatorAddress.fromString(parameters.get("WORKER_ADDRESS"));
-
         this.vendorDriver = loadVendorDriver(parameters.get("VENDOR"))
                 .setAll(parameters.asMap());
-
         this.server = new Server("workers")
                 .setBrokerURL(localIp(), parseInt(parameters.get("AGENT_PORT")))
                 .setSelfAddress(workerAddress);
-
         this.testManager = new TestManager(server, vendorDriver);
 
         ScriptExecutor scriptExecutor = new ScriptExecutor(vendorDriver);
-
         server.setProcessor(new WorkerOperationProcessor(this, testManager, scriptExecutor));
 
         Runtime.getRuntime().addShutdownHook(new WorkerShutdownThread(true));
@@ -90,9 +86,7 @@ public class Worker {
         logInterestingJvmSettings();
 
         server.start();
-
         performanceMonitor.start();
-
         vendorDriver.startVendorInstance();
 
         new ProcessSuicideThread(parameters.get("agent.pid"), parameters.intGet("WORKER_ORPHAN_INTERVAL_SECONDS")).start();
