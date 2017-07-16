@@ -54,7 +54,6 @@ class TimeStepRunStrategy extends RunStrategy {
 
     TimeStepRunStrategy(TestContainer testContainer) {
         this.binding = testContainer.getPropertyBinding();
-
         this.testContext = testContainer.getTestContext();
         this.testInstance = testContainer.getTestInstance();
         this.timeStepModel = new TimeStepModel(testInstance.getClass(), binding);
@@ -117,7 +116,6 @@ class TimeStepRunStrategy extends RunStrategy {
                     onRunStarted();
                     ThreadSpawner spawner = spawnThreads(runners);
                     spawner.awaitCompletion();
-
                     return null;
                 } finally {
                     onRunCompleted();
@@ -135,7 +133,7 @@ class TimeStepRunStrategy extends RunStrategy {
             if (!executionGroup.equals("")) {
                 name += "-" + executionGroup;
             }
-            name += "-runThread";
+            name += "-timestepThread";
             spawner.spawn(name, runner);
         }
 
