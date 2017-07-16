@@ -111,12 +111,6 @@
         <portable-version>1</portable-version>
 
         <data-serializable-factories>
-            <data-serializable-factory factory-id="2000">
-                com.hazelcast.simulator.tests.synthetic.SyntheticSerializableFactory
-            </data-serializable-factory>
-            <data-serializable-factory factory-id="3000">
-                com.hazelcast.simulator.tests.syntheticmap.SyntheticMapSerializableFactory
-            </data-serializable-factory>
             <data-serializable-factory factory-id="4000">
                 com.hazelcast.simulator.tests.map.domain.IdentifiedDataSerializableObjectFactory
             </data-serializable-factory>
@@ -137,13 +131,6 @@
             </portable-factory>
         </portable-factories>
     </serialization>
-
-    <services>
-        <service enabled="true">
-            <name>hz:impl:syntheticMapService</name>
-            <class-name>com.hazelcast.simulator.tests.syntheticmap.SyntheticMapService</class-name>
-        </service>
-    </services>
 
     <cache name="*">
     </cache>
