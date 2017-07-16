@@ -217,10 +217,6 @@ public class PropertyBinding {
 
         Set<String> used = bindAll(object, testCase);
         unusedProperties.removeAll(used);
-
-        if (object instanceof PropertyBindingAware) {
-            ((PropertyBindingAware) object).bind(this);
-        }
     }
 
     private void inject(Object object, Field field) {
