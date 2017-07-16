@@ -154,7 +154,6 @@ class TimeStepRunStrategy extends RunStrategy {
 
             for (int thread = 0; thread < threadCountMap.get(executionGroup); thread++) {
                 TimeStepRunner runner = constructor.newInstance(testInstance, timeStepModel, executionGroup);
-
                 runner.testContext = binding.getTestContext();
                 runner.maxIterations = runIterationMap.get(executionGroup);
                 runner.metronome = metronomeConstructor.newInstance();
