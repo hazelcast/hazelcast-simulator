@@ -27,8 +27,8 @@ import java.lang.reflect.Method;
  *
  * Reflection is not ideal, but it's still way better than using {@link SyncMapStreamer}
  *
- * @param <K>
- * @param <V>
+ * @param <K> the type of the key
+ * @param <V> the type of the value
  */
 public class ReflectionAsyncMapStreamer<K, V> extends AbstractAsyncStreamer<K, V> {
 

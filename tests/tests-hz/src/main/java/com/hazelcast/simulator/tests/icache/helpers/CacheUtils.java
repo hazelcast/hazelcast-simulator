@@ -59,16 +59,19 @@ public final class CacheUtils {
 
     /**
      * Obtain the default CacheManager
-     * @param hazelcastInstance
-     * @return a CacheManager for the default URI & ClassLoader running on the provided HazelcastInstance
+     *
+     * @param hazelcastInstance the HazelcastInstance
+     * @return a CacheManager for the default URI and ClassLoader running on the provided HazelcastInstance
      */
     public static HazelcastCacheManager createCacheManager(HazelcastInstance hazelcastInstance) {
         return createCacheManager(hazelcastInstance, null);
     }
 
     /**
-     * @param hazelcastInstance
-     * @param uri
+     * Creates a cache manager
+     *
+     * @param hazelcastInstance the HazelcastInstance
+     * @param uri the uri
      * @return the CacheManager for given URI and default ClassLoader.
      */
     public static HazelcastCacheManager createCacheManager(HazelcastInstance hazelcastInstance, URI uri) {

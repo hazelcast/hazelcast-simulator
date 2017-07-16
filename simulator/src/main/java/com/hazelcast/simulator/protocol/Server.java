@@ -89,6 +89,9 @@ public class Server implements Closeable {
      * <li>for a source addresses on messages being send (e.g. replies)</li>
      * <li>to listen to messages only meant for this server.</li>
      * </ol>
+     *
+     * @param selfAddress the address of this server.
+     * @return this;
      */
     public Server setSelfAddress(SimulatorAddress selfAddress) {
         this.selfAddress = selfAddress;
@@ -98,6 +101,9 @@ public class Server implements Closeable {
 
     /**
      * Set the {@link OperationProcessor} responsible for handling operations.
+     *
+     * @param processor the OperationProcessor.
+     * @return this;
      */
     public Server setProcessor(OperationProcessor processor) {
         this.processor = processor;

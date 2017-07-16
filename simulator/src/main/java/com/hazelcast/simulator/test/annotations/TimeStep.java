@@ -26,7 +26,6 @@ import java.lang.annotation.Target;
  * A method should contain either:
  * <ol>
  * <li>{@link Run}</li>
- * <li>{@link RunWithWorker}</li>
  * <li>{@link TimeStep}</li>
  * </ol>
  * The {@link TimeStep} is the one that should be picked by default. It is the most powerful and it relies on code generation

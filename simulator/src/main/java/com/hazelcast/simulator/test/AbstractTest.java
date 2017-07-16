@@ -26,7 +26,7 @@ import org.apache.log4j.Logger;
  * Coordinator doesn't not impose the AbstractTest to be the part of any test class. So if you want
  * to use it, use it; otherwise you can define your own hierarchy.
  *
- * @deprecated since 0.10. Use {@link com.hazelcast.simulator.hz.HazelcastTest} instead.
+ * @deprecated since 0.10. Use com.hazelcast.simulator.hz.HazelcastTest instead.
  */
 public abstract class AbstractTest {
 
