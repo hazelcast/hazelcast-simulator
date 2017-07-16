@@ -78,6 +78,8 @@ public final class TestPerformanceTracker {
     /**
      * Updates internal state.
      *
+     * @param updateIntervalMillis update interval in millis
+     * @param currentTimeMillis current time in millis
      * @return true if anything needs to be written; false otherwise
      */
     public boolean update(long updateIntervalMillis, long currentTimeMillis) {

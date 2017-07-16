@@ -87,6 +87,9 @@ public abstract class VendorDriver<V> implements Closeable {
 
     /**
      * Sets the agents to be used by the VendorDriver. Method is called on the coordinator-side.
+     *
+     * @param agents the agents
+     * @return this
      */
     public VendorDriver<V> setAgents(List<AgentData> agents) {
         this.agents = agents;
@@ -112,16 +115,25 @@ public abstract class VendorDriver<V> implements Closeable {
 
     /**
      * Gets the created Vendor instance. Method is called on the worker-side
+     *
+     * @return the created vendor driver.
      */
     public abstract V getVendorInstance();
 
     /**
      * Starts a Vendor instance. Method is called on the worker-side
+     *
+     * @throws Exception when something fails starting the vendor instance. Checked exception to prevent forcing to handle
+     *                   exceptions
      */
     public abstract void startVendorInstance() throws Exception;
 
     /**
      * Loads the parameters to create a worker. Method is called on the coordinator-side
+     *
+     * @param workerType the type of the worker.
+     * @param agentIndex the index of the agent
+     * @return the loaded WorkerParameters
      */
     public abstract WorkerParameters loadWorkerParameters(String workerType, int agentIndex);
 

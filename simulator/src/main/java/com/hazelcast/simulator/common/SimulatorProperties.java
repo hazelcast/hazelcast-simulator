@@ -96,6 +96,7 @@ public class SimulatorProperties {
      *
      * @param file the file to load the properties from. If {@code null}, the {@value #PROPERTIES_FILE_NAME} file in the working
      *             directory is tried.
+     * @return this
      * @throws CommandLineExitException if the given file does not exist. If file is {@code null} no exception will be thrown,
      *                                  even if the {@value #PROPERTIES_FILE_NAME} file in the working directory cannot be found.
      */
