@@ -30,6 +30,7 @@ import org.apache.log4j.Logger;
 import java.io.File;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static com.hazelcast.simulator.agent.workerprocess.WorkerParameters.loadParameters;
 import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
 import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
@@ -127,7 +128,7 @@ public class Worker {
             log("Version: %s, Commit: %s, Build Time: %s", getSimulatorVersion(), getCommitIdAbbrev(), getBuildTime());
             log("SIMULATOR_HOME: %s%n", getSimulatorHome().getAbsolutePath());
 
-            Worker worker = new Worker(WorkerParameters.loadParameters(new File(getUserDir(), "parameters")));
+            Worker worker = new Worker(loadParameters(new File(getUserDir(), "parameters")));
             worker.start();
         } catch (Throwable e) {
             ExceptionReporter.report(null, e);
@@ -187,5 +188,4 @@ public class Worker {
             closeQuietly(performanceMonitor);
         }
     }
-
 }
