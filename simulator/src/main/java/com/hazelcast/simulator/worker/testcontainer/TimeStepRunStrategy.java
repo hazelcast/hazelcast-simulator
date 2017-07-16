@@ -145,7 +145,7 @@ class TimeStepRunStrategy extends RunStrategy {
 
     @SuppressWarnings("unchecked")
     private TimeStepRunner[] createRunners() throws Exception {
-        TimeStepRunner[] returnRunners = new TimeStepRunner[totalThreadCount];
+        TimeStepRunner[] runners = new TimeStepRunner[totalThreadCount];
 
         int k = 0;
         for (String executionGroup : timeStepModel.getExecutionGroups()) {
@@ -162,11 +162,11 @@ class TimeStepRunStrategy extends RunStrategy {
                 runner.maxIterations = runIterationMap.get(executionGroup);
                 runner.metronome = metronomeConstructor.newInstance();
                 runner.bind(binding);
-                returnRunners[k] = runner;
+                runners[k] = runner;
                 k++;
             }
         }
 
-        return returnRunners;
+        return runners;
     }
 }

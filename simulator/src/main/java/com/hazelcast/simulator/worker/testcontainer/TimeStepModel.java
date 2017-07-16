@@ -43,7 +43,7 @@ import static java.lang.reflect.Modifier.isStatic;
 
 public class TimeStepModel {
 
-    public static final String PROB = "Prob";
+    private static final String PROB = "Prob";
     private final Class testClass;
 
     private final Map<String, ExecutionGroup> executionGroups = new HashMap<String, ExecutionGroup>();

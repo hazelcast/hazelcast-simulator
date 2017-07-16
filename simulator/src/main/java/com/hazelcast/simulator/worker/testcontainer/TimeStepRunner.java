@@ -32,6 +32,9 @@ import java.util.concurrent.atomic.AtomicLong;
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static java.lang.String.format;
 
+/**
+ * Simulator uses a code generator to generate a subclass of this class.
+ */
 public abstract class TimeStepRunner implements Runnable {
 
     protected TestContext testContext;
