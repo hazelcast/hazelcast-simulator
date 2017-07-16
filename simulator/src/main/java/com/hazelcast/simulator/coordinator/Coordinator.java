@@ -79,7 +79,7 @@ public class Coordinator implements Closeable {
     private final CoordinatorParameters parameters;
     private final File outputDirectory;
     private final FailureCollector failureCollector;
-    private final SimulatorProperties simulatorProperties;
+    private final SimulatorProperties properties;
     private final int testCompletionTimeoutSeconds;
     private final CoordinatorClient client;
 
@@ -88,11 +88,11 @@ public class Coordinator implements Closeable {
         this.parameters = parameters;
         this.outputDirectory = ensureNewDirectory(new File(getUserDir(), parameters.getSessionId()));
         this.failureCollector = new FailureCollector(outputDirectory, registry);
-        this.simulatorProperties = parameters.getSimulatorProperties();
-        this.testCompletionTimeoutSeconds = simulatorProperties.getTestCompletionTimeoutSeconds();
+        this.properties = parameters.getSimulatorProperties();
+        this.testCompletionTimeoutSeconds = properties.getTestCompletionTimeoutSeconds();
 
         this.client = new CoordinatorClient()
-                .setAgentBrokerPort(simulatorProperties.getAgentPort())
+                .setAgentBrokerPort(properties.getAgentPort())
                 .setProcessor(new CoordinatorOperationProcessor(failureCollector, performanceStatsCollector))
                 .setFailureCollector(failureCollector);
     }
@@ -110,17 +110,17 @@ public class Coordinator implements Closeable {
 
         log("Coordinator starting...");
 
-        startAgents(simulatorProperties, registry);
+        startAgents(properties, registry);
 
         startClient();
 
         new PrepareSessionTask(
                 publicAddresses(registry.getAgents()),
-                simulatorProperties.asMap(),
+                properties.asMap(),
                 new File(System.getProperty("user.dir"), "upload").getAbsoluteFile(),
                 parameters.getSessionId()).run();
 
-        installVendor(simulatorProperties.getVersionSpec());
+        installVendor(properties.getVersionSpec());
 
         initCoordinatorRemote();
 
@@ -128,7 +128,7 @@ public class Coordinator implements Closeable {
     }
 
     private void initCoordinatorRemote() throws RemoteException, AlreadyBoundException {
-        int remotePort = simulatorProperties.getCoordinatorPort();
+        int remotePort = properties.getCoordinatorPort();
         if (remotePort != 0) {
             java.rmi.registry.Registry rmiRegistry = LocateRegistry.createRegistry(remotePort);
             CoordinatorRemote r = new CoordinatorRemoteImpl(this);
@@ -169,8 +169,8 @@ public class Coordinator implements Closeable {
             log("Performance monitor disabled");
         }
 
-        if (simulatorProperties.getCoordinatorPort() > 0) {
-            log("Coordinator remote enabled on port " + simulatorProperties.getCoordinatorPort());
+        if (properties.getCoordinatorPort() > 0) {
+            log("Coordinator remote enabled on port " + properties.getCoordinatorPort());
         }
     }
 
@@ -178,15 +178,15 @@ public class Coordinator implements Closeable {
     public void close() {
         stopTests();
 
-        new TerminateWorkersTask(simulatorProperties, registry, client).run();
+        new TerminateWorkersTask(properties, registry, client).run();
 
         client.close();
 
-        stopAgents(simulatorProperties, registry);
+        stopAgents(properties, registry);
 
         if (!parameters.skipDownload()) {
             new DownloadTask(publicAddresses(registry.getAgents()),
-                    simulatorProperties.asMap(),
+                    properties.asMap(),
                     outputDirectory.getParentFile(),
                     parameters.getSessionId()).run();
         }
@@ -237,7 +237,7 @@ public class Coordinator implements Closeable {
 
     public void download() throws Exception {
         new DownloadTask(publicAddresses(registry.getAgents()),
-                simulatorProperties.asMap(),
+                properties.asMap(),
                 outputDirectory.getParentFile(),
                 parameters.getSessionId()).run();
 
@@ -262,8 +262,8 @@ public class Coordinator implements Closeable {
     }
 
     public void installVendor(String versionSpec) throws Exception {
-        loadVendorDriver(simulatorProperties.get("VENDOR"))
-                .setAll(simulatorProperties.asPublicMap())
+        loadVendorDriver(properties.get("VENDOR"))
+                .setAll(properties.asPublicMap())
                 .set("VERSION_SPEC", versionSpec)
                 .setAgents(registry.getAgents())
                 .install();
@@ -337,9 +337,9 @@ public class Coordinator implements Closeable {
 
         LOGGER.info("Starting " + op.getCount() + " [" + workerType + "] workers...");
 
-        VendorDriver vendorDriver = loadVendorDriver(simulatorProperties.get("VENDOR"))
+        VendorDriver vendorDriver = loadVendorDriver(properties.get("VENDOR"))
                 .setAgents(registry.getAgents())
-                .setAll(simulatorProperties.asPublicMap())
+                .setAll(properties.asPublicMap())
                 .set("CLIENT_ARGS", op.getVmOptions())
                 .set("MEMBER_ARGS", op.getVmOptions())
                 .set("SESSION_ID", parameters.getSessionId())
@@ -395,7 +395,7 @@ public class Coordinator implements Closeable {
                 client,
                 op.getCommand(),
                 workerQuery,
-                simulatorProperties.getInt("WAIT_FOR_WORKER_SHUTDOWN_TIMEOUT_SECONDS")
+                properties.getInt("WAIT_FOR_WORKER_SHUTDOWN_TIMEOUT_SECONDS")
         ).run();
 
         LOGGER.info("\n" + registry.printLayout());

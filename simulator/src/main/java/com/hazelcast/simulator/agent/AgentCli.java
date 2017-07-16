@@ -81,9 +81,7 @@ public final class AgentCli {
         }
         int port = options.valueOf(portSpec);
         int workerLastSeenTimeoutSeconds = options.valueOf(workerLastSeenTimeoutSecondsSpec);
-
         String parentPid = options.valueOf(parentPidSpec);
-
         this.agent = new Agent(addressIndex, publicAddress, port, workerLastSeenTimeoutSeconds, parentPid);
     }
 
