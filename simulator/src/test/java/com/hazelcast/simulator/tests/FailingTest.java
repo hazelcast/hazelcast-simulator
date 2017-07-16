@@ -24,7 +24,7 @@ import com.hazelcast.simulator.test.annotations.Verify;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static org.junit.Assert.fail;
 
-public class FailingTest extends AbstractTest{
+public class FailingTest extends AbstractTest {
 
     @Prepare
     public void prepare() {
