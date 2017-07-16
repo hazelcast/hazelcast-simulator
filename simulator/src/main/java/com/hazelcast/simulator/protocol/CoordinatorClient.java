@@ -18,7 +18,6 @@ package com.hazelcast.simulator.protocol;
 import com.hazelcast.simulator.common.FailureType;
 import com.hazelcast.simulator.coordinator.FailureCollector;
 import com.hazelcast.simulator.coordinator.operations.FailureOperation;
-import com.hazelcast.simulator.coordinator.registry.AgentData;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.OperationCodec;
 import com.hazelcast.simulator.protocol.operation.OperationType;
@@ -138,17 +137,18 @@ public class CoordinatorClient implements Closeable {
         return future;
     }
 
-    public List<String> invokeAll(List<AgentData> agents, SimulatorOperation op, long timeoutMillis)
+    public List<String> invokeOnAllAgents(SimulatorOperation op, long timeoutMillis)
             throws TimeoutException, InterruptedException, ExecutionException {
-        Map<AgentData, Future<String>> futures = new HashMap<AgentData, Future<String>>();
-        for (AgentData agent : agents) {
-            futures.put(agent, submit(agent.getAddress(), op));
+        Map<SimulatorAddress, Future<String>> futures = new HashMap<SimulatorAddress, Future<String>>();
+        for (RemoteBroker broker : remoteBrokers.values()) {
+            SimulatorAddress agent = broker.agentAddress;
+            futures.put(agent, submit(agent, op));
         }
 
-        List<String> responses = new ArrayList<String>(agents.size());
+        List<String> responses = new ArrayList<String>();
         long deadLine = currentTimeMillis() + timeoutMillis;
 
-        for (Map.Entry<AgentData, Future<String>> entry : futures.entrySet()) {
+        for (Map.Entry<SimulatorAddress, Future<String>> entry : futures.entrySet()) {
             long remainingTimeout = deadLine - currentTimeMillis();
 
             if (remainingTimeout <= 0) {
