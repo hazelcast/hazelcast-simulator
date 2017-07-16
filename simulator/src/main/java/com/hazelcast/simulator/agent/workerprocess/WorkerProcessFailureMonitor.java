@@ -96,7 +96,6 @@ public class WorkerProcessFailureMonitor {
                               int checkIntervalMillis) {
             super("WorkerJvmFailureMonitorThread");
             setDaemon(true);
-
             this.failureHandler = failureHandler;
             this.workerProcessManager = workerProcessManager;
             this.lastSeenTimeoutSeconds = lastSeenTimeoutSeconds;

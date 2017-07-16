@@ -58,14 +58,14 @@ public class WorkerProcessLauncher {
 
     private File sessionDir;
 
-    public WorkerProcessLauncher(WorkerProcessManager processManager,
-                                 WorkerParameters parameters) {
+    WorkerProcessLauncher(WorkerProcessManager processManager,
+                          WorkerParameters parameters) {
         this.processManager = processManager;
         this.parameters = parameters;
         this.workerAddress = SimulatorAddress.fromString(parameters.get("WORKER_ADDRESS"));
     }
 
-    public void launch() throws Exception {
+    void launch() throws Exception {
         WorkerProcess process = null;
         try {
             sessionDir = getSessionDirectory();

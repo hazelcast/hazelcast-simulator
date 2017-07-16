@@ -39,7 +39,6 @@ public class WorkerParameters {
         this.map.putAll(map);
     }
 
-
     public Map<String, String> asMap() {
         return map;
     }
@@ -75,9 +74,9 @@ public class WorkerParameters {
         return "WorkerParameters" + map;
     }
 
-    public static WorkerParameters loadParameters(File parametersFile) throws IOException {
+    public static WorkerParameters loadParameters(File file) throws IOException {
         Properties p = new Properties();
-        p.load(new StringReader(fileAsText(parametersFile)));
+        p.load(new StringReader(fileAsText(file)));
 
         Map<String, String> properties = new HashMap<String, String>();
         for (Map.Entry<Object, Object> entry : p.entrySet()) {

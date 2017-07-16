@@ -31,8 +31,8 @@ class AgentOperationProcessor implements OperationProcessor {
     private final WorkerProcessManager processManager;
     private final WorkerProcessFailureMonitor failureMonitor;
 
-    public AgentOperationProcessor(WorkerProcessManager processManager,
-                                   WorkerProcessFailureMonitor failureMonitor) {
+    AgentOperationProcessor(WorkerProcessManager processManager,
+                            WorkerProcessFailureMonitor failureMonitor) {
         this.processManager = processManager;
         this.failureMonitor = failureMonitor;
     }
