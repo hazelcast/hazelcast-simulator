@@ -157,7 +157,7 @@ import java.lang.annotation.Target;
  *     producerIterations=1000000
  * }
  * </pre>
- * In this example the producer has a configured number of iterations for warmup and running, the consumer has no such limitation.
+ * In this example the producer has a configured number of iterations for running, the consumer has no such limitation.
  *
  * <h1>Stopping a timestep thread</h1>
  * A Timestep thread can also stop itself by throwing the {@link com.hazelcast.simulator.test.StopException}. This doesn't lead
@@ -197,7 +197,7 @@ import java.lang.annotation.Target;
  * but that doesn't need to mean completion of the async call.
  *
  * <h1>Logging</h1>
- * By default a timestep based thread will not log anything during the run/warmup period. But sometimes some logging is required,
+ * By default a timestep based thread will not log anything during the run period. But sometimes some logging is required,
  * e.g. when needing to do some debugging. There are 2 out of the box options for logging:
  * <ol>
  * <li>frequency based: e.g. every 1000th iteration</li>

@@ -256,9 +256,6 @@ public final class CoordinatorRemoteCli implements Closeable {
                         + "\tsetup\n"
                         + "\tlocal prepare\n"
                         + "\tglobal prepare\n"
-                        + "\twarmup\n"
-                        + "\tlocal after warmup\n"
-                        + "\tglobal after warmup\n"
                         + "\trun\n"
                         + "\tglobal verify\n"
                         + "\tlocal verify\n"
@@ -299,7 +296,7 @@ public final class CoordinatorRemoteCli implements Closeable {
         static final String NAME = "test-stop";
 
         private final String help =
-                "Ask a test to stop its warmup or running phase. It is especially useful for tests that run without a\n"
+                "Ask a test to stop its running phase. It is especially useful for tests that run without a\n"
                         + "duration.\n"
                         + "This commands waits for the test to complete and returns the result status of the test\n"
                         + " ('completed' for success)\n"
@@ -715,11 +712,6 @@ public final class CoordinatorRemoteCli implements Closeable {
                         + "the test will run until the test decides to stop.")
                 .withRequiredArg().ofType(String.class).defaultsTo(format("%ds", DEFAULT_DURATION_SECONDS));
 
-        final OptionSpec<String> warmupSpec = parser.accepts("warmup",
-                "Amount of time to execute the warmup per test, e.g. 10s, 1m, 2h or 3d. If warmup is set to 0, "
-                        + "the test will warmup until the test decides to stop.")
-                .withRequiredArg().ofType(String.class).defaultsTo(format("%ds", 0));
-
         final OptionSpec<TargetType> targetTypeSpec = parser.accepts("targetType",
                 format("Defines the type of Workers which execute the RUN phase."
                         + " The type PREFER_CLIENT selects client Workers if they are available, member Workers otherwise."
@@ -761,21 +753,12 @@ public final class CoordinatorRemoteCli implements Closeable {
             LOGGER.info("File: " + testSuiteFile);
 
             int durationSeconds = getDurationSeconds(options, durationSpec);
-            int warmupSeconds = getDurationSeconds(options, warmupSpec);
-            if (durationSeconds != 0 && warmupSeconds > durationSeconds) {
-                throw new CommandLineExitException("warmup can't be larger than duration");
-            }
             TestSuite suite = new TestSuite(testSuiteFile)
                     .setDurationSeconds(durationSeconds)
-                    .setWarmupSeconds(warmupSeconds)
                     .setWorkerQuery(newQuery())
                     .setParallel(options.has(parallelSpec))
                     .setVerifyEnabled(options.valueOf(verifyEnabledSpec))
                     .setFailFast(options.valueOf(failFastSpec));
-
-            if (options.has(warmupSpec)) {
-                suite.setWarmupSeconds(getDurationSeconds(options, warmupSpec));
-            }
 
             LOGGER.info("Running testSuite: " + testSuiteFile.getAbsolutePath());
             return new RcTestRunOperation(suite, isAsync(), newQuery());
@@ -802,8 +785,8 @@ public final class CoordinatorRemoteCli implements Closeable {
                 + "coordinator-remote test-run\n\n"
                 + "# runs atomiclong.properties for 1 minute\n"
                 + "coordinator-remote test-run atomiclong.properties\n\n"
-                + "# runs a test with a warmup period of 5 minute and a duration of 1 hour\n"
-                + "coordinator-remote test-run --warmup 5m --duration 1h\n\n"
+                + "# runs a test with duration of 1 hour\n"
+                + "coordinator-remote test-run --duration 1h\n\n"
                 + "# runs a test by running all tests in the suite in parallel for 10m.\n"
                 + "coordinator-remote test-run --duration 10m --parallel suite.properties\n\n"
                 + "# run a test but disable the verification\n"
@@ -847,8 +830,8 @@ public final class CoordinatorRemoteCli implements Closeable {
                 + "coordinator-remote test-start\n\n"
                 + "# runs atomiclong.properties for 1 minute\n"
                 + "coordinator-remote test-start atomiclong.properties\n\n"
-                + "# runs a test with a warmup period of 5 minute and a duration of 1 hour\n"
-                + "coordinator-remote test-start --warmup 5m --duration 1h\n\n"
+                + "# runs a test with a duration of 1 hour\n"
+                + "coordinator-remote test-start --duration 1h\n\n"
                 + "# runs a test by running all tests in the suite in parallel for 10m.\n"
                 + "coordinator-remote test-start --duration 10m --parallel suite.properties\n\n"
                 + "# run a test but disable the verification\n"

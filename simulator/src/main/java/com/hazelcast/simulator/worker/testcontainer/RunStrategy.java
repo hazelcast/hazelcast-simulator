@@ -42,7 +42,7 @@ abstract class RunStrategy {
     }
 
     /**
-     * Checks if the run strategy is running. This is true in case of warmup and actual running.
+     * Checks if the run strategy is running the test.
      *
      * This method is thread-safe.
      *

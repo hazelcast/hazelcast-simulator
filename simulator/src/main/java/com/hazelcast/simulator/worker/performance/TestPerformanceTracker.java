@@ -49,11 +49,9 @@ public final class TestPerformanceTracker {
     private final TestContainer testContainer;
     private final Map<String, HistogramLogWriter> histogramLogWriterMap = new HashMap<String, HistogramLogWriter>();
     private final PerformanceLogWriter performanceLogWriter;
-    private final long warmupMillis;
     private long lastUpdateMillis;
     private Map<String, Histogram> intervalHistogramMap;
 
-    private long iterationsDuringWarmup;
     private long lastIterations;
     private double intervalLatencyAvgNanos;
     private long intervalLatency999PercentileNanos;
@@ -66,13 +64,12 @@ public final class TestPerformanceTracker {
 
     public TestPerformanceTracker(TestContainer container) {
         this.testContainer = container;
-        this.warmupMillis = container.getTestCase().getWarmupMillis();
         this.performanceLogWriter = new PerformanceLogWriter(
                 new File(getUserDir(), "performance-" + container.getTestCase().getId() + ".csv"));
     }
 
     private long startMeasuringTime() {
-        return testContainer.getRunStartedMillis() + warmupMillis;
+        return testContainer.getRunStartedMillis();
     }
 
     /**
@@ -97,14 +94,8 @@ public final class TestPerformanceTracker {
             return true;
         }
 
-        if (runStartedMillis + warmupMillis > currentTimeMillis) {
-            // the warmup period has not yet completed
-            return true;
-        }
-
         if (lastUpdateMillis == 0) {
             // first time
-            iterationsDuringWarmup = testContainer.iteration();
             for (Probe probe : testContainer.getProbeMap().values()) {
                 probe.reset();
             }
@@ -124,7 +115,7 @@ public final class TestPerformanceTracker {
         double intervalMean = -1;
         long intervalMaxLatency = -1;
 
-        long iterations = testContainer.iteration() - iterationsDuringWarmup;
+        long iterations = testContainer.iteration();
         long intervalOperationCount = iterations - lastIterations;
 
         for (Map.Entry<String, Probe> entry : probeMap.entrySet()) {

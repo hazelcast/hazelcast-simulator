@@ -82,7 +82,6 @@ public class PropertyBinding {
         this.testCase = testCase;
         this.unusedProperties.addAll(testCase.getProperties().keySet());
         unusedProperties.remove("class");
-        unusedProperties.remove("warmupMillis");
 
         bind(this);
 
