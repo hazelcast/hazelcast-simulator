@@ -136,20 +136,12 @@ final class CoordinatorCli {
                     + " List of defined test phases: %s", TestPhase.getLastTestPhase(), TestPhase.getIdsAsString()))
             .withRequiredArg().ofType(TestPhase.class).defaultsTo(TestPhase.getLastTestPhase());
 
-    private final OptionSpec<String> workerVmOptionsSpec = parser.accepts("workerVmOptions",
-            "Member Worker JVM options (quotes can be used). This option is deprecated, use 'memberArgs' instead.")
-            .withRequiredArg().ofType(String.class).defaultsTo("-XX:+HeapDumpOnOutOfMemoryError");
-
     private final OptionSpec<String> memberArgsSpec = parser.accepts("memberArgs",
             "Member Worker JVM options (quotes can be used). ")
             .withRequiredArg().ofType(String.class).defaultsTo("-XX:+HeapDumpOnOutOfMemoryError");
 
     private final OptionSpec<String> clientArgsSpec = parser.accepts("clientArgs",
             "Client Worker JVM options (quotes can be used).")
-            .withRequiredArg().ofType(String.class).defaultsTo("-XX:+HeapDumpOnOutOfMemoryError");
-
-    private final OptionSpec<String> clientWorkerVmOptionsSpec = parser.accepts("clientWorkerVmOptions",
-            "Client Worker JVM options (quotes can be used). This option is deprecated, use 'clientArgs' instead.")
             .withRequiredArg().ofType(String.class).defaultsTo("-XX:+HeapDumpOnOutOfMemoryError");
 
     private final OptionSpec<String> licenseKeySpec = parser.accepts("licenseKey",
@@ -185,8 +177,8 @@ final class CoordinatorCli {
             this.vendorDriver = loadVendorDriver(simulatorProperties.get("VENDOR"))
                     .setAll(simulatorProperties.asPublicMap())
                     .setAgents(registry.getAgents())
-                    .set("CLIENT_ARGS", loadClientArgs())
-                    .set("MEMBER_ARGS", loadMemberArgs());
+                    .set("CLIENT_ARGS", options.valueOf(clientArgsSpec))
+                    .set("MEMBER_ARGS", options.valueOf(memberArgsSpec));
 
             this.testSuite = loadTestSuite();
 
@@ -235,24 +227,6 @@ final class CoordinatorCli {
         }
 
         return coordinatorParameters;
-    }
-
-    private String loadMemberArgs() {
-        if (options.has(workerVmOptionsSpec)) {
-            LOGGER.warn("'--workerVmOptions' is deprecated, use '--memberArgs' instead.");
-            return options.valueOf(workerVmOptionsSpec);
-        } else {
-            return options.valueOf(memberArgsSpec);
-        }
-    }
-
-    private String loadClientArgs() {
-        if (options.has(clientWorkerVmOptionsSpec)) {
-            LOGGER.warn("'--clientWorkerVmOptions' is deprecated, use '--clientArgs' instead.");
-            return options.valueOf(clientWorkerVmOptionsSpec);
-        } else {
-            return options.valueOf(clientArgsSpec);
-        }
     }
 
     private TestSuite loadTestSuite() {
