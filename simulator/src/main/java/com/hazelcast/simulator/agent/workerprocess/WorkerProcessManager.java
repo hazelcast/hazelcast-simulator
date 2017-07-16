@@ -85,7 +85,7 @@ public class WorkerProcessManager {
         workerProcesses.remove(process.getAddress());
     }
 
-    public Collection<WorkerProcess> getWorkerProcesses() {
+    Collection<WorkerProcess> getWorkerProcesses() {
         return workerProcesses.values();
     }
 

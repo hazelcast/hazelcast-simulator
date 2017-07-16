@@ -29,7 +29,6 @@ public class WorkerProcessFailureHandler {
 
     private final String agentAddress;
     private final Server server;
-
     private int failureCount;
 
     public WorkerProcessFailureHandler(String agentAddress, Server server) {
@@ -41,7 +40,7 @@ public class WorkerProcessFailureHandler {
         SimulatorAddress workerAddress = workerProcess.getAddress();
         String workerId = workerProcess.getId();
 
-        FailureOperation operation = new FailureOperation(
+        FailureOperation failure = new FailureOperation(
                 message,
                 type,
                 workerAddress,
@@ -54,9 +53,9 @@ public class WorkerProcessFailureHandler {
             LOGGER.info(format("Worker %s (%s) finished.", workerId, workerAddress));
         } else {
             LOGGER.error(format("Detected failure on Worker %s (%s): %s", workerId, workerAddress,
-                    operation.getLogMessage(++failureCount)));
+                    failure.getLogMessage(++failureCount)));
         }
 
-        server.sendCoordinator(operation);
+        server.sendCoordinator(failure);
     }
 }
