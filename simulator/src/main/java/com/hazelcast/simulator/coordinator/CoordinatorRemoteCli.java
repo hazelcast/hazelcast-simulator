@@ -715,11 +715,6 @@ public final class CoordinatorRemoteCli implements Closeable {
                         + "the test will run until the test decides to stop.")
                 .withRequiredArg().ofType(String.class).defaultsTo(format("%ds", DEFAULT_DURATION_SECONDS));
 
-        final OptionSpec<String> warmupSpec = parser.accepts("warmup",
-                "Amount of time to execute the warmup per test, e.g. 10s, 1m, 2h or 3d. If warmup is set to 0, "
-                        + "the test will warmup until the test decides to stop.")
-                .withRequiredArg().ofType(String.class).defaultsTo(format("%ds", 0));
-
         final OptionSpec<TargetType> targetTypeSpec = parser.accepts("targetType",
                 format("Defines the type of Workers which execute the RUN phase."
                         + " The type PREFER_CLIENT selects client Workers if they are available, member Workers otherwise."
@@ -761,21 +756,12 @@ public final class CoordinatorRemoteCli implements Closeable {
             LOGGER.info("File: " + testSuiteFile);
 
             int durationSeconds = getDurationSeconds(options, durationSpec);
-            int warmupSeconds = getDurationSeconds(options, warmupSpec);
-            if (durationSeconds != 0 && warmupSeconds > durationSeconds) {
-                throw new CommandLineExitException("warmup can't be larger than duration");
-            }
             TestSuite suite = new TestSuite(testSuiteFile)
                     .setDurationSeconds(durationSeconds)
-                    .setWarmupSeconds(warmupSeconds)
                     .setWorkerQuery(newQuery())
                     .setParallel(options.has(parallelSpec))
                     .setVerifyEnabled(options.valueOf(verifyEnabledSpec))
                     .setFailFast(options.valueOf(failFastSpec));
-
-            if (options.has(warmupSpec)) {
-                suite.setWarmupSeconds(getDurationSeconds(options, warmupSpec));
-            }
 
             LOGGER.info("Running testSuite: " + testSuiteFile.getAbsolutePath());
             return new RcTestRunOperation(suite, isAsync(), newQuery());
