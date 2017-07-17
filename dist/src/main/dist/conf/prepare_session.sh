@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# script prepares the 'session'. So in the 'workers' directory on the 'remote' Simulator installation, a directory
-# is made with the session id, e.g. 2017-07-11__15_37_01.
-# In this directory the 'upload' directory is copied if it exists.
-# Also dstat is started if available so we get dstat data for the benchmarking report.
+# script prepares the 'session'.
+# 1: create a directory in 'workers' on the 'remote' Simulator installation e.g. 2017-07-11__15_37_01.
+# 2: copy the 'upload' directory is copied if it exists.
+# 3: start dstat if available so we get dstat data for the benchmarking report.
 
 # exit on failure
 set -e
@@ -14,13 +14,13 @@ session_id=$2
 agents=$3
 target_dir=hazelcast-simulator-$SIMULATOR_VERSION/workers/${session_id}
 
-prepare_directory_local(){
+prepare_session_dir_local(){
     # we remove the session directory first; in case of multiple executions with the same session-id
     rm -fr ${SIMULATOR_HOME}/workers/${session_id}
     mkdir -p ${SIMULATOR_HOME}/workers/${session_id}
 }
 
-prepare_directory_remote(){
+prepare_session_dir_remote(){
     agent=$1
     agent_index=$2
     # we remove the session directory first; in case of multiple executions with the same session-id
@@ -28,14 +28,14 @@ prepare_directory_remote(){
     ssh ${SSH_OPTIONS} ${SIMULATOR_USER}@${agent} "mkdir -p $target_dir"
 }
 
-prepare_directory(){
+prepare_session_dir(){
     # Preparing session directory
     if [ "$CLOUD_PROVIDER" = "local" ]; then
-        prepare_directory_local
+        prepare_session_dir_local
     else
         agent_index=1
         for agent in ${agents//,/ } ; do
-            prepare_directory_remote $agent $agent_index &
+            prepare_session_dir_remote $agent $agent_index &
             ((agent_index++))
         done
 
@@ -113,6 +113,6 @@ start_dstat(){
     fi
 }
 
-prepare_directory
+prepare_session_dir
 upload
 start_dstat
