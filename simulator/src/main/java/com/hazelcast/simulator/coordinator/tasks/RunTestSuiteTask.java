@@ -125,13 +125,13 @@ public class RunTestSuiteTask {
 
             TestCaseRunner runner = new TestCaseRunner(
                     test,
+                    coordinatorParameters,
                     targets,
                     client,
                     testPhaseSyncMap,
                     failureCollector,
                     registry,
-                    performanceStatsCollector,
-                    coordinatorParameters.getSimulatorProperties().getInt("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS"));
+                    performanceStatsCollector);
             runners.add(runner);
         }
 
