@@ -27,7 +27,7 @@ ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "mkdir -p hazelcast-simulator-$SIMULATOR
 #upload Simulator JARs
 uploadLibraryJar "simulator-*"
 
-# we don't copy all JARs to the agent to increase upload speed, e.g. YourKit is uploaded on demand by the Coordinator
+# we don't copy all JARs to the agent to increase upload speed
 #activemq libraries
 uploadLibraryJar "activemq-core*"
 uploadLibraryJar "geronimo-jms*"
