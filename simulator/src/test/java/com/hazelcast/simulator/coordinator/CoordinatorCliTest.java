@@ -243,33 +243,6 @@ public class CoordinatorCliTest {
     }
 
     @Test
-    public void testInit_warmup() {
-        args.add("--duration");
-        args.add("10s");
-        args.add("--warmup");
-        args.add("5s");
-        args.add(testSuiteFile.getAbsolutePath());
-
-        CoordinatorCli cli = createCoordinatorCli();
-
-        TestSuite testSuite = cli.testSuite;
-        assertEquals(10, testSuite.getDurationSeconds());
-        assertEquals(5000, testSuite.getTestCaseList().get(0).getWarmupMillis());
-    }
-
-    @Test
-    public void testInit_warmup_withZero() {
-        args.add("--warmup");
-        args.add("0s");
-        args.add(testSuiteFile.getAbsolutePath());
-
-        CoordinatorCli cli = createCoordinatorCli();
-
-        TestSuite testSuite = cli.testSuite;
-        assertEquals(0, testSuite.getTestCaseList().get(0).getWarmupMillis());
-    }
-
-    @Test
     public void testInit_waitForDuration() {
         args.add("--duration");
         args.add("42s");
