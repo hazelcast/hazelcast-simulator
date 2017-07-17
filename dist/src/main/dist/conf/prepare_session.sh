@@ -1,7 +1,9 @@
 #!/bin/bash
 
-# script prepares the 'session' directory. So in the 'workers' directory on the 'remote' Simulator installation, a directory
-# is made with the session id, e.g. 2017-07-11__15_37_01. In this directory the 'upload' directory is copied if it exists.
+# script prepares the 'session'. So in the 'workers' directory on the 'remote' Simulator installation, a directory
+# is made with the session id, e.g. 2017-07-11__15_37_01.
+# In this directory the 'upload' directory is copied if it exists.
+# Also dstat is started if available so we get dstat data for the benchmarking report.
 
 # exit on failure
 set -e
