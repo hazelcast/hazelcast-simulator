@@ -25,7 +25,7 @@ done
 # convert all hdr files to hgrm files so they can easily be plot using
 # http://hdrhistogram.github.io/HdrHistogram/plotFiles.html
 hdr_files=($(find "${session_dir}" -name *.hdr))
-echo HDR FIles $hdr_files
+echo HDR Files $hdr_files
 
 for hdr_file in "${hdr_files[@]}"
 do
