@@ -79,12 +79,6 @@ final class CoordinatorCli {
                     + "the test will run until the test decides to stop.")
             .withRequiredArg().ofType(String.class).defaultsTo(format("%ds", DEFAULT_DURATION_SECONDS));
 
-    private final OptionSpec<String> warmupSpec = parser.accepts("warmup",
-            "Amount of time for the warmup period. During the warmup period no throughput/latency metrics are tracked."
-                    + "This can be used to give the JIT the time to warmup etc. So if you have a duration of 180 seconds, "
-                    + "and a warmup of 30 seconds, only for the last 150 seconds of the run performance information is tracked.")
-            .withRequiredArg().ofType(String.class).defaultsTo("0s");
-
     private final OptionSpec<Integer> membersSpec = parser.accepts("members",
             "Number of cluster member Worker JVMs. If no value is specified and no mixed members are specified,"
                     + " then the number of cluster members will be equal to the number of machines in the agents file.")
@@ -244,13 +238,7 @@ final class CoordinatorCli {
         }
 
         int durationSeconds = getDurationSeconds(options, durationSpec);
-        int warmupSeconds = getDurationSeconds(options, warmupSpec);
-        if (durationSeconds != 0 && warmupSeconds > durationSeconds) {
-            throw new CommandLineExitException("warmup can't be larger than duration");
-        }
-
         testSuite.setDurationSeconds(durationSeconds)
-                .setWarmupSeconds(warmupSeconds)
                 .setFailFast(options.valueOf(failFastSpec))
                 .setVerifyEnabled(options.valueOf(verifyEnabledSpec))
                 .setParallel(options.has(parallelSpec))

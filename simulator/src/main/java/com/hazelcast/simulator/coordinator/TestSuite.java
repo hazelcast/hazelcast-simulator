@@ -32,7 +32,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
@@ -171,13 +170,6 @@ public class TestSuite implements Serializable {
 
     public TestSuite addTest(TestCase testCase) {
         testCaseList.add(testCase);
-        return this;
-    }
-
-    public TestSuite setWarmupSeconds(long warmupSeconds) {
-        for (TestCase testCase : testCaseList) {
-            testCase.setWarmupMillis(TimeUnit.SECONDS.toMillis(warmupSeconds));
-        }
         return this;
     }
 

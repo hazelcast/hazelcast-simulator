@@ -251,14 +251,7 @@ public final class TestCaseRunner {
             durationMs = Long.MAX_VALUE;
         } else {
             durationMs = SECONDS.toMillis(durationSeconds);
-            long warmupSeconds = MILLISECONDS.toSeconds(testCase.getWarmupMillis());
-            if (warmupSeconds > 0) {
-                log(format("Test will run for %s with a warmup period of %s",
-                        secondsToHuman(durationSeconds),
-                        secondsToHuman(warmupSeconds)));
-            } else {
-                log(format("Test will run for %s without warmup", secondsToHuman(durationSeconds)));
-            }
+            log(format("Test will run for %s", secondsToHuman(durationSeconds)));
             timeoutMs = startMs + durationMs;
         }
 
@@ -310,7 +303,7 @@ public final class TestCaseRunner {
         long durationWithWarmupMillis = currentTimeMillis() - startMs;
 
         // then we need to subtract the warmup.
-        long durationMillis = durationWithWarmupMillis - testCase.getWarmupMillis();
+        long durationMillis = durationWithWarmupMillis;
 
         if (performanceMonitorIntervalSeconds > 0) {
             LOGGER.info(testCase.getId() + " Waiting for all performance info");

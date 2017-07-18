@@ -33,7 +33,6 @@ public class Options {
     int memberCount = 1;
     int clientCount;
     long durationSeconds = TimeUnit.MINUTES.toSeconds(1);
-    long warmupSeconds;
     String memberArgs = "";
     String clientArgs = "";
     Config memberConfig;

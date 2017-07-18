@@ -39,8 +39,6 @@ public class TestCase implements Serializable {
 
     public TestCase(String id, Map<String, String> properties) {
         this.id = checkNotNull(id, "id can't be null");
-        // make sure that warmupSeconds is always set
-        setWarmupMillis(0);
         for (Map.Entry<String, String> entry : properties.entrySet()) {
             setProperty(entry.getKey(), entry.getValue());
         }
@@ -56,14 +54,6 @@ public class TestCase implements Serializable {
 
     public String getClassname() {
         return properties.get("class");
-    }
-
-    public void setWarmupMillis(long warmupSeconds) {
-        setProperty("warmupMillis", warmupSeconds);
-    }
-
-    public long getWarmupMillis() {
-        return Long.parseLong(properties.get("warmupMillis"));
     }
 
     public String getProperty(String name) {

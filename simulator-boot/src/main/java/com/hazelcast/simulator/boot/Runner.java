@@ -174,7 +174,6 @@ public class Runner {
     private TestSuite newTestSuite() {
         return new TestSuite()
                 .addTest(options.testCase)
-                .setWarmupSeconds((int) options.warmupSeconds)
                 .setDurationSeconds((int) options.durationSeconds)
                 .setWorkerQuery(new WorkerQuery()
                         .setTargetType(TargetType.PREFER_CLIENT));

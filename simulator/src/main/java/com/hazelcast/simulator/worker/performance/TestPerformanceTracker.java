@@ -49,7 +49,6 @@ public final class TestPerformanceTracker {
     private final TestContainer testContainer;
     private final Map<String, HistogramLogWriter> histogramLogWriterMap = new HashMap<String, HistogramLogWriter>();
     private final PerformanceLogWriter performanceLogWriter;
-    private final long warmupMillis;
     private long lastUpdateMillis;
     private Map<String, Histogram> intervalHistogramMap;
 
@@ -66,13 +65,12 @@ public final class TestPerformanceTracker {
 
     public TestPerformanceTracker(TestContainer container) {
         this.testContainer = container;
-        this.warmupMillis = container.getTestCase().getWarmupMillis();
         this.performanceLogWriter = new PerformanceLogWriter(
                 new File(getUserDir(), "performance-" + container.getTestCase().getId() + ".csv"));
     }
 
     private long startMeasuringTime() {
-        return testContainer.getRunStartedMillis() + warmupMillis;
+        return testContainer.getRunStartedMillis();
     }
 
     /**
@@ -96,11 +94,6 @@ public final class TestPerformanceTracker {
 
         if (!testContainer.isRunning() || runStartedMillis == 0) {
             // the test hasn't started
-            return true;
-        }
-
-        if (runStartedMillis + warmupMillis > currentTimeMillis) {
-            // the warmup period has not yet completed
             return true;
         }
 

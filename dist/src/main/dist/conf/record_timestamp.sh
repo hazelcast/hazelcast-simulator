@@ -15,7 +15,7 @@ test_id=$3
 label=$4
 
 record_timestamp_local(){
-    echo $label=$(date +%s)>> ${SIMULATOR_HOME}/workers/${session_id}/A1_${test_id}.time
+    echo $label,$(date +%s)>> ${SIMULATOR_HOME}/workers/${session_id}/A1_${test_id}.time
 }
 
 record_timestamp_remote(){
@@ -23,7 +23,7 @@ record_timestamp_remote(){
     agent_index=$2
     cmd='$(date +%s)'
     ssh ${SSH_OPTIONS} ${SIMULATOR_USER}@${agent} \
-        "echo $label=$cmd >> hazelcast-simulator-$SIMULATOR_VERSION/workers/${session_id}/A${agent_index}_${test_id}.time"
+        "echo $label,$cmd >> hazelcast-simulator-$SIMULATOR_VERSION/workers/${session_id}/A${agent_index}_${test_id}.time"
 }
 
 # Preparing session directory
