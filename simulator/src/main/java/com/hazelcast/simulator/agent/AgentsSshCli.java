@@ -41,6 +41,7 @@ import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadComponentRegister;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadSimulatorProperties;
 import static java.lang.String.format;
+import static java.util.Collections.singletonList;
 
 public final class AgentsSshCli {
 
@@ -51,6 +52,10 @@ public final class AgentsSshCli {
     private final OptionSpec testSpec = parser.accepts("test",
             "Checks if ssh connection to the agents can be made.");
     private final File agentsFile = new File(getUserDir(), AgentsFile.NAME);
+
+    private final OptionSpec<String> agentSpec = parser.accepts("agent",
+            "The agent to execute the command on, e.g. A1 or its public or private ip-address.")
+            .withRequiredArg().ofType(String.class);
 
     private final OptionSet options;
     private final SimulatorProperties properties;
@@ -77,7 +82,7 @@ public final class AgentsSshCli {
         String sshOptions = properties.get("SSH_OPTIONS");
         String simulatorUser = properties.get("SIMULATOR_USER");
 
-        for (AgentData agent : registry.getAgents()) {
+        for (AgentData agent : findAgents()) {
             System.out.println("[" + agent.getPublicAddress() + "]");
             new BashCommand("ssh -n -o LogLevel=quiet " + sshOptions + " " + simulatorUser
                     + "@" + agent.getPublicAddress() + " '" + command + "'")
@@ -85,6 +90,25 @@ public final class AgentsSshCli {
                     .addEnvironment(properties.asMap())
                     .execute();
         }
+    }
+
+    private List<AgentData> findAgents() {
+        List<AgentData> agents = registry.getAgents();
+
+        String agentAddress = agentSpec.value(options);
+        if (agentAddress == null) {
+            return agents;
+        }
+
+        for (AgentData agent : agents) {
+            if (agent.getPublicAddress().equals(agentAddress)
+                    || agent.getPrivateAddress().equals(agentAddress)
+                    || agent.getAddress().toString().equals(agentAddress)) {
+                return singletonList(agent);
+            }
+        }
+
+        throw new CommandLineExitException(format("Could not found agent [%s]", agentAddress));
     }
 
     private void testConnection() {
