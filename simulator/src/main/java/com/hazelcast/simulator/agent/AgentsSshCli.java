@@ -57,34 +57,42 @@ public final class AgentsSshCli {
     private final Registry registry;
 
     private AgentsSshCli(String[] args) {
-        options = CliUtils.initOptionsWithHelp(parser, args);
+        this.options = CliUtils.initOptionsWithHelp(parser, args);
         this.properties = loadSimulatorProperties();
         this.registry = loadComponentRegister(agentsFile, false);
 
         if (options.has(testSpec)) {
-            new BashCommand(getConfigurationFile("agent_online_check.sh").getAbsolutePath())
-                    .addParams(publicAddressesString(registry))
-                    .addEnvironment(properties.asMap())
-                    .setSystemOut(true)
-                    .execute();
+            testConnection();
         } else {
-            List commands = options.nonOptionArguments();
-            if (commands.size() != 1) {
-                throw new CommandLineExitException("1 argument expected");
-            }
-            String command = (String) commands.get(0);
-            String sshOptions = properties.get("SSH_OPTIONS");
-            String simulatorUser = properties.get("SIMULATOR_USER");
-
-            for (AgentData agent : registry.getAgents()) {
-                System.out.println("[" + agent.getPublicAddress() + "]");
-                new BashCommand("ssh -n -o LogLevel=quiet " + sshOptions + " " + simulatorUser
-                        + "@" + agent.getPublicAddress() + " '" + command + "'")
-                        .setSystemOut(true)
-                        .addEnvironment(properties.asMap())
-                        .execute();
-            }
+            executeCommand();
         }
+    }
+
+    private void executeCommand() {
+        List commands = options.nonOptionArguments();
+        if (commands.size() != 1) {
+            throw new CommandLineExitException("1 argument expected");
+        }
+        String command = (String) commands.get(0);
+        String sshOptions = properties.get("SSH_OPTIONS");
+        String simulatorUser = properties.get("SIMULATOR_USER");
+
+        for (AgentData agent : registry.getAgents()) {
+            System.out.println("[" + agent.getPublicAddress() + "]");
+            new BashCommand("ssh -n -o LogLevel=quiet " + sshOptions + " " + simulatorUser
+                    + "@" + agent.getPublicAddress() + " '" + command + "'")
+                    .setSystemOut(true)
+                    .addEnvironment(properties.asMap())
+                    .execute();
+        }
+    }
+
+    private void testConnection() {
+        new BashCommand(getConfigurationFile("agent_online_check.sh").getAbsolutePath())
+                .addParams(publicAddressesString(registry))
+                .addEnvironment(properties.asMap())
+                .setSystemOut(true)
+                .execute();
     }
 
     public static void main(String[] args) {
