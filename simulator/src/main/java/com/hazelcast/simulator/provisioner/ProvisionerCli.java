@@ -13,16 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.hazelcast.simulator.provisioner;
 
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.utils.Bash;
+import java.util.Map;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import org.apache.log4j.Logger;
-
-import java.util.Map;
 
 import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
 import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
@@ -33,6 +33,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadSimulatorProperties;
 import static com.hazelcast.simulator.utils.TagUtils.loadTags;
+import static com.hazelcast.simulator.utils.TagUtils.parseTags;
 import static java.lang.String.format;
 
 @SuppressWarnings("FieldCanBeLocal")
@@ -45,7 +46,7 @@ final class ProvisionerCli {
     private final OptionSpec<Integer> scaleSpec = parser.accepts("scale",
             "Number of Simulator machines to scale to. If the number of machines already exists, the call is ignored. If the"
                     + " desired number of machines is smaller than the actual number of machines, machines are terminated.")
-            .withRequiredArg().ofType(Integer.class);
+                                                        .withRequiredArg().ofType(Integer.class);
 
     private final OptionSpec installJavaSpec = parser.accepts("installJava",
             "Installs JAVA on all provisioned machines.");
@@ -65,6 +66,11 @@ final class ProvisionerCli {
     private final OptionSpec<String> tagsSpec = parser.accepts("tags",
             "Tags for an agent.")
             .withRequiredArg().ofType(String.class);
+
+    private final OptionSpec<String> ansibleSpec = parser.accepts("ansible",
+            "Runs the specified ansible script")
+            .withRequiredArg().ofType(String .class);
+
 
     private final OptionSet options;
     private final Map<String, String> tags;
@@ -93,6 +99,12 @@ final class ProvisionerCli {
                 provisioner.killJavaProcesses(false);
             } else if (options.has(sudoKillSpec)) {
                 provisioner.killJavaProcesses(true);
+            } else if (options.has(ansibleSpec)) {
+                String scriptName = options.valueOf(ansibleSpec);
+                provisioner.ansibleScript(scriptName, tags);
+            } else if (options.has(tagsSpec)) {
+                Map<String, String> tags = parseTags(options.valueOf(tagsSpec));
+                provisioner.updateTags(tags);
             } else if (options.has(terminateSpec)) {
                 provisioner.terminate();
             } else {

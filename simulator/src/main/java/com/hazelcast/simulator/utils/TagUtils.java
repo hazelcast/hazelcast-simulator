@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.utils;
 
-import joptsimple.OptionSet;
-import joptsimple.OptionSpec;
+package com.hazelcast.simulator.utils;
 
 import java.util.HashMap;
 import java.util.Map;
+import joptsimple.OptionSet;
+import joptsimple.OptionSpec;
 
 public final class TagUtils {
 
@@ -38,6 +38,20 @@ public final class TagUtils {
 
         return true;
     }
+
+    public static boolean anyMatches(Map<String, String> expectedTags, Map<String, String> actualTags) {
+        for (Map.Entry<String, String> entry : expectedTags.entrySet()) {
+            String key = entry.getKey();
+            String expected = expectedTags.get(key);
+            String actual = actualTags.get(key);
+            if (expected.equals(actual)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
 
     public static Map<String, String> parseTags(String s) {
         Map<String, String> result = new HashMap<String, String>();

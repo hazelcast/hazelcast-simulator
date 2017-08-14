@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.hazelcast.simulator.provisioner;
 
 import com.hazelcast.simulator.common.AgentsFile;
@@ -23,17 +24,19 @@ import com.hazelcast.simulator.utils.Bash;
 import com.hazelcast.simulator.utils.BashCommand;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.ThreadSpawner;
-import org.apache.log4j.Logger;
-
 import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.regex.Pattern;
+import org.apache.log4j.Logger;
 
 import static com.hazelcast.simulator.coordinator.AgentUtils.onlineCheckAgents;
 import static com.hazelcast.simulator.harakiri.HarakiriMonitorUtils.getStartHarakiriMonitorCommandOrNull;
@@ -43,6 +46,7 @@ import static com.hazelcast.simulator.provisioner.ProvisionerUtils.getInitScript
 import static com.hazelcast.simulator.utils.CommonUtils.awaitTermination;
 import static com.hazelcast.simulator.utils.CommonUtils.getElapsedSeconds;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
+import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getConfigurationFile;
@@ -54,6 +58,8 @@ import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static com.hazelcast.simulator.utils.FormatUtils.join;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadComponentRegister;
+import static com.hazelcast.simulator.utils.TagUtils.anyMatches;
+import static com.hazelcast.simulator.utils.TagUtils.tagsToString;
 import static com.hazelcast.simulator.utils.UuidUtil.newUnsecureUuidString;
 import static java.lang.String.format;
 import static java.util.concurrent.Executors.newFixedThreadPool;
@@ -331,6 +337,74 @@ public class Provisioner {
         log(HORIZONTAL_RULER);
         log(message, args);
         log(HORIZONTAL_RULER);
+    }
+
+
+    public void ansibleScript(String scriptName, Map<String, String> tags) {
+        log("Running the ansible script -> " + scriptName);
+        Map<String, List<AgentData>> agentsToProcess = new HashMap<String, List<AgentData>>();
+        if (tags.isEmpty()) {
+            agentsToProcess.put("", registry.getAgents());
+        }
+        File hostsFile = new File(getUserDir(), "ansible-" + newUnsecureUuidString() + "-hosts");
+        hostsFile.deleteOnExit();
+        deleteQuiet(hostsFile);
+
+        for (AgentData agent : registry.getAgents()) {
+            if (anyMatches(tags, agent.getTags())) {
+                String key = tagsToString(agent.getTags());
+                if (key.contains(",")) {
+                    String[] keySplit = key.split(",");
+                    for (String ks : keySplit) {
+                        addTaggedAgent(agentsToProcess, agent, ks);
+                    }
+                } else {
+                    addTaggedAgent(agentsToProcess, agent, key);
+                }
+            }
+        }
+        for (Entry<String, List<AgentData>> entry : agentsToProcess.entrySet()) {
+            if (!entry.getKey().equals("")) {
+                appendText("[" + entry.getKey() + "]" + NEW_LINE, hostsFile);
+            }
+            log(entry.getKey());
+            for (AgentData agent : entry.getValue()) {
+                log(agent.getPublicAddress());
+                appendText(agent.getPublicAddress() + NEW_LINE, hostsFile);
+            }
+        }
+
+        String ansibleCommand = "ansible-playbook -i " + hostsFile.getName() + " " + scriptName + " -u "
+                + properties.getUser() + " -f " + agentsToProcess.size();
+        log("Executing ansible command -> " + ansibleCommand);
+        String execute = bash.execute(ansibleCommand);
+        log(execute);
+    }
+
+    private void addTaggedAgent(Map<String, List<AgentData>> agentsToProcess, AgentData agent, String key) {
+        List<AgentData> list = agentsToProcess.get(key);
+        if (list == null) {
+            list = new ArrayList<AgentData>();
+        }
+        list.add(agent);
+        agentsToProcess.put(key, list);
+    }
+
+    public void updateTags(Map<String, String> tags) {
+        log("Updating tags");
+        for (Entry<String, String> entry : tags.entrySet()) {
+            String address = entry.getKey();
+            String tag = entry.getValue();
+            List<AgentData> agents = registry.getAgents();
+            for (AgentData agent : agents) {
+                if (agent.getPublicAddress().equals(address) || agent.getPrivateAddress().equals(address)) {
+                    log("updating ->" + address + ",tag -> " + tag);
+                    agent.getTags().put(tag, "");
+                }
+            }
+        }
+        log("Writing updated tags to agents.txt file");
+        AgentsFile.save(agentsFile, registry);
     }
 
     private final class InstallNodeTask implements Runnable {

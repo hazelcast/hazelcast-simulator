@@ -2,13 +2,12 @@ package com.hazelcast.simulator.provisioner;
 
 import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.utils.helper.ExitStatusZeroException;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.createAgentsFileWithLocalhost;
 import static com.hazelcast.simulator.TestEnvironmentUtils.createCloudCredentialFiles;
@@ -19,6 +18,7 @@ import static com.hazelcast.simulator.TestEnvironmentUtils.resetSecurityManager;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setExitExceptionSecurityManagerWithStatusZero;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
 import static com.hazelcast.simulator.TestEnvironmentUtils.tearDownFakeEnvironment;
+import static java.util.Collections.EMPTY_MAP;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -144,6 +144,20 @@ public class ProvisionerCliTest {
         cli.run();
 
         verify(provisioner).terminate();
+        verify(provisioner).shutdown();
+        verifyNoMoreInteractions(provisioner);
+    }
+
+    @Test
+    public void testRun_ansible() {
+        args.add("--ansible");
+        args.add("hadoop.yml");
+
+        ProvisionerCli cli = new ProvisionerCli(getArgs());
+        cli.setProvisioner(provisioner);
+        cli.run();
+
+        verify(provisioner).ansibleScript("hadoop.yml", EMPTY_MAP);
         verify(provisioner).shutdown();
         verifyNoMoreInteractions(provisioner);
     }
