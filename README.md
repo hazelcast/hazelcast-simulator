@@ -234,10 +234,10 @@ Having installed Simulator locally, this section describes how to prepare Simula
   The public IP addresses will be used by the Provisioner and Coordinator to connect to the remote machines. The private IP 
   addresses will be used by Hazelcast to form a cluster.
 
-- The default username used by Hazelcast Simulator is `simulator`. You can change this via the `USER` property in the `simulator.properties` file in your working folder.
+- The default username used by Hazelcast Simulator is `simulator`. You can change this via the `SIMULATOR_USER` property in the `simulator.properties` file in your working folder.
 
   ```
-  USER=preferredUserName
+  SIMULATOR_USER=preferredUserName
   ```
 
   Ensure that a user account with this name exists on all configured remote machines.
@@ -1828,24 +1828,24 @@ test will not run longer than this duration.
 
 # Report Generator
 
-Once a benchmark has been executed, an HTML report can be generated using the `benchmark-generator` tool. This tool requires 
+Once a benchmark has been executed, an HTML report can be generated using the `benchmark-report` tool. This tool requires
 Gnuplot 4+ and Pyton 2.7 to be installed for generating the diagrams.
 
 Assume that a benchmark has been executed and the directory `2016-08-02__22_08_09` has been created. To create a report for that 
 benchmark, you can use the following command:
 
 ```
-benchmark-generator mybenchmark 2016-08-02__22_08_09
+benchmark-report mybenchmark 2016-08-02__22_08_09
 ```
 
 The name `mybenchmark` is output directory's name. The generated report contains detailed throughput and latency information. 
 If `dstats` information is available, it shows detailed information about resource utilization such as network, CPU, and memory.
 
-The `benchmark-generator` tool is also able to make comparisons between two or more benchmarks. You can list the benchmark 
+The `benchmark-report` tool is also able to make comparisons between two or more benchmarks. You can list the benchmark
 directories to be compared as shown below:
 
 ```
-benchmark-generator mybenchmark 2016-08-02__22_08_09 2016-08-02__22_18_21
+benchmark-report mybenchmark 2016-08-02__22_08_09 2016-08-02__22_18_21
 ```
 
 
