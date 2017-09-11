@@ -17,16 +17,19 @@ package com.hazelcast.simulator.tests.map.domain;
 
 import com.hazelcast.nio.serialization.Portable;
 import com.hazelcast.nio.serialization.PortableFactory;
+import com.hazelcast.simulator.tests.map.ComplexSqlPredicateTest;
 
 public class PortableObjectFactory implements PortableFactory {
 
-    static final int FACTORY_ID = 10000001;
+    public static final int FACTORY_ID = 10000001;
 
     @Override
     public Portable create(int classId) {
         switch (classId) {
             case PortableDomainObject.CLASS_ID:
                 return new PortableDomainObject();
+            case ComplexSqlPredicateTest.Transaction.CLASS_ID:
+                return new ComplexSqlPredicateTest.Transaction();
             default:
                 throw new IllegalArgumentException("Unknown class ID" + classId);
         }

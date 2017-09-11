@@ -26,6 +26,7 @@
     <suppress checks="MagicNumber|VisibilityModifier" files="/com/hazelcast/simulator/hz/"/>
     <suppress checks="JUnitTestCase|MethodName|TypeName|ExplicitInitialization"
               files="/com/hazelcast/simulator/hz/.*Test\.java$"/>
+    <suppress checks="LineLength|ParameterNumber|MethodCount" files="/com/hazelcast/simulator/tests/.*ComplexSqlPredicateTest\.java"/>
 
 
     <!-- Ignite Tests -->
