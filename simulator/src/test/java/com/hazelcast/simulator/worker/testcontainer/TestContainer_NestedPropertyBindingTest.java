@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2008-2016, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.hazelcast.simulator.worker.testcontainer;
 
 import com.hazelcast.simulator.common.TestCase;
@@ -15,7 +30,7 @@ public class TestContainer_NestedPropertyBindingTest extends TestContainer_Abstr
         TestCase testCase = new TestCase("id")
                 .setProperty("nested.intField", 10)
                 .setProperty("nested.booleanField", true)
-                .setProperty("nested.stringField", "somestring");
+                .setProperty("nested.stringField", "someString");
 
         DummyTest test = new DummyTest();
 
@@ -24,18 +39,19 @@ public class TestContainer_NestedPropertyBindingTest extends TestContainer_Abstr
         assertNotNull(test.nested);
         assertEquals(10, test.nested.intField);
         assertEquals(true, test.nested.booleanField);
-        assertEquals("somestring", test.nested.stringField);
+        assertEquals("someString", test.nested.stringField);
     }
 
     @Test(expected = BindException.class)
     public void testNestedPropertyNotFound() {
         TestCase testCase = new TestCase("id")
-                .setProperty("nested.notexist", 10);
+                .setProperty("nested.notExist", 10);
 
         DummyTest test = new DummyTest();
         createTestContainer(test, testCase);
     }
 
+    @SuppressWarnings("WeakerAccess")
     public class DummyTest {
 
         public NestedProperties nested = new NestedProperties();
@@ -45,6 +61,7 @@ public class TestContainer_NestedPropertyBindingTest extends TestContainer_Abstr
         }
     }
 
+    @SuppressWarnings("WeakerAccess")
     public class NestedProperties {
 
         public int intField;

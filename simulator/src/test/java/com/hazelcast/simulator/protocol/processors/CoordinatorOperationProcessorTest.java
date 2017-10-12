@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2008-2016, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.hazelcast.simulator.protocol.processors;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
@@ -22,6 +37,7 @@ import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.utils.TestUtils;
 import com.hazelcast.simulator.worker.performance.PerformanceStats;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -42,6 +58,7 @@ import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPE
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
 import static com.hazelcast.simulator.protocol.processors.OperationTestUtil.process;
+import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FormatUtils.formatDouble;
 import static com.hazelcast.simulator.utils.FormatUtils.formatLong;
 import static java.lang.String.format;
@@ -63,18 +80,17 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
 
     private CoordinatorOperationProcessor processor;
     private File outputDirectory;
-    private ComponentRegistry componentRegistry;
-    private SimulatorAddress agentAddress;
 
     @Before
     public void before() {
         testPhaseListeners = new TestPhaseListeners();
         performanceStatsCollector = new PerformanceStatsCollector();
 
-        componentRegistry = new ComponentRegistry();
-        agentAddress = componentRegistry.addAgent("192.168.0.1", "192.168.0.1").getAddress();
+        ComponentRegistry componentRegistry = new ComponentRegistry();
+        SimulatorAddress agentAddress = componentRegistry.addAgent("192.168.0.1", "192.168.0.1").getAddress();
 
         workerAddress = new SimulatorAddress(WORKER, 1, 1, 0);
+
         componentRegistry.addWorkers(agentAddress, singletonList(
                 new WorkerProcessSettings(
                         workerAddress.getWorkerIndex(),
@@ -87,8 +103,12 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
         outputDirectory = TestUtils.createTmpDirectory();
         failureCollector = new FailureCollector(outputDirectory, componentRegistry);
 
-        processor = new CoordinatorOperationProcessor(null, failureCollector, testPhaseListeners,
-                performanceStatsCollector);
+        processor = new CoordinatorOperationProcessor(null, failureCollector, testPhaseListeners, performanceStatsCollector);
+    }
+
+    @After
+    public void tearDown() {
+        deleteQuiet(outputDirectory);
     }
 
     @Override
@@ -103,7 +123,7 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
         try {
             processor.processOperation(getOperationType(operation), operation, COORDINATOR, new StubPromise());
             fail();
-        }catch (ProcessException e){
+        } catch (ProcessException e) {
             assertEquals(UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR, e.getResponseType());
         }
     }

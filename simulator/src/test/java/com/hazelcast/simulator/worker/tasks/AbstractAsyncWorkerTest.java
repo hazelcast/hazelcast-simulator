@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2008-2016, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.hazelcast.simulator.worker.tasks;
 
 import com.hazelcast.core.HazelcastInstance;
@@ -22,6 +37,7 @@ import org.junit.Test;
 import java.io.File;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.teardownFakeUserDir;
@@ -67,7 +83,7 @@ public class AbstractAsyncWorkerTest {
         testContainer.invoke(TestPhase.SETUP);
 
         assertEquals(testContext, test.testContext);
-        assertEquals(0, test.workerCreated);
+        assertEquals(0, test.workerCreated.get());
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
@@ -80,7 +96,7 @@ public class AbstractAsyncWorkerTest {
         for (int i = 1; i <= THREAD_COUNT; i++) {
             assertTrue(new File(userDir, i + ".exception").exists());
         }
-        assertEquals(THREAD_COUNT, test.workerCreated);
+        assertEquals(THREAD_COUNT, test.workerCreated.get());
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
@@ -103,20 +119,20 @@ public class AbstractAsyncWorkerTest {
         for (int i = 1; i <= THREAD_COUNT; i++) {
             assertTrue(new File(userDir, i + ".exception").exists());
         }
-        assertEquals(THREAD_COUNT, test.workerCreated);
+        assertEquals(THREAD_COUNT, test.workerCreated.get());
     }
 
+    @SuppressWarnings("deprecation")
     public static class WorkerTest {
 
         private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
         private final ExecutorService executor = createFixedThreadPool(THREAD_COUNT * 2, "AbstractAsyncWorkerTest");
 
+        private final AtomicInteger workerCreated = new AtomicInteger();
         private final CountDownLatch responseLatch = new CountDownLatch(THREAD_COUNT);
         private final CountDownLatch failureLatch = new CountDownLatch(THREAD_COUNT);
 
         private TestContext testContext;
-
-        private volatile int workerCreated;
 
         @Setup
         public void setup(TestContext testContext) {
@@ -125,7 +141,7 @@ public class AbstractAsyncWorkerTest {
 
         @RunWithWorker
         public Worker createWorker() {
-            return new Worker(workerCreated++);
+            return new Worker(workerCreated.getAndIncrement());
         }
 
         private class Worker extends AbstractAsyncWorker<Operation, String> {
@@ -138,7 +154,7 @@ public class AbstractAsyncWorkerTest {
             }
 
             @Override
-            protected void timeStep(final Operation operation) throws Exception {
+            protected void timeStep(final Operation operation) {
                 ICompletableFuture<String> future;
                 switch (operation) {
                     case EXCEPTION:

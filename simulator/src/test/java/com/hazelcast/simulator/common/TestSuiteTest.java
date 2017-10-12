@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2008-2016, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.hazelcast.simulator.common;
 
 import com.hazelcast.simulator.coordinator.TestSuite;
@@ -43,14 +58,14 @@ public class TestSuiteTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void loadTestSuite_whenInvalidTestId() throws Exception {
+    public void loadTestSuite_whenInvalidTestId() {
         String txt = "*@class=AtomicLong" + NEW_LINE;
 
         createTestSuite(txt);
     }
 
     @Test
-    public void loadTestSuite_singleTestWithTestName() throws Exception {
+    public void loadTestSuite_singleTestWithTestName() {
         String txt = "atomicLongTest@class=AtomicLong" + NEW_LINE
                 + "atomicLongTest@threadCount=10";
 
@@ -63,7 +78,7 @@ public class TestSuiteTest {
     }
 
     @Test
-    public void loadTestSuite_multipleCases() throws Exception {
+    public void loadTestSuite_multipleCases() {
         String txt = "atomicLongTest@class=AtomicLong" + NEW_LINE
                 + "atomicLongTest@threadCount=10" + NEW_LINE
                 + "atomicBooleanTest@class=AtomicBoolean" + NEW_LINE
@@ -84,7 +99,7 @@ public class TestSuiteTest {
     }
 
     @Test
-    public void loadTestSuite_singleTest() throws Exception {
+    public void loadTestSuite_singleTest() {
         String txt = "class=AtomicLong" + NEW_LINE
                 + "threadCount=10";
 
@@ -101,28 +116,28 @@ public class TestSuiteTest {
     }
 
     @Test(expected = BindException.class)
-    public void loadTestSuite_missingClassName() throws Exception {
+    public void loadTestSuite_missingClassName() {
         String txt = "threadCount=10";
 
         createTestSuite(txt);
     }
 
     @Test(expected = BindException.class)
-    public void loadTestSuite_missingClassName_withTestCaseId() throws Exception {
+    public void loadTestSuite_missingClassName_withTestCaseId() {
         String txt = "TestCase@threadCount=10";
 
         createTestSuite(txt);
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void loadTestSuite_emptyClassName() throws Exception {
+    public void loadTestSuite_emptyClassName() {
         String txt = "class=";
 
         createTestSuite(txt);
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void loadTestSuite_emptyProperty() throws Exception {
+    public void loadTestSuite_emptyProperty() {
         String txt = "class=AtomicLong" + NEW_LINE
                 + "threadCount=";
 
@@ -130,40 +145,40 @@ public class TestSuiteTest {
     }
 
     @Test
-    public void getTestCase_null() throws Exception {
+    public void getTestCase_null() {
         TestSuite testSuite = createTestSuite("");
 
         assertNull(testSuite.getTestCase(null));
     }
 
     @Test
-    public void getTestCase_notFound() throws Exception {
+    public void getTestCase_notFound() {
         TestSuite testSuite = createTestSuite("");
 
         assertNull(testSuite.getTestCase("notFound"));
     }
 
     @Test
-    public void getTestCase_toString() throws Exception {
+    public void getTestCase_toString() {
         TestSuite testSuite = createTestSuite("");
 
         assertNotNull(testSuite.toString());
     }
 
     @Test(expected = CommandLineExitException.class)
-    public void propertiesNotFound() throws Exception {
+    public void propertiesNotFound() {
         loadTestSuite(new File("notFound"), null);
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void invalidTestCaseId() throws Exception {
+    public void invalidTestCaseId() {
         String txt = "In$valid@class=AtomicLong" + NEW_LINE;
 
         createTestSuite(txt);
     }
 
     @Test
-    public void overrideProperties() throws Exception {
+    public void overrideProperties() {
         String txt = "class=AtomicLong" + NEW_LINE
                 + "threadCount=10";
 
@@ -189,11 +204,11 @@ public class TestSuiteTest {
         assertEquals(8, testSuite.getMaxTestCaseIdLength());
     }
 
-    private TestSuite createTestSuite(String txt) throws Exception {
+    private TestSuite createTestSuite(String txt) {
         return createTestSuite(txt, "");
     }
 
-    private TestSuite createTestSuite(String txt, String overrideProperties) throws Exception {
+    private TestSuite createTestSuite(String txt, String overrideProperties) {
         writeText(txt, testSuiteFile);
 
         return loadTestSuite(testSuiteFile, overrideProperties);

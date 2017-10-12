@@ -106,7 +106,7 @@ public class TestContainer_InjectProbeTest extends TestContainer_AbstractTest {
         assertEquals(test.explicitSameProbeName, test.anotherExplicitSameProbeName);
     }
 
-    public static class DuplicateProbeNameTest extends BaseTest {
+    private static class DuplicateProbeNameTest extends BaseTest {
 
         @InjectProbe
         private Probe sameProbeName;

@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2008-2016, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.hazelcast.simulator.worker.testcontainer;
 
 import com.hazelcast.core.HazelcastInstance;
@@ -10,8 +25,6 @@ import com.hazelcast.simulator.utils.ExceptionReporter;
 import org.junit.After;
 import org.junit.Before;
 
-import java.io.File;
-
 import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.teardownFakeUserDir;
 import static org.mockito.Mockito.mock;
@@ -23,12 +36,10 @@ public abstract class TestContainer_AbstractTest {
 
     TestContainer testContainer;
 
-    File userDir;
-
     @Before
     public void before() {
         ExceptionReporter.reset();
-        userDir = setupFakeUserDir();
+        setupFakeUserDir();
     }
 
     @After
@@ -39,7 +50,6 @@ public abstract class TestContainer_AbstractTest {
     <T> TestContainer createTestContainer(T test) {
         return new TestContainer(testContext, test, new TestCase("foo"));
     }
-
 
     <T> TestContainer createTestContainer(T test, TestCase testCase) {
         return new TestContainer(testContext, test, testCase);

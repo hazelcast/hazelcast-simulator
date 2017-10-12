@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2008-2016, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.hazelcast.simulator.protocol.processors;
 
 import com.hazelcast.core.HazelcastInstance;
@@ -61,7 +76,7 @@ public class WorkerOperationProcessorTest {
     private WorkerOperationProcessor processor;
 
     @Before
-    public void before() throws Exception {
+    public void before() {
         properties = new HashMap<String, String>();
         setTestCaseClass(DEFAULT_TEST.getName());
 
@@ -86,7 +101,7 @@ public class WorkerOperationProcessorTest {
     }
 
     @Test
-    public void process_unsupportedOperation() throws Exception {
+    public void process_unsupportedOperation() {
         SimulatorOperation operation = new CreateWorkerOperation(Collections.<WorkerProcessSettings>emptyList(), 0);
         ResponseType responseType = processOperation(processor, getOperationType(operation), operation, COORDINATOR);
 
@@ -94,7 +109,7 @@ public class WorkerOperationProcessorTest {
     }
 
     @Test
-    public void process_IntegrationTestOperation_unsupportedOperation() throws Exception {
+    public void process_IntegrationTestOperation_unsupportedOperation() {
         SimulatorOperation operation = new IntegrationTestOperation();
         ResponseType responseType = processOperation(processor, getOperationType(operation), operation, COORDINATOR);
 
@@ -102,7 +117,7 @@ public class WorkerOperationProcessorTest {
     }
 
     @Test
-    public void process_Ping() throws Exception {
+    public void process_Ping() {
         PingOperation operation = new PingOperation();
 
         ResponseType responseType = process(processor, operation, COORDINATOR);
@@ -113,7 +128,7 @@ public class WorkerOperationProcessorTest {
     }
 
     @Test
-    public void process_TerminateWorkers_onMemberWorker() throws Exception {
+    public void process_TerminateWorkers_onMemberWorker() {
         TerminateWorkerOperation operation = new TerminateWorkerOperation(0, false);
 
         process(processor, operation, COORDINATOR);
@@ -123,7 +138,7 @@ public class WorkerOperationProcessorTest {
     }
 
     @Test
-    public void process_TerminateWorkers_onClientWorker() throws Exception {
+    public void process_TerminateWorkers_onClientWorker() {
         processor = new WorkerOperationProcessor(WorkerType.JAVA_CLIENT, hazelcastInstance, worker, workerAddress);
         TerminateWorkerOperation operation = new TerminateWorkerOperation(0, false);
 
@@ -134,7 +149,7 @@ public class WorkerOperationProcessorTest {
     }
 
     @Test
-    public void process_CreateTest() throws Exception {
+    public void process_CreateTest() {
         ResponseType responseType = runCreateTestOperation(defaultTestCase);
 
         assertEquals(SUCCESS, responseType);
@@ -142,7 +157,7 @@ public class WorkerOperationProcessorTest {
     }
 
     @Test
-    public void process_CreateTest_sameTestIndexTwice() throws Exception {
+    public void process_CreateTest_sameTestIndexTwice() {
         runCreateTestOperation(defaultTestCase, 1);
         List<TestContainer> original = new LinkedList<TestContainer>(processor.getTests());
 
@@ -153,7 +168,7 @@ public class WorkerOperationProcessorTest {
     }
 
     @Test
-    public void process_CreateTest_sameTestIdTwice() throws Exception {
+    public void process_CreateTest_sameTestIdTwice() {
         runCreateTestOperation(defaultTestCase, 1);
         List<TestContainer> original = new LinkedList<TestContainer>(processor.getTests());
 
@@ -164,7 +179,7 @@ public class WorkerOperationProcessorTest {
     }
 
     @Test
-    public void process_CreateTest_invalidTestId() throws Exception {
+    public void process_CreateTest_invalidTestId() {
         TestCase testCase = createTestCase(SuccessTest.class, "%&/?!");
 
         ResponseType responseType = runCreateTestOperation(testCase);
@@ -174,7 +189,7 @@ public class WorkerOperationProcessorTest {
     }
 
     @Test
-    public void process_CreateTest_invalidClassPath() throws Exception {
+    public void process_CreateTest_invalidClassPath() {
         TestCase testCase = new TestCase("id")
                 .setProperty("class", "not.found.SuccessTest");
         ResponseType responseType = runCreateTestOperation(testCase);
@@ -187,16 +202,17 @@ public class WorkerOperationProcessorTest {
         properties.put("class", className);
     }
 
+    @SuppressWarnings("SameParameterValue")
     private TestCase createTestCase(Class testClass, String testId) {
         setTestCaseClass(testClass.getName());
         return new TestCase(testId, properties);
     }
 
-    private ResponseType runCreateTestOperation(TestCase testCase) throws Exception {
+    private ResponseType runCreateTestOperation(TestCase testCase) {
         return runCreateTestOperation(testCase, 1);
     }
 
-    private ResponseType runCreateTestOperation(TestCase testCase, int testIndex) throws Exception {
+    private ResponseType runCreateTestOperation(TestCase testCase, int testIndex) {
         SimulatorOperation operation = new CreateTestOperation(testIndex, testCase);
         LOGGER.debug("Serialized operation: " + toJson(operation));
         return process(processor, operation, COORDINATOR);

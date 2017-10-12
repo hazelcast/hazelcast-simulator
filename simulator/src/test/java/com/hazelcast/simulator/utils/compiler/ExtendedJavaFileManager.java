@@ -20,7 +20,6 @@ import javax.tools.ForwardingJavaFileManager;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.JavaFileObject.Kind;
-import java.io.IOException;
 
 class ExtendedJavaFileManager extends ForwardingJavaFileManager<JavaFileManager> {
 
@@ -33,8 +32,7 @@ class ExtendedJavaFileManager extends ForwardingJavaFileManager<JavaFileManager>
      * @param fileManager        delegate to this file manager
      * @param dynamicClassLoader dynamic class loader
      */
-    protected ExtendedJavaFileManager(JavaFileManager fileManager, CompiledCode compiledCode,
-                                      DynamicClassLoader dynamicClassLoader) {
+    ExtendedJavaFileManager(JavaFileManager fileManager, CompiledCode compiledCode, DynamicClassLoader dynamicClassLoader) {
         super(fileManager);
         this.compiledCode = compiledCode;
         this.dynamicClassLoader = dynamicClassLoader;
@@ -43,8 +41,7 @@ class ExtendedJavaFileManager extends ForwardingJavaFileManager<JavaFileManager>
     }
 
     @Override
-    public JavaFileObject getJavaFileForOutput(Location location, String className, Kind kind, FileObject sibling)
-            throws IOException {
+    public JavaFileObject getJavaFileForOutput(Location location, String className, Kind kind, FileObject sibling) {
         return compiledCode;
     }
 

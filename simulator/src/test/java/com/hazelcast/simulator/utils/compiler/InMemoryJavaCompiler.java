@@ -28,7 +28,7 @@ import java.util.Collections;
  */
 public final class InMemoryJavaCompiler {
 
-    static final JavaCompiler COMPILER = ToolProvider.getSystemJavaCompiler();
+    private static final JavaCompiler COMPILER = ToolProvider.getSystemJavaCompiler();
 
     private InMemoryJavaCompiler() {
     }

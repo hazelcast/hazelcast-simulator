@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2008-2016, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.hazelcast.simulator.worker.tasks;
 
 import com.hazelcast.core.HazelcastInstance;
@@ -20,6 +35,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.teardownFakeUserDir;
@@ -70,7 +86,7 @@ public class AbstractWorkerWithProbeControlTest {
         testContainer.invoke(TestPhase.SETUP);
 
         assertEquals(testContext, test.testContext);
-        assertEquals(0, test.workerCreated);
+        assertEquals(0, test.workerCreated.get());
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
@@ -83,7 +99,7 @@ public class AbstractWorkerWithProbeControlTest {
         for (int i = 1; i <= THREAD_COUNT; i++) {
             assertTrue(new File(userDir,i + ".exception").exists());
         }
-        assertEquals(THREAD_COUNT, test.workerCreated);
+        assertEquals(THREAD_COUNT, test.workerCreated.get());
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
@@ -94,7 +110,7 @@ public class AbstractWorkerWithProbeControlTest {
         testContainer.invoke(TestPhase.RUN);
 
         assertFalse(test.testContext.isStopped());
-        assertEquals(THREAD_COUNT, test.workerCreated);
+        assertEquals(THREAD_COUNT, test.workerCreated.get());
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
@@ -105,7 +121,7 @@ public class AbstractWorkerWithProbeControlTest {
         testContainer.invoke(TestPhase.RUN);
 
         assertTrue(test.testContext.isStopped());
-        assertEquals(THREAD_COUNT, test.workerCreated);
+        assertEquals(THREAD_COUNT, test.workerCreated.get());
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
@@ -131,16 +147,17 @@ public class AbstractWorkerWithProbeControlTest {
         assertNotNull(test.probe);
         Histogram intervalHistogram = ((HdrProbe) test.probe).getIntervalHistogram();
         assertEquals(THREAD_COUNT * ITERATION_COUNT, intervalHistogram.getTotalCount());
-        assertEquals(THREAD_COUNT, test.workerCreated);
+        assertEquals(THREAD_COUNT, test.workerCreated.get());
     }
 
+    @SuppressWarnings("deprecation")
     public static class WorkerTest {
 
         private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
+        private final AtomicInteger workerCreated = new AtomicInteger();
 
         private TestContext testContext;
 
-        private volatile int workerCreated;
         private volatile Integer randomInt;
         private volatile Integer randomIntWithBond;
         private volatile Long randomLong;
@@ -154,7 +171,7 @@ public class AbstractWorkerWithProbeControlTest {
 
         @RunWithWorker
         public Worker createWorker() {
-            workerCreated++;
+            workerCreated.getAndIncrement();
             return new Worker(this);
         }
 
@@ -168,7 +185,7 @@ public class AbstractWorkerWithProbeControlTest {
             }
 
             @Override
-            protected void timeStep(Operation operation, Probe probe) throws Exception {
+            protected void timeStep(Operation operation, Probe probe) {
                 switch (operation) {
                     case EXCEPTION:
                         throw new TestException("expected exception");

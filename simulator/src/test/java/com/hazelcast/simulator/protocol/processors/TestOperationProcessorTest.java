@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2008-2016, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.hazelcast.simulator.protocol.processors;
 
 import com.hazelcast.core.HazelcastInstance;
@@ -62,7 +77,7 @@ public class TestOperationProcessorTest {
     }
 
     @Test
-    public void testProcessOperation_unsupportedOperation() throws Exception {
+    public void testProcessOperation_unsupportedOperation() {
         createTestOperationProcessor();
 
         SimulatorOperation operation = new CreateWorkerOperation(Collections.<WorkerProcessSettings>emptyList(), 0);
@@ -72,7 +87,7 @@ public class TestOperationProcessorTest {
     }
 
     @Test
-    public void process_IntegrationTestOperation_unsupportedOperation() throws Exception {
+    public void process_IntegrationTestOperation_unsupportedOperation() {
         createTestOperationProcessor();
 
         SimulatorOperation operation = new IntegrationTestOperation();
@@ -83,7 +98,7 @@ public class TestOperationProcessorTest {
     }
 
     @Test
-    public void process_StartTest() throws Exception {
+    public void process_StartTest() {
         createTestOperationProcessor();
 
         runPhase(TestPhase.SETUP);
@@ -94,7 +109,7 @@ public class TestOperationProcessorTest {
     }
 
     @Test
-    public void process_StartTest_failingTest() throws Exception {
+    public void process_StartTest_failingTest() {
         createTestOperationProcessor(FailingTest.class);
 
         runPhase(TestPhase.SETUP);
@@ -104,7 +119,7 @@ public class TestOperationProcessorTest {
     }
 
     @Test
-    public void process_StartTest_noSetUp() throws Exception {
+    public void process_StartTest_noSetUp() {
         createTestOperationProcessor();
 
         runTest();
@@ -114,7 +129,7 @@ public class TestOperationProcessorTest {
     }
 
     @Test
-    public void process_StartTest_skipRunPhase_targetTypeMismatch() throws Exception {
+    public void process_StartTest_skipRunPhase_targetTypeMismatch() {
         createTestOperationProcessor();
 
         StartTestOperation operation = new StartTestOperation(TargetType.CLIENT);
@@ -127,7 +142,7 @@ public class TestOperationProcessorTest {
     }
 
     @Test
-    public void process_StartTest_skipRunPhase_notOnTargetWorkersList() throws Exception {
+    public void process_StartTest_skipRunPhase_notOnTargetWorkersList() {
         createTestOperationProcessor();
 
         List<String> targetWorkers = singletonList(new SimulatorAddress(AddressLevel.WORKER, 1, 2, 0).toString());
@@ -141,7 +156,7 @@ public class TestOperationProcessorTest {
     }
 
     @Test
-    public void process_StartTestPhase_failingTest() throws Exception {
+    public void process_StartTestPhase_failingTest() {
         createTestOperationProcessor(FailingTest.class);
 
         runPhase(TestPhase.GLOBAL_VERIFY);
@@ -150,7 +165,7 @@ public class TestOperationProcessorTest {
     }
 
     @Test
-    public void process_StartTestPhase_oldPhaseStillRunning() throws Exception {
+    public void process_StartTestPhase_oldPhaseStillRunning() {
         createTestOperationProcessor();
 
         runPhase(TestPhase.SETUP);
@@ -164,7 +179,7 @@ public class TestOperationProcessorTest {
     }
 
     @Test
-    public void process_StartTestPhase_removeTest() throws Exception {
+    public void process_StartTestPhase_removeTest() {
         createTestOperationProcessor();
 
         runPhase(TestPhase.LOCAL_TEARDOWN);
@@ -173,11 +188,11 @@ public class TestOperationProcessorTest {
         verify(workerConnector).removeTest(1);
     }
 
-    private void runPhase(TestPhase testPhase) throws Exception {
+    private void runPhase(TestPhase testPhase) {
         runPhase(testPhase, SUCCESS);
     }
 
-    private void runPhase(TestPhase testPhase, ResponseType expectedResponseType) throws Exception {
+    private void runPhase(TestPhase testPhase, ResponseType expectedResponseType) {
         StartTestPhaseOperation operation = new StartTestPhaseOperation(testPhase);
         ResponseType responseType = process(processor, operation, COORDINATOR);
 
@@ -186,13 +201,14 @@ public class TestOperationProcessorTest {
         waitForPhaseCompletion(testPhase);
     }
 
-    private void runTest() throws Exception {
+    private void runTest() {
         StartTestOperation operation = new StartTestOperation();
         process(processor, operation, COORDINATOR);
 
         waitForPhaseCompletion(TestPhase.RUN);
     }
 
+    @SuppressWarnings("SameParameterValue")
     private void stopTest(final int delayMs) {
         Thread stopThread = new Thread() {
             @Override

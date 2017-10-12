@@ -1,8 +1,22 @@
+/*
+ * Copyright (c) 2008-2016, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.hazelcast.simulator.utils;
 
 import org.junit.Test;
 
-import java.util.Arrays;
 import java.util.Collections;
 
 import static com.hazelcast.simulator.utils.FormatUtils.fillString;
@@ -18,6 +32,7 @@ import static com.hazelcast.simulator.utils.FormatUtils.secondsToHuman;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
 import static com.hazelcast.simulator.utils.TestUtils.assertEqualsStringFormat;
 import static java.lang.String.format;
+import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -197,14 +212,14 @@ public class FormatUtilsTest {
     }
 
     @Test
-    public void testJoin() throws Exception {
-        Iterable<String> input = Arrays.asList("one", "two", "three");
+    public void testJoin() {
+        Iterable<String> input = asList("one", "two", "three");
         String joined = join(input);
         assertEquals("one, two, three", joined);
     }
 
     @Test
-    public void testJoinEmptyString() throws Exception {
+    public void testJoinEmptyString() {
         String joined = join(Collections.EMPTY_LIST);
         assertEquals("", joined);
     }

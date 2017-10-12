@@ -17,6 +17,6 @@ package com.hazelcast.simulator.utils.helper;
 
 public final class ExitStatusZeroException extends SecurityException {
 
-    public ExitStatusZeroException() {
+    ExitStatusZeroException() {
     }
 }

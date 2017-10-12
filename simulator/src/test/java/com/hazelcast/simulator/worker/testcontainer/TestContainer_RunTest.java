@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2008-2016, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.hazelcast.simulator.worker.testcontainer;
 
 import com.hazelcast.core.HazelcastInstance;
@@ -73,6 +88,7 @@ public class TestContainer_RunTest extends TestContainer_AbstractTest {
         assertFalse(test.runWithWorkerCalled);
     }
 
+    @SuppressWarnings("deprecation")
     private static class RunWithWorkerTest {
 
         volatile boolean runWithWorkerCreated;
@@ -85,7 +101,7 @@ public class TestContainer_RunTest extends TestContainer_AbstractTest {
             return new AbstractMonotonicWorker() {
 
                 @Override
-                protected void timeStep() throws Exception {
+                protected void timeStep() {
                     runWithWorkerCalled = true;
                 }
             };
@@ -113,6 +129,7 @@ public class TestContainer_RunTest extends TestContainer_AbstractTest {
         assertTrue(test.runWithWorkerCalled);
     }
 
+    @SuppressWarnings("deprecation")
     private static class RunWithIWorkerTest extends AbstractTest {
 
         private final HazelcastInstance hazelcastInstance;
@@ -138,11 +155,11 @@ public class TestContainer_RunTest extends TestContainer_AbstractTest {
                 }
 
                 @Override
-                public void beforeRun() throws Exception {
+                public void beforeRun() {
                 }
 
                 @Override
-                public void afterRun() throws Exception {
+                public void afterRun() {
                 }
 
                 @Override
@@ -175,6 +192,7 @@ public class TestContainer_RunTest extends TestContainer_AbstractTest {
         assertEquals(THREAD_COUNT * ITERATION_COUNT, totalCount);
     }
 
+    @SuppressWarnings("deprecation")
     static class MultiProbeWorkerTest {
 
         enum Operation {
@@ -211,7 +229,7 @@ public class TestContainer_RunTest extends TestContainer_AbstractTest {
             }
 
             @Override
-            protected void timeStep(Operation operation, Probe probe) throws Exception {
+            protected void timeStep(Operation operation, Probe probe) {
                 test.runWithWorkerCalled = true;
                 if (getIteration() == ITERATION_COUNT) {
                     stopWorker();
@@ -251,6 +269,7 @@ public class TestContainer_RunTest extends TestContainer_AbstractTest {
         createTestContainer(new DuplicateRunWithWorkerAnnotationsTest());
     }
 
+    @SuppressWarnings("deprecation")
     private static class DuplicateRunWithWorkerAnnotationsTest {
 
         @RunWithWorker
@@ -269,6 +288,7 @@ public class TestContainer_RunTest extends TestContainer_AbstractTest {
         createTestContainer(new DuplicateMixedRunAnnotationsTest());
     }
 
+    @SuppressWarnings("deprecation")
     private static class DuplicateMixedRunAnnotationsTest {
 
         @Run

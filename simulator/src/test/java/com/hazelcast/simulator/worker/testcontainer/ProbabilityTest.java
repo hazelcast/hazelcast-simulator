@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2008-2016, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.hazelcast.simulator.worker.testcontainer;
 
 import org.junit.Test;
@@ -14,15 +29,14 @@ public class ProbabilityTest {
 
     @Test
     public void testMagic_singleItem() {
-        int[] x = methodProbabilitiesToMethodRatios(1);
-        // assertNull(x);
+        int[] ratios = methodProbabilitiesToMethodRatios(1);
+        assertEquals(1, ratios.length);
+        assertEquals(1, ratios[0]);
     }
 
     @Test
     public void test_methodProbabilitiesToMethodRatios() {
-        int[] ratios;
-
-        ratios = methodProbabilitiesToMethodRatios(0.1, 0.2, 0.1, 0.29, 0.21, 0.1);
+        int[] ratios = methodProbabilitiesToMethodRatios(0.1, 0.2, 0.1, 0.29, 0.21, 0.1);
         assertEquals(6, ratios.length);
         assertEquals(10, ratios[0]);
         assertEquals(20, ratios[1]);
@@ -34,9 +48,7 @@ public class ProbabilityTest {
 
     @Test
     public void test_methodProbabilitiesToMethodRatios_highPricision() {
-        int[] ratios;
-
-        ratios = methodProbabilitiesToMethodRatios(0.1, 0.9);
+        int[] ratios = methodProbabilitiesToMethodRatios(0.1, 0.9);
         assertEquals(2, ratios.length);
         assertEquals(1, ratios[0]);
         assertEquals(9, ratios[1]);
@@ -69,13 +81,10 @@ public class ProbabilityTest {
 
     @Test
     public void test_methodProbabilitiesToMethodRatios_simplication() {
-        int[] ratios;
-
-        ratios = methodProbabilitiesToMethodRatios(0.10, 0.90);
+        int[] ratios = methodProbabilitiesToMethodRatios(0.10, 0.90);
         assertEquals(2, ratios.length);
         assertEquals(1, ratios[0]);
         assertEquals(9, ratios[1]);
-
 
         ratios = methodProbabilitiesToMethodRatios(0.1, 0.90);
         assertEquals(2, ratios.length);
@@ -98,7 +107,6 @@ public class ProbabilityTest {
         assertEquals(9, ratios[1]);
     }
 
-
     @Test
     public void toMethodProbabilityArray() {
         assertMethodProbabilityArray(1, 99);
@@ -106,17 +114,14 @@ public class ProbabilityTest {
         assertMethodProbabilityArray(1, 900, 100, 9, 99);
     }
 
-    public void assertMethodProbabilityArray(int... ratios) {
+    private void assertMethodProbabilityArray(int... ratios) {
         byte[] probabilityArray = ratiosToMethodProbabilityArray(ratios);
 
         int[] remainingMethodRatios = Arrays.copyOf(ratios, ratios.length);
-
-        for (int k = 0; k < probabilityArray.length; k++) {
-            int methodIndex = probabilityArray[k];
+        for (byte methodIndex : probabilityArray) {
             if (methodIndex >= remainingMethodRatios.length) {
                 fail("Unknown method " + methodIndex);
             }
-
             remainingMethodRatios[methodIndex]--;
         }
 

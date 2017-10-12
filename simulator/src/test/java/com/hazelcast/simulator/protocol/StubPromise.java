@@ -1,15 +1,27 @@
+/*
+ * Copyright (c) 2008-2016, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.hazelcast.simulator.protocol;
 
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.worker.Promise;
 
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 public class StubPromise extends Promise implements Future<ResponseType> {
-
 
     private volatile ResponseType responseType;
     private volatile String response;
@@ -62,7 +74,7 @@ public class StubPromise extends Promise implements Future<ResponseType> {
         }
     }
 
-    public String getResponse() throws InterruptedException  {
+    public String getResponse() throws InterruptedException {
         synchronized (this) {
             while (responseType == null) {
                 wait();
@@ -73,7 +85,7 @@ public class StubPromise extends Promise implements Future<ResponseType> {
     }
 
     @Override
-    public ResponseType get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+    public ResponseType get(long timeout, TimeUnit unit) {
         throw new UnsupportedOperationException();
     }
 }
