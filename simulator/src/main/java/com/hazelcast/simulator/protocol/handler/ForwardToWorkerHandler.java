@@ -60,12 +60,12 @@ public class ForwardToWorkerHandler extends SimpleChannelInboundHandler<ByteBuf>
     }
 
     @Override
-    protected void channelRead0(final ChannelHandlerContext ctx, final ByteBuf buffer) throws Exception {
+    protected void channelRead0(final ChannelHandlerContext ctx, final ByteBuf buffer) {
         if (LOGGER.isTraceEnabled()) {
             LOGGER.trace(format("ForwardToWorkerHandler.channelRead0() %s %s", addressLevel, localAddress));
         }
 
-        int workerAddressIndex = ctx.attr(forwardAddressIndex).get();
+        int workerAddressIndex = ctx.channel().attr(forwardAddressIndex).get();
         if (isSimulatorMessage(buffer)) {
             forwardSimulatorMessage(ctx, buffer, workerAddressIndex);
         } else if (isResponse(buffer)) {

@@ -56,7 +56,7 @@ public class MessageTestConsumeHandler extends SimpleChannelInboundHandler<Simul
             LOGGER.trace(format("[%d] %s MessageTestConsumeHandler is consuming message...", msg.getMessageId(), localAddress));
         }
 
-        final int testAddressIndex = ctx.attr(forwardAddressIndex).get();
+        final int testAddressIndex = ctx.channel().attr(forwardAddressIndex).get();
         executorService.submit(new Runnable() {
             @Override
             public void run() {

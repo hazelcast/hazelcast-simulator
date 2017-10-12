@@ -103,7 +103,7 @@ public class SimulatorProtocolDecoder extends ByteToMessageDecoder {
             out.add(message);
         } else {
             int addressIndex = SimulatorMessageCodec.getChildAddressIndex(buffer, addressLevelValue);
-            ctx.attr(forwardAddressIndex).set(addressIndex);
+            ctx.channel().attr(forwardAddressIndex).set(addressIndex);
 
             out.add(buffer.duplicate());
             buffer.readerIndex(buffer.readableBytes());
@@ -131,7 +131,7 @@ public class SimulatorProtocolDecoder extends ByteToMessageDecoder {
             out.add(response);
         } else {
             int addressIndex = ResponseCodec.getChildAddressIndex(buffer, addressLevelValue);
-            ctx.attr(forwardAddressIndex).set(addressIndex);
+            ctx.channel().attr(forwardAddressIndex).set(addressIndex);
 
             out.add(buffer.duplicate());
             buffer.readerIndex(buffer.readableBytes());
