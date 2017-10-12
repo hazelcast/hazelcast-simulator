@@ -1670,6 +1670,6 @@ Hazelcast Simulator is available under the Apache 2 License.
 
 # Copyright
 
-Copyright (c) 2008-2016, Hazelcast, Inc. All Rights Reserved.
+Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
 
 Visit [www.hazelcast.com](http://www.hazelcast.com/) for more info. Also, see the Hazelcast Simulator chapter in the Reference Manual at [http://hazelcast.org/documentation/](http://hazelcast.org/documentation/). Docs for latest version can be found [here](http://docs.hazelcast.org/docs/latest/manual/html-single/index.html#hazelcast-simulator)
