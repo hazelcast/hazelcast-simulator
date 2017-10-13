@@ -134,7 +134,7 @@ public class TestContainer {
         } catch (NoSuchMethodException e) {
             throw new IllegalTestException(format("Test class '%s' should have a public no arg constructor", testClassName));
         } catch (Exception e) {
-            throw new IllegalTestException("Could not create instance of " + testClassName, e);
+            throw new IllegalTestException("Could not create instance of " + testClassName + " [" + e.getMessage() + "]", e);
         }
     }
 
