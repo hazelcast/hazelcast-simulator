@@ -18,33 +18,33 @@ package com.hazelcast.simulator.tests.map.helpers;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
-public class MapStoreWithCounterPerKey extends MapStoreWithCounter {
+public class MapStoreWithCounterPerKey extends MapStoreWithCounter<Long, AtomicLong> {
 
-    private final Map<Object, AtomicInteger> storeCount = new ConcurrentHashMap<Object, AtomicInteger>();
+    private final Map<Long, AtomicLong> storeCount = new ConcurrentHashMap<Long, AtomicLong>();
 
-    public Set<Object> keySet() {
+    public Set<Long> keySet() {
         return storeCount.keySet();
     }
 
-    public int valueOf(Object key) {
+    public int valueOf(Long key) {
         return storeCount.get(key).intValue();
     }
 
     @Override
-    public void store(Object key, Object value) {
+    public void store(Long key, AtomicLong value) {
         super.store(key, value);
 
         if (storeCount.get(key) == null) {
-            storeCount.put(key, new AtomicInteger((0)));
+            storeCount.put(key, new AtomicLong((0)));
         }
         storeCount.get(key).incrementAndGet();
     }
 
     @Override
-    public void storeAll(Map<Object, Object> map) {
-        for (Map.Entry<Object, Object> kvp : map.entrySet()) {
+    public void storeAll(Map<Long, AtomicLong> map) {
+        for (Map.Entry<Long, AtomicLong> kvp : map.entrySet()) {
             store(kvp.getKey(), kvp.getValue());
         }
     }

@@ -27,13 +27,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 
-public class MapStoreWithCounter implements MapStore<Object, Object> {
+public class MapStoreWithCounter<K, V> implements MapStore<K, V> {
 
     private static int minDelayMs;
     private static int maxDelayMs;
 
     private final Random random = new Random();
-    private final Map<Object, Object> store = new ConcurrentHashMap<Object, Object>();
+    private final Map<K, V> store = new ConcurrentHashMap<K, V>();
     private final AtomicInteger storeCount = new AtomicInteger(0);
     private final AtomicInteger deleteCount = new AtomicInteger(0);
     private final AtomicInteger countLoad = new AtomicInteger(0);
@@ -46,54 +46,54 @@ public class MapStoreWithCounter implements MapStore<Object, Object> {
         MapStoreWithCounter.maxDelayMs = maxDelayMs;
     }
 
-    public Object get(Object key) {
+    public Object get(K key) {
         return store.get(key);
     }
 
-    public Set<Map.Entry<Object, Object>> entrySet() {
+    public Set<Map.Entry<K, V>> entrySet() {
         return store.entrySet();
     }
 
     @Override
-    public void store(Object key, Object value) {
+    public void store(K key, V value) {
         delay();
         storeCount.incrementAndGet();
         store.put(key, value);
     }
 
     @Override
-    public void storeAll(Map<Object, Object> map) {
-        for (Map.Entry<Object, Object> kvp : map.entrySet()) {
+    public void storeAll(Map<K, V> map) {
+        for (Map.Entry<K, V> kvp : map.entrySet()) {
             store(kvp.getKey(), kvp.getValue());
         }
     }
 
     @Override
-    public void delete(Object key) {
+    public void delete(K key) {
         delay();
         deleteCount.incrementAndGet();
         store.remove(key);
     }
 
     @Override
-    public void deleteAll(Collection<Object> keys) {
-        for (Object key : keys) {
+    public void deleteAll(Collection<K> keys) {
+        for (K key : keys) {
             delete(key);
         }
     }
 
     @Override
-    public Object load(Object key) {
+    public V load(K key) {
         delay();
         countLoad.incrementAndGet();
         return store.get(key);
     }
 
     @Override
-    public Map<Object, Object> loadAll(Collection<Object> keys) {
-        Map<Object, Object> result = new HashMap<Object, Object>();
-        for (Object key : keys) {
-            final Object v = load(key);
+    public Map<K, V> loadAll(Collection<K> keys) {
+        Map<K, V> result = new HashMap<K, V>();
+        for (K key : keys) {
+            final V v = load(key);
             if (v != null) {
                 result.put(key, v);
             }
@@ -102,7 +102,7 @@ public class MapStoreWithCounter implements MapStore<Object, Object> {
     }
 
     @Override
-    public Set<Object> loadAllKeys() {
+    public Set<K> loadAllKeys() {
         delay();
         return store.keySet();
     }

@@ -29,10 +29,13 @@ import com.hazelcast.simulator.worker.selector.OperationSelector;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
+import java.util.Iterator;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isClient;
 import static com.hazelcast.simulator.tests.map.helpers.MapStoreUtils.assertMapStoreConfiguration;
+import static com.hazelcast.simulator.tests.map.helpers.MapStoreUtils.getMapStoreConfig;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.TestUtils.assertTrueEventually;
 import static org.junit.Assert.assertEquals;
@@ -121,7 +124,6 @@ public class MapStoreTest extends AbstractTest {
 
         assertMapStoreConfiguration(logger, targetInstance, name, MapStoreWithCounter.class);
     }
-
 
     @RunWithWorker
     public Worker createWorker() {
@@ -224,29 +226,39 @@ public class MapStoreTest extends AbstractTest {
             return;
         }
 
-        MapStoreConfig mapStoreConfig = targetInstance.getConfig().getMapConfig(name).getMapStoreConfig();
+        MapStoreConfig mapStoreConfig = getMapStoreConfig(targetInstance, name);
         int writeDelayMs = (int) TimeUnit.SECONDS.toMillis(mapStoreConfig.getWriteDelaySeconds());
+        final MapStoreWithCounter<Integer, Integer> mapStore
+                = (MapStoreWithCounter<Integer, Integer>) mapStoreConfig.getImplementation();
 
         int sleepMs = mapStoreMaxDelayMs * 2 + maxTTLExpiryMs * 2 + (writeDelayMs * 2);
         logger.info("Sleeping for " + TimeUnit.MILLISECONDS.toSeconds(sleepMs) + " seconds to wait for delay and TTL values.");
         sleepMillis(sleepMs);
-
-        final MapStoreWithCounter mapStore = (MapStoreWithCounter) mapStoreConfig.getImplementation();
 
         logger.info(name + ": map size = " + map.size());
         logger.info(name + ": map store = " + mapStore);
 
         assertTrueEventually(new AssertTask() {
             @Override
-            public void run() throws Exception {
-                for (Integer key : map.localKeySet()) {
-                    assertEquals(map.get(key), mapStore.get(key));
-                }
-                assertEquals("Map entrySets should be equal", map.getAll(map.localKeySet()).entrySet(), mapStore.entrySet());
-
+            public void run() {
                 for (int key = putTTlKeyDomain; key < putTTlKeyDomain + putTTlKeyRange; key++) {
                     assertNull(name + ": TTL key should not be in the map", map.get(key));
                 }
+            }
+        });
+
+        assertTrueEventually(new AssertTask() {
+            @Override
+            public void run() {
+                // entries will be persisted to MapStore eventually
+                Iterator<Map.Entry<Integer, Integer>> iterator = mapStore.entrySet().iterator();
+                while (iterator.hasNext()) {
+                    Map.Entry<Integer, Integer> entry = iterator.next();
+                    map.remove(entry.getKey(), entry.getValue());
+                    iterator.remove();
+                }
+
+                assertEquals("IMap should be empty when all persisted entries are removed", 0, map.size());
             }
         });
     }

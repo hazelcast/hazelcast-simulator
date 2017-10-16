@@ -30,13 +30,17 @@ public final class MapStoreUtils {
     private MapStoreUtils() {
     }
 
+    public static MapStoreConfig getMapStoreConfig(HazelcastInstance instance, String mapName) {
+        return instance.getConfig().getMapConfig(mapName).getMapStoreConfig();
+    }
+
     public static void assertMapStoreConfiguration(ILogger logger, HazelcastInstance instance, String mapName,
                                                    Class<? extends MapStore> mapStoreImplementation) {
         if (isClient(instance)) {
             return;
         }
         String expectedMapStoreName = mapStoreImplementation.getName();
-        MapStoreConfig mapStoreConfig = instance.getConfig().getMapConfig(mapName).getMapStoreConfig();
+        MapStoreConfig mapStoreConfig = getMapStoreConfig(instance, mapName);
         assertMapStoreConfig(expectedMapStoreName, mapName, mapStoreConfig, logger);
         assertMapStoreClassName(expectedMapStoreName, mapName, mapStoreConfig);
         assertMapStoreImplementation(expectedMapStoreName, mapName, mapStoreConfig, mapStoreImplementation);

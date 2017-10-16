@@ -73,9 +73,8 @@ public class MapEvictAndStoreTest extends AbstractTest {
         logger.info(name + ": map store = " + mapStore);
 
         logger.info(name + ": Checking if some keys where stored more than once");
-        for (Object key : mapStore.keySet()) {
+        for (Long key : mapStore.keySet()) {
             assertEquals("There were multiple calls to MapStore.store", 1, mapStore.valueOf(key));
         }
     }
-
 }

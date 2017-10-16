@@ -29,10 +29,13 @@ import com.hazelcast.simulator.worker.selector.OperationSelector;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
+import java.util.Iterator;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isClient;
 import static com.hazelcast.simulator.tests.map.helpers.MapStoreUtils.assertMapStoreConfiguration;
+import static com.hazelcast.simulator.tests.map.helpers.MapStoreUtils.getMapStoreConfig;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.TestUtils.assertTrueEventually;
 import static org.junit.Assert.assertEquals;
@@ -122,8 +125,6 @@ public class MapStoreTest extends AbstractTest {
         assertMapStoreConfiguration(logger, targetInstance, name, MapStoreWithCounter.class);
     }
 
-
-
     @RunWithWorker
     public Worker createWorker() {
         return new Worker();
@@ -146,31 +147,25 @@ public class MapStoreTest extends AbstractTest {
                 case LOAD_ALL:
                     map.loadAll(true);
                     break;
-
                 case PUT:
                     putOperation(key);
                     break;
-
                 case GET:
                     map.get(key);
                     operationCounter.getCount.incrementAndGet();
                     break;
-
                 case GET_ASYNC:
                     map.getAsync(key);
                     operationCounter.getAsyncCount.incrementAndGet();
                     break;
-
                 case DELETE:
                     map.delete(key);
                     operationCounter.deleteCount.incrementAndGet();
                     break;
-
                 case DESTROY:
                     map.destroy();
                     operationCounter.destroyCount.incrementAndGet();
                     break;
-
                 default:
                     throw new UnsupportedOperationException();
             }
@@ -184,24 +179,20 @@ public class MapStoreTest extends AbstractTest {
                     map.put(key, value);
                     operationCounter.putCount.incrementAndGet();
                     break;
-
                 case PUT_ASYNC:
                     map.putAsync(key, value);
                     operationCounter.putAsyncCount.incrementAndGet();
                     break;
-
                 case PUT_TTL:
                     int delayKey = putTTlKeyDomain + randomInt(putTTlKeyRange);
                     int delayMs = minTTLExpiryMs + randomInt(maxTTLExpiryMs);
                     map.putTransient(delayKey, value, delayMs, TimeUnit.MILLISECONDS);
                     operationCounter.putTransientCount.incrementAndGet();
                     break;
-
                 case PUT_IF_ABSENT:
                     map.putIfAbsent(key, value);
                     operationCounter.putIfAbsentCount.incrementAndGet();
                     break;
-
                 case REPLACE:
                     Integer orig = map.get(key);
                     if (orig != null) {
@@ -209,7 +200,6 @@ public class MapStoreTest extends AbstractTest {
                         operationCounter.replaceCount.incrementAndGet();
                     }
                     break;
-
                 default:
                     throw new UnsupportedOperationException();
             }
@@ -236,29 +226,39 @@ public class MapStoreTest extends AbstractTest {
             return;
         }
 
-        MapStoreConfig mapStoreConfig = targetInstance.getConfig().getMapConfig(name).getMapStoreConfig();
+        MapStoreConfig mapStoreConfig = getMapStoreConfig(targetInstance, name);
         int writeDelayMs = (int) TimeUnit.SECONDS.toMillis(mapStoreConfig.getWriteDelaySeconds());
+        final MapStoreWithCounter<Integer, Integer> mapStore
+                = (MapStoreWithCounter<Integer, Integer>) mapStoreConfig.getImplementation();
 
         int sleepMs = mapStoreMaxDelayMs * 2 + maxTTLExpiryMs * 2 + (writeDelayMs * 2);
         logger.info("Sleeping for " + TimeUnit.MILLISECONDS.toSeconds(sleepMs) + " seconds to wait for delay and TTL values.");
         sleepMillis(sleepMs);
-
-        final MapStoreWithCounter mapStore = (MapStoreWithCounter) mapStoreConfig.getImplementation();
 
         logger.info(name + ": map size = " + map.size());
         logger.info(name + ": map store = " + mapStore);
 
         assertTrueEventually(new AssertTask() {
             @Override
-            public void run() throws Exception {
-                for (Integer key : map.localKeySet()) {
-                    assertEquals(map.get(key), mapStore.get(key));
-                }
-                assertEquals("Map entrySets should be equal", map.getAll(map.localKeySet()).entrySet(), mapStore.entrySet());
-
+            public void run() {
                 for (int key = putTTlKeyDomain; key < putTTlKeyDomain + putTTlKeyRange; key++) {
                     assertNull(name + ": TTL key should not be in the map", map.get(key));
                 }
+            }
+        });
+
+        assertTrueEventually(new AssertTask() {
+            @Override
+            public void run() {
+                // entries will be persisted to MapStore eventually
+                Iterator<Map.Entry<Integer, Integer>> iterator = mapStore.entrySet().iterator();
+                while (iterator.hasNext()) {
+                    Map.Entry<Integer, Integer> entry = iterator.next();
+                    map.remove(entry.getKey(), entry.getValue());
+                    iterator.remove();
+                }
+
+                assertEquals("IMap should be empty when all persisted entries are removed", 0, map.size());
             }
         });
     }
