@@ -23,11 +23,15 @@ import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
+import com.hazelcast.simulator.utils.ThrottlingLogger;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 
+import javax.cache.processor.EntryProcessor;
+import javax.cache.processor.EntryProcessorException;
+import javax.cache.processor.MutableEntry;
+import java.io.Serializable;
 import java.util.Random;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -50,9 +54,16 @@ public class IntByteICacheTest extends HazelcastTest {
     public int writeKeyCount = -1;
     public KeyLocality keyLocality = KeyLocality.SHARED;
     // timeout in milliseconds for Cache asynchronous operations
-    public int timeout = 50;
+    public int timeoutMs = 50;
     // if true, any occurrence of TimeoutException is caught and only logged, if false it's propagated further
     public boolean catchTimeoutException = false;
+    // number of millisecond for stalling the partition thread using stallPartitionThread method
+    public int stallTimeMs = 0;
+
+    private final ThrottlingLogger throttlingLogger = ThrottlingLogger.newLogger(logger, 5000);
+    private final StallingEntryProcessor stallingEntryProcessor = new StallingEntryProcessor(stallTimeMs);
+
+    private int timeoutExceptionCounter = 0;
 
     private ICache<Integer, Object> cache;
     private int[] keys;
@@ -95,13 +106,15 @@ public class IntByteICacheTest extends HazelcastTest {
     }
 
     @TimeStep(prob = 0.1)
-    public void putAsync(ThreadState state) throws InterruptedException, ExecutionException, TimeoutException {
+    public void putTimed(ThreadState state) throws Exception {
         Future<Void> future = cache.putAsync(state.randomKey(), state.randomValue());
         try {
-            future.get(timeout, TimeUnit.MILLISECONDS);
+            future.get(timeoutMs, TimeUnit.MILLISECONDS);
         } catch (TimeoutException ex) {
+            timeoutExceptionCounter++;
             if (catchTimeoutException) {
-                logger.error("putAsync didn't finish within configured " + timeout + " ms timeout.", ex);
+                throttlingLogger.warn("putAsync didn't finish within configured " + timeoutMs + " ms timeout. "
+                        + "Number of timeouts occurred: " + timeoutExceptionCounter);
             } else {
                 throw ex;
             }
@@ -114,20 +127,27 @@ public class IntByteICacheTest extends HazelcastTest {
     }
 
     @TimeStep(prob = -1)
-    public Object getAsync(ThreadState state) throws InterruptedException, ExecutionException, TimeoutException {
+    public Object getTimed(ThreadState state) throws Exception {
         Future<Object> future = cache.getAsync(state.randomKey());
         Object result = null;
         try {
-            result = future.get(timeout, TimeUnit.MILLISECONDS);
+            result = future.get(timeoutMs, TimeUnit.MILLISECONDS);
         } catch (TimeoutException ex) {
+            timeoutExceptionCounter++;
             if (catchTimeoutException) {
-                logger.error("getAsync didn't finish within configured " + timeout + " ms timeout.", ex);
+                throttlingLogger.warn("getAsync didn't finish within configured " + timeoutMs + " ms timeout. "
+                        + "Number of timeouts occurred: " + timeoutExceptionCounter);
             } else {
                 throw ex;
             }
         }
 
         return result;
+    }
+
+    @TimeStep(prob = 0)
+    public void stall(ThreadState state) {
+        cache.invoke(state.randomKey(), stallingEntryProcessor);
     }
 
     public class ThreadState extends BaseThreadState {
@@ -141,8 +161,29 @@ public class IntByteICacheTest extends HazelcastTest {
         }
     }
 
+    static class StallingEntryProcessor implements EntryProcessor<Integer, Object, Object>, Serializable {
+
+        private int stallTime;
+
+        public StallingEntryProcessor(int stallTime) {
+            this.stallTime = stallTime;
+        }
+
+        @Override
+        public Object process(MutableEntry entry, Object... arguments) throws EntryProcessorException {
+            try {
+                Thread.sleep(stallTime);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+
+            return entry;
+        }
+    }
+
     @Teardown
     public void tearDown() {
+        throttlingLogger.info("Total number of TimeoutExceptions occurred: " + timeoutExceptionCounter);
         cache.destroy();
     }
 }
