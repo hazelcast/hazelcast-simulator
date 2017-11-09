@@ -20,6 +20,7 @@ import com.hazelcast.cache.ICache;
 import com.hazelcast.core.HazelcastInstance;
 import org.apache.log4j.Logger;
 
+import javax.cache.Cache;
 import javax.cache.Caching;
 import javax.cache.expiry.Duration;
 import javax.cache.spi.CachingProvider;
@@ -27,7 +28,7 @@ import java.net.URI;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.cache.HazelcastCachingProvider.propertiesByInstanceItself;
+import static com.hazelcast.cache.HazelcastCachingProvider.propertiesByInstanceName;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepTimeUnit;
 import static java.lang.String.format;
@@ -49,12 +50,14 @@ public final class CacheUtils {
     }
 
     public static <K, V> ICache<K, V> getCache(HazelcastInstance hazelcastInstance, String cacheName) {
-        return getCache(createCacheManager(hazelcastInstance), cacheName);
+        HazelcastCacheManager cacheManager = createCacheManager(hazelcastInstance);
+        return getCache(cacheManager, cacheName);
     }
 
     @SuppressWarnings("unchecked")
     public static <K, V> ICache<K, V> getCache(HazelcastCacheManager cacheManager, String cacheName) {
-        return cacheManager.getCache(cacheName).unwrap(ICache.class);
+        Cache<Object, Object> cache = cacheManager.getCache(cacheName);
+        return cache.unwrap(ICache.class);
     }
 
     /**
@@ -71,12 +74,13 @@ public final class CacheUtils {
      * Creates a cache manager
      *
      * @param hazelcastInstance the HazelcastInstance
-     * @param uri the uri
+     * @param uri               the uri
      * @return the CacheManager for given URI and default ClassLoader.
      */
     public static HazelcastCacheManager createCacheManager(HazelcastInstance hazelcastInstance, URI uri) {
-        Properties properties = propertiesByInstanceItself(hazelcastInstance);
-        return (HazelcastCacheManager) getCachingProvider(hazelcastInstance).getCacheManager(uri, null, properties);
+        Properties properties = propertiesByInstanceName(hazelcastInstance.getName());
+        CachingProvider cachingProvider = getCachingProvider(hazelcastInstance);
+        return (HazelcastCacheManager) cachingProvider.getCacheManager(uri, null, properties);
     }
 
     public static CachingProvider getCachingProvider(HazelcastInstance hazelcastInstance) {
