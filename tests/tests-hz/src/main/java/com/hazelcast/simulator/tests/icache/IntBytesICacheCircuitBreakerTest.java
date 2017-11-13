@@ -16,13 +16,16 @@
 package com.hazelcast.simulator.tests.icache;
 
 import com.hazelcast.cache.ICache;
+import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
+import com.hazelcast.simulator.test.annotations.BeforeRun;
 import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
+import com.hazelcast.simulator.utils.ExceptionReporter;
 import com.hazelcast.simulator.utils.ThrottlingLogger;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
@@ -33,20 +36,26 @@ import javax.cache.processor.MutableEntry;
 import java.io.Serializable;
 import java.util.Random;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntKeys;
 import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.getCache;
+import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateByteArray;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
-public class IntByteICacheTest extends HazelcastTest {
+/**
+ * An ICache test with Integer as key and a byte-array as value.
+ *
+ * It makes use of the circuit breaker patter for puts/gets. If put or get times out, an error is recorded.
+ */
+public class IntBytesICacheCircuitBreakerTest extends HazelcastTest {
 
     // properties
     public int keyCount = 1000;
     public int valueCount = 1000;
-    public int minSize = 16;
-    public int maxSize = 2000;
+    public int valueMinSize = 16;
+    public int valueMaxSize = 2000;
     // the number of keys that are going to be written.
     // normally you want to keep this the same as keyCount (for reading), but it can help to expose certain problems like
     // gc. If they writeKeyCount is very small, only a small group of objects get updated frequently and helps to prevent
@@ -55,6 +64,11 @@ public class IntByteICacheTest extends HazelcastTest {
     public KeyLocality keyLocality = KeyLocality.SHARED;
     // timeout in milliseconds for Cache asynchronous operations
     public int timeoutMs = 50;
+
+    // the backoff in millies between retrying a failed get/put. If this value is set to a very low value, it could
+    // lead to a high rate of spinning on failing gets/puts and could result in a high error rate.
+    public int backoffMs = 50;
+
     // if true, any occurrence of TimeoutException is caught and only logged, if false it's propagated further
     public boolean catchTimeoutException = false;
     // number of millisecond for stalling the partition thread using stallPartitionThread method
@@ -63,7 +77,14 @@ public class IntByteICacheTest extends HazelcastTest {
     private final ThrottlingLogger throttlingLogger = ThrottlingLogger.newLogger(logger, 5000);
     private final StallingEntryProcessor stallingEntryProcessor = new StallingEntryProcessor(stallTimeMs);
 
-    private int timeoutExceptionCounter = 0;
+    private final AtomicLong puts = new AtomicLong();
+    private final AtomicLong gets = new AtomicLong();
+    private final AtomicLong putErrors = new AtomicLong();
+    private final AtomicLong getErrors = new AtomicLong();
+    private IAtomicLong globalPuts;
+    private IAtomicLong globalGets;
+    private IAtomicLong globalPutErrors;
+    private IAtomicLong globalGetErrors;
 
     private ICache<Integer, Object> cache;
     private int[] keys;
@@ -74,13 +95,18 @@ public class IntByteICacheTest extends HazelcastTest {
         cache = getCache(targetInstance, name);
         keys = generateIntKeys(keyCount, keyLocality, targetInstance);
 
-        if (minSize > maxSize) {
-            throw new IllegalStateException("minSize can't be larger than maxSize");
+        if (valueMinSize > valueMaxSize) {
+            throw new IllegalStateException("valueMinSize can't be larger than valueMaxSize");
         }
 
         if (writeKeyCount == -1) {
             writeKeyCount = keyCount;
         }
+
+        globalGetErrors = targetInstance.getAtomicLong("globalGetErrors");
+        globalPutErrors = targetInstance.getAtomicLong("globalPutErrors");
+        globalGets = targetInstance.getAtomicLong("globalGets");
+        globalPuts = targetInstance.getAtomicLong("globalPuts");
     }
 
     @Prepare
@@ -88,8 +114,8 @@ public class IntByteICacheTest extends HazelcastTest {
         Random random = new Random();
         values = new byte[valueCount][];
         for (int i = 0; i < values.length; i++) {
-            int delta = maxSize - minSize;
-            int length = delta == 0 ? minSize : minSize + random.nextInt(delta);
+            int delta = valueMaxSize - valueMinSize;
+            int length = delta == 0 ? valueMinSize : valueMinSize + random.nextInt(delta);
             values[i] = generateByteArray(random, length);
         }
 
@@ -100,43 +126,45 @@ public class IntByteICacheTest extends HazelcastTest {
         streamer.await();
     }
 
-    @TimeStep(prob = 0.0)
-    public void put(ThreadState state) {
-        cache.put(state.randomKey(), state.randomValue());
+    @BeforeRun
+    public void beforeRun() {
+        new PublishThread().start();
     }
 
     @TimeStep(prob = 0.1)
-    public void putTimed(ThreadState state) throws Exception {
-        Future<Void> future = cache.putAsync(state.randomKey(), state.randomValue());
+    public void put(ThreadState state) throws Exception {
+        puts.incrementAndGet();
+
         try {
-            future.get(timeoutMs, TimeUnit.MILLISECONDS);
-        } catch (TimeoutException ex) {
-            timeoutExceptionCounter++;
+            Future<Void> future = cache.putAsync(state.randomKey(), state.randomValue());
+            future.get(timeoutMs, MILLISECONDS);
+        } catch (Exception ex) {
+            sleepMillis(backoffMs);
+
+            putErrors.incrementAndGet();
             if (catchTimeoutException) {
                 throttlingLogger.warn("putAsync didn't finish within configured " + timeoutMs + " ms timeout. "
-                        + "Number of timeouts occurred: " + timeoutExceptionCounter);
+                        + "Number of timeouts occurred: " + putErrors + " exception:" + ex.getClass());
             } else {
                 throw ex;
             }
         }
     }
 
-    @TimeStep(prob = 0)
-    public void get(ThreadState state) {
-        cache.get(state.randomKey());
-    }
-
     @TimeStep(prob = -1)
-    public Object getTimed(ThreadState state) throws Exception {
-        Future<Object> future = cache.getAsync(state.randomKey());
+    public Object get(ThreadState state) throws Exception {
+        gets.incrementAndGet();
+
         Object result = null;
         try {
-            result = future.get(timeoutMs, TimeUnit.MILLISECONDS);
-        } catch (TimeoutException ex) {
-            timeoutExceptionCounter++;
+            Future<Object> future = cache.getAsync(state.randomKey());
+            result = future.get(timeoutMs, MILLISECONDS);
+        } catch (Exception ex) {
+            sleepMillis(backoffMs);
+            getErrors.incrementAndGet();
             if (catchTimeoutException) {
                 throttlingLogger.warn("getAsync didn't finish within configured " + timeoutMs + " ms timeout. "
-                        + "Number of timeouts occurred: " + timeoutExceptionCounter);
+                        + "Number of timeouts occurred: " + putErrors + " exception:" + ex.getClass());
             } else {
                 throw ex;
             }
@@ -174,6 +202,7 @@ public class IntByteICacheTest extends HazelcastTest {
             try {
                 Thread.sleep(stallTime);
             } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
                 throw new RuntimeException(e);
             }
 
@@ -181,9 +210,47 @@ public class IntByteICacheTest extends HazelcastTest {
         }
     }
 
+    private final class PublishThread extends Thread {
+        // only 1 driver should be echoing the fail ratio's.
+        private final boolean isEchoer;
+
+        PublishThread() {
+            this.isEchoer = targetInstance.getAtomicLong("isEchoer").getAndIncrement() == 0;
+        }
+
+        @Override
+        public void run() {
+            try {
+                int k = 0;
+                while (!testContext.isStopped()) {
+                    k++;
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        continue;
+                    }
+
+                    long getFails = globalGetErrors.addAndGet(getErrors.getAndSet(0));
+                    long putFails = globalPutErrors.addAndGet(putErrors.getAndSet(0));
+
+                    long gets = globalGets.addAndGet(IntBytesICacheCircuitBreakerTest.this.gets.getAndSet(0));
+                    long puts = globalPuts.addAndGet(IntBytesICacheCircuitBreakerTest.this.puts.getAndSet(0));
+
+                    if (isEchoer && k % 5 == 0) {
+                        testContext.echoCoordinator("get fail " + ((100d * getFails) / gets) + " %% "
+                                + "put fail " + ((100d * putFails) / puts) + " %%");
+                    }
+                }
+            } catch (Exception e) {
+                ExceptionReporter.report(testContext.getTestId(), e);
+            }
+        }
+    }
+
     @Teardown
     public void tearDown() {
-        throttlingLogger.info("Total number of TimeoutExceptions occurred: " + timeoutExceptionCounter);
+        throttlingLogger.info("Total number of TimeoutExceptions occurred: " + putErrors);
         cache.destroy();
     }
 }
