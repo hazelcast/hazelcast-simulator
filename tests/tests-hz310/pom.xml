@@ -2,32 +2,25 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>tests</artifactId>
-    <name>Hazelcast Simulator Tests</name>
-    <packaging>pom</packaging>
+    <artifactId>tests-hz310</artifactId>
+    <name>Hazelcast Simulator Tests (HZ 3.10)</name>
 
     <parent>
         <groupId>com.hazelcast.simulator</groupId>
         <artifactId>simulator-root</artifactId>
         <version>0.9.9-SNAPSHOT</version>
-        <relativePath>../pom.xml</relativePath>
+        <relativePath>../../pom.xml</relativePath>
     </parent>
-
-    <prerequisites>
-        <maven>${maven.version}</maven>
-    </prerequisites>
 
     <properties>
         <main.basedir>${project.parent.basedir}</main.basedir>
     </properties>
 
-    <modules>
-        <module>tests-common</module>
-        <module>tests-hz35</module>
-        <module>tests-hz36</module>
-        <module>tests-hz37</module>
-        <module>tests-hz38</module>
-        <module>tests-hz39</module>
-        <module>tests-hz310</module>
-    </modules>
+    <dependencies>
+        <dependency>
+            <groupId>com.hazelcast.simulator</groupId>
+            <artifactId>tests-common</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+    </dependencies>
 </project>
