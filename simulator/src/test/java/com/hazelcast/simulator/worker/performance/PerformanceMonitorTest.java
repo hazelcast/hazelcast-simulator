@@ -29,6 +29,7 @@ import com.hazelcast.simulator.worker.testcontainer.TestContainer;
 import com.hazelcast.simulator.worker.testcontainer.TestContextImpl;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.concurrent.ConcurrentHashMap;
@@ -100,15 +101,18 @@ public class PerformanceMonitorTest {
         addTest(new SuccessTest());
 
         performanceMonitor.start();
+        sleepMillis(300);
 
         verifyNoMoreInteractions(serverConnector);
     }
 
     @Test
+    @Ignore(value = "the logic has been changed, so that the TestPerformanceTracker is always running...")
     public void test_whenTestWithProbeWhichIsNotRunning_thenDoNothing() {
         addTest(new com.hazelcast.simulator.tests.PerformanceMonitorTest());
 
         performanceMonitor.start();
+        sleepMillis(300);
 
         verifyNoMoreInteractions(serverConnector);
     }
@@ -156,11 +160,13 @@ public class PerformanceMonitorTest {
     }
 
     @Test
+    @Ignore(value = "the logic has been changed, so that the TestPerformanceTracker is always running...")
     public void test_whenTestWithProbeWhichIsNotRunningAnymore_thenDoNothing() throws Exception {
         addTest(new com.hazelcast.simulator.tests.PerformanceMonitorTest());
         tests.get(TEST_NAME).invoke(TestPhase.RUN);
 
         performanceMonitor.start();
+        sleepMillis(300);
 
         verifyNoMoreInteractions(serverConnector);
     }

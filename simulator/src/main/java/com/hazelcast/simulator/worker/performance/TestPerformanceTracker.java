@@ -70,6 +70,10 @@ public final class TestPerformanceTracker {
 
     public void update(long currentTimestamp) {
         Map<String, Probe> probeMap = testContainer.getProbeMap();
+        if (probeMap.isEmpty()) {
+            return;
+        }
+
         Map<String, Histogram> intervalHistograms = new HashMap<String, Histogram>(probeMap.size());
 
         long intervalPercentileLatency = -1;
