@@ -68,6 +68,7 @@ public final class TestPerformanceTracker {
                 new File(getUserDir(), "performance-" + container.getTestCase().getId() + ".csv"));
     }
 
+    @SuppressWarnings("checkstyle:npathcomplexity")
     public void update(long currentTimestamp) {
         Map<String, Probe> probeMap = testContainer.getProbeMap();
         if (probeMap.isEmpty()) {
