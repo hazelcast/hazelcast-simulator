@@ -351,8 +351,9 @@ class Provisioner {
         uploadLibraryJar(ip, "jopt*");
         uploadLibraryJar(ip, "junit*");
         uploadLibraryJar(ip, "log4j*");
+        uploadLibraryJar(ip, "metrics-core-**");
         uploadLibraryJar(ip, "netty-*");
-        uploadLibraryJar(ip, "slf4j-log4j12-*");
+        uploadLibraryJar(ip, "slf4j-*");
 
         // upload remaining files
         bash.uploadToRemoteSimulatorDir(ip, simulatorPath + "/bin/", "bin");
