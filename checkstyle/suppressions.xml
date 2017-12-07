@@ -43,6 +43,11 @@
     <suppress checks="JUnitTestCase|MethodName|TypeName|ExplicitInitialization"
               files="/com/hazelcast/simulator/couchbase/.*Test\.java$"/>
 
+    <!-- Memcached Tests -->
+    <suppress checks="MagicNumber|VisibilityModifier" files="/com/hazelcast/simulator/memcached/"/>
+    <suppress checks="JUnitTestCase|MethodName|TypeName|ExplicitInitialization"
+              files="/com/hazelcast/simulator/memcached/.*Test\.java$"/>
+
     <!-- file comes from HdrHistogram project; see comments for more info -->
     <suppress checks="" files="com/hazelcast/simulator/utils/HistogramLogProcessor"/>
 

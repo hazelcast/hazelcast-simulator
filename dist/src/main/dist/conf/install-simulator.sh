@@ -81,6 +81,11 @@ if [ "$VENDOR" = "couchbase" ]; then
     uploadLibraryJar "rxjava-*"
 fi
 
+# hack to get memcached working
+if [ "$VENDOR" = "memcached" ]; then
+    uploadLibraryJar "spymemcached*"
+fi
+
 # upload remaining files
 uploadToRemoteSimulatorDir "$SIMULATOR_HOME/bin/" "bin"
 uploadToRemoteSimulatorDir "$SIMULATOR_HOME/conf/" "conf"

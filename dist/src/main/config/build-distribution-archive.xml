@@ -78,5 +78,13 @@
                 <include>com.hazelcast.simulator:tests-couchbase</include>
             </includes>
         </dependencySet>
+
+        <dependencySet>
+            <outputDirectory>test-lib/tests-memcached</outputDirectory>
+            <useProjectArtifact>false</useProjectArtifact>
+            <includes>
+                <include>com.hazelcast.simulator:tests-memcached</include>
+            </includes>
+        </dependencySet>
     </dependencySets>
 </assembly>
