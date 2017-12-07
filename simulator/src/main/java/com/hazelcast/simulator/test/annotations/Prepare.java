@@ -26,6 +26,8 @@ import java.lang.annotation.Target;
  * Multiple {@link Prepare} methods are allowed. The {@link Prepare} methods on a subclass are executed before
  * the {@link Prepare} methods on a super class, however there is no ordering within the same class. This is the same
  * semantics as provided by junit. However local {@link Prepare} always happens before global {@link Prepare}.
+ *
+ * The prepare method(s) is called only once per test-instance.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)

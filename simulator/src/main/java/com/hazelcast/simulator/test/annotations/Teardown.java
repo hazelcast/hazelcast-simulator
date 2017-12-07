@@ -26,6 +26,8 @@ import java.lang.annotation.Target;
  * Multiple {@link Teardown} methods are allowed. The {@link Teardown} methods on a subclass are executed before
  * the {@link Teardown} methods on a super class, however there is no ordering within the same class. However global
  * teardown will be executed before local teardown.
+ *
+ * The teardown method(s) is called at most once per test-instance.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)

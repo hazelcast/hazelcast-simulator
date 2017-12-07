@@ -27,6 +27,8 @@ import java.lang.annotation.Target;
  * Multiple {@link Verify} methods are allowed. The {@link Verify} methods on a subclass are executed before
  * the {@link Verify} methods on a super class, however there is no ordering within the same class. This is the same
  * semantics as provided by junit. However {@link Verify} local happens before global {@link Verify}.
+ *
+ * The verify method(s) is called at most once per test-instance.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
