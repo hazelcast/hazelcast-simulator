@@ -110,5 +110,13 @@
                 <include>com.hazelcast.simulator:tests-lettuce</include>
             </includes>
         </dependencySet>
+
+        <dependencySet>
+            <outputDirectory>test-lib/tests-jedis</outputDirectory>
+            <useProjectArtifact>false</useProjectArtifact>
+            <includes>
+                <include>com.hazelcast.simulator:tests-jedis</include>
+            </includes>
+        </dependencySet>
     </dependencySets>
 </assembly>
