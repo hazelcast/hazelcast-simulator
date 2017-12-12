@@ -18,7 +18,7 @@ package com.hazelcast.simulator.memcached;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.InjectTestContext;
 import com.hazelcast.simulator.test.annotations.InjectVendor;
-import net.spy.memcached.MemcachedClient;
+import edu.umd.cs.findbugs.annotations.SuppressWarnings;
 import org.apache.log4j.Logger;
 
 public abstract class MemcachedTest {
@@ -34,7 +34,7 @@ public abstract class MemcachedTest {
     protected final Logger logger = Logger.getLogger(getClass());
 
     @InjectVendor
-    protected MemcachedClient client;
+    protected MemcachedClientFactory clientFactory;
 
     @InjectTestContext
     protected TestContext testContext;

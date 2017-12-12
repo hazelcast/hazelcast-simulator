@@ -17,9 +17,7 @@ package com.hazelcast.simulator.memcached;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.vendors.VendorDriver;
-import net.spy.memcached.MemcachedClient;
 
-import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,9 +25,9 @@ import java.util.List;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static java.lang.String.format;
 
-public class MemcachedDriver extends VendorDriver<MemcachedClient> {
+public class MemcachedDriver extends VendorDriver<MemcachedClientFactory> {
 
-    private MemcachedClient client;
+    private MemcachedClientFactory clientFactory;
 
     @Override
     public WorkerParameters loadWorkerParameters(String workerType, int agentIndex) {
@@ -54,8 +52,8 @@ public class MemcachedDriver extends VendorDriver<MemcachedClient> {
     }
 
     @Override
-    public MemcachedClient getVendorInstance() {
-        return client;
+    public MemcachedClientFactory getVendorInstance() {
+        return clientFactory;
     }
 
     @Override
@@ -74,13 +72,12 @@ public class MemcachedDriver extends VendorDriver<MemcachedClient> {
             }
             addresses.add(new InetSocketAddress(addressParts[0], port));
         }
-        this.client = new MemcachedClient(addresses);
+
+        clientFactory = new MemcachedClientFactory(addresses);
     }
 
     @Override
-    public void close() throws IOException {
-        if (client != null) {
-            client.shutdown();
-        }
+    public void close() {
+        clientFactory.shutdown();
     }
 }

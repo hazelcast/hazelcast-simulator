@@ -18,12 +18,13 @@ package com.hazelcast.simulator.memcached;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
-import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
+import net.spy.memcached.MemcachedClient;
 import net.spy.memcached.internal.OperationFuture;
 import net.spy.memcached.transcoders.SerializingTranscoder;
 
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateByteArray;
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateStrings;
@@ -42,12 +43,17 @@ public class ReadWriteTest extends MemcachedTest {
     // gc. If they writeKeyCount is very small, only a small group of objects get updated frequently and helps to prevent
     // getting them tenured. If writeKeyCount is -1, it will automatically be set to keyCount
     public int writeKeyCount = -1;
+    public boolean preload = true; // whether we want to preload the entries into the cache
+    public long operationTimeout = 2500; // in milliseconds
+    public boolean useSharedClient = false; // whether to use one client per thread or share the clients
 
     private String[] keys;
     private byte[][] values;
 
+
     @Setup
     public void setUp() {
+        clientFactory.setUseSharedClient(useSharedClient);
         keys = generateStrings(keyCount, keyLength);
 
         if (minSize > maxSize) {
@@ -69,37 +75,46 @@ public class ReadWriteTest extends MemcachedTest {
             values[i] = generateByteArray(random, length);
         }
 
-        for (String key : keys) {
-            client.add(key, ttl, values[random.nextInt(values.length)]);
+        if (preload) {
+            MemcachedClient loaderClient = clientFactory.create();
+            SerializingTranscoder transcoder = new SerializingTranscoder(Integer.MAX_VALUE);
+            transcoder.setCompressionThreshold(Integer.MAX_VALUE);
+            for (String key : keys) {
+                loaderClient.add(key, ttl, values[random.nextInt(values.length)], transcoder);
+            }
         }
     }
 
     @TimeStep(prob = 0.1)
     public OperationFuture<Boolean> put(ThreadState state) {
-        return client.add(state.randomKey(), ttl, state.randomValue(), state.transcoder());
+        return state.client.add(state.randomKey(), ttl, state.randomValue(), state.transcoder());
     }
 
     @TimeStep(prob = 0.0)
     public boolean putWithCheck(ThreadState state) throws Exception {
-        return client.add(state.randomKey(), ttl, state.randomValue(), state.transcoder()).get();
+        return state.client.add(state.randomKey(), ttl, state.randomValue(), state.transcoder())
+                .get(operationTimeout, TimeUnit.MILLISECONDS);
     }
 
     @TimeStep(prob = 0.0)
     public OperationFuture<Boolean> set(ThreadState state) {
-        return client.set(state.randomWriteKey(), ttl, state.randomValue(), state.transcoder());
+        return state.client.set(state.randomWriteKey(), ttl, state.randomValue(), state.transcoder());
     }
 
     @TimeStep(prob = 0.0)
     public boolean setWithCheck(ThreadState state) throws Exception {
-        return client.set(state.randomWriteKey(), ttl, state.randomValue(), state.transcoder()).get();
+        return state.client.set(state.randomWriteKey(), ttl, state.randomValue(), state.transcoder())
+                .get(operationTimeout, TimeUnit.MILLISECONDS);
     }
 
     @TimeStep(prob = -1)
     public Object get(ThreadState state) {
-        return client.get(state.randomKey());
+        return state.client.get(state.randomKey());
     }
 
     public class ThreadState extends BaseThreadState {
+
+        private final MemcachedClient client = clientFactory.create();
 
         private SerializingTranscoder transcoder;
 
@@ -123,10 +138,5 @@ public class ReadWriteTest extends MemcachedTest {
         private byte[] randomValue() {
             return values[randomInt(values.length)];
         }
-    }
-
-    @Teardown
-    public void tearDown() {
-        client.shutdown();
     }
 }
