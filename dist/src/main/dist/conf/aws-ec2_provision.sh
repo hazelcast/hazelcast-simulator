@@ -74,6 +74,11 @@ start_instances(){
 
     cat >$temp_file <<EOL
 #!/bin/bash
+
+# enable this to fix the original account. Make sure the proper user for that
+# account is used.
+# echo $id_rsa_pub>>/home/ec2-user/.ssh/authorized_keys
+
 exec > ~/init.out
 exec 2> ~/init.err
 
@@ -81,7 +86,7 @@ addgroup wheel || true
 
 # fix the sudoers file. inspired by org.jclouds.scriptbuilder.statements.login.Sudoers
 rm -fr /etc/sudoers
-echo "Defaults    env_reset" >> /etc/sudoers1
+echo "Defaults    env_reset" >> /etc/sudoers
 echo "Defaults    secure_path=\"/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\" " >> /etc/sudoers
 echo "root ALL = (ALL) ALL" >> /etc/sudoers
 echo "%wheel ALL = (ALL) NOPASSWD:ALL" >> /etc/sudoers
@@ -100,7 +105,11 @@ chmod 700 /home/$SIMULATOR_USER/.ssh
 touch /home/$SIMULATOR_USER/.ssh/authorized_keys
 chmod 600 /home/$SIMULATOR_USER/.ssh/authorized_keys
 echo $id_rsa_pub>>/home/$SIMULATOR_USER/.ssh/authorized_keys
-chown -R $SIMULATOR_USER /home/$SIMULATOR_USER/
+chown -R $SIMULATOR_USER:$SIMULATOR_USER /home/$SIMULATOR_USER/
+
+# this is needed to fix problems due to SELinux
+# https://blog.tinned-software.net/ssh-key-authentication-is-not-working-selinux/
+sudo -H -u $SIMULATOR_USER bash -c "restorecon -r -v /home/$SIMULATOR_USER/" || true
 EOL
     args=""
     args="$args --image-id $IMAGE_ID"
