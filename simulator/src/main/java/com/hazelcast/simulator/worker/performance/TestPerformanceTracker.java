@@ -175,7 +175,6 @@ public final class TestPerformanceTracker {
         this.lastUpdateMillis = currentTimeMillis;
     }
 
-
     long intervalOperationCount() {
         return intervalOperationCount;
     }
