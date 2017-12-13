@@ -31,15 +31,6 @@
             <name>Hazelcast Snapshot Repository</name>
             <url>https://oss.sonatype.org/content/repositories/snapshots</url>
         </repository>
-
-        <repository>
-            <id>jclouds-snapshots</id>
-            <name>jclouds Snapshot Repository</name>
-            <url>https://repository.apache.org/content/repositories/snapshots</url>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
     </repositories>
 
     <properties>
