@@ -18,7 +18,6 @@ package com.hazelcast.simulator.memcached;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.InjectTestContext;
 import com.hazelcast.simulator.test.annotations.InjectVendor;
-import edu.umd.cs.findbugs.annotations.SuppressWarnings;
 import net.spy.memcached.MemcachedClient;
 import org.apache.log4j.Logger;
 
