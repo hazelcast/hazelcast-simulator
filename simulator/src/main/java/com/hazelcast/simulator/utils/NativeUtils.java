@@ -95,7 +95,7 @@ public final class NativeUtils {
             RuntimeMXBean runtime = java.lang.management.ManagementFactory.getRuntimeMXBean();
             java.lang.reflect.Field jvm = runtime.getClass().getDeclaredField("jvm");
             jvm.setAccessible(true);
-            sun.management.VMManagement management = (sun.management.VMManagement) jvm.get(runtime);
+            Object management = jvm.get(runtime);
             java.lang.reflect.Method pidMethod = management.getClass().getDeclaredMethod("getProcessId");
             pidMethod.setAccessible(true);
 
