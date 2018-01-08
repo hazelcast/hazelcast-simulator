@@ -436,19 +436,19 @@ public final class CoordinatorRemoteCli implements Closeable {
                 + "\n"
                 + "Examples\n"
                 + "# takes a threadump on all workers\n"
-                + "coordinator-remote worker-script  --command 'bash:jstack $PID''\n\n"
+                + "coordinator-remote worker-script 'bash:jstack $PID''\n\n"
                 + "# takes a threadump on at most 2 workers\n"
-                + "coordinator-remote worker-script  --maxCount 2 --command 'bash:jstack $PID''\n\n"
+                + "coordinator-remote worker-script  --maxCount 2 'bash:jstack $PID''\n\n"
                 + "# takes a threadump on all member\n"
-                + "coordinator-remote worker-script  --workerType member --command 'bash:jstack $PID''\n\n"
+                + "coordinator-remote worker-script  --workerType member 'bash:jstack $PID''\n\n"
                 + "# takes a threadump on all workers with a specific version\n"
-                + "coordinator-remote worker-script  --versionSpec maven=3.7 --command 'bash:jstack $PID''\n\n"
+                + "coordinator-remote worker-script  --versionSpec maven=3.7 'bash:jstack $PID''\n\n"
                 + "# takes a threaddump on all member on agent A1\n"
-                + "coordinator-remote worker-script --workerType member --agents A1 --command 'bash:jstack $PID'\n\n"
+                + "coordinator-remote worker-script --workerType member --agents A1 'bash:jstack $PID'\n\n"
                 + "# takes a threaddump on A1_W1\n"
-                + "coordinator-remote worker-script --workers A1_W1 --command 'bash:jstack $PID'\n\n"
+                + "coordinator-remote worker-script --workers A1_W1 'bash:jstack $PID'\n\n"
                 + "# executes a javascript on all workers\n"
-                + "coordinator-remote worker-script --command 'js:java.lang.System.out.println(\"hello\")'";
+                + "coordinator-remote worker-script 'js:java.lang.System.out.println(\"hello\")'";
 
         private final OptionSpec fireAndForget = parser.accepts("fireAndForget",
                 "If the command is a fire and forget and no waiting for a response.");
