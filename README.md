@@ -767,7 +767,7 @@ the following examples:
   - `member-kill --versionSpec maven=3.8` which kills one member having the given version.
   <br></br>
 - Example for the option `workerType`:
-  - `worker-script --workerType javaclient --command 'bash:ls'` executes the `ls` command on all Java clients.
+  - `worker-script --workerType javaclient 'bash:ls'` executes the `ls` command on all Java clients.
   <br></br>
 - Example for the option `agents`:
   - `test-run --agents C_A1,C_A2 map.properties` runs a test on all members that belong to Agent 1 and 2.
@@ -982,7 +982,7 @@ scripting language. Please see the [Killing Workers](#killing-workers) for more 
 For example, the following command will return the directory listing for every worker:
 
 ```
-coordinator-remote worker-script --command `bash:ls`
+coordinator-remote worker-script `bash:ls`
 ```
 
 
@@ -992,7 +992,7 @@ By default the `worker-script` command will wait for the results of the `execute
 executed in a fire and forget fashion. This can be done using the `--fireAndForgetFlag` option as shown below:
 
 ```
-coordinator-remote worker-script --fireAndForgetFlag  --command 'bash:jstack $PID'
+coordinator-remote worker-script --fireAndForgetFlag 'bash:jstack $PID'
 ```
 
 This command makes a thread dump of each worker JVM.
