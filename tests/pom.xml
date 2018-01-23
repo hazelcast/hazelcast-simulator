@@ -29,5 +29,6 @@
         <module>tests-infinispan</module>
         <module>tests-couchbase</module>
         <module>tests-memcached</module>
+        <module>tests-jet</module>
     </modules>
 </project>
