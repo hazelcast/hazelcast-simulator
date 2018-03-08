@@ -946,7 +946,7 @@ given agent, or kill all workers with a given version. Please see the [Querying 
 You can fully control how a worker is going to get killed. It can be done, for example, by executing a bash script:
 
 ```
-coordinator-remote worker-kill 'bash:kill -9 $PID'
+coordinator-remote worker-kill --command 'bash:kill -9 $PID'
 ```
 
 The `$PID`, the PID of the worker, is available as an environment variable for the bash script.
@@ -954,7 +954,7 @@ The `$PID`, the PID of the worker, is available as an environment variable for t
 You can also send an embedded JavaScript as shown below:
 
 ```
-coordinator-remote worker-kill 'js:code that kills the JVM'
+coordinator-remote worker-kill --command 'js:code that kills the JVM'
 ```
 
 Using the JavaScript you can execute commands on the JVM without needing to have the that code on the worker. Access to the 
@@ -967,7 +967,7 @@ make sure the appropriate JAR files are set on the worker's classpath.
 Another way to kill a member is by causing an OOME as shown below:
 
 ```
-coordinator-remote worker-kill OOME
+coordinator-remote worker-kill --command OOME
 ```
 
 The OOME is actually built on top of the JavaScript version and it allocates big arrays till the JVM runs out of memory.
