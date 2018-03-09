@@ -87,7 +87,6 @@ public class IntByteMapTest extends HazelcastTest {
 
     @TimeStep(prob = 0.0)
     public void set(ThreadState state) {
-
         map.set(state.randomWriteKey(), state.randomValue());
     }
 
