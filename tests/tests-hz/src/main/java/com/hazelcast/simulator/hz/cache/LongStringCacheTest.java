@@ -21,6 +21,8 @@ import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
+import com.hazelcast.simulator.worker.loadsupport.Streamer;
+import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 
 import javax.cache.Cache;
 import javax.cache.CacheManager;
@@ -51,10 +53,12 @@ public class LongStringCacheTest extends HazelcastTest {
     @Prepare(global = true)
     public void prepare() {
         Random random = new Random();
+        Streamer<Long, String> streamer = StreamerFactory.getInstance(cache);
         for (long key = 0; key < keyDomain; key++) {
             String value = values[random.nextInt(valueCount)];
-            cache.put(key, value);
+            streamer.pushEntry(key, value);
         }
+        streamer.await();
     }
 
     @TimeStep(prob = -1)
