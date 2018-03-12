@@ -69,32 +69,31 @@ public class MapTransactionReadWriteTest extends HazelcastTest {
     }
 
     @TimeStep(prob = 0.1)
-    public void put(ThreadState state) {
+    public Object put(ThreadState state) {
         final int key = state.randomKey();
         final int value = state.randomValue();
-        targetInstance.executeTransaction(new TransactionalTask<Object>() {
+        return targetInstance.executeTransaction(new TransactionalTask<Object>() {
             @Override
-            public Object execute(TransactionalTaskContext transactionalTaskContext) {
-                TransactionalMap<Integer, Integer> txMap = transactionalTaskContext.getMap(map.getName());
+            public Object execute(TransactionalTaskContext ctx) {
+                TransactionalMap<Integer, Integer> txMap = ctx.getMap(map.getName());
                 if (useSet) {
                     txMap.set(key, value);
+                    return null;
                 } else {
-                    txMap.put(key, value);
+                    return txMap.put(key, value);
                 }
-                return null;
             }
         });
     }
 
     @TimeStep(prob = -1)
-    public void get(ThreadState state) {
+    public Object get(ThreadState state) {
         final int key = state.randomKey();
-        targetInstance.executeTransaction(new TransactionalTask<Object>() {
+        return targetInstance.executeTransaction(new TransactionalTask<Object>() {
             @Override
-            public Object execute(TransactionalTaskContext transactionalTaskContext) {
-                TransactionalMap<Integer, Integer> txMap = transactionalTaskContext.getMap(map.getName());
-                txMap.get(key);
-                return null;
+            public Object execute(TransactionalTaskContext ctx) {
+                TransactionalMap<Integer, Integer> txMap = ctx.getMap(map.getName());
+                return txMap.get(key);
             }
         });
     }
