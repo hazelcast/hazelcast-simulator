@@ -27,8 +27,10 @@ import com.hazelcast.simulator.utils.BashCommand;
 import com.hazelcast.simulator.worker.operations.CreateTestOperation;
 import com.hazelcast.simulator.worker.operations.StartPhaseOperation;
 import com.hazelcast.simulator.worker.operations.StopRunOperation;
+import com.hazelcast.simulator.worker.performance.PerformanceStats;
 import org.apache.log4j.Logger;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -53,7 +55,9 @@ import static com.hazelcast.simulator.utils.CommonUtils.getElapsedSeconds;
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepUntilMs;
+import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FileUtils.getConfigurationFile;
+import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.FormatUtils.formatPercentage;
 import static com.hazelcast.simulator.utils.FormatUtils.padRight;
 import static com.hazelcast.simulator.utils.FormatUtils.secondsToHuman;
@@ -309,8 +313,17 @@ public final class TestCaseRunner {
             LOGGER.info(testCase.getId() + " Waiting for all performance info");
             sleepSeconds(performanceMonitorIntervalSeconds);
 
+            String performanceInfo = performanceStatsCollector.detailedPerformanceInfo(testCase.getId(), durationMillis);
             LOGGER.info("Performance " + testCase.getId() + "\n"
-                    + performanceStatsCollector.detailedPerformanceInfo(testCase.getId(), durationMillis));
+                    + performanceInfo);
+
+            PerformanceStats performanceStats = performanceStatsCollector.get(testCase.getId(), true);
+            File outputDir = new File(getUserDir(), this.coordinatorParameters.getSessionId());
+            File performanceFile = new File(outputDir, "performance.txt");
+            long operationCount = performanceStats.getOperationCount();
+            appendText("operations=" + operationCount + "\n", performanceFile);
+            appendText("durationMillis=" + durationMillis + "\n", performanceFile);
+            appendText("tps=" + (((float) operationCount / durationMillis)) + "\n", performanceFile);
         }
     }
 

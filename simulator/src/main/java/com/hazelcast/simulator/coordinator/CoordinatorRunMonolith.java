@@ -66,6 +66,7 @@ class CoordinatorRunMonolith {
 
         try {
             coordinator.createRunTestSuiteTask(testSuite).run();
+
         } catch (CommandLineExitException e) {
             for (int i = 0; i < WAIT_FOR_WORKER_FAILURE_RETRY_COUNT && failureCollector.getFailureCount() == 0; i++) {
                 sleepSeconds(1);

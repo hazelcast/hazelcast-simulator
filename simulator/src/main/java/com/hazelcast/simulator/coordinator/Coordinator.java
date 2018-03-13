@@ -220,7 +220,7 @@ public class Coordinator implements Closeable {
         LOGGER.info("The following tests failed to complete: " + tests);
     }
 
-    private void startClient() throws Exception {
+    private void startClient() {
         // todo: should be async to speed things up
         for (AgentData agent : registry.getAgents()) {
             try {
@@ -235,7 +235,7 @@ public class Coordinator implements Closeable {
         LOGGER.info("Remote client started successfully!");
     }
 
-    public void download() throws Exception {
+    public void download() {
         new DownloadTask(publicAddresses(registry.getAgents()),
                 properties.asMap(),
                 outputDirectory.getParentFile(),
@@ -243,7 +243,7 @@ public class Coordinator implements Closeable {
 
     }
 
-    public void stop() throws Exception {
+    public void stop() {
         LOGGER.info("Shutting down...");
 
         new Thread(new Runnable() {
@@ -261,7 +261,7 @@ public class Coordinator implements Closeable {
         }).start();
     }
 
-    public void installVendor(String versionSpec) throws Exception {
+    public void installVendor(String versionSpec) {
         loadVendorDriver(properties.get("VENDOR"))
                 .setAll(properties.asPublicMap())
                 .set("VERSION_SPEC", versionSpec)
@@ -269,11 +269,11 @@ public class Coordinator implements Closeable {
                 .install();
     }
 
-    public String printLayout() throws Exception {
+    public String printLayout() {
         return registry.printLayout();
     }
 
-    public String testRun(RcTestRunOperation op) throws Exception {
+    public String testRun(RcTestRunOperation op) {
         LOGGER.info("Run starting...");
         final RunTestSuiteTask runTestSuiteTask = createRunTestSuiteTask(op.getTestSuite());
 
@@ -326,7 +326,7 @@ public class Coordinator implements Closeable {
                 + " seconds, current status: " + test.getStatusString());
     }
 
-    public String testStatus(RcTestStatusOperation op) throws Exception {
+    public String testStatus(RcTestStatusOperation op) {
         TestData test = registry.getTest(op.getTestId());
         return test == null ? "null" : test.getStatusString();
     }
