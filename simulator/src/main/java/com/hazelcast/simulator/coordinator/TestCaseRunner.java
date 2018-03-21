@@ -323,7 +323,7 @@ public final class TestCaseRunner {
             long operationCount = performanceStats.getOperationCount();
             appendText("operations=" + operationCount + "\n", performanceFile);
             appendText("durationMillis=" + durationMillis + "\n", performanceFile);
-            appendText("tps=" + (((float) operationCount / durationMillis)) + "\n", performanceFile);
+            appendText("tps=" + ((1000f * operationCount) / durationMillis) + "\n", performanceFile);
         }
     }
 
