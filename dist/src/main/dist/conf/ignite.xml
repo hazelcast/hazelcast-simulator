@@ -17,11 +17,8 @@
 
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xmlns:util="http://www.springframework.org/schema/util"
        xsi:schemaLocation="http://www.springframework.org/schema/beans
-       http://www.springframework.org/schema/beans/spring-beans.xsd
-       http://www.springframework.org/schema/util
-       http://www.springframework.org/schema/util/spring-util.xsd">
+       http://www.springframework.org/schema/beans/spring-beans.xsd">
 
     <!--
         Initialize property configurer so we can reference environment variables.
@@ -33,6 +30,18 @@
 
     <bean id="grid.cfg" class="org.apache.ignite.configuration.IgniteConfiguration">
         <property name="clientMode" value="<!--CLIENT_MODE-->"/>
+
+        <property name="cacheConfiguration">
+            <!-- the followng matches the default HZ configuration with 1 sync backup -->
+            <bean class="org.apache.ignite.configuration.CacheConfiguration">
+                <property name="name" value="cache"/>
+                <property name="cacheMode" value="PARTITIONED"/>
+                <property name="backups" value="1"/>
+                <property name="writeSynchronizationMode" value="FULL_SYNC"/>
+                <property name="readFromBackup" value="false"/>
+                <!-- Other cache configurations. -->
+            </bean>
+        </property>
 
         <property name="discoverySpi">
             <bean class="org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi">

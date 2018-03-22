@@ -22,7 +22,7 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import static com.hazelcast.simulator.utils.FileUtils.ensureNewDirectory;
+import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 
@@ -31,7 +31,7 @@ import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
  */
 public class CoordinatorParameters {
 
-    private String sessionId = new SimpleDateFormat("yyyy-MM-dd__HH_mm_ss").format(new Date());
+    private String sessionId;
     private TestPhase lastTestPhaseToSync = TestPhase.getLastTestPhase();
 
     private SimulatorProperties simulatorProperties;
@@ -40,18 +40,41 @@ public class CoordinatorParameters {
     private int workerVmStartupDelayMs;
     private File outputDirectory;
 
+    public CoordinatorParameters() {
+        setSessionId(new SimpleDateFormat("yyyy-MM-dd__HH_mm_ss").format(new Date()));
+    }
+
     public String getSessionId() {
         return sessionId;
     }
 
     public CoordinatorParameters setSessionId(String sessionId) {
-        this.sessionId = checkNotNull(sessionId, "sessionId can't be null");
-        this.outputDirectory = ensureNewDirectory(new File(getUserDir(), sessionId));
+        checkNotNull(sessionId, "sessionId can't be null");
+
+        File file = new File(sessionId);
+        if (!file.isAbsolute()) {
+            file = new File(getUserDir(), sessionId);
+        }
+
+        File parentDir = file.getParentFile();
+        if (file.getName().equals("@it")) {
+            int k = 1;
+            for (; ; ) {
+                file = new File(parentDir, String.format("%03d", k));
+                if (!file.exists()) {
+                    break;
+                }
+                k++;
+            }
+        }
+
+        this.sessionId = file.getName();
+        this.outputDirectory = file.getAbsoluteFile();
         return this;
     }
 
     public File getOutputDirectory() {
-        return outputDirectory;
+        return ensureExistingDirectory(outputDirectory);
     }
 
     public TestPhase getLastTestPhaseToSync() {
