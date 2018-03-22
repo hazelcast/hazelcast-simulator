@@ -274,6 +274,21 @@ public final class FileUtils {
         return dir;
     }
 
+    /**
+     * Makes sure the directory exists and is fresh.
+     *
+     * If the directory doesn't exist, it is created.
+     *
+     * If the directory does exist, it is fully deleted and then recreated.
+     *
+     * @param dir the directory
+     * @return the directory
+     */
+    public static File ensureFreshDirectory(File dir) {
+        delete(dir);
+        return ensureExistingDirectory(dir);
+    }
+
     public static File ensureNewDirectory(File dir) {
         if (dir.exists()) {
             throw new UncheckedIOException(format("Directory [%s] already exists", dir.getAbsoluteFile()));

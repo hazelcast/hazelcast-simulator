@@ -51,14 +51,14 @@ public class AtomicLongTest extends HazelcastTest {
     }
 
     @TimeStep(prob = -1)
-    public void get(ThreadState state) {
-        state.randomCounter().get();
+    public long get(ThreadState state) {
+        return state.randomCounter().get();
     }
 
     @TimeStep(prob = 0.1)
-    public void write(ThreadState state) {
-        state.randomCounter().incrementAndGet();
+    public long write(ThreadState state) {
         state.increments++;
+        return state.randomCounter().incrementAndGet();
     }
 
     public class ThreadState extends BaseThreadState {

@@ -110,7 +110,11 @@ final class CoordinatorCli {
 
     private final OptionSpec<String> sessionIdSpec = parser.accepts("sessionId",
             "Defines the ID of the Session. If not set the actual date will be used."
-                    + " The session ID is used for creating the working directory")
+                    + " The session ID is used for creating the working directory."
+                    + " The session ID can also contain a directory e.g. foo/mytest, in this case mytest is the sessionId "
+                    + " and simulator will make use of the foo/mytest directory to write the results."
+                    + " For repeated runs, the session can be set to e.g. somedir/@it. In this case the @it is replaced by "
+                    + " an automatically incrementing number.")
             .withRequiredArg().ofType(String.class);
 
     private final OptionSpec<Boolean> verifyEnabledSpec = parser.accepts("verifyEnabled",

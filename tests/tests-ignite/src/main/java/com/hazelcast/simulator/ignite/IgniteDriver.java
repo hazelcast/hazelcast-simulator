@@ -24,7 +24,6 @@ import org.apache.ignite.Ignition;
 import org.apache.log4j.Logger;
 
 import java.io.File;
-import java.io.IOException;
 
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static java.lang.String.format;
@@ -43,7 +42,7 @@ public class IgniteDriver extends VendorDriver<Ignite> {
 
         if ("member".equals(workerType)) {
             loadServerParameters(params);
-        } else if ("javaclient".equals(workerType)) {
+        } else if ("litemember".equals(workerType)) {
             loadClientParameters(params);
         } else {
             throw new IllegalArgumentException(format("Unsupported workerType [%s]", workerType));
@@ -61,7 +60,7 @@ public class IgniteDriver extends VendorDriver<Ignite> {
     private void loadClientParameters(WorkerParameters params) {
         params.set("JVM_OPTIONS", get("CLIENT_ARGS", ""))
                 .set("file:ignite.xml", loadServerOrNativeClientConfig(true))
-                .set("file:worker.sh", loadWorkerScript("javaclient"));
+                .set("file:worker.sh", loadWorkerScript("litemember"));
     }
 
     private String loadServerOrNativeClientConfig(boolean client) {
@@ -70,12 +69,12 @@ public class IgniteDriver extends VendorDriver<Ignite> {
         ConfigFileTemplate template = new ConfigFileTemplate(config)
                 .withAgents(agents);
 
-        StringBuilder sb = new StringBuilder();
+        StringBuilder addresses = new StringBuilder();
         for (AgentData agent : agents) {
-            sb.append("<value>").append(agent.getPrivateAddress()).append("</value>");
+            addresses.append("<value>").append(agent.getPrivateAddress()).append("</value>");
         }
 
-        template.addReplacement("<!--ADDRESSES-->", sb.toString());
+        template.addReplacement("<!--ADDRESSES-->", addresses.toString());
         template.addReplacement("<!--CLIENT_MODE-->", client);
         return template.render();
     }
@@ -94,7 +93,7 @@ public class IgniteDriver extends VendorDriver<Ignite> {
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
         if (ignite != null) {
             ignite.close();
         }

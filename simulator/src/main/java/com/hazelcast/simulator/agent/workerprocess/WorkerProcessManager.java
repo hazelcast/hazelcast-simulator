@@ -66,7 +66,7 @@ public class WorkerProcessManager {
     }
 
     // launching is done asynchronous so we don't block the calling thread (messaging thread)
-    public void launch(CreateWorkerOperation op, Promise promise) throws Exception {
+    public void launch(CreateWorkerOperation op, Promise promise) {
         WorkerParameters workerParameters = op.getWorkerParameters();
 
         // we add the pid to the worker-parameters so the worker can check if the agent is still alive.

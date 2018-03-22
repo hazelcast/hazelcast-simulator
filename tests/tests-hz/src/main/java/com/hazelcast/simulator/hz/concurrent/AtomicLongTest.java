@@ -13,27 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.ignite.concurrent;
 
-import com.hazelcast.simulator.ignite.IgniteTest;
+package com.hazelcast.simulator.hz.concurrent;
+
+import com.hazelcast.core.IAtomicLong;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
-import org.apache.ignite.IgniteAtomicLong;
 
-public class AtomicLongTest extends IgniteTest {
+public class AtomicLongTest extends HazelcastTest {
 
     public int countersLength = 1000;
 
-    private IgniteAtomicLong[] counters;
+    private IAtomicLong[] counters;
 
     @Setup
     public void setup() {
-        counters = new IgniteAtomicLong[countersLength];
+        counters = new IAtomicLong[countersLength];
 
         for (int i = 0; i < countersLength; i++) {
-            counters[i] = ignite.atomicLong("" + i, 0, true);
+            counters[i] = targetInstance.getAtomicLong("" + i);
         }
     }
 
@@ -49,7 +50,7 @@ public class AtomicLongTest extends IgniteTest {
 
     public class ThreadState extends BaseThreadState {
 
-        private IgniteAtomicLong randomCounter() {
+        private IAtomicLong randomCounter() {
             int index = randomInt(counters.length);
             return counters[index];
         }
@@ -57,8 +58,8 @@ public class AtomicLongTest extends IgniteTest {
 
     @Teardown
     public void teardown() {
-        for (IgniteAtomicLong counter : counters) {
-            counter.close();
+        for (IAtomicLong counter : counters) {
+            counter.destroy();
         }
     }
 }

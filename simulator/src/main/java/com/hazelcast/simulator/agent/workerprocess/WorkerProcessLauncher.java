@@ -29,6 +29,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static com.hazelcast.simulator.utils.BuildInfoUtils.getHazelcastVersionFromJAR;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
+import static com.hazelcast.simulator.utils.FileUtils.ensureFreshDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
@@ -95,7 +96,7 @@ public class WorkerProcessLauncher {
 
     private WorkerProcess startWorker() throws IOException {
         String workerDirName = parameters.get("WORKER_DIR_NAME");
-        File workerHome = ensureExistingDirectory(sessionDir, workerDirName);
+        File workerHome = ensureFreshDirectory(new File(sessionDir, workerDirName));
 
         copyResourcesToWorkerHome(workerDirName);
 

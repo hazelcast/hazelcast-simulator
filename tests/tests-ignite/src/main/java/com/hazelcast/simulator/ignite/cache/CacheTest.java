@@ -50,9 +50,9 @@ public class CacheTest extends IgniteTest {
     }
 
     @TimeStep(prob = -1)
-    public void get(ThreadState state) {
+    public Object get(ThreadState state) {
         Integer key = state.randomInt(keyCount);
-        cache.get(key);
+        return cache.get(key);
     }
 
     public class ThreadState extends BaseThreadState {
