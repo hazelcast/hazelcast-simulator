@@ -61,7 +61,6 @@ import static com.hazelcast.simulator.coordinator.AgentUtils.startAgents;
 import static com.hazelcast.simulator.coordinator.AgentUtils.stopAgents;
 import static com.hazelcast.simulator.coordinator.registry.AgentData.publicAddresses;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
-import static com.hazelcast.simulator.utils.FileUtils.ensureNewDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.TagUtils.matches;
 import static com.hazelcast.simulator.vendors.VendorDriver.loadVendorDriver;
@@ -77,7 +76,6 @@ public class Coordinator implements Closeable {
 
     private final Registry registry;
     private final CoordinatorParameters parameters;
-    private final File outputDirectory;
     private final FailureCollector failureCollector;
     private final SimulatorProperties properties;
     private final int testCompletionTimeoutSeconds;
@@ -86,8 +84,7 @@ public class Coordinator implements Closeable {
     public Coordinator(Registry registry, CoordinatorParameters parameters) {
         this.registry = registry;
         this.parameters = parameters;
-        this.outputDirectory = ensureNewDirectory(new File(getUserDir(), parameters.getSessionId()));
-        this.failureCollector = new FailureCollector(outputDirectory, registry);
+        this.failureCollector = new FailureCollector(parameters.getOutputDirectory(), registry);
         this.properties = parameters.getSimulatorProperties();
         this.testCompletionTimeoutSeconds = properties.getTestCompletionTimeoutSeconds();
 
@@ -117,7 +114,7 @@ public class Coordinator implements Closeable {
         new PrepareSessionTask(
                 publicAddresses(registry.getAgents()),
                 properties.asMap(),
-                new File(System.getProperty("user.dir"), "upload").getAbsoluteFile(),
+                new File(getUserDir(), "upload").getAbsoluteFile(),
                 parameters.getSessionId()).run();
 
         installVendor(properties.getVersionSpec());
@@ -158,7 +155,7 @@ public class Coordinator implements Closeable {
 
     private void logConfiguration() {
         log("Total number of agents: %s", registry.agentCount());
-        log("Output directory: " + outputDirectory.getAbsolutePath());
+        log("Output directory: " + parameters.getOutputDirectory().getAbsolutePath());
 
         int performanceIntervalSeconds
                 = parameters.getSimulatorProperties().getInt("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS");
@@ -185,9 +182,10 @@ public class Coordinator implements Closeable {
         stopAgents(properties, registry);
 
         if (!parameters.skipDownload()) {
-            new DownloadTask(publicAddresses(registry.getAgents()),
+            new DownloadTask(
+                    publicAddresses(registry.getAgents()),
                     properties.asMap(),
-                    outputDirectory.getParentFile(),
+                    parameters.getOutputDirectory().getParentFile(),
                     parameters.getSessionId()).run();
         }
 
@@ -238,7 +236,7 @@ public class Coordinator implements Closeable {
     public void download() {
         new DownloadTask(publicAddresses(registry.getAgents()),
                 properties.asMap(),
-                outputDirectory.getParentFile(),
+                parameters.getOutputDirectory().getParentFile(),
                 parameters.getSessionId()).run();
 
     }

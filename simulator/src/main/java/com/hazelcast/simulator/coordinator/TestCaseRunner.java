@@ -57,7 +57,6 @@ import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepUntilMs;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FileUtils.getConfigurationFile;
-import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.FormatUtils.formatPercentage;
 import static com.hazelcast.simulator.utils.FormatUtils.padRight;
 import static com.hazelcast.simulator.utils.FormatUtils.secondsToHuman;
@@ -78,6 +77,7 @@ public final class TestCaseRunner {
     private static final int WAIT_FOR_PHASE_COMPLETION_LOG_INTERVAL_SECONDS = 30;
     private static final int WAIT_FOR_PHASE_COMPLETION_LOG_VERBOSE_DELAY_SECONDS = 300;
     private static final Logger LOGGER = Logger.getLogger(TestCaseRunner.class);
+    private static final float THOUSAND = 1000f;
 
     private final TestData test;
     private final TestCase testCase;
@@ -318,12 +318,11 @@ public final class TestCaseRunner {
                     + performanceInfo);
 
             PerformanceStats performanceStats = performanceStatsCollector.get(testCase.getId(), true);
-            File outputDir = new File(getUserDir(), this.coordinatorParameters.getSessionId());
-            File performanceFile = new File(outputDir, "performance.txt");
+            File performanceFile = new File(coordinatorParameters.getOutputDirectory(), "performance.txt");
             long operationCount = performanceStats.getOperationCount();
             appendText("operations=" + operationCount + "\n", performanceFile);
             appendText("durationMillis=" + durationMillis + "\n", performanceFile);
-            appendText("tps=" + ((1000f * operationCount) / durationMillis) + "\n", performanceFile);
+            appendText("tps=" + ((THOUSAND * operationCount) / durationMillis) + "\n", performanceFile);
         }
     }
 

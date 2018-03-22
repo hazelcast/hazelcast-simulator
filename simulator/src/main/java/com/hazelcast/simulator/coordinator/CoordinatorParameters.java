@@ -18,9 +18,12 @@ package com.hazelcast.simulator.coordinator;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestPhase;
 
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import static com.hazelcast.simulator.utils.FileUtils.ensureNewDirectory;
+import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 
 /**
@@ -35,6 +38,7 @@ public class CoordinatorParameters {
     private boolean skipDownload;
     private boolean skipShutdownHook;
     private int workerVmStartupDelayMs;
+    private File outputDirectory;
 
     public String getSessionId() {
         return sessionId;
@@ -42,7 +46,12 @@ public class CoordinatorParameters {
 
     public CoordinatorParameters setSessionId(String sessionId) {
         this.sessionId = checkNotNull(sessionId, "sessionId can't be null");
+        this.outputDirectory = ensureNewDirectory(new File(getUserDir(), sessionId));
         return this;
+    }
+
+    public File getOutputDirectory() {
+        return outputDirectory;
     }
 
     public TestPhase getLastTestPhaseToSync() {
