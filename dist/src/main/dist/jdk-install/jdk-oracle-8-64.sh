@@ -3,4 +3,4 @@
 set -e
 source jdk-support.sh
 
-installOracleJdk "jdk-8u121-linux-x64.tar.gz" "~/jdk1.8.0_121"
+installOracleJdk "jdk-8u161-linux-x64.tar.gz" "~/jdk1.8.0_161"
