@@ -18,8 +18,8 @@
 
     <properties>
         <main.basedir>${project.parent.basedir}</main.basedir>
-        <infinispan.version>9.0.0.CR3</infinispan.version>
-        <javassist.version>3.12.1.GA</javassist.version>
+        <infinispan.version>9.2.0.Final</infinispan.version>
+        <javassist.version>3.20.0-GA</javassist.version>
     </properties>
 
     <dependencies>
@@ -50,7 +50,7 @@
         </dependency>
 
         <dependency>
-            <groupId>javassist</groupId>
+            <groupId>org.javassist</groupId>
             <artifactId>javassist</artifactId>
             <version>${javassist.version}</version>
         </dependency>

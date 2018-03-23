@@ -27,7 +27,6 @@ import org.infinispan.server.hotrod.HotRodServer;
 import org.infinispan.server.hotrod.configuration.HotRodServerConfiguration;
 import org.infinispan.server.hotrod.configuration.HotRodServerConfigurationBuilder;
 
-import java.io.IOException;
 import java.util.Properties;
 
 import static java.lang.String.format;
@@ -139,7 +138,7 @@ public class InfinispanDriver extends VendorDriver<BasicCacheContainer> {
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
         if (hotRodServer != null) {
             hotRodServer.stop();
         }
