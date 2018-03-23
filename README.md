@@ -334,7 +334,7 @@ The Simulator archetype can be used to generate a project for external tests to 
 mvn archetype:generate \
    -DarchetypeGroupId=com.hazelcast.simulator \
    -DarchetypeArtifactId=archetype \
-   -DarchetypeVersion=0.10-SNAPSHOT
+   -DarchetypeVersion=0.11-SNAPSHOT
 ```
 
 Please update archetypeVersion to the Simulator version you are using.
