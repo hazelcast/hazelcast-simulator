@@ -54,7 +54,7 @@ report_dir = os.path.abspath(report_dir)
 warmup = int(args.warmup[0])
 cooldown = int(args.cooldown[0])
 
-print("output directory '" + report_dir + "'")
+print("Report directory '" + report_dir + "'")
 
 
 # ================ utils ========================
