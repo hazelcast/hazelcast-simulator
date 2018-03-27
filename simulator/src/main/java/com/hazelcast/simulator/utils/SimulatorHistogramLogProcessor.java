@@ -118,7 +118,7 @@ public class SimulatorHistogramLogProcessor extends HistogramLogProcessor {
     protected String buildLegend(boolean cvs) {
         if (cvs) {
             return "\"Timestamp\","
-                    + "\"StartTime\""
+                    + "\"StartTime\","
                     + "\"Int_Count\","
                     + "\"Int_25%\","
                     + "\"Int_50%\","
@@ -143,10 +143,10 @@ public class SimulatorHistogramLogProcessor extends HistogramLogProcessor {
                     + "\"Total_99.99%\","
                     + "\"Total_99.999%\","
                     + "\"Total_Min%\","
-                    + "\"Total_Max\""
-                    + "\"Total_Mean\""
-                    + "\"Total_Std_Deviation\""
-                    + "\"Total_Throughput\""
+                    + "\"Total_Max\","
+                    + "\"Total_Mean\","
+                    + "\"Total_Std_Deviation\","
+                    + "\"Total_Throughput\","
                     ;
         } else {
             return "Time: StartTime: IntervalPercentiles:count "
