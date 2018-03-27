@@ -1,3 +1,4 @@
+#!/bin/bash
 
 clients=1
 members=3
