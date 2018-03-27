@@ -10,13 +10,6 @@
 # - gc aggregated
 # - hdr
 
-# done:
-# - problem with throughput; it seems the cooldown cut isn't good
-# - gc plot is now combined
-# - add warmup option
-# - add cooldown option
-# - fix period to include warmup cooldown
-#
 # backlog
 # - google chart option
 # - latency per worker
@@ -28,9 +21,9 @@
 import argparse
 import csv
 import os
-import subprocess
 import re
-import tempfile
+import subprocess
+from collections import Counter
 
 parser = argparse.ArgumentParser(description='Creating a benchmark report from one or more benchmarks.')
 parser.add_argument('benchmarks', metavar='B', nargs='+',
@@ -56,6 +49,7 @@ if not args.output:
     report_dir = "report"
 else:
     report_dir = args.output[0]
+report_dir = os.path.abspath(report_dir)
 
 warmup = int(args.warmup[0])
 cooldown = int(args.cooldown[0])
@@ -91,11 +85,11 @@ def agent_for_worker(worker_name):
 class Gnuplot:
     image_width = 1280
     image_height = 1024
-    filepath = None
+    image_path = None
     ylabel = None
     is_bytes = None
     is_points = None
-    gnuplot_file = None
+    script_file = None
 
     def __init__(self, directory, title, basefilename=None):
         self.title = title
@@ -105,20 +99,21 @@ class Gnuplot:
         self.basefilename = basefilename
 
     def _complete(self):
-        self.gnuplot_file.close()
+        self.script_file.close()
         from os import system
-        system('gnuplot ' + self.gnuplot_file.name)
+        system('gnuplot ' + self.script_file.name)
 
     def _write(self, line):
-        self.gnuplot_file.write(line + '\n')
+        self.script_file.write(line + '\n')
 
     def add(self, ts, title=None):
         self.ts_list.append(ts)
         self.titles[ts] = title
         return self
 
-    # returns a color for the time series. We are using some hard coded colors to make sure
-    # the the colors are predictable and very much different. If there are too many time series
+    # returns a color for the time series. We are using some hard
+    # coded colors to make sure the the colors are predictable and
+    # very much different. If there are too many time series
     # then we just rely on the default mechanism
     def _color(self, ts):
         if (len(self.ts_list)) > 8:
@@ -153,8 +148,6 @@ class Gnuplot:
             print("Skipping plot of " + self.title + "; empty time series")
             return
 
-        self.gnuplot_file = tempfile.NamedTemporaryFile(delete=False)
-
         ts_first = self.ts_list[0]
         self.ylabel = ts_first.ylabel
 
@@ -164,16 +157,19 @@ class Gnuplot:
             ext = "png"
 
         if self.basefilename:
-            self.filepath = os.path.join(self.directory, self.basefilename + "." + ext)
+            self.image_path = os.path.join(self.directory, self.basefilename + "." + ext)
+            script_path = os.path.join(self.directory, self.basefilename + ".plt")
         else:
-            self.filepath = os.path.join(self.directory, ts_first.name + "." + ext)
+            self.image_path = os.path.join(self.directory, ts_first.name + "." + ext)
+            script_path = os.path.join(self.directory, ts_first.name + ".plt")
 
         self.is_bytes = ts_first.is_bytes
         self.is_points = ts_first.is_points
         ensure_dir(self.directory)
+        self.script_file = open(script_path, "w")
         self._plot()
 
-        print(self.filepath)
+        print(self.image_path)
 
     def _plot(self):
         raise NotImplementedError("Please Implement this method")
@@ -211,12 +207,12 @@ class TimeseriesGnuplot(Gnuplot):
         # else:
         #    self._write("set format y '%.0f'")
 
-        self._write("set output '" + self.filepath + "'")
+        self._write("set output '" + self.image_path + "'")
         self._write("plot \\")
 
         tmp_files = []
         for ts in self.ts_list:
-            ts_file = ts.to_tmp_file()
+            ts_file = ts.to_data_file()
             tmp_files.append(ts_file)
 
             if len(self.ts_list) > 1:
@@ -265,13 +261,11 @@ class LatencyDistributionGnuplot(Gnuplot):
         self._write("set logscale x")
         self._write('set key top left')
         self._write("set style line 1 lt 1 lw 3 pt 3 linecolor rgb \"red\"")
-        self._write("set output '" + self.filepath + "'")
+        self._write("set output '" + self.image_path + "'")
 
         self._write("plot '" + simulator_home + "/bin/xlabels.csv' notitle with labels center offset 0, 1.5 point,\\")
-        tmp_files = []
         for ts in self.ts_list:
-            ts_file = ts.to_tmp_file()
-            tmp_files.append(ts_file)
+            ts_file = ts.to_data_file()
 
             if len(self.ts_list) > 1:
                 title = self.titles[ts]
@@ -289,9 +283,6 @@ class LatencyDistributionGnuplot(Gnuplot):
             self._write("   \"" + ts_file.name + "\" using 1:2 " + title_str + " " + lt + " with lines, \\")
 
         self._complete()
-
-        for tmp_file in tmp_files:
-            tmp_file.close()
 
 
 class GoogleCharts:
@@ -330,7 +321,9 @@ class GoogleCharts:
         print filepath
 
 
-# a series is effectively a list of key/values. It could be a time series where the key is the time and the value
+seriesCounter = Counter()
+
+# a series is a list of key/values. It could be a time series where the key is the time and the value
 # is the measured value e.g. cpu usage.
 class Series:
     name = None
@@ -377,12 +370,20 @@ class Series:
         else:
             return self.items[len(self.items) - 1].time
 
-    def to_tmp_file(self):
-        temp = tempfile.NamedTemporaryFile(delete=False)
+    def to_data_file(self):
+        data_dir = os.path.join(report_dir, "data")
+        ensure_dir(data_dir)
+
+        val = seriesCounter.get(self.name, 0)
+        seriesCounter[self.name] = val + 1
+
+        file_name = os.path.join(data_dir, self.name + "_" + str(val) + ".data")
+
+        file = open(file_name, "w")
         for item in self.items:
-            temp.write(str(item.time) + ',' + str(item.value) + '\n')
-        temp.close()
-        return temp
+            file.write(str(item.time) + ',' + str(item.value) + '\n')
+        file.close()
+        return file
 
     def length(self):
         return len(self.items)
@@ -426,8 +427,8 @@ class KeyValue:
         self.value = float(value)
 
 
-# A handle to a series. With a handle you can refer to a series, without needing to pull it into memory. Since we could have
-# a lot of measured data, we want to prevent getting it all in memory.
+# A handle to a series. With a handle you can refer to a series, without needing to pull it
+# into memory. Since we could have a lot of measured data, we want to prevent getting it all in memory.
 class SeriesHandle:
     def __init__(self, src, name, title, ylabel, load_method,
                  args=None, is_bytes=False, is_points=False, start_time=None, end_time=None):
@@ -645,7 +646,7 @@ class GcAnalyzer:
         if not os.path.exists(gc_log):
             return
 
-        cmd = "java -jar "+simulator_home+"/lib/gcviewer-1.35-SNAPSHOT.jar "+gc_log+" "+gc_csv+" -t CSV_FULL"
+        cmd = "java -jar " + simulator_home + "/lib/gcviewer-1.35-SNAPSHOT.jar " + gc_log + " " + gc_csv + " -t CSV_FULL"
         print(cmd)
         with open(os.devnull, 'w') as devnull:
             subprocess.check_call(cmd.split(), stdout=devnull, stderr=devnull)
@@ -883,8 +884,8 @@ class Benchmark:
             csv_file = os.path.join(src_dir, file_name)
             with open(csv_file, 'rb') as time_file:
                 csvreader = csv.reader(time_file, delimiter=',', quotechar='|')
-                start_time = str(int(next(csvreader)[1])+warmup)
-                end_time = str(int(next(csvreader)[1])-cooldown)
+                start_time = str(int(next(csvreader)[1]) + warmup)
+                end_time = str(int(next(csvreader)[1]) - cooldown)
                 print("start_time:" + start_time)
                 print("end_time_ms:" + end_time)
                 self.agent_benchmark_periods[agent_name] = Period(start_time, end_time)
@@ -961,7 +962,7 @@ class Comparison:
         # Make the benchmarks
         self.benchmarks = []
         for benchmark_dir in benchmark_dirs:
-            cmd = simulator_home+"/conf/hdr.sh "+benchmark_dir
+            cmd = simulator_home + "/conf/hdr.sh " + benchmark_dir
             subprocess.check_output(cmd.split())
             self.benchmarks.append(Benchmark(benchmark_dir, benchmark_names[benchmark_dir]))
 
