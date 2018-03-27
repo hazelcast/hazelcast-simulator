@@ -210,10 +210,8 @@ class TimeseriesGnuplot(Gnuplot):
         self._write("set output '" + self.image_path + "'")
         self._write("plot \\")
 
-        tmp_files = []
         for ts in self.ts_list:
             ts_file = ts.to_data_file()
-            tmp_files.append(ts_file)
 
             if len(self.ts_list) > 1:
                 title = self.titles[ts]
@@ -237,9 +235,6 @@ class TimeseriesGnuplot(Gnuplot):
                     lt = "lt rgb \"" + color + "\""
                 self._write("   \'" + ts_file.name + "\' using (t0(timecolumn(1))):2 " + title_str + " " + lt + ", \\")
         self._complete()
-
-        for tmp_file in tmp_files:
-            tmp_file.close()
 
 
 class LatencyDistributionGnuplot(Gnuplot):
@@ -374,10 +369,10 @@ class Series:
         data_dir = os.path.join(report_dir, "data")
         ensure_dir(data_dir)
 
-        val = seriesCounter.get(self.name, 0)
-        seriesCounter[self.name] = val + 1
+        count = seriesCounter.get(self.name, 1)
+        seriesCounter[self.name] = count + 1
 
-        file_name = os.path.join(data_dir, self.name + "_" + str(val) + ".data")
+        file_name = os.path.join(data_dir, self.name + "_" + str(count) + ".data")
 
         file = open(file_name, "w")
         for item in self.items:
