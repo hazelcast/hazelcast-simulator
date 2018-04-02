@@ -13,21 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.hz.cache;
+package com.hazelcast.simulator.hz;
 
-import java.io.Externalizable;
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
+import java.io.Serializable;
 
-public class ExternalizablePojo implements Externalizable {
+public class SerializablePojo implements Serializable {
     private int id;
 
-    public ExternalizablePojo() {
+    public SerializablePojo() {
         // No-op.
     }
 
-    public ExternalizablePojo(int id) {
+    public SerializablePojo(int id) {
         this.id = id;
     }
 
@@ -36,17 +33,7 @@ public class ExternalizablePojo implements Externalizable {
     }
 
     @Override
-    public void readExternal(ObjectInput in) throws IOException {
-        id = in.readInt();
-    }
-
-    @Override
-    public void writeExternal(ObjectOutput out) throws IOException {
-        out.writeInt(id);
-    }
-
-    @Override
     public String toString() {
-        return "ExternalizablePojo{id=" + id + '}';
+        return "SerializablePojo{id=" + id + '}';
     }
 }
