@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.hazelcast.simulator.hz.cache;
 
-import com.hazelcast.simulator.hz.ExternalizablePojo;
+import com.hazelcast.simulator.hz.DataSerializablePojo;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.Prepare;
@@ -30,12 +31,12 @@ import javax.cache.CacheManager;
 
 import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.createCacheManager;
 
-public class LongExternalizableCacheTest extends HazelcastTest {
+public class LongDataSerializableCacheTest extends HazelcastTest {
 
     // properties
     public int keyDomain = 10000;
 
-    private Cache<Long, ExternalizablePojo> cache;
+    private Cache<Long, DataSerializablePojo> cache;
 
     @Setup
     public void setUp() {
@@ -45,15 +46,15 @@ public class LongExternalizableCacheTest extends HazelcastTest {
 
     @Prepare(global = true)
     public void prepare() {
-        Streamer<Long, ExternalizablePojo> streamer = StreamerFactory.getInstance(cache);
+        Streamer<Long, DataSerializablePojo> streamer = StreamerFactory.getInstance(cache);
         for (long key = 0; key < keyDomain; key++) {
-            streamer.pushEntry(key, new ExternalizablePojo());
+            streamer.pushEntry(key, new DataSerializablePojo());
         }
         streamer.await();
     }
 
     @TimeStep(prob = -1)
-    public ExternalizablePojo get(ThreadState state) {
+    public DataSerializablePojo get(ThreadState state) {
         return cache.get(state.randomKey());
     }
 
@@ -64,12 +65,12 @@ public class LongExternalizableCacheTest extends HazelcastTest {
 
     public class ThreadState extends BaseThreadState {
 
-        private Long randomKey() {
+        private long randomKey() {
             return randomLong(keyDomain);
         }
 
-        private ExternalizablePojo randomValue() {
-            return new ExternalizablePojo(randomInt());
+        private DataSerializablePojo randomValue() {
+            return new DataSerializablePojo(randomInt());
         }
     }
 
