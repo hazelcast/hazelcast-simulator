@@ -32,7 +32,7 @@ abstract class AbstractAsyncStreamer<K, V> implements Streamer<K, V> {
 
     private static final ILogger LOGGER = Logger.getLogger(AbstractAsyncStreamer.class);
 
-    private static final long DEFAULT_TIMEOUT_MINUTES = 2;
+    private static final long DEFAULT_TIMEOUT_MINUTES = 5;
     private static final int MAXIMUM_LOGGING_RATE_MILLIS = 5000;
 
     private final int concurrencyLevel;
