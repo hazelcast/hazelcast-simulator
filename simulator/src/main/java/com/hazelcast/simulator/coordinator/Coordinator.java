@@ -80,6 +80,7 @@ public class Coordinator implements Closeable {
     private final SimulatorProperties properties;
     private final int testCompletionTimeoutSeconds;
     private final CoordinatorClient client;
+    private CoordinatorRemoteImpl coordinatorRemote;
 
     public Coordinator(Registry registry, CoordinatorParameters parameters) {
         this.registry = registry;
@@ -128,8 +129,8 @@ public class Coordinator implements Closeable {
         int remotePort = properties.getCoordinatorPort();
         if (remotePort != 0) {
             java.rmi.registry.Registry rmiRegistry = LocateRegistry.createRegistry(remotePort);
-            CoordinatorRemote r = new CoordinatorRemoteImpl(this);
-            Remote stub = UnicastRemoteObject.exportObject(r, 0);
+            coordinatorRemote = new CoordinatorRemoteImpl(this);
+            Remote stub = UnicastRemoteObject.exportObject(coordinatorRemote, 0);
 
             // Bind the remote object's stub in the registry
             rmiRegistry.bind("CoordinatorRemote", stub);
