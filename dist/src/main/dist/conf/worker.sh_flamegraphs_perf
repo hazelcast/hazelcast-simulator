@@ -47,6 +47,8 @@ worker_pid=$(cat worker.pid)
 echo worker_pid $worker_pid
 
 echo "Perf record"
+# for overview of interesting perf settings
+# http://www.brendangregg.com/perf.html
 sudo perf record -F 99 -a -g -- sleep 180
 echo "Perf record:DONE"
 
