@@ -106,7 +106,7 @@ public class HazelcastDriver extends VendorDriver<HazelcastInstance> {
     }
 
     public String initMemberHzConfig(boolean liteMember) {
-        String config = loadMemberConfig();
+        String config = loadMemberConfig(liteMember);
         ConfigFileTemplate template = new ConfigFileTemplate(config);
 
         String licenseKey = get("LICENCE_KEY");
@@ -137,13 +137,17 @@ public class HazelcastDriver extends VendorDriver<HazelcastInstance> {
         return template.render();
     }
 
-    private String loadMemberConfig() {
+    private String loadMemberConfig(boolean liteMember) {
         String config = get("CONFIG");
         if (config != null) {
             return config;
         }
 
-        return loadConfiguration("Hazelcast member configuration", "hazelcast.xml");
+        if (liteMember && new File("litemember-hazelcast.xml").exists()) {
+            return loadConfiguration("Hazelcast lite-member configuration", "litemember-hazelcast.xml");
+        } else {
+            return loadConfiguration("Hazelcast member configuration", "hazelcast.xml");
+        }
     }
 
     public String initClientHzConfig() {
