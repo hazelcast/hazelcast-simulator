@@ -24,6 +24,8 @@ import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.StartNanos;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
+import com.hazelcast.simulator.worker.loadsupport.Streamer;
+import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 import com.hazelcast.spi.impl.SimpleExecutionCallback;
 
 import java.util.Random;
@@ -51,10 +53,12 @@ public class LongStringMapTest extends HazelcastTest {
     @Prepare(global = true)
     public void prepare() {
         Random random = new Random();
+        Streamer<Long, String> streamer = StreamerFactory.getInstance(map);
         for (long key = 0; key < keyDomain; key++) {
             String value = values[random.nextInt(valueCount)];
-            map.put(key, value);
+            streamer.pushEntry(key, value);
         }
+        streamer.await();
     }
 
     @TimeStep(prob = -1)
