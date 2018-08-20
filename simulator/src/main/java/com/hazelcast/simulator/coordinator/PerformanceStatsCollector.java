@@ -36,6 +36,7 @@ import static com.hazelcast.simulator.worker.performance.PerformanceStats.INTERV
 import static java.lang.Math.round;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -48,7 +49,7 @@ public class PerformanceStatsCollector {
     public static final int THROUGHPUT_FORMAT_LENGTH = 12;
     public static final int LATENCY_FORMAT_LENGTH = 10;
 
-    private static final long DISPLAY_LATENCY_AS_MICROS_MAX_VALUE = SECONDS.toMicros(1);
+    private static final long DISPLAY_LATENCY_AS_MICROS_MAX_VALUE = MILLISECONDS.toMicros(10);
 
     // holds a map per Worker SimulatorAddress which contains the lastDelta PerformanceStats per testCaseId
     private final ConcurrentMap<SimulatorAddress, WorkerPerformance> workerPerformanceInfoMap
