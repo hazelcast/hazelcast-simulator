@@ -61,6 +61,11 @@
             <artifactId>tests-hz310</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.hazelcast.simulator</groupId>
+            <artifactId>tests-hz311</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
