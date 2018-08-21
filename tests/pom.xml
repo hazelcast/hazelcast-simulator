@@ -30,5 +30,6 @@
         <module>tests-couchbase</module>
         <module>tests-memcached</module>
         <module>tests-jet</module>
+        <module>tests-mongodb</module>
     </modules>
 </project>
