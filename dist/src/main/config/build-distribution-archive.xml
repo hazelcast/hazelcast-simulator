@@ -79,5 +79,12 @@
                 <include>com.hazelcast.simulator:tests-hz310</include>
             </includes>
         </dependencySet>
+        <dependencySet>
+            <outputDirectory>test-lib/311</outputDirectory>
+            <useProjectArtifact>false</useProjectArtifact>
+            <includes>
+                <include>com.hazelcast.simulator:tests-hz311</include>
+            </includes>
+        </dependencySet>
     </dependencySets>
 </assembly>
