@@ -61,7 +61,6 @@ public class SqlPredicateTest extends HazelcastTest {
         }
         streamer.await();
         logger.info("Map size is: " + map.size());
-        logger.info("Map localKeySet size is: " + map.localKeySet().size());
     }
 
     private DataSerializableEmployee generateRandomEmployee(Random random) {
