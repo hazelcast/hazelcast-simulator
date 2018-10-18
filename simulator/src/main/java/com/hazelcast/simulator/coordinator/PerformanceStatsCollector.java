@@ -16,7 +16,7 @@
 package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.worker.performance.PerformanceStats;
+import com.hazelcast.simulator.worker.performance.IntervalStats;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -32,7 +32,7 @@ import static com.hazelcast.simulator.utils.FormatUtils.formatDouble;
 import static com.hazelcast.simulator.utils.FormatUtils.formatLong;
 import static com.hazelcast.simulator.utils.FormatUtils.formatPercentage;
 import static com.hazelcast.simulator.utils.FormatUtils.secondsToHuman;
-import static com.hazelcast.simulator.worker.performance.PerformanceStats.INTERVAL_LATENCY_PERCENTILE;
+import static com.hazelcast.simulator.worker.performance.IntervalStats.INTERVAL_LATENCY_PERCENTILE;
 import static java.lang.Math.round;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
@@ -51,11 +51,11 @@ public class PerformanceStatsCollector {
 
     private static final long DISPLAY_LATENCY_AS_MICROS_MAX_VALUE = MILLISECONDS.toMicros(10);
 
-    // holds a map per Worker SimulatorAddress which contains the lastDelta PerformanceStats per testCaseId
+    // holds a map per Worker SimulatorAddress which contains the lastDelta IntervalStats per testCaseId
     private final ConcurrentMap<SimulatorAddress, WorkerPerformance> workerPerformanceInfoMap
             = new ConcurrentHashMap<SimulatorAddress, WorkerPerformance>();
 
-    public void update(SimulatorAddress workerAddress, Map<String, PerformanceStats> performanceStatsMap) {
+    public void update(SimulatorAddress workerAddress, Map<String, IntervalStats> performanceStatsMap) {
         WorkerPerformance workerPerformance = workerPerformanceInfoMap.get(workerAddress);
         if (workerPerformance == null) {
             WorkerPerformance newInfo = new WorkerPerformance();
@@ -67,15 +67,15 @@ public class PerformanceStatsCollector {
     }
 
     public String formatIntervalPerformanceNumbers(String testId) {
-        PerformanceStats latest = get(testId, false);
+        IntervalStats latest = get(testId, false);
         if (latest.isEmpty() || latest.getOperationCount() < 1) {
             return "";
         }
 
         String latencyUnit = "µs";
-        long latencyAvg = NANOSECONDS.toMicros(round(latest.getIntervalLatencyAvgNanos()));
-        long latency999Percentile = NANOSECONDS.toMicros(latest.getIntervalLatency999PercentileNanos());
-        long latencyMax = NANOSECONDS.toMicros(latest.getIntervalLatencyMaxNanos());
+        long latencyAvg = NANOSECONDS.toMicros(round(latest.getLatencyAvg()));
+        long latency999Percentile = NANOSECONDS.toMicros(latest.getLatency999Percentile());
+        long latencyMax = NANOSECONDS.toMicros(latest.getLatencyMax());
 
         if (latencyAvg > DISPLAY_LATENCY_AS_MICROS_MAX_VALUE) {
             latencyUnit = "ms";
@@ -96,24 +96,24 @@ public class PerformanceStatsCollector {
                 latencyUnit);
     }
 
-    PerformanceStats get(String testCaseId, boolean aggregated) {
-        // aggregate the PerformanceStats instances from all Workers by adding values (since from different Workers)
-        PerformanceStats result = new PerformanceStats();
+    IntervalStats get(String testCaseId, boolean aggregated) {
+        // aggregate the IntervalStats instances from all Workers by adding values (since from different Workers)
+        IntervalStats result = new IntervalStats();
 
         for (WorkerPerformance workerPerformance : workerPerformanceInfoMap.values()) {
-            PerformanceStats performanceStats = workerPerformance.get(testCaseId, aggregated);
-            result.add(performanceStats);
+            IntervalStats intervalStats = workerPerformance.get(testCaseId, aggregated);
+            result.add(intervalStats);
         }
 
         return result;
     }
 
     public String detailedPerformanceInfo(String testId, long runningTimeMs) {
-        PerformanceStats totalPerformanceStats = new PerformanceStats();
-        Map<SimulatorAddress, PerformanceStats> agentPerformanceStatsMap = new HashMap<SimulatorAddress, PerformanceStats>();
-        calculatePerformanceStats(testId, totalPerformanceStats, agentPerformanceStatsMap);
+        IntervalStats totalIntervalStats = new IntervalStats();
+        Map<SimulatorAddress, IntervalStats> agentPerformanceStatsMap = new HashMap<SimulatorAddress, IntervalStats>();
+        calculatePerformanceStats(testId, totalIntervalStats, agentPerformanceStatsMap);
 
-        long totalOperationCount = totalPerformanceStats.getOperationCount();
+        long totalOperationCount = totalIntervalStats.getOperationCount();
 
         if (totalOperationCount < 1) {
             return "Performance information is not available!";
@@ -133,9 +133,9 @@ public class PerformanceStatsCollector {
 
 
         for (SimulatorAddress address : sort(agentPerformanceStatsMap.keySet())) {
-            PerformanceStats performanceStats = agentPerformanceStatsMap.get(address);
+            IntervalStats intervalStats = agentPerformanceStatsMap.get(address);
 
-            long operationCount = performanceStats.getOperationCount();
+            long operationCount = intervalStats.getOperationCount();
             sb.append(format("  Agent %-15s %s%% %s ops %s ops/s\n",
                     address,
                     formatPercentage(operationCount, totalOperationCount),
@@ -146,23 +146,23 @@ public class PerformanceStatsCollector {
     }
 
     void calculatePerformanceStats(String testId,
-                                   PerformanceStats totalPerformanceStats,
-                                   Map<SimulatorAddress, PerformanceStats> agentPerformanceStatsMap) {
+                                   IntervalStats totalIntervalStats,
+                                   Map<SimulatorAddress, IntervalStats> agentPerformanceStatsMap) {
 
         for (Map.Entry<SimulatorAddress, WorkerPerformance> entry : workerPerformanceInfoMap.entrySet()) {
             SimulatorAddress workerAddress = entry.getKey();
             SimulatorAddress agentAddress = workerAddress.getParent();
-            PerformanceStats agentPerformanceStats = agentPerformanceStatsMap.get(agentAddress);
-            if (agentPerformanceStats == null) {
-                agentPerformanceStats = new PerformanceStats();
-                agentPerformanceStatsMap.put(agentAddress, agentPerformanceStats);
+            IntervalStats agentIntervalStats = agentPerformanceStatsMap.get(agentAddress);
+            if (agentIntervalStats == null) {
+                agentIntervalStats = new IntervalStats();
+                agentPerformanceStatsMap.put(agentAddress, agentIntervalStats);
             }
 
             WorkerPerformance workerPerformance = entry.getValue();
-            PerformanceStats workerTestPerformanceStats = workerPerformance.get(testId, true);
-            if (workerTestPerformanceStats != null) {
-                agentPerformanceStats.add(workerTestPerformanceStats);
-                totalPerformanceStats.add(workerTestPerformanceStats);
+            IntervalStats workerTestIntervalStats = workerPerformance.get(testId, true);
+            if (workerTestIntervalStats != null) {
+                agentIntervalStats.add(workerTestIntervalStats);
+                totalIntervalStats.add(workerTestIntervalStats);
             }
         }
     }
@@ -186,13 +186,13 @@ public class PerformanceStatsCollector {
         private final ConcurrentMap<String, TestPerformance> testPerformanceMap
                 = new ConcurrentHashMap<String, TestPerformance>();
 
-        private void updateAll(Map<String, PerformanceStats> deltas) {
-            for (Map.Entry<String, PerformanceStats> entry : deltas.entrySet()) {
+        private void updateAll(Map<String, IntervalStats> deltas) {
+            for (Map.Entry<String, IntervalStats> entry : deltas.entrySet()) {
                 update(entry.getKey(), entry.getValue());
             }
         }
 
-        private void update(String testId, PerformanceStats delta) {
+        private void update(String testId, IntervalStats delta) {
             for (; ; ) {
                 TestPerformance current = testPerformanceMap.get(testId);
                 if (current == null) {
@@ -208,10 +208,10 @@ public class PerformanceStatsCollector {
             }
         }
 
-        private PerformanceStats get(String testId, boolean aggregated) {
+        private IntervalStats get(String testId, boolean aggregated) {
             TestPerformance testPerformance = testPerformanceMap.get(testId);
             if (testPerformance == null) {
-                return new PerformanceStats();
+                return new IntervalStats();
             }
             return aggregated ? testPerformance.aggregated : testPerformance.lastDelta;
         }
@@ -221,16 +221,16 @@ public class PerformanceStatsCollector {
      * Contains the latest and aggregated performance info.
      */
     private final class TestPerformance {
-        private final PerformanceStats aggregated;
-        private final PerformanceStats lastDelta;
+        private final IntervalStats aggregated;
+        private final IntervalStats lastDelta;
 
-        private TestPerformance(PerformanceStats aggregated, PerformanceStats lastDelta) {
+        private TestPerformance(IntervalStats aggregated, IntervalStats lastDelta) {
             this.aggregated = aggregated;
             this.lastDelta = lastDelta;
         }
 
-        private TestPerformance update(PerformanceStats delta) {
-            PerformanceStats newAggregated = new PerformanceStats(aggregated);
+        private TestPerformance update(IntervalStats delta) {
+            IntervalStats newAggregated = new IntervalStats(aggregated);
             newAggregated.add(delta, false);
             return new TestPerformance(newAggregated, delta);
         }

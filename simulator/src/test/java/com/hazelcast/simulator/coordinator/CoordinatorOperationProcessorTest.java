@@ -5,8 +5,8 @@ import com.hazelcast.simulator.coordinator.operations.FailureOperation;
 import com.hazelcast.simulator.protocol.Promise;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.exception.ProcessException;
-import com.hazelcast.simulator.worker.operations.PerformanceStatsOperation;
-import com.hazelcast.simulator.worker.performance.PerformanceStats;
+import com.hazelcast.simulator.worker.operations.IntervalStatsOperation;
+import com.hazelcast.simulator.worker.performance.IntervalStats;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -44,9 +44,9 @@ public class CoordinatorOperationProcessorTest {
 
     @Test
     public void test_whenPerformanceStatsOperation() throws Exception {
-        PerformanceStatsOperation op = mock(PerformanceStatsOperation.class);
-        Map<String, PerformanceStats> performanceStats = mock(Map.class);
-        when(op.getPerformanceStats()).thenReturn(performanceStats);
+        IntervalStatsOperation op = mock(IntervalStatsOperation.class);
+        Map<String, IntervalStats> performanceStats = mock(Map.class);
+        when(op.getStatsMap()).thenReturn(performanceStats);
 
         processor.process(op, address, promise);
 

@@ -17,34 +17,34 @@ package com.hazelcast.simulator.worker.operations;
 
 import com.google.gson.annotations.SerializedName;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
-import com.hazelcast.simulator.worker.performance.PerformanceStats;
+import com.hazelcast.simulator.worker.performance.IntervalStats;
 
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Sends a {@link PerformanceStats} per running Simulator Test to the Coordinator, which contains the last snapshot of performance
+ * Sends a {@link IntervalStats} per running Simulator Test to the Coordinator, which contains the last snapshot of performance
  * numbers from that test.
  *
  * This Operation is 'mandatory' to implement. The consequence of not implementing it is no performance information is
  * available on the coordinator for logging purposes.
  */
-public class PerformanceStatsOperation implements SimulatorOperation {
+public class IntervalStatsOperation implements SimulatorOperation {
 
     /**
-     * Map of {@link PerformanceStats} per Simulator Test.
+     * Map of {@link IntervalStats} per Simulator Test.
      *
      * The key is the id of the test.
-     * The value is the PerformanceStats for that test.
+     * The value is the IntervalStats for that test.
      */
-    @SerializedName("performanceStatsMap")
-    private final Map<String, PerformanceStats> performanceStatsMap = new HashMap<String, PerformanceStats>();
+    @SerializedName("statsMap")
+    private final Map<String, IntervalStats> statsMap = new HashMap<String, IntervalStats>();
 
-    public void addPerformanceStats(String testId, PerformanceStats performanceStats) {
-        performanceStatsMap.put(testId, performanceStats);
+    public void addStats(String testId, IntervalStats intervalStats) {
+        statsMap.put(testId, intervalStats);
     }
 
-    public Map<String, PerformanceStats> getPerformanceStats() {
-        return performanceStatsMap;
+    public Map<String, IntervalStats> getStatsMap() {
+        return statsMap;
     }
 }

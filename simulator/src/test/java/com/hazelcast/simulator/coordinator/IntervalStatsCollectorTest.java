@@ -1,7 +1,7 @@
 package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.worker.performance.PerformanceStats;
+import com.hazelcast.simulator.worker.performance.IntervalStats;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -9,14 +9,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.workerAddress;
-import static com.hazelcast.simulator.worker.performance.PerformanceStats.aggregateAll;
+import static com.hazelcast.simulator.worker.performance.IntervalStats.aggregateAll;
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-public class PerformanceStatsCollectorTest {
+public class IntervalStatsCollectorTest {
 
     private static final double ASSERT_EQUALS_DELTA = 0.1;
 
@@ -50,7 +50,7 @@ public class PerformanceStatsCollectorTest {
 
     @Test
     public void testFormatPerformanceNumbers() {
-        update(a1w1, TEST_CASE_ID_1, new PerformanceStats(1000, 200, 500, 1900.0d, 1800, 2500));
+        update(a1w1, TEST_CASE_ID_1, new IntervalStats(1000, 200, 500, 1900.0d, 1800, 2500));
 
         String performance = performanceStatsCollector.formatIntervalPerformanceNumbers(TEST_CASE_ID_1);
         assertTrue(performance.contains("ops"));
@@ -72,8 +72,8 @@ public class PerformanceStatsCollectorTest {
     public void testFormatPerformanceNumbers_avgLatencyOverMicrosThreshold() throws Exception {
         SimulatorAddress worker = workerAddress(3, 1);
 
-        Map<String, PerformanceStats> performanceStats = new HashMap<String, PerformanceStats>();
-        performanceStats.put(TEST_CASE_ID_1, new PerformanceStats(
+        Map<String, IntervalStats> performanceStats = new HashMap<String, IntervalStats>();
+        performanceStats.put(TEST_CASE_ID_1, new IntervalStats(
                 800, 100, 300, SECONDS.toNanos(3), MICROSECONDS.toNanos(2400), MICROSECONDS.toNanos(2500)));
 
         performanceStatsCollector.update(worker, performanceStats);
@@ -83,59 +83,59 @@ public class PerformanceStatsCollectorTest {
         assertFalse(performance.contains("µs"));
     }
 
-    private void update(SimulatorAddress address, String testId, PerformanceStats performanceStats) {
-        Map<String, PerformanceStats> performanceStatsMap = new HashMap<String, PerformanceStats>();
-        performanceStatsMap.put(testId, performanceStats);
+    private void update(SimulatorAddress address, String testId, IntervalStats intervalStats) {
+        Map<String, IntervalStats> performanceStatsMap = new HashMap<String, IntervalStats>();
+        performanceStatsMap.put(testId, intervalStats);
         performanceStatsCollector.update(address, performanceStatsMap);
     }
 
     @Test
     public void testGet() {
-        update(a1w1, TEST_CASE_ID_1, new PerformanceStats(1000, 200, 500, 1900.0d, 1800, 2500));
-        update(a1w1, TEST_CASE_ID_1, new PerformanceStats(1500, 150, 550, 1600.0d, 1700, 2400));
-        update(a2w1, TEST_CASE_ID_1, new PerformanceStats(800, 100, 300, 2200.0d, 2400, 2800));
+        update(a1w1, TEST_CASE_ID_1, new IntervalStats(1000, 200, 500, 1900.0d, 1800, 2500));
+        update(a1w1, TEST_CASE_ID_1, new IntervalStats(1500, 150, 550, 1600.0d, 1700, 2400));
+        update(a2w1, TEST_CASE_ID_1, new IntervalStats(800, 100, 300, 2200.0d, 2400, 2800));
 
-        PerformanceStats performanceStats = performanceStatsCollector.get(TEST_CASE_ID_1, true);
+        IntervalStats intervalStats = performanceStatsCollector.get(TEST_CASE_ID_1, true);
 
-        assertFalse(performanceStats.isEmpty());
-        assertEquals(2300, performanceStats.getOperationCount());
-        assertEquals(300.0, performanceStats.getIntervalThroughput(), ASSERT_EQUALS_DELTA);
-        assertEquals(850.0, performanceStats.getTotalThroughput(), ASSERT_EQUALS_DELTA);
-        assertEquals(2400, performanceStats.getIntervalLatency999PercentileNanos());
-        assertEquals(2200.0d, performanceStats.getIntervalLatencyAvgNanos(), 0.001);
-        assertEquals(2800, performanceStats.getIntervalLatencyMaxNanos());
+        assertFalse(intervalStats.isEmpty());
+        assertEquals(2300, intervalStats.getOperationCount());
+        assertEquals(300.0, intervalStats.getIntervalThroughput(), ASSERT_EQUALS_DELTA);
+        assertEquals(850.0, intervalStats.getTotalThroughput(), ASSERT_EQUALS_DELTA);
+        assertEquals(2400, intervalStats.getLatency999Percentile());
+        assertEquals(2200.0d, intervalStats.getLatencyAvg(), 0.001);
+        assertEquals(2800, intervalStats.getLatencyMax());
     }
 
     @Test
     public void testGet_testCaseNotFound() {
-        PerformanceStats performanceStats = performanceStatsCollector.get("notFound", true);
+        IntervalStats intervalStats = performanceStatsCollector.get("notFound", true);
 
-        assertTrue(performanceStats.isEmpty());
+        assertTrue(intervalStats.isEmpty());
     }
 
     @Test
     public void testGet_onEmptyContainer() {
-        PerformanceStats performanceStats = emptyPerformanceStatsCollector.get(TEST_CASE_ID_1, true);
+        IntervalStats intervalStats = emptyPerformanceStatsCollector.get(TEST_CASE_ID_1, true);
 
-        assertTrue(performanceStats.isEmpty());
+        assertTrue(intervalStats.isEmpty());
     }
 
     @Test
     public void testCalculatePerformanceStats() {
-        PerformanceStats a1w1Stats = new PerformanceStats(100, 10, 100.0, 50, 100, 200);
-        PerformanceStats a1w2Stats = new PerformanceStats(200, 20, 200.0, 60, 110, 210);
+        IntervalStats a1w1Stats = new IntervalStats(100, 10, 100.0, 50, 100, 200);
+        IntervalStats a1w2Stats = new IntervalStats(200, 20, 200.0, 60, 110, 210);
 
         update(a1w1, TEST_CASE_ID_1, a1w1Stats);
         update(a1w2, TEST_CASE_ID_1, a1w2Stats);
 
-        PerformanceStats a2w1Stats = new PerformanceStats(300, 30, 300.0, 70, 120, 220);
-        PerformanceStats a2w2Stats = new PerformanceStats(400, 40, 400.0, 80, 120, 230);
+        IntervalStats a2w1Stats = new IntervalStats(300, 30, 300.0, 70, 120, 220);
+        IntervalStats a2w2Stats = new IntervalStats(400, 40, 400.0, 80, 120, 230);
 
         update(a2w1, TEST_CASE_ID_1, a2w1Stats);
         update(a2w2, TEST_CASE_ID_1, a2w2Stats);
 
-        PerformanceStats totalStats = new PerformanceStats();
-        Map<SimulatorAddress, PerformanceStats> agentStats = new HashMap<SimulatorAddress, PerformanceStats>();
+        IntervalStats totalStats = new IntervalStats();
+        Map<SimulatorAddress, IntervalStats> agentStats = new HashMap<SimulatorAddress, IntervalStats>();
 
         performanceStatsCollector.calculatePerformanceStats(TEST_CASE_ID_1, totalStats, agentStats);
 
@@ -149,20 +149,20 @@ public class PerformanceStatsCollectorTest {
 
     @Test
     public void testCalculatePerformanceStats_differentTests() {
-        PerformanceStats a1w1Stats = new PerformanceStats(100, 10, 100.0, 50, 100, 200);
-        PerformanceStats a1w2Stats = new PerformanceStats(200, 20, 200.0, 60, 110, 210);
+        IntervalStats a1w1Stats = new IntervalStats(100, 10, 100.0, 50, 100, 200);
+        IntervalStats a1w2Stats = new IntervalStats(200, 20, 200.0, 60, 110, 210);
 
         update(a1w1, TEST_CASE_ID_1, a1w1Stats);
         update(a1w2, TEST_CASE_ID_2, a1w2Stats);
 
-        PerformanceStats a2w1Stats = new PerformanceStats(300, 30, 300.0, 70, 120, 220);
-        PerformanceStats a2w2Stats = new PerformanceStats(400, 40, 400.0, 80, 120, 230);
+        IntervalStats a2w1Stats = new IntervalStats(300, 30, 300.0, 70, 120, 220);
+        IntervalStats a2w2Stats = new IntervalStats(400, 40, 400.0, 80, 120, 230);
 
         update(a2w1, TEST_CASE_ID_1, a2w1Stats);
         update(a2w2, TEST_CASE_ID_2, a2w2Stats);
 
-        PerformanceStats totalStats = new PerformanceStats();
-        Map<SimulatorAddress, PerformanceStats> agentStats = new HashMap<SimulatorAddress, PerformanceStats>();
+        IntervalStats totalStats = new IntervalStats();
+        Map<SimulatorAddress, IntervalStats> agentStats = new HashMap<SimulatorAddress, IntervalStats>();
 
         performanceStatsCollector.calculatePerformanceStats(TEST_CASE_ID_1, totalStats, agentStats);
 
@@ -174,22 +174,22 @@ public class PerformanceStatsCollectorTest {
         assertPerfStatEquals(aggregateAll(a1w1Stats, a2w1Stats), totalStats);
     }
 
-    private void assertPerfStatEquals(PerformanceStats expected, PerformanceStats actual) {
+    private void assertPerfStatEquals(IntervalStats expected, IntervalStats actual) {
         assertEquals(expected.getOperationCount(), actual.getOperationCount());
         assertEquals(expected.getIntervalThroughput(), actual.getIntervalThroughput(), ASSERT_EQUALS_DELTA);
         assertEquals(actual.getTotalThroughput(), actual.getTotalThroughput(), ASSERT_EQUALS_DELTA);
-        assertEquals(actual.getIntervalLatency999PercentileNanos(), actual.getIntervalLatency999PercentileNanos());
-        assertEquals(actual.getIntervalLatencyMaxNanos(), actual.getIntervalLatencyMaxNanos());
+        assertEquals(actual.getLatency999Percentile(), actual.getLatency999Percentile());
+        assertEquals(actual.getLatencyMax(), actual.getLatencyMax());
     }
 
     @Test
     public void testCalculatePerformanceStats_onEmptyContainer() {
-        PerformanceStats totalPerformanceStats = new PerformanceStats();
-        Map<SimulatorAddress, PerformanceStats> agentPerformanceStatsMap = new HashMap<SimulatorAddress, PerformanceStats>();
+        IntervalStats totalIntervalStats = new IntervalStats();
+        Map<SimulatorAddress, IntervalStats> agentPerformanceStatsMap = new HashMap<SimulatorAddress, IntervalStats>();
 
-        emptyPerformanceStatsCollector.calculatePerformanceStats("foo", totalPerformanceStats, agentPerformanceStatsMap);
+        emptyPerformanceStatsCollector.calculatePerformanceStats("foo", totalIntervalStats, agentPerformanceStatsMap);
 
         assertEquals(0, agentPerformanceStatsMap.size());
-        assertTrue(totalPerformanceStats.isEmpty());
+        assertTrue(totalIntervalStats.isEmpty());
     }
 }
