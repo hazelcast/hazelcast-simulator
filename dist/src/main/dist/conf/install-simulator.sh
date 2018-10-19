@@ -91,6 +91,11 @@ if [ "$VENDOR" = "memcached" ]; then
     uploadLibraryJar "spymemcached*"
 fi
 
+# hack to get mongodb working
+if [ "$VENDOR" = "mongodb" ]; then
+    uploadLibraryJar "mongo-*"
+fi
+
 # upload remaining files
 uploadToRemoteSimulatorDir "$SIMULATOR_HOME/bin/" "bin"
 uploadToRemoteSimulatorDir "$SIMULATOR_HOME/conf/" "conf"
