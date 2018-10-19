@@ -41,7 +41,7 @@ public class BuildInfoUtilsTest {
 
     @Test
     public void testGetHazelcastVersionFromJAR() {
-        assertEquals("2342", getHazelcastVersionFromJAR(RESOURCE_PATH + "build-info-with-version-manifest.jar"));
+        assertEquals("310", getHazelcastVersionFromJAR(RESOURCE_PATH + "build-info-with-version-manifest.jar"));
     }
 
     @Test

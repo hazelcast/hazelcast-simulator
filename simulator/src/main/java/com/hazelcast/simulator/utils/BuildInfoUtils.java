@@ -36,7 +36,7 @@ import static java.lang.String.format;
 public final class BuildInfoUtils {
 
     static final int DEFAULT_MAJOR_VERSION = 3;
-    static final int DEFAULT_MINOR_VERSION = 8;
+    static final int DEFAULT_MINOR_VERSION = 10;
 
     static final int DEFAULT_FALLBACK_MAJOR_VERSION = 3;
     static final int DEFAULT_FALLBACK_MINOR_VERSION = 5;
