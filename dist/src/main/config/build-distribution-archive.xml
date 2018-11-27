@@ -102,5 +102,13 @@
                 <include>com.hazelcast.simulator:tests-mongodb</include>
             </includes>
         </dependencySet>
+
+        <dependencySet>
+            <outputDirectory>test-lib/tests-lettuce</outputDirectory>
+            <useProjectArtifact>false</useProjectArtifact>
+            <includes>
+                <include>com.hazelcast.simulator:tests-lettuce</include>
+            </includes>
+        </dependencySet>
     </dependencySets>
 </assembly>

@@ -31,5 +31,6 @@
         <module>tests-memcached</module>
         <module>tests-jet</module>
         <module>tests-mongodb</module>
+        <module>tests-lettuce</module>
     </modules>
 </project>
