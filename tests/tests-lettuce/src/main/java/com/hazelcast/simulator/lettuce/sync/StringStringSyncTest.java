@@ -44,7 +44,7 @@ public class StringStringSyncTest extends LettuceTest {
 
     // loading the data is very inefficient. Needs some work in the future
     @Prepare(global = true)
-    private void loadInitialData() {
+    public void loadInitialData() {
         Random random = new Random();
         StatefulRedisConnection<String, String> connection = redisClient.connect();
         RedisCommands sync = connection.sync();
