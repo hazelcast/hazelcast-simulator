@@ -32,5 +32,6 @@
         <module>tests-jet</module>
         <module>tests-mongodb</module>
         <module>tests-lettuce</module>
+        <module>tests-jedis</module>
     </modules>
 </project>

@@ -94,6 +94,11 @@ fi
 # hack to get mongodb working
 if [ "$VENDOR" = "mongodb" ]; then
     uploadLibraryJar "mongo-*"
+
+# hack to get redis working
+if [ "$VENDOR" = "jedis" ]; then
+    uploadLibraryJar "jedis*"
+    uploadLibraryJar "commons-pool2*"
 fi
 
 # hack to get lettuce working
