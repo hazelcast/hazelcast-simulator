@@ -96,6 +96,14 @@ if [ "$VENDOR" = "mongodb" ]; then
     uploadLibraryJar "mongo-*"
 fi
 
+# hack to get lettuce working
+if [ "$VENDOR" = "lettuce" ]; then
+    uploadLibraryJar "lettuce-core-*"
+    uploadLibraryJar "netty-*"
+    uploadLibraryJar "reactor-*"
+    uploadLibraryJar "reactive-streams-*"
+fi
+
 # upload remaining files
 uploadToRemoteSimulatorDir "$SIMULATOR_HOME/bin/" "bin"
 uploadToRemoteSimulatorDir "$SIMULATOR_HOME/conf/" "conf"
