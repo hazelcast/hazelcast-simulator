@@ -94,6 +94,7 @@ fi
 # hack to get mongodb working
 if [ "$VENDOR" = "mongodb" ]; then
     uploadLibraryJar "mongo-*"
+fi
 
 # hack to get redis working
 if [ "$VENDOR" = "jedis" ]; then
