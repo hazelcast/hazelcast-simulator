@@ -31,7 +31,6 @@ import com.hazelcast.transaction.TransactionalTaskContext;
 
 import java.util.Random;
 
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
 import static com.hazelcast.simulator.tests.helpers.KeyLocality.SHARED;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntKeys;
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateByteArray;
@@ -157,6 +156,5 @@ public class MapTxTest extends HazelcastTest {
     @Teardown
     public void teardown() {
         map.destroy();
-        logger.info(getOperationCountInformation(targetInstance));
     }
 }

@@ -25,7 +25,6 @@ import com.hazelcast.simulator.tests.helpers.KeyLocality;
 
 import java.util.Random;
 
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
 import static com.hazelcast.simulator.tests.helpers.KeyLocality.SHARED;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKeys;
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateByteArray;
@@ -93,6 +92,5 @@ public class AtomicReferenceTest extends HazelcastTest {
         for (IAtomicReference counter : counters) {
             counter.destroy();
         }
-        logger.info(getOperationCountInformation(targetInstance));
     }
 }

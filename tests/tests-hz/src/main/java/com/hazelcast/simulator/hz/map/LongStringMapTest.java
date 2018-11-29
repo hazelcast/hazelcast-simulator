@@ -30,7 +30,6 @@ import com.hazelcast.spi.impl.SimpleExecutionCallback;
 
 import java.util.Random;
 
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateStrings;
 
 public class LongStringMapTest extends HazelcastTest {
@@ -120,6 +119,5 @@ public class LongStringMapTest extends HazelcastTest {
     @Teardown
     public void tearDown() {
         map.destroy();
-        logger.info(getOperationCountInformation(targetInstance));
     }
 }

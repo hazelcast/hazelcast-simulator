@@ -16,8 +16,6 @@
 package com.hazelcast.simulator.tests.helpers;
 
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.HazelcastInstanceAware;
-import com.hazelcast.core.IExecutorService;
 import com.hazelcast.core.IMap;
 import com.hazelcast.core.Member;
 import com.hazelcast.core.Partition;
@@ -35,17 +33,11 @@ import com.hazelcast.spi.impl.NodeEngineImpl;
 import com.hazelcast.spi.impl.operationservice.InternalOperationService;
 import org.apache.log4j.Logger;
 
-import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Future;
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
-import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 import static com.hazelcast.simulator.utils.ReflectionUtils.getFieldValue;
 import static com.hazelcast.simulator.utils.VersionUtils.isMinVersion;
@@ -67,80 +59,6 @@ public final class HazelcastTestUtils {
         }
     }
 
-    public static String getPartitionDistributionInformation(HazelcastInstance hz) {
-        Map<Member, Integer> partitionCountMap = new HashMap<Member, Integer>();
-        int totalPartitions = 0;
-        for (Partition partition : hz.getPartitionService().getPartitions()) {
-            totalPartitions++;
-            Member member = partition.getOwner();
-            Integer count = partitionCountMap.get(member);
-            if (count == null) {
-                count = 0;
-            }
-
-            count++;
-            partitionCountMap.put(member, count);
-        }
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("total partitions: ").append(totalPartitions).append(NEW_LINE);
-        for (Map.Entry<Member, Integer> entry : partitionCountMap.entrySet()) {
-            Member member = entry.getKey();
-            long count = entry.getValue();
-            double percentage = count * 100d / totalPartitions;
-            sb.append(member).append(" total: ").append(count)
-                    .append(" percentage: ").append(percentage).append('%').append(NEW_LINE);
-        }
-        return sb.toString();
-    }
-
-    public static String getOperationCountInformation(HazelcastInstance hz) {
-        Map<Member, Long> operationCountMap = getOperationCount(hz);
-
-        long totalOps = 0;
-        for (Long count : operationCountMap.values()) {
-            totalOps += count;
-        }
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("total operations: ").append(totalOps).append(NEW_LINE);
-        for (Map.Entry<Member, Long> entry : operationCountMap.entrySet()) {
-            Member member = entry.getKey();
-            long opsOnMember = entry.getValue();
-            double percentage = opsOnMember * 100d / totalOps;
-            sb.append(member)
-                    .append(" operations: ").append(opsOnMember)
-                    .append(" percentage: ").append(percentage).append('%').append(NEW_LINE);
-        }
-        return sb.toString();
-    }
-
-    public static Map<Member, Long> getOperationCount(HazelcastInstance hz) {
-        IExecutorService executorService = hz.getExecutorService("operationCountExecutor");
-
-        Map<Member, Future<Long>> futures = new HashMap<Member, Future<Long>>();
-        for (Member member : hz.getCluster().getMembers()) {
-            Future<Long> future = executorService.submitToMember(new GetOperationCount(), member);
-            futures.put(member, future);
-        }
-
-        Map<Member, Long> result = new HashMap<Member, Long>();
-        for (Map.Entry<Member, Future<Long>> entry : futures.entrySet()) {
-            try {
-                Member member = entry.getKey();
-                Long value = entry.getValue().get();
-                if (value == null) {
-                    value = 0L;
-                }
-                result.put(member, value);
-            } catch (Exception e) {
-                throw rethrow(e);
-            }
-        }
-
-        return result;
-    }
-
     public static void logPartitionStatistics(Logger log, String name, IMap<Object, Integer> map, boolean printSizes) {
         MapProxyImpl mapProxy = (MapProxyImpl) map;
         MapService mapService = (MapService) mapProxy.getService();
@@ -160,29 +78,6 @@ public final class HazelcastTestUtils {
         log.info(format("%s: Local partitions (count %d) (size %d) (avg %.2f) (IDs %s)%s",
                 name, localPartitions.size(), localSize, localSize / (float) localPartitions.size(), partitionIDs.toString(),
                 printSizes ? format(" (sizes %s)", partitionSizes.toString()) : ""));
-    }
-
-    public static final class GetOperationCount implements Callable<Long>, HazelcastInstanceAware, Serializable {
-
-        private static final long serialVersionUID = 2875034360565495907L;
-
-        private transient HazelcastInstance hz;
-
-        @Override
-        public Long call() throws Exception {
-            try {
-                InternalOperationService operationService = HazelcastTestUtils.getOperationService(hz);
-                return operationService.getExecutedOperationCount();
-            } catch (NoSuchMethodError e) {
-                LOGGER.warn(e);
-                return -1L;
-            }
-        }
-
-        @Override
-        public void setHazelcastInstance(HazelcastInstance hazelcastInstance) {
-            this.hz = hazelcastInstance;
-        }
     }
 
     public static void waitClusterSize(org.apache.log4j.Logger logger, HazelcastInstance hz, int clusterSize) {

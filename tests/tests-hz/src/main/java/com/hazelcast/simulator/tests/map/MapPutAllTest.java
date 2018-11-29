@@ -31,7 +31,6 @@ import java.util.Random;
 import java.util.TreeMap;
 
 import static com.hazelcast.simulator.tests.helpers.GenericTypes.STRING;
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
 import static com.hazelcast.simulator.tests.helpers.KeyLocality.SHARED;
 
 /**
@@ -109,7 +108,6 @@ public class MapPutAllTest extends HazelcastTest {
     @Teardown
     public void tearDown() {
         map.destroy();
-        logger.info(getOperationCountInformation(targetInstance));
 
         if (valueType == GenericTypes.INTEGER) {
             valueSize = Integer.MAX_VALUE;

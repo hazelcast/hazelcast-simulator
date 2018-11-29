@@ -27,7 +27,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
 import static com.hazelcast.simulator.tests.helpers.KeyLocality.SHARED;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntegerKeys;
 
@@ -109,6 +108,5 @@ public class MapPutAllOnTheFlyTest extends HazelcastTest {
     @Teardown
     public void tearDown() {
         map.destroy();
-        logger.info(getOperationCountInformation(targetInstance));
     }
 }
