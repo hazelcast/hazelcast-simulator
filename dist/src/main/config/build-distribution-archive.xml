@@ -40,22 +40,6 @@
         </dependencySet>
 
         <dependencySet>
-            <outputDirectory>test-lib/tests-hz37</outputDirectory>
-            <useProjectArtifact>false</useProjectArtifact>
-            <includes>
-                <include>com.hazelcast.simulator:tests-hz37</include>
-            </includes>
-        </dependencySet>
-
-        <dependencySet>
-            <outputDirectory>test-lib/tests-hz38</outputDirectory>
-            <useProjectArtifact>false</useProjectArtifact>
-            <includes>
-                <include>com.hazelcast.simulator:tests-hz38</include>
-            </includes>
-        </dependencySet>
-
-        <dependencySet>
             <outputDirectory>test-lib/tests-ignite</outputDirectory>
             <useProjectArtifact>false</useProjectArtifact>
             <includes>
