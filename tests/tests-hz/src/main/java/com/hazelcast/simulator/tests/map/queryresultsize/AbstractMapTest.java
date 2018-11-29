@@ -27,7 +27,6 @@ import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.logPartitionStatistics;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.rethrow;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntKeys;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKeys;
@@ -102,8 +101,6 @@ abstract class AbstractMapTest extends HazelcastTest {
             throw new IllegalArgumentException("Unknown key type: " + keyType);
         }
         streamer.await();
-
-        logPartitionStatistics(logger, name, map, true);
     }
 
     protected void baseVerify(boolean expectedExceptions) {
