@@ -18,14 +18,12 @@ package com.hazelcast.simulator.tests.jmx;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
-import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 import java.lang.management.ManagementFactory;
 
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.waitClusterSize;
 
 public class PartitionServiceMBeanTest extends HazelcastTest {
@@ -56,10 +54,5 @@ public class PartitionServiceMBeanTest extends HazelcastTest {
     @TimeStep(prob = 0)
     public void isLocalMemberSafe() throws Exception {
         mBeanServer.getAttribute(objectName, "isLocalMemberSafe");
-    }
-
-    @Teardown
-    public void tearDown() {
-        logger.info(getOperationCountInformation(targetInstance));
     }
 }

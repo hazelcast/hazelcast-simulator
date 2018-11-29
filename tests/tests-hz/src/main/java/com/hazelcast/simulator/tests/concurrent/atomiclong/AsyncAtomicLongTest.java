@@ -38,7 +38,6 @@ import com.hazelcast.simulator.utils.ExceptionReporter;
 import java.util.LinkedList;
 import java.util.List;
 
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isClient;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.rethrow;
@@ -169,8 +168,7 @@ public class AsyncAtomicLongTest extends HazelcastTest {
             }
         }
         totalCounter.destroy();
-        logger.info(getOperationCountInformation(targetInstance));
-    }
+     }
 
     private class LongExecutionCallback implements ExecutionCallback<Long> {
         private final Probe probe;

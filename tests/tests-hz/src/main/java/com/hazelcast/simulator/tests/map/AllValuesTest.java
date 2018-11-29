@@ -27,7 +27,6 @@ import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 
 import java.util.Collection;
 
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateString;
 import static org.junit.Assert.assertEquals;
 
@@ -80,6 +79,5 @@ public class AllValuesTest extends HazelcastTest {
     @Teardown
     public void teardown() {
         map.destroy();
-        logger.info(getOperationCountInformation(targetInstance));
     }
 }
