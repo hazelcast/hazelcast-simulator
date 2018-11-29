@@ -35,7 +35,6 @@ import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.NativeUtils.writePid;
-import static com.hazelcast.simulator.utils.SimulatorUtils.localIp;
 
 public class Agent implements Closeable {
 
@@ -62,7 +61,7 @@ public class Agent implements Closeable {
         this.publicAddress = publicAddress;
         this.parentPid = parentPid;
         this.broker = new Broker()
-                .setBrokerAddress(localIp(), port);
+                .setBrokerAddress("0.0.0.0", port);
 
         // this server will listen to requests on the 'agents' topic
         this.server = new Server("agents")
