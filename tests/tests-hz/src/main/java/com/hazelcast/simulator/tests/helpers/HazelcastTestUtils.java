@@ -16,18 +16,11 @@
 package com.hazelcast.simulator.tests.helpers;
 
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.IMap;
-import com.hazelcast.core.Member;
-import com.hazelcast.core.Partition;
-import com.hazelcast.core.PartitionService;
 import com.hazelcast.instance.BuildInfo;
 import com.hazelcast.instance.BuildInfoProvider;
 import com.hazelcast.instance.HazelcastInstanceImpl;
 import com.hazelcast.instance.HazelcastInstanceProxy;
 import com.hazelcast.instance.Node;
-import com.hazelcast.map.impl.MapService;
-import com.hazelcast.map.impl.MapServiceContext;
-import com.hazelcast.map.impl.proxy.MapProxyImpl;
 import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.spi.impl.NodeEngineImpl;
 import com.hazelcast.spi.impl.operationservice.InternalOperationService;
@@ -35,7 +28,6 @@ import org.apache.log4j.Logger;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Collection;
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
@@ -57,27 +49,6 @@ public final class HazelcastTestUtils {
         } else {
             throw new TestException(throwable);
         }
-    }
-
-    public static void logPartitionStatistics(Logger log, String name, IMap<Object, Integer> map, boolean printSizes) {
-        MapProxyImpl mapProxy = (MapProxyImpl) map;
-        MapService mapService = (MapService) mapProxy.getService();
-        MapServiceContext mapServiceContext = mapService.getMapServiceContext();
-        Collection<Integer> localPartitions = mapServiceContext.getOwnedPartitions();
-        int localSize = 0;
-        StringBuilder partitionIDs = new StringBuilder();
-        StringBuilder partitionSizes = new StringBuilder();
-        String separator = "";
-        for (int partitionId : localPartitions) {
-            int partitionSize = mapServiceContext.getRecordStore(partitionId, map.getName()).size();
-            localSize += partitionSize;
-            partitionIDs.append(separator).append(partitionId);
-            partitionSizes.append(separator).append(partitionSize);
-            separator = ", ";
-        }
-        log.info(format("%s: Local partitions (count %d) (size %d) (avg %.2f) (IDs %s)%s",
-                name, localPartitions.size(), localSize, localSize / (float) localPartitions.size(), partitionIDs.toString(),
-                printSizes ? format(" (sizes %s)", partitionSizes.toString()) : ""));
     }
 
     public static void waitClusterSize(org.apache.log4j.Logger logger, HazelcastInstance hz, int clusterSize) {
@@ -128,25 +99,6 @@ public final class HazelcastTestUtils {
             impl = (HazelcastInstanceImpl) hz;
         }
         return impl;
-    }
-
-    /**
-     * Returns the next {@code long} key owned by the given Hazelcast instance.
-     *
-     * @param instance Hazelcast instance to search next key for
-     * @param lastKey  last key to start search from
-     * @return next key owned by given Hazelcast instance
-     */
-    public static long nextKeyOwnedBy(HazelcastInstance instance, long lastKey) {
-        Member localMember = instance.getCluster().getLocalMember();
-        PartitionService partitionService = instance.getPartitionService();
-        while (true) {
-            Partition partition = partitionService.getPartition(lastKey);
-            if (localMember.equals(partition.getOwner())) {
-                return lastKey;
-            }
-            lastKey++;
-        }
     }
 
     public static boolean isMemberNode(HazelcastInstance instance) {

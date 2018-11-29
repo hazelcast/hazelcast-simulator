@@ -23,7 +23,6 @@ import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.logPartitionStatistics;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 
 public class ClusterStatisticsTest extends HazelcastTest {
@@ -54,8 +53,6 @@ public class ClusterStatisticsTest extends HazelcastTest {
         logger.info(name + ": isClusterSafe() " + partitionService.isClusterSafe());
         logger.info(name + ": isLocalMemberSafe() " + partitionService.isLocalMemberSafe());
         logger.info(name + ": getCluster().getMembers().size() " + targetInstance.getCluster().getMembers().size());
-
-        logPartitionStatistics(logger, name, map, false);
     }
 
     @TimeStep
