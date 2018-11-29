@@ -40,11 +40,6 @@ public class BuildInfoUtilsTest {
     }
 
     @Test
-    public void testGetHazelcastVersionFromJAR() {
-        assertEquals("2342", getHazelcastVersionFromJAR(RESOURCE_PATH + "build-info-with-version-manifest.jar"));
-    }
-
-    @Test
     public void testGetHazelcastVersionFromJAR_whenNoJarFound_thenReturnDefault() {
         assertEquals(format("%d%d", DEFAULT_MAJOR_VERSION, DEFAULT_MINOR_VERSION), getHazelcastVersionFromJAR(RESOURCE_PATH));
     }
@@ -67,18 +62,6 @@ public class BuildInfoUtilsTest {
     @Test
     public void testGetMinorVersion_whenVersionCannotBeFound_thenReturnDefaultVersion() {
         assertEquals(DEFAULT_FALLBACK_MINOR_VERSION, getMinorVersion(null));
-    }
-
-    @Test
-    public void testGetHazelcastVersionFromJarOrNull_whenJarContainsHazelcastProperties() {
-        File file = new File(RESOURCE_PATH + "build-info-with-hazelcast-runtime.jar").getAbsoluteFile();
-        assertEquals("42.23", getHazelcastVersionFromJarOrNull(file.getAbsolutePath()));
-    }
-
-    @Test
-    public void testGetHazelcastVersionFromJarOrNull() {
-        File file = new File(RESOURCE_PATH + "build-info-with-version-manifest.jar").getAbsoluteFile();
-        assertEquals("23.42-SNAPSHOT", getHazelcastVersionFromJarOrNull(file.getAbsolutePath()));
     }
 
     @Test
