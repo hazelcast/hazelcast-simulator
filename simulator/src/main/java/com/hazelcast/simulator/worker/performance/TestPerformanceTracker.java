@@ -69,10 +69,6 @@ public final class TestPerformanceTracker {
                 new File(getUserDir(), "performance-" + container.getTestCase().getId() + ".csv"));
     }
 
-    private long startMeasuringTime() {
-        return testContainer.getRunStartedMillis();
-    }
-
     /**
      * Updates internal state.
      *
@@ -165,7 +161,7 @@ public final class TestPerformanceTracker {
         this.totalOperationCount += intervalOperationCount;
 
         long intervalTimeDelta = currentTimeMillis - lastUpdateMillis;
-        long totalTimeDelta = currentTimeMillis - startMeasuringTime();
+        long totalTimeDelta = currentTimeMillis - testContainer.getRunStartedMillis();
 
         this.intervalThroughput = (intervalOperationCount * ONE_SECOND_IN_MILLIS) / (double) intervalTimeDelta;
         this.totalThroughput = (totalOperationCount * ONE_SECOND_IN_MILLIS / (double) totalTimeDelta);
@@ -223,8 +219,8 @@ public final class TestPerformanceTracker {
         try {
             File latencyFile = getLatencyFile(testId, probeName);
             HistogramLogWriter histogramLogWriter = new HistogramLogWriter(latencyFile);
-            histogramLogWriter.setBaseTime(startMeasuringTime());
-            histogramLogWriter.outputStartTime(startMeasuringTime());
+            histogramLogWriter.setBaseTime(testContainer.getRunStartedMillis());
+            histogramLogWriter.outputStartTime(testContainer.getRunStartedMillis());
             histogramLogWriter.outputComment("[Latency histograms for " + testId + '.' + probeName + ']');
             histogramLogWriter.outputLogFormatVersion();
             histogramLogWriter.outputLegend();
