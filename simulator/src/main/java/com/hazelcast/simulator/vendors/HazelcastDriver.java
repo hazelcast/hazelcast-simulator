@@ -97,7 +97,7 @@ public class HazelcastDriver extends VendorDriver<HazelcastInstance> {
     }
 
     private String loadJvmOptions(String argsProperty) {
-        return get(argsProperty, "") + " -Dhazelcast.logging.type=log4j";
+        return get(argsProperty, "");
     }
 
     @Override

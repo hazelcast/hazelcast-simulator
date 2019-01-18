@@ -17,6 +17,10 @@
 
     <!--LICENSE-KEY-->
 
+    <properties>
+        <property name="hazelcast.logging.type">log4j</property>
+    </properties>
+
     <serialization>
         <data-serializable-factories>
             <data-serializable-factory factory-id="4000">
