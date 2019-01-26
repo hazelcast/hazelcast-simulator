@@ -282,6 +282,11 @@ import java.lang.annotation.Target;
  * }
  * </pre>
  *
+ * <h1>Measure latency</h1>
+ * In some cases measuring the latency can be very expensive due to contention on HDR or because reading out the clock
+ * can be expensive on certain environments (e.g. EC2 with XEN clock. By adding 'measureLatency=false' to the test,
+ * Simulator will not measure latency.
+ *
  * <h2>Coordinated omission</h2>
  * A lot of testing frameworks are suffering from a problem called coordinated omission:
  * https://www.infoq.com/presentations/latency-pitfalls
