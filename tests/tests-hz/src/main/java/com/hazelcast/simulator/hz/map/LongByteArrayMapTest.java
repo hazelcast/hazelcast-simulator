@@ -16,7 +16,10 @@
 
 package com.hazelcast.simulator.hz.map;
 
+import com.hazelcast.core.ExecutionCallback;
+import com.hazelcast.core.ICompletableFuture;
 import com.hazelcast.core.IMap;
+import com.hazelcast.core.Pipelining;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.BaseThreadState;
@@ -29,9 +32,14 @@ import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 import com.hazelcast.spi.impl.SimpleExecutionCallback;
 
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Random;
+import java.util.Set;
+import java.util.concurrent.Executor;
 
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateByteArray;
+import static com.hazelcast.simulator.utils.GeneratorUtils.generateByteArrays;
 
 public class LongByteArrayMapTest extends HazelcastTest {
 
@@ -40,14 +48,23 @@ public class LongByteArrayMapTest extends HazelcastTest {
     public int valueCount = 10000;
     public int minValueLength = 10;
     public int maxValueLength = 10;
+    public int pipelineDepth = 10;
+    public int pipelineIterations = 100;
+    public int getAllSize = 5;
 
     private IMap<Long, byte[]> map;
     private byte[][] values;
-
+    private final Executor callerRuns = new Executor() {
+        @Override
+        public void execute(Runnable command) {
+            command.run();
+        }
+    };
 
     @Setup
     public void setUp() {
         map = targetInstance.getMap(name);
+        values = generateByteArrays(valueCount, minValueLength, maxValueLength);
     }
 
     @Prepare(global = true)
@@ -74,6 +91,15 @@ public class LongByteArrayMapTest extends HazelcastTest {
     }
 
     @TimeStep(prob = -1)
+    public Map<Long, byte[]> getAll(ThreadState state ) {
+        Set<Long> keys = new HashSet<Long>();
+        for(int k=0;k<getAllSize;k++){
+            keys.add(state.randomKey());
+        }
+        return map.getAll(keys);
+    }
+
+    @TimeStep(prob = 0)
     public void getAsync(ThreadState state, final Probe probe, @StartNanos final long startNanos) {
         map.getAsync(state.randomKey()).andThen(new SimpleExecutionCallback<byte[]>() {
             @Override
@@ -113,7 +139,36 @@ public class LongByteArrayMapTest extends HazelcastTest {
         });
     }
 
+    @TimeStep(prob = 0)
+    public void pipelinedGet(final ThreadState state, final @StartNanos long startNanos, final Probe probe) throws Exception {
+        if (state.pipeline == null) {
+            state.pipeline =new Pipelining<byte[]>(pipelineDepth);
+        }
+        ICompletableFuture<byte[]> f = map.getAsync(state.randomKey());
+        f.andThen(new ExecutionCallback<byte[]>() {
+            @Override
+            public void onResponse(byte[] response) {
+                probe.done(startNanos);
+            }
+
+            @Override
+            public void onFailure(Throwable t) {
+                probe.done(startNanos);
+            }
+        }, callerRuns);
+        state.pipeline.add(f);
+        state.i++;
+        if (state.i == pipelineIterations) {
+            state.i = 0;
+            state.pipeline.results();
+            state.pipeline = null;
+        }
+    }
+
+
     public class ThreadState extends BaseThreadState {
+        private Pipelining<byte[]> pipeline;
+        private int i;
 
         private long randomKey() {
             return randomLong(keyDomain);

@@ -64,4 +64,14 @@ public final class GeneratorUtils {
         random.nextBytes(result);
         return result;
     }
+
+    public static byte[][] generateByteArrays(int count, int minLength, int maxLength) {
+        byte[][] keys = new byte[count][];
+        Random random = new Random();
+        for (int i = 0; i < keys.length; i++) {
+            int length = RandomUtils.nextInt(minLength, maxLength);
+            keys[i] =generateByteArray(random, length);
+        }
+        return keys;
+    }
 }
