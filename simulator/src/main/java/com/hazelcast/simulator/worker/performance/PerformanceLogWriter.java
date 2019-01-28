@@ -17,6 +17,8 @@ package com.hazelcast.simulator.worker.performance;
 
 import java.io.File;
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.util.Locale;
 
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
@@ -28,7 +30,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 final class PerformanceLogWriter {
 
     private final StringBuffer sb = new StringBuffer();
-    private final DecimalFormat format = new DecimalFormat("#.###");
+    private final DecimalFormat format = new DecimalFormat("#.###", new DecimalFormatSymbols(Locale.ENGLISH));
     private final File file;
     private boolean headerWritten;
 
