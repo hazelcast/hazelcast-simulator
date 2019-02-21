@@ -30,5 +30,6 @@
         <module>tests-hz39</module>
         <module>tests-hz310</module>
         <module>tests-hz311</module>
+        <module>tests-hz312</module>
     </modules>
 </project>
