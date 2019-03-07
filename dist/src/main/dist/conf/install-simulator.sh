@@ -69,9 +69,15 @@ if [ "$VENDOR" = "infinispan" ]; then
     uploadLibraryJar "jboss*"
     uploadLibraryJar "jgroups*"
     uploadLibraryJar "netty*"
-    uploadLibraryJar "scala*"
+    uploadLibraryJar "jackson*"
     uploadLibraryJar "commons-pool*"
     uploadLibraryJar "javassist*"
+    uploadLibraryJar "xstream*"
+    uploadLibraryJar "xmlpull*"
+    uploadLibraryJar "caffeine*"
+    uploadLibraryJar "reactive-streams*"
+    # specific version needed due to different versions
+    uploadLibraryJar "rxjava-2.2.4*"
 fi
 
 # hack to get couchbase working
