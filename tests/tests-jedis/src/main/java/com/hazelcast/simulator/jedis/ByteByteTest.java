@@ -81,7 +81,7 @@ public class ByteByteTest extends JedisTest {
 
     @Teardown
     public void tearDown() {
-        client.shutdown();
+        client.close();
     }
 
 }
