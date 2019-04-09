@@ -17,7 +17,10 @@ package com.hazelcast.simulator.memcached;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.vendors.VendorDriver;
+import net.spy.memcached.ConnectionFactoryBuilder;
 import net.spy.memcached.MemcachedClient;
+import net.spy.memcached.auth.AuthDescriptor;
+import net.spy.memcached.auth.PlainCallbackHandler;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -74,7 +77,15 @@ public class MemcachedDriver extends VendorDriver<MemcachedClient> {
             }
             addresses.add(new InetSocketAddress(addressParts[0], port));
         }
-        this.client = new MemcachedClient(addresses);
+
+        if(get("MEMCACHED_USERNAME") != null && get("MEMCACHED_PASSWORD") != null) {
+            AuthDescriptor authDescriptor =
+                    new AuthDescriptor(new String[] { "PLAIN" }, new PlainCallbackHandler(get("MEMCACHED_USERNAME"), get("MEMCACHED_PASSWORD")));
+            this.client = new MemcachedClient(new ConnectionFactoryBuilder()
+                    .setProtocol(ConnectionFactoryBuilder.Protocol.BINARY).setAuthDescriptor(authDescriptor).build(), addresses);
+        } else {
+            this.client = new MemcachedClient(addresses);
+        }
     }
 
     @Override
