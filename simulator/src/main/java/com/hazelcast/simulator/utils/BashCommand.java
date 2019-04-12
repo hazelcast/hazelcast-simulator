@@ -119,7 +119,7 @@ public class BashCommand {
     }
 
     public String execute() {
-        StringBuilder sb = new StringBuilder();
+        StringBuffer sb = new StringBuffer();
 
         String command = command();
 
@@ -186,13 +186,13 @@ public class BashCommand {
     private class BashStreamGobbler extends Thread {
         private final InputStreamReader inputStreamReader;
         private final BufferedReader reader;
-        private final StringBuilder stringBuilder;
+        private final StringBuffer stringBuffer;
 
         @SuppressFBWarnings("DM_DEFAULT_ENCODING")
-        public BashStreamGobbler(InputStream in, StringBuilder stringBuilder) {
+        public BashStreamGobbler(InputStream in, StringBuffer stringBuffer) {
             this.inputStreamReader = new InputStreamReader(in);
             this.reader = new BufferedReader(inputStreamReader);
-            this.stringBuilder = stringBuilder;
+            this.stringBuffer = stringBuffer;
         }
 
         @Override
@@ -225,7 +225,7 @@ public class BashCommand {
                         LOGGER.trace(line);
                     }
                     if (!systemOut) {
-                        stringBuilder.append(line).append(NEW_LINE);
+                        stringBuffer.append(line).append(NEW_LINE);
                     }
                 }
             } catch (IOException ignored) {
