@@ -78,9 +78,9 @@ public class MemcachedDriver extends VendorDriver<MemcachedClient> {
             addresses.add(new InetSocketAddress(addressParts[0], port));
         }
 
-        if(get("MEMCACHED_USERNAME") != null && get("MEMCACHED_PASSWORD") != null) {
-            AuthDescriptor authDescriptor =
-                    new AuthDescriptor(new String[] { "PLAIN" }, new PlainCallbackHandler(get("MEMCACHED_USERNAME"), get("MEMCACHED_PASSWORD")));
+        if (get("MEMCACHED_USERNAME") != null && get("MEMCACHED_PASSWORD") != null) {
+            AuthDescriptor authDescriptor = new AuthDescriptor(new String[] { "PLAIN" },
+                    new PlainCallbackHandler(get("MEMCACHED_USERNAME"), get("MEMCACHED_PASSWORD")));
             this.client = new MemcachedClient(new ConnectionFactoryBuilder()
                     .setProtocol(ConnectionFactoryBuilder.Protocol.BINARY).setAuthDescriptor(authDescriptor).build(), addresses);
         } else {
