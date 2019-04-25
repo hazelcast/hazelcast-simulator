@@ -65,7 +65,7 @@ public class MemcachedDriver extends VendorDriver<MemcachedClient> {
     public void startVendorInstance() throws Exception {
         String[] nodes = get("nodes").split(",");
         List<InetSocketAddress> addresses = new ArrayList<InetSocketAddress>();
-        for (String node: nodes) {
+        for (String node : nodes) {
             String[] addressParts = node.split(":");
             if (addressParts.length == 0 || addressParts.length > 2) {
                 throw new IllegalArgumentException("Invalid node address. Example: localhost:11211");
@@ -79,8 +79,9 @@ public class MemcachedDriver extends VendorDriver<MemcachedClient> {
         }
 
         if (get("MEMCACHED_USERNAME") != null && get("MEMCACHED_PASSWORD") != null) {
-            AuthDescriptor authDescriptor = new AuthDescriptor(new String[] { "PLAIN" },
-                    new PlainCallbackHandler(get("MEMCACHED_USERNAME"), get("MEMCACHED_PASSWORD")));
+            AuthDescriptor authDescriptor =
+                    new AuthDescriptor(new String[]{"PLAIN"},
+                            new PlainCallbackHandler(get("MEMCACHED_USERNAME"), get("MEMCACHED_PASSWORD")));
             this.client = new MemcachedClient(new ConnectionFactoryBuilder()
                     .setProtocol(ConnectionFactoryBuilder.Protocol.BINARY).setAuthDescriptor(authDescriptor).build(), addresses);
         } else {

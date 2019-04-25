@@ -83,7 +83,7 @@ public class JedisDriver extends VendorDriver<JedisCluster> {
     private Set<HostAndPort> getAddresses() {
         String[] nodes = get("nodes").split(",");
         Set<HostAndPort> addresses = new HashSet<HostAndPort>();
-        for (String node: nodes) {
+        for (String node : nodes) {
             String[] addressParts = node.split(":");
             if (addressParts.length == 0 || addressParts.length > 2) {
                 throw new IllegalArgumentException("Invalid node address. Example: localhost:11211");
