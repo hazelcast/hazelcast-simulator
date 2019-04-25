@@ -66,7 +66,7 @@ public class JedisDriver extends VendorDriver<JedisCluster> {
         Set<HostAndPort> addresses = getAddresses();
         GenericObjectPoolConfig poolConfig = new GenericObjectPoolConfig();
         poolConfig.setMaxTotal(100);
-        if(get("REDIS_CLUSTER_PASSWORD") != null) {
+        if (get("REDIS_CLUSTER_PASSWORD") != null) {
             this.client = new JedisCluster(addresses, 30000, 30000, 3, get("REDIS_CLUSTER_PASSWORD"), poolConfig);
         } else {
             this.client = new JedisCluster(addresses, poolConfig);
@@ -83,7 +83,7 @@ public class JedisDriver extends VendorDriver<JedisCluster> {
     private Set<HostAndPort> getAddresses() {
         String[] nodes = get("nodes").split(",");
         Set<HostAndPort> addresses = new HashSet<HostAndPort>();
-        for (String node: nodes) {
+        for (String node : nodes) {
             String[] addressParts = node.split(":");
             if (addressParts.length == 0 || addressParts.length > 2) {
                 throw new IllegalArgumentException("Invalid node address. Example: localhost:11211");
