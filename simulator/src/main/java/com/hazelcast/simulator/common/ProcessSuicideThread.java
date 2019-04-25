@@ -57,6 +57,7 @@ public final class ProcessSuicideThread extends Thread {
                 } catch (Exception e) {
                     String msg = "Process terminating; parent process with pid [" + parentPid + "] is not alive";
                     LOGGER.error(msg);
+                    LOGGER.debug("The ps command execution resulted in an Exception", e);
                     System.err.println(msg);
                     System.exit(1);
                 }
