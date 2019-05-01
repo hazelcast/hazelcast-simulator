@@ -25,7 +25,7 @@ import io.lettuce.core.api.sync.RedisCommands;
 
 import java.util.Random;
 
-import static com.hazelcast.simulator.utils.GeneratorUtils.generateStrings;
+import static com.hazelcast.simulator.utils.GeneratorUtils.generateAsciiStrings;
 
 public class StringStringSyncTest extends LettuceTest {
 
@@ -39,7 +39,7 @@ public class StringStringSyncTest extends LettuceTest {
 
     @Setup
     public void setup() {
-        values = generateStrings(valueCount, minValueLength, maxValueLength);
+        values = generateAsciiStrings(valueCount, minValueLength, maxValueLength);
     }
 
     // loading the data is very inefficient. Needs some work in the future

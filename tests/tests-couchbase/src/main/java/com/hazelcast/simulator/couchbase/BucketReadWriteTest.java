@@ -28,7 +28,7 @@ import com.hazelcast.simulator.test.annotations.TimeStep;
 
 import java.util.Random;
 
-import static com.hazelcast.simulator.utils.GeneratorUtils.generateStrings;
+import static com.hazelcast.simulator.utils.GeneratorUtils.generateAsciiStrings;
 
 public class BucketReadWriteTest extends CouchbaseTest {
     public int keyDomain = 100000;
@@ -51,7 +51,7 @@ public class BucketReadWriteTest extends CouchbaseTest {
 //
 //        clusterManager.insertBucket(bucketSettings);
 
-        values = generateStrings(valueCount, minValueLength, maxValueLength);
+        values = generateAsciiStrings(valueCount, minValueLength, maxValueLength);
 
 
         ClusterManager clusterManager = cluster.clusterManager("Administrator", "password");

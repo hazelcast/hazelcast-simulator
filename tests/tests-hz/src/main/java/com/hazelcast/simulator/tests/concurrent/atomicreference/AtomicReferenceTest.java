@@ -28,7 +28,7 @@ import java.util.Random;
 import static com.hazelcast.simulator.tests.helpers.KeyLocality.SHARED;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKeys;
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateByteArray;
-import static com.hazelcast.simulator.utils.GeneratorUtils.generateString;
+import static com.hazelcast.simulator.utils.GeneratorUtils.generateAsciiString;
 
 public class AtomicReferenceTest extends HazelcastTest {
 
@@ -48,7 +48,7 @@ public class AtomicReferenceTest extends HazelcastTest {
         Random random = new Random();
         for (int i = 0; i < valueCount; i++) {
             if (useStringValue) {
-                values[i] = generateString(valueLength);
+                values[i] = generateAsciiString(valueLength);
             } else {
                 values[i] = generateByteArray(random, valueLength);
             }

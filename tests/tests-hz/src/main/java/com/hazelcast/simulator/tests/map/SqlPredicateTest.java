@@ -29,7 +29,7 @@ import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 
 import java.util.Random;
 
-import static com.hazelcast.simulator.utils.GeneratorUtils.generateString;
+import static com.hazelcast.simulator.utils.GeneratorUtils.generateAsciiString;
 
 public class SqlPredicateTest extends HazelcastTest {
 
@@ -54,7 +54,7 @@ public class SqlPredicateTest extends HazelcastTest {
         Random random = new Random();
         Streamer<String, DataSerializableEmployee> streamer = StreamerFactory.getInstance(map);
         for (int i = 0; i < keyCount; i++) {
-            String key = generateString(keyLength);
+            String key = generateAsciiString(keyLength);
             DataSerializableEmployee value = generateRandomEmployee(random);
             streamer.pushEntry(key, value);
         }

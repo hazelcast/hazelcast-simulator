@@ -27,7 +27,7 @@ package com.hazelcast.simulator.worker.loadsupport;
  * {@code
  *   Streamer<String, Person> streamer = StreamerFactory.getInstance(map);
  *   for (int i = 0; i < keyCount; i++) {
- *     String key = generateString(keyLength);
+ *     String key = generateAsciiString(keyLength);
  *     Person value = new Person(i);
  *     streamer.pushEntry(key, value);
  *   }

@@ -29,7 +29,7 @@ import javax.cache.CacheManager;
 import java.util.Random;
 
 import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.createCacheManager;
-import static com.hazelcast.simulator.utils.GeneratorUtils.generateStrings;
+import static com.hazelcast.simulator.utils.GeneratorUtils.generateAsciiStrings;
 
 public class LongStringCacheTest extends HazelcastTest {
 
@@ -47,7 +47,7 @@ public class LongStringCacheTest extends HazelcastTest {
     public void setUp() {
         CacheManager cacheManager = createCacheManager(targetInstance);
         cache = cacheManager.getCache(name);
-        values = generateStrings(valueCount, minValueLength, maxValueLength);
+        values = generateAsciiStrings(valueCount, minValueLength, maxValueLength);
     }
 
     @Prepare(global = true)

@@ -27,7 +27,7 @@ import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 
 import java.util.Set;
 
-import static com.hazelcast.simulator.utils.GeneratorUtils.generateString;
+import static com.hazelcast.simulator.utils.GeneratorUtils.generateAsciiString;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -56,8 +56,8 @@ public class AllKeySetTest extends HazelcastTest {
     public void prepare() {
         Streamer<String, String> streamer = StreamerFactory.getInstance(map);
         for (int i = 0; i < entryCount; i++) {
-            String key = generateString(keyLength);
-            String value = generateString(valueLength);
+            String key = generateAsciiString(keyLength);
+            String value = generateAsciiString(valueLength);
             streamer.pushEntry(key, value);
         }
         streamer.await();

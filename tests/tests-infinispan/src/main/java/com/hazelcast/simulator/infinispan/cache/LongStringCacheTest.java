@@ -27,7 +27,7 @@ import javax.cache.CacheManager;
 import javax.cache.Caching;
 import java.util.Random;
 
-import static com.hazelcast.simulator.utils.GeneratorUtils.generateStrings;
+import static com.hazelcast.simulator.utils.GeneratorUtils.generateAsciiStrings;
 
 public class LongStringCacheTest extends InfinispanTest {
 
@@ -45,7 +45,7 @@ public class LongStringCacheTest extends InfinispanTest {
     public void setup() {
         CacheManager cacheManager = Caching.getCachingProvider().getCacheManager();
         cache = cacheManager.getCache(name);
-        values = generateStrings(valueCount, minValueLength, maxValueLength);
+        values = generateAsciiStrings(valueCount, minValueLength, maxValueLength);
     }
 
     @Prepare(global = true)

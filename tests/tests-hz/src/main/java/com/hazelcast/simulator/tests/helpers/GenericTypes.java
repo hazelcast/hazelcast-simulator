@@ -22,7 +22,7 @@ import java.util.Random;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntegerKeys;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKeys;
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateByteArray;
-import static com.hazelcast.simulator.utils.GeneratorUtils.generateString;
+import static com.hazelcast.simulator.utils.GeneratorUtils.generateAsciiString;
 
 public enum GenericTypes {
 
@@ -44,7 +44,7 @@ public enum GenericTypes {
     public Object generateValue(Random random, int valueSize) {
         switch (this) {
             case STRING:
-                return generateString(valueSize);
+                return generateAsciiString(valueSize);
             case BYTE:
                 return generateByteArray(random, valueSize);
             default:
