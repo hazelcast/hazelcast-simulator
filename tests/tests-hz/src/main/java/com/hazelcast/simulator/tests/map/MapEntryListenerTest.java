@@ -32,7 +32,7 @@ import com.hazelcast.simulator.tests.map.helpers.ScrambledZipfianGenerator;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
-import static com.hazelcast.simulator.utils.GeneratorUtils.generateStrings;
+import static com.hazelcast.simulator.utils.GeneratorUtils.generateAsciiStrings;
 import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 
@@ -69,7 +69,7 @@ public class MapEntryListenerTest extends HazelcastTest {
 
     @Setup
     public void setUp() {
-        values = generateStrings(valueCount, valueLength);
+        values = generateAsciiStrings(valueCount, valueLength);
         listener = new EntryListenerImpl<Integer, String>(minEntryListenerDelayMs, maxEntryListenerDelayMs);
 
         eventCounts = targetInstance.getList(name + "eventCount");

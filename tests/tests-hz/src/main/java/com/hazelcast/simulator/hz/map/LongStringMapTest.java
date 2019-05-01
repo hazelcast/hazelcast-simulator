@@ -30,7 +30,7 @@ import com.hazelcast.spi.impl.SimpleExecutionCallback;
 
 import java.util.Random;
 
-import static com.hazelcast.simulator.utils.GeneratorUtils.generateStrings;
+import static com.hazelcast.simulator.utils.GeneratorUtils.generateAsciiStrings;
 
 public class LongStringMapTest extends HazelcastTest {
 
@@ -46,7 +46,7 @@ public class LongStringMapTest extends HazelcastTest {
     @Setup
     public void setUp() {
         map = targetInstance.getMap(name);
-        values = generateStrings(valueCount, minValueLength, maxValueLength);
+        values = generateAsciiStrings(valueCount, minValueLength, maxValueLength);
     }
 
     @Prepare(global = true)

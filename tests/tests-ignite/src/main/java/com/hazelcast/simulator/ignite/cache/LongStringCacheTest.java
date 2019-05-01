@@ -25,7 +25,7 @@ import com.hazelcast.simulator.test.annotations.TimeStep;
 import javax.cache.Cache;
 import java.util.Random;
 
-import static com.hazelcast.simulator.utils.GeneratorUtils.generateStrings;
+import static com.hazelcast.simulator.utils.GeneratorUtils.generateAsciiStrings;
 
 public class LongStringCacheTest extends IgniteTest {
 
@@ -42,7 +42,7 @@ public class LongStringCacheTest extends IgniteTest {
     @Setup
     public void setUp() {
         cache = ignite.getOrCreateCache(name);
-        values = generateStrings(valueCount, minValueLength, maxValueLength);
+        values = generateAsciiStrings(valueCount, minValueLength, maxValueLength);
     }
 
     @Prepare(global = true)

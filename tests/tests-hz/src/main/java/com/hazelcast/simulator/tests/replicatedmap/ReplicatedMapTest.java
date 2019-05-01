@@ -23,7 +23,7 @@ import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 
-import static com.hazelcast.simulator.utils.GeneratorUtils.generateStrings;
+import static com.hazelcast.simulator.utils.GeneratorUtils.generateAsciiStrings;
 
 public class ReplicatedMapTest extends HazelcastTest {
 
@@ -43,7 +43,7 @@ public class ReplicatedMapTest extends HazelcastTest {
 
     @Prepare
     public void prepare() {
-        values = generateStrings(valueCount, valueLength);
+        values = generateAsciiStrings(valueCount, valueLength);
     }
 
     @TimeStep(prob = 0.45)

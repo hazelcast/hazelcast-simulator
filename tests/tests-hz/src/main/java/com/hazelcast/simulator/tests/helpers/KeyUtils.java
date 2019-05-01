@@ -27,7 +27,7 @@ import java.util.Random;
 import java.util.Set;
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
-import static com.hazelcast.simulator.utils.GeneratorUtils.generateString;
+import static com.hazelcast.simulator.utils.GeneratorUtils.generateAsciiString;
 import static java.lang.String.format;
 
 public final class KeyUtils {
@@ -362,9 +362,9 @@ public final class KeyUtils {
         @Override
         protected String generateKey() {
             if (prefix.length() == 0) {
-                return generateString(keyLength);
+                return generateAsciiString(keyLength);
             } else {
-                return prefix + generateString(keyLength - prefix.length());
+                return prefix + generateAsciiString(keyLength - prefix.length());
             }
         }
     }

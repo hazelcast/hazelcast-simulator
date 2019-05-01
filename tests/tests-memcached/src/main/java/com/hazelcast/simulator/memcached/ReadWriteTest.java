@@ -26,7 +26,7 @@ import net.spy.memcached.transcoders.SerializingTranscoder;
 import java.util.Random;
 
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateByteArray;
-import static com.hazelcast.simulator.utils.GeneratorUtils.generateStrings;
+import static com.hazelcast.simulator.utils.GeneratorUtils.generateAsciiStrings;
 
 public class ReadWriteTest extends MemcachedTest {
 
@@ -48,7 +48,7 @@ public class ReadWriteTest extends MemcachedTest {
 
     @Setup
     public void setUp() {
-        keys = generateStrings(keyCount, keyLength);
+        keys = generateAsciiStrings(keyCount, keyLength);
 
         if (minSize > maxSize) {
             throw new IllegalStateException("minSize can't be larger than maxSize");

@@ -5,8 +5,8 @@ import org.junit.Test;
 import java.util.Random;
 
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateByteArray;
-import static com.hazelcast.simulator.utils.GeneratorUtils.generateString;
-import static com.hazelcast.simulator.utils.GeneratorUtils.generateStrings;
+import static com.hazelcast.simulator.utils.GeneratorUtils.generateAsciiString;
+import static com.hazelcast.simulator.utils.GeneratorUtils.generateAsciiStrings;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
 import static com.hazelcast.simulator.utils.TestUtils.assertEqualsStringFormat;
 
@@ -19,7 +19,7 @@ public class GeneratorUtilsTest {
 
     @Test
     public void testGenerateStrings() throws Exception {
-        String[] strings = generateStrings(3, 7);
+        String[] strings = generateAsciiStrings(3, 7);
 
         assertEqualsStringFormat("Expected to get %d strings, but was %d", 3, strings.length);
         for (String actual : strings) {
@@ -29,14 +29,14 @@ public class GeneratorUtilsTest {
 
     @Test
     public void testGenerateStringZeroLength() throws Exception {
-        String actual = generateString(0);
+        String actual = generateAsciiString(0);
 
         assertEqualsStringFormat("Expected generated string length to be %d, but was %d", 0, actual.length());
     }
 
     @Test
     public void testGenerateString() throws Exception {
-        String actual = generateString(42);
+        String actual = generateAsciiString(42);
 
         assertEqualsStringFormat("Expected generated string length to be %d, but was %d", 42, actual.length());
     }

@@ -30,7 +30,7 @@ import java.util.Random;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.waitClusterSize;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKeys;
-import static com.hazelcast.simulator.utils.GeneratorUtils.generateStrings;
+import static com.hazelcast.simulator.utils.GeneratorUtils.generateAsciiStrings;
 
 public class StringStringMapTest extends HazelcastTest {
 
@@ -53,11 +53,11 @@ public class StringStringMapTest extends HazelcastTest {
         map = targetInstance.getMap(name);
     }
 
-    @Prepare(global = false)
+    @Prepare
     public void prepare() {
         waitClusterSize(logger, targetInstance, minNumberOfMembers);
         keys = generateStringKeys(keyCount, keyLength, keyLocality, targetInstance);
-        values = generateStrings(valueCount, minValueLength, maxValueLength);
+        values = generateAsciiStrings(valueCount, minValueLength, maxValueLength);
 
         loadInitialData();
     }

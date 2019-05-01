@@ -36,20 +36,20 @@ public final class GeneratorUtils {
      * @param length the length of each individual string
      * @return the created array of Strings.
      */
-    public static String[] generateStrings(int count, int length) {
-        return generateStrings(count, length, length);
+    public static String[] generateAsciiStrings(int count, int length) {
+        return generateAsciiStrings(count, length, length);
     }
 
-    public static String[] generateStrings(int count, int minLength, int maxLength) {
+    public static String[] generateAsciiStrings(int count, int minLength, int maxLength) {
         String[] keys = new String[count];
         for (int i = 0; i < keys.length; i++) {
             int length = RandomUtils.nextInt(minLength, maxLength);
-            keys[i] = generateString(length);
+            keys[i] = generateAsciiString(length);
         }
         return keys;
     }
 
-    public static String generateString(int length) {
+    public static String generateAsciiString(int length) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < length; i++) {
             char c = ALPHABET.charAt(RANDOM.nextInt(ALPHABET.length()));
