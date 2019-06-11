@@ -22,7 +22,7 @@ public class IdentifiedDataSerializableDomainObject extends DataSerializableDoma
     static final int CLASS_ID = 1;
 
     @Override
-    public int getId() {
+    public int getClassId() {
         return CLASS_ID;
     }
 

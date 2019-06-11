@@ -15,10 +15,9 @@
  */
 package com.hazelcast.simulator.tests.queue;
 
-import com.hazelcast.core.IList;
-import com.hazelcast.core.ILock;
-import com.hazelcast.core.IQueue;
-import com.hazelcast.core.TransactionalQueue;
+import com.hazelcast.collection.IList;
+import com.hazelcast.collection.IQueue;
+import com.hazelcast.cp.lock.ILock;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
@@ -27,6 +26,7 @@ import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.tests.helpers.TxnCounter;
 import com.hazelcast.transaction.TransactionContext;
+import com.hazelcast.transaction.TransactionalQueue;
 
 import static org.junit.Assert.assertFalse;
 

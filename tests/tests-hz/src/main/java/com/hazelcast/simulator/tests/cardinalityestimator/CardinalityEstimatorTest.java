@@ -17,9 +17,9 @@
 package com.hazelcast.simulator.tests.cardinalityestimator;
 
 import com.hazelcast.cardinality.CardinalityEstimator;
-import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.IMap;
-import com.hazelcast.map.AbstractEntryProcessor;
+import com.hazelcast.cp.IAtomicLong;
+import com.hazelcast.map.EntryProcessor;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
@@ -208,7 +208,7 @@ public class CardinalityEstimatorTest extends HazelcastTest {
         }
     }
 
-    private static final class IncEntryProcessor extends AbstractEntryProcessor<String, Long> {
+    private static final class IncEntryProcessor implements EntryProcessor<String, Long, Object> {
         private final long delta;
 
         private IncEntryProcessor(long delta) {

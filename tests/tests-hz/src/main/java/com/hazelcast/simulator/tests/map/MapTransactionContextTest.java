@@ -15,13 +15,13 @@
  */
 package com.hazelcast.simulator.tests.map;
 
-import com.hazelcast.core.TransactionalMap;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.transaction.TransactionContext;
 import com.hazelcast.transaction.TransactionOptions;
 import com.hazelcast.transaction.TransactionOptions.TransactionType;
+import com.hazelcast.transaction.TransactionalMap;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.rethrow;
 import static com.hazelcast.transaction.TransactionOptions.TransactionType.TWO_PHASE;

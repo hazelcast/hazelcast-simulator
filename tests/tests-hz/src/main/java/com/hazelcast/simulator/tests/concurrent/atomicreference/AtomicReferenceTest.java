@@ -15,7 +15,7 @@
  */
 package com.hazelcast.simulator.tests.concurrent.atomicreference;
 
-import com.hazelcast.core.IAtomicReference;
+import com.hazelcast.cp.IAtomicReference;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -27,8 +27,8 @@ import java.util.Random;
 
 import static com.hazelcast.simulator.tests.helpers.KeyLocality.SHARED;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKeys;
-import static com.hazelcast.simulator.utils.GeneratorUtils.generateByteArray;
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateAsciiString;
+import static com.hazelcast.simulator.utils.GeneratorUtils.generateByteArray;
 
 public class AtomicReferenceTest extends HazelcastTest {
 

@@ -1,8 +1,8 @@
 package com.hazelcast.simulator.utils;
 
-import com.hazelcast.core.Cluster;
+import com.hazelcast.cluster.Cluster;
+import com.hazelcast.cluster.Member;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.Member;
 import com.hazelcast.simulator.coordinator.registry.AgentData;
 import com.hazelcast.simulator.coordinator.registry.Registry;
 import org.junit.AfterClass;
@@ -150,18 +150,6 @@ public class HazelcastUtilsTest {
         String address = getHazelcastAddress("member", "172.16.16.1", null);
 
         assertEquals("server:172.16.16.1", address);
-    }
-
-    @Test
-    public void testGetHazelcastAddress_withMemberWorker_oldHazelcastVersion() {
-        Member member = mock(Member.class);
-        when(member.getInetSocketAddress()).thenReturn(SOCKET_ADDRESS);
-        when(member.getSocketAddress()).thenThrow(new NoSuchMethodError("expected exception"));
-        hazelcastInstance = createMockHazelcastInstance(member);
-
-        String address = getHazelcastAddress("member", "172.16.16.1", hazelcastInstance);
-
-        assertEquals("127.0.0.1:5701", address);
     }
 
     @Test
