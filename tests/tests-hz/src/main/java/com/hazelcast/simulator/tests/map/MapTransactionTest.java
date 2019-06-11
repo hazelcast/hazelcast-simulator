@@ -15,9 +15,8 @@
  */
 package com.hazelcast.simulator.tests.map;
 
-import com.hazelcast.core.IList;
+import com.hazelcast.collection.IList;
 import com.hazelcast.core.IMap;
-import com.hazelcast.core.TransactionalMap;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
@@ -28,6 +27,7 @@ import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.transaction.TransactionException;
 import com.hazelcast.transaction.TransactionOptions;
 import com.hazelcast.transaction.TransactionOptions.TransactionType;
+import com.hazelcast.transaction.TransactionalMap;
 import com.hazelcast.transaction.TransactionalTask;
 import com.hazelcast.transaction.TransactionalTaskContext;
 

@@ -15,10 +15,10 @@
  */
 package com.hazelcast.simulator.tests.helpers;
 
+import com.hazelcast.cluster.Member;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.Member;
-import com.hazelcast.core.Partition;
-import com.hazelcast.core.PartitionService;
+import com.hazelcast.partition.Partition;
+import com.hazelcast.partition.PartitionService;
 
 import java.util.HashMap;
 import java.util.HashSet;

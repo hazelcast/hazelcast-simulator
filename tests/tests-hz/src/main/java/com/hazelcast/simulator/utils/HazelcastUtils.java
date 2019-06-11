@@ -15,8 +15,8 @@
  */
 package com.hazelcast.simulator.utils;
 
+import com.hazelcast.cluster.Member;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.Member;
 
 import java.net.InetSocketAddress;
 import java.util.Iterator;
@@ -77,7 +77,7 @@ public final class HazelcastUtils {
             return (InetSocketAddress) hazelcastInstance.getLocalEndpoint().getSocketAddress();
         } catch (NoSuchMethodError ignored) {
             try {
-                return hazelcastInstance.getCluster().getLocalMember().getInetSocketAddress();
+                return hazelcastInstance.getCluster().getLocalMember().getSocketAddress();
             } catch (Exception e) {
                 return null;
             }

@@ -16,8 +16,8 @@
 package com.hazelcast.simulator.tests.icache;
 
 import com.hazelcast.cache.ICache;
+import com.hazelcast.collection.IList;
 import com.hazelcast.config.CacheConfig;
-import com.hazelcast.core.IList;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;

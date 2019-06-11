@@ -15,10 +15,7 @@
  */
 package com.hazelcast.simulator.tests.topic;
 
-import com.hazelcast.core.IAtomicLong;
-import com.hazelcast.core.ITopic;
-import com.hazelcast.core.Message;
-import com.hazelcast.core.MessageListener;
+import com.hazelcast.cp.IAtomicLong;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.DataSerializableFactory;
@@ -34,6 +31,9 @@ import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.utils.AssertTask;
 import com.hazelcast.simulator.utils.ExceptionReporter;
+import com.hazelcast.topic.ITopic;
+import com.hazelcast.topic.Message;
+import com.hazelcast.topic.MessageListener;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -164,7 +164,7 @@ public class ReliableTopicTest extends HazelcastTest {
         }
 
         @Override
-        public int getId() {
+        public int getClassId() {
             return 0;
         }
     }

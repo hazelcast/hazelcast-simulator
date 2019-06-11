@@ -15,9 +15,9 @@
  */
 package com.hazelcast.simulator.tests.map;
 
-import com.hazelcast.core.IList;
+import com.hazelcast.collection.IList;
 import com.hazelcast.core.IMap;
-import com.hazelcast.map.AbstractEntryProcessor;
+import com.hazelcast.map.EntryProcessor;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
@@ -98,7 +98,7 @@ public class MapEntryProcessorTest extends HazelcastTest {
         }
     }
 
-    private static final class IncrementEntryProcessor extends AbstractEntryProcessor<Integer, Long> {
+    private static final class IncrementEntryProcessor implements EntryProcessor<Integer, Long, Object> {
 
         private final long increment;
         private final int delayMs;

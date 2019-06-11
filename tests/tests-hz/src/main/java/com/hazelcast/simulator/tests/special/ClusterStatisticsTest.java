@@ -16,7 +16,7 @@
 package com.hazelcast.simulator.tests.special;
 
 import com.hazelcast.core.IMap;
-import com.hazelcast.core.PartitionService;
+import com.hazelcast.partition.PartitionService;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;

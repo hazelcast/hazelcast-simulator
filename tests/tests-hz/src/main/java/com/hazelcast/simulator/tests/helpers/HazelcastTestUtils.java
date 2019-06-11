@@ -23,7 +23,7 @@ import com.hazelcast.instance.HazelcastInstanceProxy;
 import com.hazelcast.instance.Node;
 import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.spi.impl.NodeEngineImpl;
-import com.hazelcast.spi.impl.operationservice.InternalOperationService;
+import com.hazelcast.spi.impl.operationservice.OperationService;
 import org.apache.log4j.Logger;
 
 import java.lang.reflect.InvocationTargetException;
@@ -62,7 +62,7 @@ public final class HazelcastTestUtils {
         }
     }
 
-    public static InternalOperationService getOperationService(HazelcastInstance hz) {
+    public static OperationService getOperationService(HazelcastInstance hz) {
         Node node = checkNotNull(getNode(hz), "node is null in Hazelcast instance " + hz);
         NodeEngineImpl nodeEngine = node.getNodeEngine();
         try {
@@ -73,10 +73,10 @@ public final class HazelcastTestUtils {
         }
     }
 
-    private static InternalOperationService getOperationServiceViaReflection(NodeEngineImpl nodeEngine) {
+    private static OperationService getOperationServiceViaReflection(NodeEngineImpl nodeEngine) {
         try {
             Method method = NodeEngineImpl.class.getMethod("getOperationService");
-            return (InternalOperationService) method.invoke(nodeEngine);
+            return (OperationService) method.invoke(nodeEngine);
         } catch (NoSuchMethodException e) {
             throw new IllegalStateException(e);
         } catch (InvocationTargetException e) {

@@ -15,11 +15,10 @@
  */
 package com.hazelcast.simulator.tests.concurrent.atomiclong;
 
-import com.hazelcast.core.AsyncAtomicLong;
 import com.hazelcast.core.DistributedObject;
 import com.hazelcast.core.ExecutionCallback;
-import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.ICompletableFuture;
+import com.hazelcast.cp.IAtomicLong;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.BaseThreadState;
@@ -57,17 +56,17 @@ public class AsyncAtomicLongTest extends HazelcastTest {
     public int batchSize = -1;
 
     private IAtomicLong totalCounter;
-    private AsyncAtomicLong[] counters;
+    private IAtomicLong[] counters;
 
     @Setup
     public void setup() {
         totalCounter = targetInstance.getAtomicLong(name + ":TotalCounter");
         if (isMemberNode(targetInstance)) {
-            counters = new AsyncAtomicLong[countersLength];
+            counters = new IAtomicLong[countersLength];
 
             String[] names = generateStringKeys(name, countersLength, keyLocality, targetInstance);
             for (int i = 0; i < countersLength; i++) {
-                counters[i] = (AsyncAtomicLong) targetInstance.getAtomicLong(names[i]);
+                counters[i] = (IAtomicLong) targetInstance.getAtomicLong(names[i]);
             }
         }
     }
@@ -82,17 +81,17 @@ public class AsyncAtomicLongTest extends HazelcastTest {
 
     @TimeStep
     public void write(ThreadState state, Probe probe, @StartNanos long startNanos) {
-        AsyncAtomicLong counter = state.getRandomCounter();
+        IAtomicLong counter = state.getRandomCounter();
         state.increments++;
-        ICompletableFuture<Long> future = counter.asyncIncrementAndGet();
+        ICompletableFuture<Long> future = counter.incrementAndGetAsync();
         state.add(future);
         future.andThen(new LongExecutionCallback(probe, startNanos));
     }
 
     @TimeStep(prob = -1)
     public void get(ThreadState state, Probe probe, @StartNanos long startNanos) {
-        AsyncAtomicLong counter = state.getRandomCounter();
-        ICompletableFuture<Long> future = counter.asyncGet();
+        IAtomicLong counter = state.getRandomCounter();
+        ICompletableFuture<Long> future = counter.getAsync();
         state.add(future);
         future.andThen(new LongExecutionCallback(probe, startNanos));
     }
@@ -125,7 +124,7 @@ public class AsyncAtomicLongTest extends HazelcastTest {
             }
         }
 
-        AsyncAtomicLong getRandomCounter() {
+        IAtomicLong getRandomCounter() {
             int index = randomInt(counters.length);
             return counters[index];
         }
