@@ -85,6 +85,10 @@ public class EntryListenerImpl<K, V> implements EntryListener<K, V>, DataSeriali
     public void mapCleared(MapEvent mapEvent) {
     }
 
+    @Override
+    public void entryExpired(EntryEvent<K, V> event) {
+    }
+
     private void delay() {
         if (maxDelayMs > 0) {
             sleepMillis(minDelayMs + random.nextInt(maxDelayMs));

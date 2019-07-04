@@ -17,7 +17,8 @@ package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.IMap;
 import com.hazelcast.query.PagingPredicate;
-import com.hazelcast.query.SqlPredicate;
+import com.hazelcast.query.impl.predicates.PagingPredicateImpl;
+import com.hazelcast.query.impl.predicates.SqlPredicate;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.Prepare;
@@ -103,7 +104,7 @@ public final class PagingPredicateTest extends HazelcastTest {
     }
 
     private PagingPredicate createNewPredicate() {
-        return new PagingPredicate(innerPredicate, pageSize);
+        return new PagingPredicateImpl(innerPredicate, pageSize);
     }
 
     public final class ThreadState extends BaseThreadState {
