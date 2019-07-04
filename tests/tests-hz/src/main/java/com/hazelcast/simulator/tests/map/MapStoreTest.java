@@ -17,7 +17,7 @@ package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.collection.IList;
 import com.hazelcast.config.MapStoreConfig;
-import com.hazelcast.core.IMap;
+import com.hazelcast.map.IMap;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
@@ -38,11 +38,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 /**
- * This test operates on a map which has a {@link com.hazelcast.core.MapStore} configured.
+ * This test operates on a map which has a {@link com.hazelcast.map.MapStore} configured.
  *
  * We use map operations such as loadAll, put, get, delete or destroy with some probability distribution to trigger
- * {@link com.hazelcast.core.MapStore} methods. We verify that the the key/value pairs in the map are also "persisted"
- * into the {@link com.hazelcast.core.MapStore}.
+ * {@link com.hazelcast.map.MapStore} methods. We verify that the the key/value pairs in the map are also "persisted"
+ * into the {@link com.hazelcast.map.MapStore}.
  */
 public class MapStoreTest extends HazelcastTest {
 

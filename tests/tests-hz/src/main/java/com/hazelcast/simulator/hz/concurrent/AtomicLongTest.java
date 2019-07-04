@@ -16,10 +16,10 @@
 
 package com.hazelcast.simulator.hz.concurrent;
 
-import com.hazelcast.core.Pipelining;
-import com.hazelcast.cp.IAtomicLong;
 import com.hazelcast.core.ExecutionCallback;
 import com.hazelcast.core.ICompletableFuture;
+import com.hazelcast.core.Pipelining;
+import com.hazelcast.cp.IAtomicLong;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.BaseThreadState;
@@ -29,7 +29,6 @@ import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 
 import java.util.concurrent.Executor;
-import java.util.concurrent.Semaphore;
 
 public class AtomicLongTest extends HazelcastTest {
 
@@ -39,6 +38,12 @@ public class AtomicLongTest extends HazelcastTest {
     public int pipelineIterations = 100;
 
     private IAtomicLong[] counters;
+    private final Executor callerRuns = new Executor() {
+        @Override
+        public void execute(Runnable command) {
+            command.run();
+        }
+    };
 
     @Setup
     public void setup() {
@@ -59,17 +64,10 @@ public class AtomicLongTest extends HazelcastTest {
         return state.randomCounter().incrementAndGet();
     }
 
-    private final Executor callerRuns = new Executor() {
-        @Override
-        public void execute(Runnable command) {
-            command.run();
-        }
-    };
-
     @TimeStep(prob = 0)
-    public void pipelinedGet(final ThreadState state, final @StartNanos long startNanos, final Probe probe) throws Exception {
+    public void pipelinedGet(final ThreadState state, @StartNanos final long startNanos, final Probe probe) throws Exception {
         if (state.pipeline == null) {
-            state.pipeline =new Pipelining<Long>(pipelineDepth);
+            state.pipeline = new Pipelining<Long>(pipelineDepth);
         }
         ICompletableFuture<Long> f = state.randomCounter().getAsync();
         f.andThen(new ExecutionCallback<Long>() {

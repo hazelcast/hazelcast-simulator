@@ -15,7 +15,7 @@
  */
 package com.hazelcast.simulator.tests.map;
 
-import com.hazelcast.core.IMap;
+import com.hazelcast.map.IMap;
 import com.hazelcast.query.PagingPredicate;
 import com.hazelcast.query.impl.predicates.PagingPredicateImpl;
 import com.hazelcast.query.impl.predicates.SqlPredicate;

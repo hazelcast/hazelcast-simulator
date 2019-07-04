@@ -15,7 +15,7 @@
  */
 package com.hazelcast.simulator.worker.loadsupport;
 
-import com.hazelcast.core.IMap;
+import com.hazelcast.map.IMap;
 
 /**
  * Synchronous implementation of {@link Streamer} for {@link IMap}.

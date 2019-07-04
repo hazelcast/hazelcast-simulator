@@ -16,7 +16,7 @@
 package com.hazelcast.simulator.worker.loadsupport;
 
 import com.hazelcast.core.ICompletableFuture;
-import com.hazelcast.core.IMap;
+import com.hazelcast.map.IMap;
 
 import java.util.concurrent.Semaphore;
 

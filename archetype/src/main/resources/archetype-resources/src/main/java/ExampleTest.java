@@ -15,7 +15,7 @@
  */
 package ${package};
 
-import com.hazelcast.core.IMap;
+import com.hazelcast.map.IMap;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.Prepare;

@@ -15,7 +15,7 @@
  */
 package com.hazelcast.simulator.tests.map;
 
-import com.hazelcast.core.IMap;
+import com.hazelcast.map.IMap;
 import com.hazelcast.core.IdGenerator;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.TestException;

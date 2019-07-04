@@ -15,7 +15,7 @@
  */
 package com.hazelcast.simulator.tests.map;
 
-import com.hazelcast.core.IMap;
+import com.hazelcast.map.IMap;
 import com.hazelcast.query.Predicate;
 import com.hazelcast.query.Predicates;
 import com.hazelcast.simulator.hz.HazelcastTest;

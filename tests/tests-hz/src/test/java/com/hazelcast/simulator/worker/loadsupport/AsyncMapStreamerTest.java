@@ -2,7 +2,7 @@ package com.hazelcast.simulator.worker.loadsupport;
 
 import com.hazelcast.core.ExecutionCallback;
 import com.hazelcast.core.ICompletableFuture;
-import com.hazelcast.core.IMap;
+import com.hazelcast.map.IMap;
 import com.hazelcast.simulator.TestEnvironmentUtils;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.junit.After;

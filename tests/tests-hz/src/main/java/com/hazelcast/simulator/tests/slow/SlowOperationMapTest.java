@@ -15,7 +15,7 @@
  */
 package com.hazelcast.simulator.tests.slow;
 
-import com.hazelcast.core.IMap;
+import com.hazelcast.map.IMap;
 import com.hazelcast.map.MapInterceptor;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
