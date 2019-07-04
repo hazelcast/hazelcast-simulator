@@ -16,7 +16,7 @@
 
 package com.hazelcast.simulator.tests.quorum;
 
-import com.hazelcast.core.IMap;
+import com.hazelcast.map.IMap;
 import com.hazelcast.quorum.QuorumException;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;

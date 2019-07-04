@@ -17,7 +17,7 @@
 package com.hazelcast.simulator.tests.cardinalityestimator;
 
 import com.hazelcast.cardinality.CardinalityEstimator;
-import com.hazelcast.core.IMap;
+import com.hazelcast.map.IMap;
 import com.hazelcast.cp.IAtomicLong;
 import com.hazelcast.map.EntryProcessor;
 import com.hazelcast.simulator.hz.HazelcastTest;

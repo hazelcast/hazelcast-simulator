@@ -15,7 +15,7 @@
  */
 package com.hazelcast.simulator.tests.map.helpers;
 
-import com.hazelcast.core.MapStore;
+import com.hazelcast.map.MapStore;
 
 import java.util.Collection;
 import java.util.HashMap;

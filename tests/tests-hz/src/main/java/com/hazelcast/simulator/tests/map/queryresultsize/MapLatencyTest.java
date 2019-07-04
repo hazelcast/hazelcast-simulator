@@ -20,8 +20,8 @@ import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
 
 /**
- * This test creates latency probe results for {@link com.hazelcast.core.IMap#values()}, {@link com.hazelcast.core.IMap#keySet()}
- * and {@link com.hazelcast.core.IMap#entrySet()}. It is used to ensure that the query result size limit has no bad impact on the
+ * This test creates latency probe results for {@link com.hazelcast.map.IMap#values()}, {@link com.hazelcast.map.IMap#keySet()}
+ * and {@link com.hazelcast.map.IMap#entrySet()}. It is used to ensure that the query result size limit has no bad impact on the
  * latency of those method calls.
  *
  * To achieve this we fill a map slightly below the trigger limit of the query result size limit, so we are sure it will never

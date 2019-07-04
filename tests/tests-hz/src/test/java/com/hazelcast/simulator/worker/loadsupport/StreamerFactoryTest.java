@@ -1,7 +1,7 @@
 package com.hazelcast.simulator.worker.loadsupport;
 
 import com.hazelcast.cache.ICache;
-import com.hazelcast.core.IMap;
+import com.hazelcast.map.IMap;
 import org.junit.Test;
 
 import javax.cache.Cache;

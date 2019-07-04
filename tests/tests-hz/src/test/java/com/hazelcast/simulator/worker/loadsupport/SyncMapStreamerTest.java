@@ -1,6 +1,6 @@
 package com.hazelcast.simulator.worker.loadsupport;
 
-import com.hazelcast.core.IMap;
+import com.hazelcast.map.IMap;
 import com.hazelcast.util.EmptyStatement;
 import org.junit.Before;
 import org.junit.Test;

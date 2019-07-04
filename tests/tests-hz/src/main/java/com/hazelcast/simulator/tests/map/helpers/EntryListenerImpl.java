@@ -17,7 +17,7 @@ package com.hazelcast.simulator.tests.map.helpers;
 
 import com.hazelcast.core.EntryEvent;
 import com.hazelcast.core.EntryListener;
-import com.hazelcast.core.MapEvent;
+import com.hazelcast.map.MapEvent;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.DataSerializable;

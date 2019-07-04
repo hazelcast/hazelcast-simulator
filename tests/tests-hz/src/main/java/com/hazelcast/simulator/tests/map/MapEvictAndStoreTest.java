@@ -17,7 +17,7 @@ package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.config.MapConfig;
 import com.hazelcast.config.MapStoreConfig;
-import com.hazelcast.core.IMap;
+import com.hazelcast.map.IMap;
 import com.hazelcast.cp.IAtomicLong;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.annotations.Setup;

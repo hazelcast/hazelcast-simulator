@@ -17,7 +17,7 @@ package com.hazelcast.simulator.tests.map.helpers;
 
 import com.hazelcast.config.MapStoreConfig;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.MapStore;
+import com.hazelcast.map.MapStore;
 import com.hazelcast.simulator.test.TestException;
 import org.apache.log4j.Logger;
 

@@ -17,8 +17,8 @@ package com.hazelcast.simulator.hz.map;
 
 import com.hazelcast.core.ExecutionCallback;
 import com.hazelcast.core.ICompletableFuture;
-import com.hazelcast.core.IMap;
 import com.hazelcast.core.Pipelining;
+import com.hazelcast.map.IMap;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.BaseThreadState;
@@ -83,9 +83,9 @@ public class LongStringMapTest extends HazelcastTest {
     }
 
     @TimeStep(prob = 0)
-    public Map<Long, String> getAll(ThreadState state ) {
+    public Map<Long, String> getAll(ThreadState state) {
         Set<Long> keys = new HashSet<Long>();
-        for(int k=0;k<getAllSize;k++){
+        for (int k = 0; k < getAllSize; k++) {
             keys.add(state.randomKey());
         }
         return map.getAll(keys);
@@ -102,12 +102,12 @@ public class LongStringMapTest extends HazelcastTest {
     }
 
     @TimeStep(prob = 0)
-    public void pipelinedGetHack(ThreadState state)throws Exception {
+    public void pipelinedGetHack(ThreadState state) throws Exception {
         Future[] futures = new Future[pipelineDepth];
-        for(int k=0;k<pipelineDepth;k++) {
-            futures[k]=map.getAsync(state.randomKey());
+        for (int k = 0; k < pipelineDepth; k++) {
+            futures[k] = map.getAsync(state.randomKey());
         }
-        for(Future f:futures){
+        for (Future f : futures) {
             f.get();
         }
     }
@@ -143,9 +143,9 @@ public class LongStringMapTest extends HazelcastTest {
     }
 
     @TimeStep(prob = 0)
-    public void pipelinedGet(final ThreadState state, final @StartNanos long startNanos, final Probe probe) throws Exception {
+    public void pipelinedGet(final ThreadState state, @StartNanos final long startNanos, final Probe probe) throws Exception {
         if (state.pipeline == null) {
-            state.pipeline =new Pipelining<String>(pipelineDepth);
+            state.pipeline = new Pipelining<String>(pipelineDepth);
         }
         ICompletableFuture<String> f = map.getAsync(state.randomKey());
         f.andThen(new ExecutionCallback<String>() {

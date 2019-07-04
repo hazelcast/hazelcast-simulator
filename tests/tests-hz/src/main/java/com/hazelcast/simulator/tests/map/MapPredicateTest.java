@@ -16,7 +16,7 @@
 package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.collection.IList;
-import com.hazelcast.core.IMap;
+import com.hazelcast.map.IMap;
 import com.hazelcast.query.PagingPredicate;
 import com.hazelcast.query.Predicate;
 import com.hazelcast.query.PredicateBuilder;
