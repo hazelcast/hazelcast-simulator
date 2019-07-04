@@ -32,7 +32,7 @@ public final class GeneratorUtils {
     /**
      * Generates an array of strings.
      *
-     * @param count number of String in the array
+     * @param count  number of String in the array
      * @param length the length of each individual string
      * @return the created array of Strings.
      */
@@ -70,7 +70,7 @@ public final class GeneratorUtils {
         Random random = new Random();
         for (int i = 0; i < keys.length; i++) {
             int length = RandomUtils.nextInt(minLength, maxLength);
-            keys[i] =generateByteArray(random, length);
+            keys[i] = generateByteArray(random, length);
         }
         return keys;
     }

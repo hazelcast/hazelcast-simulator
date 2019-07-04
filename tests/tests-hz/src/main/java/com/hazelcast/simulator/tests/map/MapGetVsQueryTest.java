@@ -19,10 +19,10 @@ import com.hazelcast.core.IMap;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.DataSerializable;
-import com.hazelcast.query.EntryObject;
 import com.hazelcast.query.Predicate;
 import com.hazelcast.query.PredicateBuilder;
-import com.hazelcast.query.SqlPredicate;
+import com.hazelcast.query.impl.PredicateBuilderImpl;
+import com.hazelcast.query.impl.predicates.SqlPredicate;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.Prepare;
@@ -64,7 +64,7 @@ public class MapGetVsQueryTest extends HazelcastTest {
     @TimeStep(prob = 0)
     public void predicateBuilder(ThreadState state) {
         int id = state.randomInt(itemCount);
-        EntryObject entryObject = new PredicateBuilder().getEntryObject();
+        PredicateBuilder.EntryObject entryObject = new PredicateBuilderImpl().getEntryObject();
         Predicate predicate = entryObject.get("id").equal(id);
         map.values(predicate);
     }

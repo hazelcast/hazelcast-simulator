@@ -17,12 +17,13 @@ package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.collection.IList;
 import com.hazelcast.core.IMap;
-import com.hazelcast.query.EntryObject;
 import com.hazelcast.query.PagingPredicate;
 import com.hazelcast.query.Predicate;
 import com.hazelcast.query.PredicateBuilder;
 import com.hazelcast.query.Predicates;
-import com.hazelcast.query.SqlPredicate;
+import com.hazelcast.query.impl.PredicateBuilderImpl;
+import com.hazelcast.query.impl.predicates.PagingPredicateImpl;
+import com.hazelcast.query.impl.predicates.SqlPredicate;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
@@ -93,7 +94,7 @@ public class MapPredicateTest extends HazelcastTest {
         String name = Employee.getRandomName();
 
         // TODO: Still broken because it relies on reflection which is dog slow, so we need an explicit AgeNamePredicate
-        EntryObject entryObject = new PredicateBuilder().getEntryObject();
+        PredicateBuilder.EntryObject entryObject = new PredicateBuilderImpl().getEntryObject();
         Predicate agePredicate = entryObject.get("age").lessThan(age);
         Predicate ageNamePredicate = entryObject.get("name").equal(name).and(agePredicate);
 
@@ -131,7 +132,7 @@ public class MapPredicateTest extends HazelcastTest {
         double maxSalary = state.randomDouble() * Employee.MAX_SALARY;
         Predicate predicate = Predicates.lessThan("salary", maxSalary);
         SalaryComparator salaryComparator = new SalaryComparator();
-        PagingPredicate pagingPredicate = new PagingPredicate(predicate, salaryComparator, pageSize);
+        PagingPredicate pagingPredicate = new PagingPredicateImpl(predicate, salaryComparator, pageSize);
 
         Collection<Employee> employees;
         List<Employee> employeeList;
