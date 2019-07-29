@@ -19,6 +19,10 @@ import com.hazelcast.config.MapStoreConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.MapStore;
 import com.hazelcast.logging.ILogger;
+import com.hazelcast.map.impl.MapContainer;
+import com.hazelcast.map.impl.MapService;
+import com.hazelcast.map.impl.MapServiceContext;
+import com.hazelcast.map.impl.proxy.MapProxyImpl;
 import com.hazelcast.simulator.test.TestException;
 
 import static com.hazelcast.config.MapStoreConfig.InitialLoadMode.LAZY;
@@ -44,6 +48,16 @@ public final class MapStoreUtils {
         assertMapStoreConfig(expectedMapStoreName, mapName, mapStoreConfig, logger);
         assertMapStoreClassName(expectedMapStoreName, mapName, mapStoreConfig);
         assertMapStoreImplementation(expectedMapStoreName, mapName, mapStoreConfig, mapStoreImplementation);
+    }
+
+    // given a member-side HazelcastInstance and a mapName, return the MapStore instance
+    // or null if none configured
+    public static <T extends MapStore> T getMapStoreInstance(HazelcastInstance instance, String mapName) {
+        MapProxyImpl map = (MapProxyImpl) instance.getMap(mapName);
+        MapService service = (MapService) map.getService();
+        MapServiceContext context = service.getMapServiceContext();
+        MapContainer container = context.getMapContainer(mapName);
+        return (T) container.getMapStoreContext().getMapStoreWrapper().getMapStore();
     }
 
     private static void assertMapStoreConfig(String expectedMapStoreName, String mapName, MapStoreConfig mapStoreConfig,

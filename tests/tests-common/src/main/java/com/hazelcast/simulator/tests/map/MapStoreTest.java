@@ -36,6 +36,7 @@ import java.util.concurrent.TimeUnit;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isClient;
 import static com.hazelcast.simulator.tests.map.helpers.MapStoreUtils.assertMapStoreConfiguration;
 import static com.hazelcast.simulator.tests.map.helpers.MapStoreUtils.getMapStoreConfig;
+import static com.hazelcast.simulator.tests.map.helpers.MapStoreUtils.getMapStoreInstance;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.TestUtils.assertTrueEventually;
 import static org.junit.Assert.assertEquals;
@@ -229,7 +230,7 @@ public class MapStoreTest extends AbstractTest {
         MapStoreConfig mapStoreConfig = getMapStoreConfig(targetInstance, name);
         int writeDelayMs = (int) TimeUnit.SECONDS.toMillis(mapStoreConfig.getWriteDelaySeconds());
         final MapStoreWithCounter<Integer, Integer> mapStore
-                = (MapStoreWithCounter<Integer, Integer>) mapStoreConfig.getImplementation();
+                = (MapStoreWithCounter<Integer, Integer>) getMapStoreInstance(targetInstance, name);
 
         int sleepMs = mapStoreMaxDelayMs * 2 + maxTTLExpiryMs * 2 + (writeDelayMs * 2);
         logger.info("Sleeping for " + TimeUnit.MILLISECONDS.toSeconds(sleepMs) + " seconds to wait for delay and TTL values.");
