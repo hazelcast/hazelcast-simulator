@@ -38,7 +38,6 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.Executor;
 
-import static com.hazelcast.simulator.utils.GeneratorUtils.generateByteArray;
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateByteArrays;
 
 public class LongByteArrayMapTest extends HazelcastTest {
@@ -70,13 +69,6 @@ public class LongByteArrayMapTest extends HazelcastTest {
     @Prepare(global = true)
     public void prepare() {
         Random random = new Random();
-        values = new byte[valueCount][];
-        for (int i = 0; i < values.length; i++) {
-            int delta = minValueLength - maxValueLength;
-            int length = delta == 0 ? minValueLength : minValueLength + random.nextInt(delta);
-            values[i] = generateByteArray(random, length);
-        }
-
         Streamer<Long, byte[]> streamer = StreamerFactory.getInstance(map);
         for (long key = 0; key < keyDomain; key++) {
             byte[] value = values[random.nextInt(valueCount)];
