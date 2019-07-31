@@ -202,14 +202,14 @@ public class ExtractorMapTest extends HazelcastTest {
         }
     }
 
-    public static final class PayloadExtractor extends ValueExtractor<SillySequence, String> {
+    public static final class PayloadExtractor implements ValueExtractor<SillySequence, String> {
         @Override
         public void extract(SillySequence sillySequence, String indexString, ValueCollector valueCollector) {
             valueCollector.addObject(sillySequence.payloadField.get(Integer.parseInt(indexString)));
         }
     }
 
-    public static final class PayloadPortableExtractor extends ValueExtractor<ValueReader, String> {
+    public static final class PayloadPortableExtractor implements ValueExtractor<ValueReader, String> {
         @Override
         public void extract(ValueReader reader, String indexString, ValueCollector valueCollector) {
             reader.read("payloadFromExtractor[" + indexString + "]", valueCollector);
