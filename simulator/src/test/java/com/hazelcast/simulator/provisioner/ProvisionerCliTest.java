@@ -12,9 +12,7 @@ import java.util.List;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.createAgentsFileWithLocalhost;
 import static com.hazelcast.simulator.TestEnvironmentUtils.createCloudCredentialFiles;
-import static com.hazelcast.simulator.TestEnvironmentUtils.createPublicPrivateKeyFiles;
 import static com.hazelcast.simulator.TestEnvironmentUtils.deleteCloudCredentialFiles;
-import static com.hazelcast.simulator.TestEnvironmentUtils.deletePublicPrivateKeyFiles;
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetSecurityManager;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setExitExceptionSecurityManagerWithStatusZero;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
@@ -37,7 +35,6 @@ public class ProvisionerCliTest {
 
         createAgentsFileWithLocalhost();
         createCloudCredentialFiles();
-        createPublicPrivateKeyFiles();
     }
 
     @AfterClass
@@ -45,7 +42,6 @@ public class ProvisionerCliTest {
         resetSecurityManager();
         tearDownFakeEnvironment();
         deleteCloudCredentialFiles();
-        deletePublicPrivateKeyFiles();
     }
 
     @Test
