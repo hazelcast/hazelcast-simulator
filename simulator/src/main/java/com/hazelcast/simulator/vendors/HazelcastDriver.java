@@ -160,7 +160,7 @@ public class HazelcastDriver extends VendorDriver<HazelcastInstance> {
         template.addEnvironment(properties);
 
         template.addReplacement("<!--MEMBERS-->",
-                createAddressConfig("address", agents, get("HAZELCAST_PORT")));
+                createAddressConfig("address", agents, get("CLIENT_PORT", get("HAZELCAST_PORT"))));
         if (licenseKey != null) {
             template.addReplacement("<!--LICENSE-KEY-->", format("<license-key>%s</license-key>", licenseKey));
         }
