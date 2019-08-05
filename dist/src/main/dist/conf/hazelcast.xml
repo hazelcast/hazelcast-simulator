@@ -48,7 +48,6 @@
     <map name="MapMaxSize*">
         <eviction-policy>LRU</eviction-policy>
         <max-size policy="PER_NODE">1000</max-size>
-        <eviction-percentage>25</eviction-percentage>
         <min-eviction-check-millis>0</min-eviction-check-millis>
     </map>
 
