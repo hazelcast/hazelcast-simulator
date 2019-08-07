@@ -30,7 +30,6 @@ prepare()
         release_repo="https://oss.sonatype.org/content/repositories/releases"
 
         prepare_using_maven "hazelcast" "$maven_version" ${release_repo} ${snapshot_repo}
-        prepare_using_maven "hazelcast-client" "$maven_version" ${release_repo} ${snapshot_repo}
     elif [[ ${version_spec} == git* ]] ; then
         git_branch=${version_spec#*=}
 
