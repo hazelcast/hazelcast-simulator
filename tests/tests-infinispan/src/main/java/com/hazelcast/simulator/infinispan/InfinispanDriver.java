@@ -36,14 +36,6 @@ import static java.lang.String.format;
  * - logging in case of jgroups error
  * - fix the 'ping' port
  * - hotrod configuration
- *
- * done
- * - java assist for netty
- * - client connection terminates
- * - client support
- * - cluster support
- * - some sensible configuration for the cache
- * - right ports
  */
 public class InfinispanDriver extends VendorDriver<BasicCacheContainer> {
 

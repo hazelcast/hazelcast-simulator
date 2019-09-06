@@ -18,8 +18,8 @@
 
     <properties>
         <main.basedir>${project.parent.basedir}</main.basedir>
-        <infinispan.version>9.4.8.Final</infinispan.version>
-        <javassist.version>3.20.0-GA</javassist.version>
+        <infinispan.version>9.4.16.Final</infinispan.version>
+        <!-- javassist.version>3.20.0-GA</javassist.version -->
     </properties>
 
     <dependencies>
@@ -49,11 +49,18 @@
             <version>${infinispan.version}</version>
         </dependency>
 
+
         <dependency>
-            <groupId>org.javassist</groupId>
-            <artifactId>javassist</artifactId>
-            <version>${javassist.version}</version>
+            <groupId>org.infinispan</groupId>
+            <artifactId>infinispan-jcache</artifactId>
+            <version>${infinispan.version}</version>
         </dependency>
+
+<!--        <dependency>-->
+<!--            <groupId>org.javassist</groupId>-->
+<!--            <artifactId>javassist</artifactId>-->
+<!--            <version>${javassist.version}</version>-->
+<!--        </dependency>-->
 
         <dependency>
             <groupId>org.infinispan</groupId>

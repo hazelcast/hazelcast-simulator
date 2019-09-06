@@ -71,7 +71,7 @@ if [ "$VENDOR" = "infinispan" ]; then
     uploadLibraryJar "netty*"
     uploadLibraryJar "jackson*"
     uploadLibraryJar "commons-pool*"
-    uploadLibraryJar "javassist*"
+    #uploadLibraryJar "javassist*"
     uploadLibraryJar "xstream*"
     uploadLibraryJar "xmlpull*"
     uploadLibraryJar "caffeine*"
@@ -85,11 +85,6 @@ if [ "$VENDOR" = "couchbase" ]; then
     uploadLibraryJar "java-client-*"
     uploadLibraryJar "core-io-*"
     uploadLibraryJar "rxjava-*"
-fi
-
-#hack to get hz enterprise working
-if [ "$VENDOR" = "jet" ]; then
-    uploadLibraryJar "hazelcast-jet-*"
 fi
 
 # hack to get memcached working
