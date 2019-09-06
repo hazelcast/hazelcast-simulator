@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package com.hazelcast.simulator.tests.quorum;
+package com.hazelcast.simulator.tests.splitbrain;
 
-import com.hazelcast.quorum.QuorumException;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.TimeStep;
+import com.hazelcast.splitbrainprotection.SplitBrainProtectionException;
 import org.junit.Assert;
 
 import javax.cache.Cache;
@@ -36,7 +36,7 @@ import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.createCach
  * and the tests will pass or fail accordingly.
  */
 
-public class QuorumCacheTest extends HazelcastTest {
+public class SplitBrainCacheTest extends HazelcastTest {
 
     // properties
     public int keyCount = 100;
@@ -44,7 +44,7 @@ public class QuorumCacheTest extends HazelcastTest {
 
     private volatile LastClusterSizeChange lastClusterSizeChange;
     private Cache<Long, Long> cache;
-    private int quorumCount;
+    private int minimalClusterSize;
 
     @Setup
     @SuppressWarnings("unchecked")
@@ -53,8 +53,8 @@ public class QuorumCacheTest extends HazelcastTest {
         cache = cacheManager.getCache(name);
         this.lastClusterSizeChange = new LastClusterSizeChange(0L,
                 getMemberCount());
-        this.quorumCount = targetInstance.getConfig()
-                .getQuorumConfig("cache-quorum-ref").getSize();
+        this.minimalClusterSize = targetInstance.getConfig()
+                .getSplitBrainProtectionConfig("cache-quorum-ref").getMinimumClusterSize();
     }
 
     private int getMemberCount() {
@@ -74,7 +74,7 @@ public class QuorumCacheTest extends HazelcastTest {
         try {
             cache.put(key, 0L);
             checkGracePeriod(lastChange, true);
-        } catch (QuorumException qe) {
+        } catch (SplitBrainProtectionException qe) {
             checkGracePeriod(lastChange, false);
         }
     }
@@ -83,14 +83,14 @@ public class QuorumCacheTest extends HazelcastTest {
         try {
             cache.put(key, value);
             logger.warn("Detected Grace Period. Ignoring Operation succeeded behaviour.");
-        } catch (QuorumException qe) {
+        } catch (SplitBrainProtectionException qe) {
             logger.warn("Detected Grace Period. Ignoring Quorum Exception.");
         }
     }
 
     private void checkGracePeriod(LastClusterSizeChange lastChange,
                                   boolean operationPassed) {
-        boolean hadQuorum = lastChange.clusterSize >= quorumCount;
+        boolean hadQuorum = lastChange.clusterSize >= minimalClusterSize;
         if (operationPassed == hadQuorum) {
             return;
         }
@@ -107,7 +107,7 @@ public class QuorumCacheTest extends HazelcastTest {
         }
         Assert.fail(String
                 .format("Quorum count was %s and the member count was %s but the operation %s.",
-                        quorumCount, lastChange.clusterSize,
+                        minimalClusterSize, lastChange.clusterSize,
                         hadQuorum ? "failed" : "succeeded"));
     }
 
