@@ -17,26 +17,31 @@ package com.hazelcast.simulator.infinispan.cache;
 
 import com.hazelcast.simulator.infinispan.InfinispanTest;
 import com.hazelcast.simulator.test.BaseThreadState;
+import com.hazelcast.simulator.test.annotations.InjectVendor;
 import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
+import org.infinispan.commons.api.BasicCache;
+import org.infinispan.commons.api.BasicCacheContainer;
 
 import javax.cache.Cache;
 import javax.cache.CacheManager;
 import javax.cache.Caching;
+import java.util.Map;
 
 public class LongLongCacheTest extends InfinispanTest {
 
     // properties
     public int keyDomain = 10000;
 
-    private Cache<Long, Long> cache;
+    @InjectVendor
+    private BasicCacheContainer cacheContainer;
+    private Map<Long, Long> cache;
 
     @Setup
     public void setup() {
-        CacheManager cacheManager = Caching.getCachingProvider().getCacheManager();
-        cache = cacheManager.getCache(name);
+        cache = cacheContainer.getCache(name);
     }
 
     @Prepare(global = true)
@@ -65,10 +70,5 @@ public class LongLongCacheTest extends InfinispanTest {
         private Long randomValue() {
             return randomLong();
         }
-    }
-
-    @Teardown
-    public void tearDown() {
-        cache.close();
     }
 }
