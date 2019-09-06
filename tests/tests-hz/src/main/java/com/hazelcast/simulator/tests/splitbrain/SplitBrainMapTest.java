@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.hazelcast.simulator.tests.quorum;
+package com.hazelcast.simulator.tests.splitbrain;
 
 import com.hazelcast.map.IMap;
-import com.hazelcast.quorum.QuorumException;
+import com.hazelcast.splitbrainprotection.SplitBrainProtectionException;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -32,7 +32,7 @@ import org.junit.Assert;
  * and the tests will pass or fail accordingly.
  */
 
-public class QuorumMapTest extends HazelcastTest {
+public class SplitBrainMapTest extends HazelcastTest {
 
     // properties
     public int keyCount = 100;
@@ -40,7 +40,7 @@ public class QuorumMapTest extends HazelcastTest {
 
     private volatile LastClusterSizeChange lastClusterSizeChange;
     private IMap<Long, Long> map;
-    private int quorumCount;
+    private int minimalClusterSize;
 
     @Setup
     @SuppressWarnings("unchecked")
@@ -48,8 +48,8 @@ public class QuorumMapTest extends HazelcastTest {
         this.lastClusterSizeChange = new LastClusterSizeChange(0L,
                 getMemberCount());
         this.map = targetInstance.getMap(name);
-        this.quorumCount = targetInstance.getConfig()
-                .getQuorumConfig("map-quorum-ref").getSize();
+        this.minimalClusterSize = targetInstance.getConfig()
+                .getSplitBrainProtectionConfig("map-quorum-ref").getMinimumClusterSize();
     }
 
     private int getMemberCount() {
@@ -69,7 +69,7 @@ public class QuorumMapTest extends HazelcastTest {
         try {
             map.put(key, 0L);
             checkGracePeriod(lastChange, true);
-        } catch (QuorumException qe) {
+        } catch (SplitBrainProtectionException qe) {
             checkGracePeriod(lastChange, false);
         }
     }
@@ -78,14 +78,14 @@ public class QuorumMapTest extends HazelcastTest {
         try {
             map.put(key, value);
             logger.warn("Detected Grace Period. Ignoring Operation succeeded behaviour.");
-        } catch (QuorumException qe) {
+        } catch (SplitBrainProtectionException qe) {
             logger.warn("Detected Grace Period. Ignoring Quorum Exception.");
         }
     }
 
     private void checkGracePeriod(LastClusterSizeChange lastChange,
                                   boolean operationPassed) {
-        boolean hadQuorum = lastChange.clusterSize >= quorumCount;
+        boolean hadQuorum = lastChange.clusterSize >= minimalClusterSize;
         if (operationPassed == hadQuorum) {
             return;
         }
@@ -102,7 +102,7 @@ public class QuorumMapTest extends HazelcastTest {
         }
         Assert.fail(String
                 .format("Quorum count was %s and the member count was %s but the operation %s.",
-                        quorumCount, lastChange.clusterSize,
+                        minimalClusterSize, lastChange.clusterSize,
                         hadQuorum ? "failed" : "succeeded"));
     }
 
