@@ -159,6 +159,7 @@ public class SimulatorPropertiesTest {
     @Test
     public void testGet() {
         assertEquals("5701", simulatorProperties.get("HAZELCAST_PORT"));
+        assertNull(simulatorProperties.get("CLIENT_PORT"));
     }
 
     @Test

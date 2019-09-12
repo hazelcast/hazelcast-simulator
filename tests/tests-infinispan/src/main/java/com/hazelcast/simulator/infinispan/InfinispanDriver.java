@@ -88,7 +88,7 @@ public class InfinispanDriver extends VendorDriver<BasicCacheContainer> {
     }
 
     private String initialHosts(boolean clientMode) {
-        String port = clientMode ? "11222" : get("HAZELCAST_PORT");
+        String port = clientMode ? get("CLIENT_PORT", "11222") : get("HAZELCAST_PORT");
 
         StringBuilder sb = new StringBuilder();
         boolean first = true;
