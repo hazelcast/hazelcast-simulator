@@ -1,6 +1,6 @@
 package com.hazelcast.simulator.worker.loadsupport;
 
-import com.hazelcast.util.EmptyStatement;
+import com.hazelcast.simulator.utils.EmptyStatement;
 import org.junit.Before;
 import org.junit.Test;
 

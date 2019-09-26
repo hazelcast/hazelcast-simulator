@@ -63,7 +63,7 @@ upload_local(){
 upload(){
     # Uploading 'upload' directory if exist
     if [ ! -d ${src_dir} ]; then
-        echo "[INFO]'$src_dir' directory doesn't exist, skipping upload."
+        echo "[DEBUG]'$src_dir' directory doesn't exist, skipping upload."
     else
         if [ "$CLOUD_PROVIDER" = "local" ]; then
             upload_local

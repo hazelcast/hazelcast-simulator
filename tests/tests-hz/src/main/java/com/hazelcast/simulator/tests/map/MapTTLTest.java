@@ -25,8 +25,8 @@ import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.tests.map.helpers.MapOperationCounter;
 import com.hazelcast.simulator.utils.AssertTask;
+import com.hazelcast.simulator.utils.EmptyStatement;
 import com.hazelcast.spi.exception.DistributedObjectDestroyedException;
-import com.hazelcast.util.EmptyStatement;
 
 import java.util.concurrent.TimeUnit;
 
