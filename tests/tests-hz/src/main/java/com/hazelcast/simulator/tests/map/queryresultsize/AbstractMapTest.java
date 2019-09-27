@@ -50,8 +50,8 @@ abstract class AbstractMapTest extends HazelcastTest {
 
     void baseSetup() {
         this.map = targetInstance.getMap(name);
-        this.operationCounter = targetInstance.getAtomicLong(name + "Ops");
-        this.exceptionCounter = targetInstance.getAtomicLong(name + "Exceptions");
+        this.operationCounter = getAtomicLong(name + "Ops");
+        this.exceptionCounter = getAtomicLong(name + "Exceptions");
 
         Integer minResultSizeLimit = 100000;
         Float resultLimitFactor = 1.15f;

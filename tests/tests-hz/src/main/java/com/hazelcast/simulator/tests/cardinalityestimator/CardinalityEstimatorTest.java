@@ -83,10 +83,10 @@ public class CardinalityEstimatorTest extends HazelcastTest {
             expectedCountMap.set(estimatorName, 0L);
         }
 
-        this.totalThreadCount = targetInstance.getAtomicLong(testContext.getTestId() + "-totalThreadCount");
+        this.totalThreadCount = getAtomicLong(testContext.getTestId() + "-totalThreadCount");
         this.totalThreadCount.addAndGet(threadCount);
 
-        this.threadIdGenerator = targetInstance.getAtomicLong(testContext.getTestId() + "-threadIdGenerator");
+        this.threadIdGenerator = getAtomicLong(testContext.getTestId() + "-threadIdGenerator");
     }
 
     @BeforeRun

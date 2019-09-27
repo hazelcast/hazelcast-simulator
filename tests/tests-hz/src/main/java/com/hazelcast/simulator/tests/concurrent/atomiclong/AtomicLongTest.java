@@ -41,12 +41,12 @@ public class AtomicLongTest extends HazelcastTest {
 
     @Setup
     public void setup() {
-        totalCounter = targetInstance.getAtomicLong(name + ":TotalCounter");
+        totalCounter = getAtomicLong(name + ":TotalCounter");
         counters = new IAtomicLong[countersLength];
 
         String[] names = generateStringKeys(name, countersLength, keyLocality, targetInstance);
         for (int i = 0; i < countersLength; i++) {
-            counters[i] = targetInstance.getAtomicLong(names[i]);
+            counters[i] = getAtomicLong(names[i]);
         }
     }
 
@@ -87,7 +87,7 @@ public class AtomicLongTest extends HazelcastTest {
             if (serviceName.equals(distributedObject.getServiceName())
                     && key.startsWith(name)
                     && !key.equals(totalName)) {
-                actual += targetInstance.getAtomicLong(key).get();
+                actual += getAtomicLong(key).get();
             }
         }
 

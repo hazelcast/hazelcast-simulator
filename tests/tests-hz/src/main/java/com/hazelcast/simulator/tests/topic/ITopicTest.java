@@ -60,8 +60,8 @@ public class ITopicTest extends HazelcastTest {
 
     @Setup
     public void setup() {
-        totalExpectedCounter = targetInstance.getAtomicLong(name + ":TotalExpectedCounter");
-        totalFoundCounter = targetInstance.getAtomicLong(name + ":TotalFoundCounter");
+        totalExpectedCounter = getAtomicLong(name + ":TotalExpectedCounter");
+        totalFoundCounter = getAtomicLong(name + ":TotalFoundCounter");
 
         topics = new ITopic[topicCount];
         listeners = new LinkedList<TopicListener>();
