@@ -17,7 +17,6 @@ package com.hazelcast.simulator.hz;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.cp.IAtomicLong;
-import com.hazelcast.cp.internal.datastructures.atomiclong.AtomicLongService;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.InjectTestContext;
 import com.hazelcast.simulator.test.annotations.InjectVendor;
@@ -41,7 +40,7 @@ public abstract class HazelcastTest {
     protected final Logger logger = Logger.getLogger(getClass());
 
     public IAtomicLong getAtomicLong(String name){
-        return  targetInstance.getDistributedObject(AtomicLongService.SERVICE_NAME, name);
+        return  targetInstance.getDistributedObject("hz:impl:atomicLongService", name);
     }
 
     @InjectVendor
