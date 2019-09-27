@@ -49,7 +49,7 @@ public class AtomicLongTest extends HazelcastTest {
     public void setup() {
         counters = new IAtomicLong[countersLength];
         for (int i = 0; i < countersLength; i++) {
-            counters[i] = targetInstance.getAtomicLong("" + i);
+            counters[i] = getAtomicLong("" + i);
             counters[i].get();
         }
     }

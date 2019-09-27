@@ -39,8 +39,8 @@ public class ProducerConsumerTest extends HazelcastTest {
 
     @Setup
     public void setup() {
-        produced = targetInstance.getAtomicLong(name + ":Produced");
-        consumed = targetInstance.getAtomicLong(name + ":Consumed");
+        produced = getAtomicLong(name + ":Produced");
+        consumed = getAtomicLong(name + ":Consumed");
         workQueue = targetInstance.getQueue(name + ":WorkQueue");
     }
 

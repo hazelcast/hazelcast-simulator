@@ -55,8 +55,8 @@ public class ExecutorTest extends HazelcastTest {
             executors[i] = targetInstance.getExecutorService(name + '-' + i);
         }
 
-        executedCounter = targetInstance.getAtomicLong(name + ":ExecutedCounter");
-        expectedExecutedCounter = targetInstance.getAtomicLong(name + ":ExpectedExecutedCounter");
+        executedCounter = getAtomicLong(name + ":ExecutedCounter");
+        expectedExecutedCounter = getAtomicLong(name + ":ExpectedExecutedCounter");
     }
 
     @TimeStep

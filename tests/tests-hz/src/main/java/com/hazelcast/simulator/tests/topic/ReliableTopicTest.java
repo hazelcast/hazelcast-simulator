@@ -63,7 +63,7 @@ public class ReliableTopicTest extends HazelcastTest {
     @Setup
     @SuppressWarnings("unchecked")
     public void setup() {
-        totalMessagesSend = targetInstance.getAtomicLong(name + ":TotalExpectedCounter");
+        totalMessagesSend = getAtomicLong(name + ":TotalExpectedCounter");
         topics = new ITopic[topicCount];
         listeners = new LinkedList<MessageListenerImpl>();
 

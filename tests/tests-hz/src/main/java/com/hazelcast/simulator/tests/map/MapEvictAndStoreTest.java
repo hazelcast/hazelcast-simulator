@@ -41,7 +41,7 @@ public class MapEvictAndStoreTest extends HazelcastTest {
     @Setup
     public void setup() {
         map = targetInstance.getMap(name);
-        keyCounter = targetInstance.getAtomicLong(name);
+        keyCounter = getAtomicLong(name);
 
         assertMapStoreConfiguration(logger, targetInstance, name, MapStoreWithCounterPerKey.class);
     }

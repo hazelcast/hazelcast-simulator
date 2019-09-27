@@ -60,13 +60,13 @@ public class AsyncAtomicLongTest extends HazelcastTest {
 
     @Setup
     public void setup() {
-        totalCounter = targetInstance.getAtomicLong(name + ":TotalCounter");
+        totalCounter = getAtomicLong(name + ":TotalCounter");
         if (isMemberNode(targetInstance)) {
             counters = new IAtomicLong[countersLength];
 
             String[] names = generateStringKeys(name, countersLength, keyLocality, targetInstance);
             for (int i = 0; i < countersLength; i++) {
-                counters[i] = (IAtomicLong) targetInstance.getAtomicLong(names[i]);
+                counters[i] = getAtomicLong(names[i]);
             }
         }
     }
@@ -150,7 +150,7 @@ public class AsyncAtomicLongTest extends HazelcastTest {
                 for (DistributedObject distributedObject : targetInstance.getDistributedObjects()) {
                     String key = distributedObject.getName();
                     if (serviceName.equals(distributedObject.getServiceName()) && key.startsWith(name)) {
-                        actual += targetInstance.getAtomicLong(key).get();
+                        actual += getAtomicLong(key).get();
                     }
                 }
 

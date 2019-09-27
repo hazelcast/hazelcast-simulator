@@ -103,10 +103,10 @@ public class IntBytesICacheCircuitBreakerTest extends HazelcastTest {
             writeKeyCount = keyCount;
         }
 
-        globalGetErrors = targetInstance.getAtomicLong("globalGetErrors");
-        globalPutErrors = targetInstance.getAtomicLong("globalPutErrors");
-        globalGets = targetInstance.getAtomicLong("globalGets");
-        globalPuts = targetInstance.getAtomicLong("globalPuts");
+        globalGetErrors = getAtomicLong("globalGetErrors");
+        globalPutErrors = getAtomicLong("globalPutErrors");
+        globalGets = getAtomicLong("globalGets");
+        globalPuts = getAtomicLong("globalPuts");
     }
 
     @Prepare
@@ -215,7 +215,7 @@ public class IntBytesICacheCircuitBreakerTest extends HazelcastTest {
         private final boolean isEchoer;
 
         PublishThread() {
-            this.isEchoer = targetInstance.getAtomicLong("isEchoer").getAndIncrement() == 0;
+            this.isEchoer = getAtomicLong("isEchoer").getAndIncrement() == 0;
         }
 
         @Override
