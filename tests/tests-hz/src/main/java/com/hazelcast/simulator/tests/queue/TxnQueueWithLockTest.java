@@ -17,7 +17,7 @@ package com.hazelcast.simulator.tests.queue;
 
 import com.hazelcast.collection.IList;
 import com.hazelcast.collection.IQueue;
-import com.hazelcast.cp.lock.ILock;
+import com.hazelcast.cp.lock.FencedLock;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
@@ -35,13 +35,13 @@ import static org.junit.Assert.assertFalse;
  */
 public class TxnQueueWithLockTest extends HazelcastTest {
 
-    private ILock firstLock;
-    private ILock secondLock;
+    private FencedLock firstLock;
+    private FencedLock secondLock;
 
     @Setup
     public void setup() {
-        firstLock = targetInstance.getLock(name + "l1");
-        secondLock = targetInstance.getLock(name + "l2");
+        firstLock = targetInstance.getCPSubsystem().getLock(name + "l1");
+        secondLock = targetInstance.getCPSubsystem().getLock(name + "l2");
     }
 
     @TimeStep
