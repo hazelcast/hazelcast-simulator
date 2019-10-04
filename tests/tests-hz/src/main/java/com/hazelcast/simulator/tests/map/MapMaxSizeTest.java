@@ -71,7 +71,7 @@ public class MapMaxSizeTest extends HazelcastTest {
     }
 
     @TimeStep(prob = 0.2)
-    public void putUsingAsyncSync(ThreadState state) {
+    public void putAsync(ThreadState state) {
         int key = state.randomInt(keyCount);
         map.putAsync(key, state.randomInt());
         state.operationCounter.putAsync++;
