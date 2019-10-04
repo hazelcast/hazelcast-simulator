@@ -15,6 +15,7 @@
  */
 package com.hazelcast.simulator.tests.map;
 
+import com.hazelcast.config.IndexType;
 import com.hazelcast.map.IMap;
 import com.hazelcast.query.PagingPredicate;
 import com.hazelcast.query.impl.predicates.PagingPredicateImpl;
@@ -64,7 +65,7 @@ public final class PagingPredicateTest extends HazelcastTest {
     @Prepare(global = true)
     public void globalPrepare() {
         if (useIndex) {
-            map.addIndex("salary", true);
+            map.addIndex(IndexType.SORTED, "salary");
         }
         Streamer<Integer, Employee> streamer = StreamerFactory.getInstance(map);
         for (int i = 0; i < keyCount; i++) {

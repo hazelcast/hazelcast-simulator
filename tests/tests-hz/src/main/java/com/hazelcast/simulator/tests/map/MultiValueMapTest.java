@@ -15,6 +15,7 @@
  */
 package com.hazelcast.simulator.tests.map;
 
+import com.hazelcast.config.IndexType;
 import com.hazelcast.map.IMap;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
@@ -65,7 +66,7 @@ public class MultiValueMapTest extends HazelcastTest {
     @Prepare(global = true)
     public void prepare() {
         if (useIndex) {
-            map.addIndex("payloadField[any]", true);
+            map.addIndex(IndexType.SORTED, "payloadField[any]");
         }
         loadInitialData();
     }

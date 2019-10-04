@@ -15,6 +15,8 @@
  */
 package com.hazelcast.simulator.tests.map;
 
+import com.hazelcast.config.IndexConfig;
+import com.hazelcast.config.IndexType;
 import com.hazelcast.map.IMap;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
@@ -71,7 +73,7 @@ public class ExtractorMapTest extends HazelcastTest {
     public void globalPrepare() {
         if (useIndex) {
             for (int i = 0; i < indexValuesCount; i++) {
-                map.addIndex(format("payloadFromExtractor[%d]", i), true);
+                map.addIndex(IndexType.SORTED, format("payloadFromExtractor[%d]", i));
             }
         }
 
