@@ -15,19 +15,19 @@
  */
 package com.hazelcast.simulator.worker.loadsupport;
 
-import com.hazelcast.core.ExecutionCallback;
-import com.hazelcast.core.ICompletableFuture;
 import com.hazelcast.simulator.utils.ExceptionReporter;
 import com.hazelcast.simulator.utils.ThrottlingLogger;
 import com.hazelcast.spi.exception.TargetDisconnectedException;
 import org.apache.log4j.Logger;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiConsumer;
 
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static java.util.concurrent.TimeUnit.MINUTES;
@@ -41,7 +41,7 @@ abstract class AbstractAsyncStreamer<K, V> implements Streamer<K, V> {
 
     private final int concurrencyLevel;
     private final Semaphore semaphore;
-    private final ExecutionCallback callback;
+    private final StreamerExecutionCallback callback;
     private final ThrottlingLogger throttlingLogger;
     private final AtomicReference<Throwable> storedException = new AtomicReference<Throwable>();
     private final AtomicBoolean rejectedExecutionExceptionReported = new AtomicBoolean();
@@ -59,7 +59,7 @@ abstract class AbstractAsyncStreamer<K, V> implements Streamer<K, V> {
         this.throttlingLogger = ThrottlingLogger.newLogger(LOGGER, MAXIMUM_LOGGING_RATE_MILLIS);
     }
 
-    abstract ICompletableFuture storeAsync(K key, V value);
+    abstract CompletableFuture storeAsync(K key, V value);
 
     @Override
     @SuppressWarnings("unchecked")
@@ -71,11 +71,10 @@ abstract class AbstractAsyncStreamer<K, V> implements Streamer<K, V> {
 
         acquirePermit(1);
         try {
-            ICompletableFuture<V> future = storeAsync(key, value);
-            future.andThen(callback);
+            CompletableFuture<V> future = storeAsync(key, value);
+            future.whenCompleteAsync(callback, Runnable::run);
         } catch (Exception e) {
             releasePermit(1);
-
             throw rethrow(e);
         }
     }
@@ -113,15 +112,22 @@ abstract class AbstractAsyncStreamer<K, V> implements Streamer<K, V> {
         }
     }
 
-    private final class StreamerExecutionCallback implements ExecutionCallback<V> {
+    private final class StreamerExecutionCallback implements BiConsumer<V, Throwable> {
 
         @Override
-        public void onResponse(V response) {
+        public void accept(V v, Throwable throwable) {
+            if (throwable != null) {
+                onFailure(throwable);
+            } else {
+                onSuccess(v);
+            }
+        }
+
+        public void onSuccess(V response) {
             releasePermit(1);
             counter.incrementAndGet();
         }
 
-        @Override
         public void onFailure(Throwable t) {
             storedException.compareAndSet(null, t);
 
@@ -147,7 +153,7 @@ abstract class AbstractAsyncStreamer<K, V> implements Streamer<K, V> {
                 ExceptionReporter.report(null, t);
             }
 
-            onResponse(null);
+            onSuccess(null);
         }
     }
 }

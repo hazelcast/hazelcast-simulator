@@ -3,9 +3,7 @@
            xmlns="http://www.hazelcast.com/schema/config"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
-    <cluster>
-        <name>workers</name>
-    </cluster>
+    <cluster-name>workers</cluster-name>
 
     <!--LITE_MEMBER_CONFIG-->
 

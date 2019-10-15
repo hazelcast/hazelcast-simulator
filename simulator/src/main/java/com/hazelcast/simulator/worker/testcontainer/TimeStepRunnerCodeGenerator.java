@@ -245,7 +245,7 @@ class TimeStepRunnerCodeGenerator {
             }
 
             String resultTypeName = ((SimpleScalar) list.get(0)).getAsString();
-            return "com.hazelcast.core.ICompletableFuture".equals(resultTypeName);
+            return "java.util.concurrent.CompletableFuture".equals(resultTypeName);
         }
     }
 

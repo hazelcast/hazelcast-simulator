@@ -19,9 +19,7 @@ import com.hazelcast.cache.ICache;
 import com.hazelcast.map.IMap;
 
 import javax.cache.Cache;
-import java.util.concurrent.atomic.AtomicBoolean;
 
-import static com.hazelcast.simulator.utils.BuildInfoUtils.isMinVersion;
 import static com.hazelcast.simulator.worker.loadsupport.Streamer.DEFAULT_CONCURRENCY_LEVEL;
 
 /**
@@ -31,9 +29,6 @@ import static com.hazelcast.simulator.worker.loadsupport.Streamer.DEFAULT_CONCUR
  */
 public final class StreamerFactory {
 
-    private static final AtomicBoolean CREATE_ASYNC = new AtomicBoolean(isMinVersion("3.5"));
-    private static final boolean USE_REFLECTION_STREAMER = useReflectionAsyncStreamer();
-
     private StreamerFactory() {
     }
 
@@ -42,14 +37,7 @@ public final class StreamerFactory {
     }
 
     public static <K, V> Streamer<K, V> getInstance(IMap<K, V> map, int concurrencyLevel) {
-        if (CREATE_ASYNC.get()) {
-            if (USE_REFLECTION_STREAMER) {
-                return new ReflectionAsyncMapStreamer<K, V>(concurrencyLevel, map);
-            } else {
-                return new AsyncMapStreamer<K, V>(concurrencyLevel, map);
-            }
-        }
-        return new SyncMapStreamer<K, V>(map);
+        return new AsyncMapStreamer<K, V>(concurrencyLevel, map);
     }
 
     public static <K, V> Streamer<K, V> getInstance(Cache<K, V> cache) {
@@ -57,25 +45,9 @@ public final class StreamerFactory {
     }
 
     public static <K, V> Streamer<K, V> getInstance(Cache<K, V> cache, int concurrencyLevel) {
-        if (CREATE_ASYNC.get() && cache instanceof ICache) {
+        if (cache instanceof ICache) {
             return new AsyncCacheStreamer<K, V>(concurrencyLevel, (ICache<K, V>) cache);
         }
         return new SyncCacheStreamer<K, V>(cache);
-    }
-
-    static void enforceAsync(boolean enforceAsync) {
-        CREATE_ASYNC.set(enforceAsync);
-    }
-
-    private static boolean useReflectionAsyncStreamer() {
-        IMap imapProxy = null;
-        try {
-            imapProxy.getAsync(null);
-            throw new AssertionError("expected NPE");
-        } catch (NoSuchMethodError e) {
-            return true;
-        } catch (NullPointerException e) {
-            return false;
-        }
     }
 }

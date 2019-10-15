@@ -15,8 +15,6 @@
  */
 package com.hazelcast.simulator.hz.map;
 
-import com.hazelcast.core.ExecutionCallback;
-import com.hazelcast.core.ICompletableFuture;
 import com.hazelcast.core.Pipelining;
 import com.hazelcast.map.IMap;
 import com.hazelcast.simulator.hz.HazelcastTest;
@@ -29,14 +27,13 @@ import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
-import com.hazelcast.spi.impl.SimpleExecutionCallback;
 
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Future;
 
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateAsciiStrings;
 
@@ -92,24 +89,8 @@ public class LongStringMapTest extends HazelcastTest {
     }
 
     @TimeStep(prob = 0)
-    public void getAsync(ThreadState state, final Probe probe, @StartNanos final long startNanos) {
-        map.getAsync(state.randomKey()).andThen(new SimpleExecutionCallback<String>() {
-            @Override
-            public void notify(Object o) {
-                probe.done(startNanos);
-            }
-        });
-    }
-
-    @TimeStep(prob = 0)
-    public void pipelinedGetHack(ThreadState state) throws Exception {
-        Future[] futures = new Future[pipelineDepth];
-        for (int k = 0; k < pipelineDepth; k++) {
-            futures[k] = map.getAsync(state.randomKey());
-        }
-        for (Future f : futures) {
-            f.get();
-        }
+    public CompletableFuture<String> getAsync(ThreadState state) {
+        return map.getAsync(state.randomKey()).toCompletableFuture();
     }
 
     @TimeStep(prob = 0.1)
@@ -118,13 +99,8 @@ public class LongStringMapTest extends HazelcastTest {
     }
 
     @TimeStep(prob = 0.0)
-    public void putAsync(ThreadState state, final Probe probe, @StartNanos final long startNanos) {
-        map.putAsync(state.randomKey(), state.randomValue()).andThen(new SimpleExecutionCallback<String>() {
-            @Override
-            public void notify(Object o) {
-                probe.done(startNanos);
-            }
-        });
+    public CompletableFuture putAsync(ThreadState state) {
+        return map.putAsync(state.randomKey(), state.randomValue()).toCompletableFuture();
     }
 
     @TimeStep(prob = 0)
@@ -133,32 +109,17 @@ public class LongStringMapTest extends HazelcastTest {
     }
 
     @TimeStep(prob = 0)
-    public void setAsync(ThreadState state, final Probe probe, @StartNanos final long startNanos) {
-        map.setAsync(state.randomKey(), state.randomValue()).andThen(new SimpleExecutionCallback<Void>() {
-            @Override
-            public void notify(Object o) {
-                probe.done(startNanos);
-            }
-        });
+    public void setAsync(ThreadState state) {
+        map.setAsync(state.randomKey(), state.randomValue()).toCompletableFuture();
     }
 
     @TimeStep(prob = 0)
     public void pipelinedGet(final ThreadState state, @StartNanos final long startNanos, final Probe probe) throws Exception {
         if (state.pipeline == null) {
-            state.pipeline = new Pipelining<String>(pipelineDepth);
+            state.pipeline = new Pipelining<>(pipelineDepth);
         }
-        ICompletableFuture<String> f = map.getAsync(state.randomKey());
-        f.andThen(new ExecutionCallback<String>() {
-            @Override
-            public void onResponse(String response) {
-                probe.done(startNanos);
-            }
-
-            @Override
-            public void onFailure(Throwable t) {
-                probe.done(startNanos);
-            }
-        }, callerRuns);
+        CompletableFuture<String> f = map.getAsync(state.randomKey()).toCompletableFuture();
+        f.whenCompleteAsync((s, throwable) -> probe.done(startNanos),callerRuns);
         state.pipeline.add(f);
         state.i++;
         if (state.i == pipelineIterations) {
