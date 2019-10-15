@@ -16,7 +16,6 @@
 package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.collection.IList;
-import com.hazelcast.core.ICompletableFuture;
 import com.hazelcast.map.IMap;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
@@ -26,6 +25,7 @@ import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.tests.map.helpers.MapOperationCounter;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
@@ -48,34 +48,34 @@ public class MapAsyncOpsTest extends HazelcastTest {
     }
 
     @TimeStep(prob = 0.2)
-    public ICompletableFuture<Object> putAsync(ThreadState state) {
+    public CompletableFuture<Object> putAsync(ThreadState state) {
         int key = state.randomInt(keyCount);
         Object value = state.randomInt();
         count.putAsyncCount.incrementAndGet();
-        return map.putAsync(key, value);
+        return map.putAsync(key, value).toCompletableFuture();
     }
 
     @TimeStep(prob = 0.2)
-    public ICompletableFuture<Object> putAsyncTTL(ThreadState state) {
+    public CompletableFuture<Object> putAsyncTTL(ThreadState state) {
         int key = state.randomInt(keyCount);
         Object value = state.randomInt();
         int delay = 1 + state.randomInt(maxTTLExpirySeconds);
         count.putAsyncTTLCount.incrementAndGet();
-        return map.putAsync(key, value, delay, TimeUnit.SECONDS);
+        return map.putAsync(key, value, delay, TimeUnit.SECONDS).toCompletableFuture();
     }
 
     @TimeStep(prob = 0.2)
-    public ICompletableFuture<Object> getAsync(ThreadState state) {
+    public CompletableFuture<Object> getAsync(ThreadState state) {
         int key = state.randomInt(keyCount);
         count.getAsyncCount.incrementAndGet();
-        return map.getAsync(key);
+        return map.getAsync(key).toCompletableFuture();
     }
 
     @TimeStep(prob = 0.2)
-    public ICompletableFuture<Object> removeAsync(ThreadState state) {
+    public CompletableFuture<Object> removeAsync(ThreadState state) {
         int key = state.randomInt(keyCount);
         count.removeAsyncCount.incrementAndGet();
-        return map.removeAsync(key);
+        return map.removeAsync(key).toCompletableFuture();
     }
 
     @TimeStep(prob = 0.2)

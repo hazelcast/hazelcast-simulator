@@ -15,9 +15,9 @@
  */
 package com.hazelcast.simulator.worker.loadsupport;
 
-import com.hazelcast.core.ICompletableFuture;
 import com.hazelcast.map.IMap;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Semaphore;
 
 /**
@@ -41,7 +41,7 @@ final class AsyncMapStreamer<K, V> extends AbstractAsyncStreamer<K, V> {
     }
 
     @Override
-    ICompletableFuture storeAsync(K key, V value) {
-        return (ICompletableFuture) map.putAsync(key, value);
+    CompletableFuture storeAsync(K key, V value) {
+        return  map.setAsync(key, value).toCompletableFuture();
     }
 }

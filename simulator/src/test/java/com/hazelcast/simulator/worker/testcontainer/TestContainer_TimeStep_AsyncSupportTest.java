@@ -1,7 +1,5 @@
 package com.hazelcast.simulator.worker.testcontainer;
 
-import com.hazelcast.core.ExecutionCallback;
-import com.hazelcast.core.ICompletableFuture;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.probes.Probe;
@@ -12,10 +10,7 @@ import org.HdrHistogram.Recorder;
 import org.junit.Test;
 
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.CompletableFuture;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -82,57 +77,21 @@ public class TestContainer_TimeStep_AsyncSupportTest extends TestContainer_Abstr
         }
 
         @TimeStep(prob = 0.5)
-        public ICompletableFuture<Object> asyncTimeStep() {
-            return new DummyICompletableFuture();
+        public CompletableFuture<Object> asyncTimeStep() {
+            return new CompletableFuture<>();
         }
     }
 
     public static class StartAsyncTest_withMultipleAsyncMethod {
         @TimeStep(prob = 0.5)
-        public ICompletableFuture<Object> asyncTimeStep1() {
-            return new DummyICompletableFuture();
+        public CompletableFuture<Object> asyncTimeStep1() {
+            return new CompletableFuture();
         }
 
         @TimeStep(prob = 0.5)
-        public ICompletableFuture<Object> asyncTimeStep2() {
-            return new DummyICompletableFuture();
+        public CompletableFuture<Object> asyncTimeStep2() {
+            return new CompletableFuture();
         }
     }
 
-    private static class DummyICompletableFuture implements ICompletableFuture<Object> {
-        @Override
-        public boolean cancel(boolean mayInterruptIfRunning) {
-            throw new UnsupportedOperationException("not implemented");
-        }
-
-        @Override
-        public boolean isCancelled() {
-            throw new UnsupportedOperationException("not implemented");
-        }
-
-        @Override
-        public boolean isDone() {
-            throw new UnsupportedOperationException("not implemented");
-        }
-
-        @Override
-        public Object get() throws InterruptedException, ExecutionException {
-            throw new UnsupportedOperationException("not implemented");
-        }
-
-        @Override
-        public Object get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
-            throw new UnsupportedOperationException("not implemented");
-        }
-
-        @Override
-        public void andThen(ExecutionCallback<Object> executionCallback) {
-            executionCallback.onResponse(null);
-        }
-
-        @Override
-        public void andThen(ExecutionCallback<Object> executionCallback, Executor executor) {
-            throw new UnsupportedOperationException("not implemented");
-        }
-    }
 }

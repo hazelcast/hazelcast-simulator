@@ -80,7 +80,7 @@ public class TTLICacheTest extends HazelcastTest {
     @TimeStep(prob = 0.1)
     public void getAsync(ThreadState state) throws Exception {
         int key = state.randomInt(keyCount);
-        Future<Long> future = cache.getAsync(key, expiryPolicy);
+        Future<Long> future = cache.getAsync(key, expiryPolicy).toCompletableFuture();
         future.get();
         state.counter.getAsyncExpiry++;
     }

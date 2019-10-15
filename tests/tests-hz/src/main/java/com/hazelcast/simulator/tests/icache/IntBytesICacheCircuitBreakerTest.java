@@ -136,7 +136,7 @@ public class IntBytesICacheCircuitBreakerTest extends HazelcastTest {
         puts.incrementAndGet();
 
         try {
-            Future<Void> future = cache.putAsync(state.randomKey(), state.randomValue());
+            Future<Void> future = cache.putAsync(state.randomKey(), state.randomValue()).toCompletableFuture();
             future.get(timeoutMs, MILLISECONDS);
         } catch (Exception ex) {
             sleepMillis(backoffMs);
@@ -157,7 +157,7 @@ public class IntBytesICacheCircuitBreakerTest extends HazelcastTest {
 
         Object result = null;
         try {
-            Future<Object> future = cache.getAsync(state.randomKey());
+            Future<Object> future = cache.getAsync(state.randomKey()).toCompletableFuture();
             result = future.get(timeoutMs, MILLISECONDS);
         } catch (Exception ex) {
             sleepMillis(backoffMs);

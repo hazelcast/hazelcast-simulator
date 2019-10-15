@@ -125,12 +125,7 @@ public class ${className} extends TimeStepRunner {
     }
 
 <#macro handleAsyncResult m>
-                    ${resultName}.andThen(new com.hazelcast.spi.impl.SimpleExecutionCallback() {
-                        @Override
-                        public void notify(Object o) {
-                           ${m.getName()}Probe.recordValue(System.nanoTime() - startNanos);
-                         }
-                    });
+                    ${resultName}.whenCompleteAsync((o, throwable) ->  ${m.getName()}Probe.recordValue(System.nanoTime() - startNanos), Runnable::run);
 </#macro>
 
 <#macro timestepMethodCall m>

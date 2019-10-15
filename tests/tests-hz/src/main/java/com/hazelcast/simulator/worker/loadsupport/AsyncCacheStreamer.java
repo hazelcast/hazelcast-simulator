@@ -16,8 +16,8 @@
 package com.hazelcast.simulator.worker.loadsupport;
 
 import com.hazelcast.cache.ICache;
-import com.hazelcast.core.ICompletableFuture;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Semaphore;
 
 /**
@@ -41,7 +41,7 @@ final class AsyncCacheStreamer<K, V> extends AbstractAsyncStreamer<K, V> {
     }
 
     @Override
-    ICompletableFuture storeAsync(K key, V value) {
-        return (ICompletableFuture) cache.putAsync(key, value);
+    CompletableFuture storeAsync(K key, V value) {
+        return cache.putAsync(key, value).toCompletableFuture();
     }
 }

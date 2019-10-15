@@ -7,9 +7,7 @@
 
     <!--LITE_MEMBER_CONFIG-->
 
-    <cluster>
-        <name>workers</name>
-    </cluster>
+    <cluster-name>workers</cluster-name>
 
     <network>
         <port port-count="200" auto-increment="true">5701</port>

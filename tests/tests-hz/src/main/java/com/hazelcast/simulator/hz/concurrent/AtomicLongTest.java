@@ -16,8 +16,6 @@
 
 package com.hazelcast.simulator.hz.concurrent;
 
-import com.hazelcast.core.ExecutionCallback;
-import com.hazelcast.core.ICompletableFuture;
 import com.hazelcast.core.Pipelining;
 import com.hazelcast.cp.IAtomicLong;
 import com.hazelcast.simulator.hz.HazelcastTest;
@@ -28,6 +26,7 @@ import com.hazelcast.simulator.test.annotations.StartNanos;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
 public class AtomicLongTest extends HazelcastTest {
@@ -38,12 +37,7 @@ public class AtomicLongTest extends HazelcastTest {
     public int pipelineIterations = 100;
 
     private IAtomicLong[] counters;
-    private final Executor callerRuns = new Executor() {
-        @Override
-        public void execute(Runnable command) {
-            command.run();
-        }
-    };
+    private final Executor callerRuns = Runnable::run;
 
     @Setup
     public void setup() {
@@ -69,18 +63,8 @@ public class AtomicLongTest extends HazelcastTest {
         if (state.pipeline == null) {
             state.pipeline = new Pipelining<Long>(pipelineDepth);
         }
-        ICompletableFuture<Long> f = state.randomCounter().getAsync();
-        f.andThen(new ExecutionCallback<Long>() {
-            @Override
-            public void onResponse(Long response) {
-                probe.done(startNanos);
-            }
-
-            @Override
-            public void onFailure(Throwable t) {
-                probe.done(startNanos);
-            }
-        }, callerRuns);
+        CompletableFuture<Long> f = state.randomCounter().getAsync().toCompletableFuture();
+        f.whenCompleteAsync((bytes, throwable) -> probe.done(startNanos), Runnable::run);
         state.pipeline.add(f);
         state.i++;
         if (state.i == pipelineIterations) {
