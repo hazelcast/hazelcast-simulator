@@ -50,12 +50,7 @@ public class LongStringMapTest extends HazelcastTest {
 
     private IMap<Long, String> map;
     private String[] values;
-    private final Executor callerRuns = new Executor() {
-        @Override
-        public void execute(Runnable command) {
-            command.run();
-        }
-    };
+    private final Executor callerRuns = Runnable::run;
 
     @Setup
     public void setUp() {

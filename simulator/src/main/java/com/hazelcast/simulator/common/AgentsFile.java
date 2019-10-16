@@ -24,6 +24,7 @@ import java.io.File;
 import java.util.Map;
 
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
+import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static com.hazelcast.simulator.utils.TagUtils.tagsToString;
@@ -44,6 +45,20 @@ public final class AgentsFile {
     public static final String NAME = "agents.txt";
 
     private AgentsFile() {
+    }
+
+    public static File preferredAgentsFile() {
+        File dir = getUserDir();
+        for (; ; ) {
+            File agentFile = new File(dir, NAME);
+            if (agentFile.exists()) {
+                return agentFile;
+            }
+            dir = dir.getParentFile();
+            if (dir == null) {
+                return new File(getUserDir(), NAME);
+            }
+        }
     }
 
     public static Registry load(File agentFile) {

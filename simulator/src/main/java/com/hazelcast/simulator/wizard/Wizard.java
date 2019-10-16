@@ -27,6 +27,7 @@ import java.io.File;
 import java.util.Properties;
 import java.util.TreeSet;
 
+import static com.hazelcast.simulator.common.AgentsFile.preferredAgentsFile;
 import static com.hazelcast.simulator.common.SimulatorProperties.CLOUD_CREDENTIAL;
 import static com.hazelcast.simulator.common.SimulatorProperties.CLOUD_IDENTITY;
 import static com.hazelcast.simulator.common.SimulatorProperties.CLOUD_PROVIDER;
@@ -40,7 +41,6 @@ import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
-import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
@@ -57,7 +57,7 @@ class Wizard {
 
     private static final Logger LOGGER = Logger.getLogger(Wizard.class);
 
-    private final File agentFile = new File(getUserDir(), AgentsFile.NAME).getAbsoluteFile();
+    private final File agentFile =  preferredAgentsFile().getAbsoluteFile();
 
     Wizard() {
     }
