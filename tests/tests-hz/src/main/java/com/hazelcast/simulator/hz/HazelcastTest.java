@@ -39,13 +39,13 @@ public abstract class HazelcastTest {
 
     protected final Logger logger = Logger.getLogger(getClass());
 
-    public IAtomicLong getAtomicLong(String name){
-        return  targetInstance.getDistributedObject("hz:impl:atomicLongService", name);
-    }
+    @InjectTestContext
+    protected TestContext testContext;
 
     @InjectVendor
     protected HazelcastInstance targetInstance;
 
-    @InjectTestContext
-    protected TestContext testContext;
+    public IAtomicLong getAtomicLong(String name) {
+        return targetInstance.getDistributedObject("hz:impl:atomicLongService", name);
+    }
 }

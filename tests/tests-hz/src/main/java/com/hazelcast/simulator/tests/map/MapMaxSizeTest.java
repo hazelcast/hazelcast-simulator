@@ -16,7 +16,8 @@
 package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.collection.IList;
-import com.hazelcast.config.MaxSizeConfig;
+import com.hazelcast.config.EvictionConfig;
+import com.hazelcast.config.MapConfig;
 import com.hazelcast.map.IMap;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
@@ -26,18 +27,20 @@ import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.tests.map.helpers.MapMaxSizeOperationCounter;
 
-import static com.hazelcast.config.MaxSizeConfig.MaxSizePolicy.PER_NODE;
+import static com.hazelcast.config.MaxSizePolicy.PER_NODE;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
 import static com.hazelcast.simulator.utils.TestUtils.assertEqualsStringFormat;
 import static java.lang.String.format;
 import static org.junit.Assert.assertTrue;
 
 /**
- * This tests runs {@link IMap#put(Object, Object)} and {@link IMap#get(Object)} operations on a map, which is configured with
- * {@link com.hazelcast.config.MaxSizeConfig.MaxSizePolicy#PER_NODE}.
+ * This tests runs {@link IMap#put(Object, Object)} and {@link
+ * IMap#get(Object)} operations on a map, which is configured
+ * with {@link com.hazelcast.config.MaxSizePolicy#PER_NODE}.
  *
- * With some probability distribution we are doing put, putAsync, get and verification operations on the map.
- * We verify during the test and at the end that the map has not exceeded its max configured size.
+ * With some probability distribution we are doing put, putAsync, get
+ * and verification operations on the map. We verify during the test and
+ * at the end that the map has not exceeded its max configured size.
  */
 public class MapMaxSizeTest extends HazelcastTest {
 
@@ -54,12 +57,16 @@ public class MapMaxSizeTest extends HazelcastTest {
         operationCounterList = targetInstance.getList(name + "OperationCounter");
 
         if (isMemberNode(targetInstance)) {
-            MaxSizeConfig maxSizeConfig = targetInstance.getConfig().getMapConfig(name).getMaxSizeConfig();
-            maxSizePerNode = maxSizeConfig.getSize();
-            assertEqualsStringFormat("Expected MaxSizePolicy %s, but was %s", PER_NODE, maxSizeConfig.getMaxSizePolicy());
-            assertTrue("Expected MaxSizePolicy.getSize() < Integer.MAX_VALUE", maxSizePerNode < Integer.MAX_VALUE);
+            MapConfig mapConfig = targetInstance.getConfig().getMapConfig(name);
+            EvictionConfig evictionConfig = mapConfig.getEvictionConfig();
+            maxSizePerNode = evictionConfig.getSize();
 
-            logger.info("MapSizeConfig of " + name + ": " + maxSizeConfig);
+            assertEqualsStringFormat("Expected MaxSizePolicy %s, but was %s",
+                    PER_NODE, evictionConfig.getMaxSizePolicy());
+            assertTrue("Expected MaxSizePolicy.getSize() < Integer.MAX_VALUE",
+                    maxSizePerNode < Integer.MAX_VALUE);
+
+            logger.info("Eviction config of " + name + ": " + evictionConfig);
         }
     }
 
