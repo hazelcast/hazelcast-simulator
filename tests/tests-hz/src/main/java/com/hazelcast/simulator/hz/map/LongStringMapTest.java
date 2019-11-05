@@ -119,7 +119,7 @@ public class LongStringMapTest extends HazelcastTest {
             state.pipeline = new Pipelining<>(pipelineDepth);
         }
         CompletableFuture<String> f = map.getAsync(state.randomKey()).toCompletableFuture();
-        f.whenCompleteAsync((s, throwable) -> probe.done(startNanos),callerRuns);
+        f.whenCompleteAsync((s, throwable) -> probe.done(startNanos), callerRuns);
         state.pipeline.add(f);
         state.i++;
         if (state.i == pipelineIterations) {
