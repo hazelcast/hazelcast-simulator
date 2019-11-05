@@ -40,12 +40,11 @@
             <write-coalescing>false</write-coalescing>
         </map-store>
         <time-to-live-seconds>10</time-to-live-seconds>
-        <max-size policy="PER_NODE">5000</max-size>
+        <eviction size="5000" max-size-policy="PER_NODE"/>
     </map>
 
     <map name="MapMaxSize*">
-        <eviction-policy>LRU</eviction-policy>
-        <max-size policy="PER_NODE">1000</max-size>
+        <eviction max-size-policy="PER_NODE" size="1000" eviction-policy="LRU"/>
     </map>
 
     <map name="NoBackup*">
