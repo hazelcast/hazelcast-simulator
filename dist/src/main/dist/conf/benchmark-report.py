@@ -935,6 +935,7 @@ class Comparison:
         last_benchmark = None
 
         print("Loading benchmarks")
+        os.remove(report_dir+"/performance.csv")
 
         # collect all benchmark directories and the names for the benchmarks
         for benchmark_arg in benchmark_args:
@@ -957,7 +958,7 @@ class Comparison:
         # Make the benchmarks
         self.benchmarks = []
         for benchmark_dir in benchmark_dirs:
-            cmd = simulator_home + "/conf/hdr.sh " + benchmark_dir
+            cmd = simulator_home + "/conf/hdr.sh " + benchmark_dir+ " "+report_dir
             subprocess.check_output(cmd.split())
             self.benchmarks.append(Benchmark(benchmark_dir, benchmark_names[benchmark_dir]))
 
