@@ -56,6 +56,10 @@ public final class FileUtils {
     private FileUtils() {
     }
 
+    public static String stripExtension(String filename) {
+        return filename.replaceFirst("[.][^.]+$", "");
+    }
+
     public static boolean isValidFileName(String fileName) {
         return VALID_FILE_NAME_PATTERN.matcher(fileName).matches();
     }

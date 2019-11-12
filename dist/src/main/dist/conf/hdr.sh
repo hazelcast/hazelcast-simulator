@@ -9,6 +9,7 @@ set -e
 
 # the session id; could be a * om case everything needs to be downloaded
 session_dir=$1
+report_dir=$2
 
 # merge all hdr files of each member into a hdr file which gets stored in the target_directory
 probes=($(ls -R ${session_dir} | grep .hdr | sort | uniq))
@@ -46,4 +47,11 @@ do
     echo "[INFO]          $hdr_file"
 
     mv "${file_name}.hgrm.bak" "${file_name}.hgrm"
+done
+
+hgrm_files=($(find "${session_dir}" -maxdepth 1 -name *.hgrm ))
+echo HDR hgrm_files $hgrm_files
+for hgrm_file in "${hgrm_files[@]}"
+do
+    java -cp "${SIMULATOR_HOME}/lib/*"  com.hazelcast.simulator.utils.PerformanceCsv $hgrm_file $report_dir $session_dir
 done
