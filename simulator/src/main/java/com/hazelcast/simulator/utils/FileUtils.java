@@ -94,6 +94,7 @@ public final class FileUtils {
     public static void writeText(String text, File file) {
         checkNotNull(text, "Text can't be null");
         checkNotNull(file, "File can't be null");
+        ensureExistingDirectory(file.getParentFile());
 
         FileOutputStream stream = null;
         OutputStreamWriter streamWriter = null;

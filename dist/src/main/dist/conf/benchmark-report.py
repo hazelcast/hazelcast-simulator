@@ -935,7 +935,6 @@ class Comparison:
         last_benchmark = None
 
         print("Loading benchmarks")
-        os.remove(report_dir+"/performance.csv")
 
         # collect all benchmark directories and the names for the benchmarks
         for benchmark_arg in benchmark_args:
@@ -1025,6 +1024,10 @@ class Comparison:
         for benchmark in self.benchmarks:
             print(" benchmark [" + benchmark.name + "] benchmark.dir [" + benchmark.src_dir + "]")
 
+
+performance_csv=report_dir+"/performance.csv"
+if os.path.isfile(performance_csv):
+    os.remove(performance_csv)
 
 comparison = Comparison()
 comparison.compare()

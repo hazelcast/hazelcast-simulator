@@ -26,12 +26,14 @@ import static java.util.Arrays.asList;
 
 public class PerformanceCsv {
 
+    private PerformanceCsv(){}
+
     public static void main(String[] args) {
         File reportDir = new File(args[1]);
         File sessionDir = new File(args[2]);
         File out = new File(reportDir, "performance.csv");
         if (!out.exists()) {
-            appendText(getHeader(), out);
+            FileUtils.writeText(getHeader(), out);
         }
         File hgrmFile = new File(args[0]);
 
@@ -81,7 +83,7 @@ public class PerformanceCsv {
     }
 
     private static String getHeader() {
-        return "\"session\",\"benchmark\",\"10%\",\"20%\",\"50%\",\"75%\",\"90%\",\"95%\",\"99%\",\"99.9%\"," +
-                "\"99.99%\",\"max\",\"operations\",\"duration\",\"throughput\"\n";
+        return "\"session\",\"benchmark\",\"10%\",\"20%\",\"50%\",\"75%\",\"90%\",\"95%\",\"99%\",\"99.9%\","
+                + "\"99.99%\",\"max\",\"operations\",\"duration\",\"throughput\"\n";
     }
 }
