@@ -79,7 +79,7 @@ public class PerformanceCsv {
         long duration = endMillis - startMillis;
         outSb.append(",").append(duration);
 
-        outSb.append(",").append(totalCount * 100d / duration);
+        outSb.append(",").append(totalCount * 1000d / duration);
     }
 
     private static String getHeader() {
