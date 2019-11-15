@@ -233,7 +233,8 @@ public class Provisioner {
         String startHarakiriMonitorCommand = getStartHarakiriMonitorCommandOrNull(properties);
         try {
             log("Creating machines (can take a few minutes)...");
-            new BashCommand(getConfigurationFile("aws-ec2_provision.sh").getAbsolutePath())
+            String filename = properties.get("CLOUD_PROVIDER") + "_provision.sh";
+            new BashCommand(getConfigurationFile(filename).getAbsolutePath())
                     .addEnvironment(properties.asMap())
                     .addParams(delta)
                     .execute();
@@ -249,6 +250,7 @@ public class Provisioner {
                 future.get();
             }
         } catch (Exception e) {
+            LOGGER.error("Failed to provision machines",e);
             throw new CommandLineExitException("Failed to provision machines: " + e.getMessage());
         }
 
