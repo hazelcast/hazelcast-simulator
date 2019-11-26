@@ -51,8 +51,8 @@ else:
     report_dir = args.output[0]
 report_dir = os.path.abspath(report_dir)
 
-warmup = int(args.warmup[0])
-cooldown = int(args.cooldown[0])
+warmup_seconds = int(args.warmup[0])
+cooldown_seconds = int(args.cooldown[0])
 
 print("Report directory '" + report_dir + "'")
 
@@ -254,6 +254,8 @@ class LatencyDistributionGnuplot(Gnuplot):
         self._write("unset xtics")
         self._write("set ylabel 'Latency (μs)'")
         self._write("set logscale x")
+#        if slef.logscaley:
+#            self._write("set logscale y")
         self._write('set key top left')
         self._write("set style line 1 lt 1 lw 3 pt 3 linecolor rgb \"red\"")
         self._write("set output '" + self.image_path + "'")
@@ -666,9 +668,9 @@ class GcAnalyzer:
 
 
 class DstatAnalyzer:
-    def __init__(self, directory, agent_benchmark_periods):
+    def __init__(self, directory, period):
         self.directory = directory
-        self.agent_benchmark_periods = agent_benchmark_periods;
+        self.period = period
 
     def analyze(self):
         handles = []
@@ -679,7 +681,7 @@ class DstatAnalyzer:
                 continue
 
             agent_name = agent_for_worker(file_name)
-            period = self.agent_benchmark_periods[agent_name]
+            period = self.period
             dstat_file = os.path.join(self.directory, file_name)
 
             handles.append(
@@ -821,7 +823,9 @@ class ThroughputAnalyzer:
         handles = []
         handles.append(
             SeriesHandle("throughput", "throughput_" + self.worker_name, "Throughput", "Operations/sec",
-                         self.__load_throughput, start_time=self.period.start_time, end_time=self.period.end_time))
+                         self.__load_throughput,
+                         start_time=self.period.start_time,
+                         end_time=self.period.end_time))
         return handles
 
     def __load_throughput(self):
@@ -862,28 +866,48 @@ class Benchmark:
     src_dir = ""
     workers = None
     name = ""
-    agent_benchmark_periods = None
+    period = None
 
-    def __init__(self, src_dir, name):
+    def __init__(self, src_dir, name, id):
         self.src_dir = src_dir
         self.name = name
-        self.agent_benchmark_periods = {}
         self.handles = []
 
-        # Load the periods
-        for file_name in os.listdir(src_dir):
-            if not file_name.endswith(".time"):
+        # iterate over the worker directories and look
+        print("---------------------------------------")
+
+        # look up the start/end period of the benchmark
+        for worker_name in os.listdir(src_dir):
+            if not worker_name.startswith("A"):
+                continue
+            worker_dir = os.path.join(src_dir, worker_name)
+            if not os.path.isdir(worker_dir):
                 continue
 
-            agent_name = agent_for_worker(file_name)
-            csv_file = os.path.join(src_dir, file_name)
-            with open(csv_file, 'rb') as time_file:
-                csvreader = csv.reader(time_file, delimiter=',', quotechar='|')
-                start_time = str(int(next(csvreader)[1]) + warmup)
-                end_time = str(int(next(csvreader)[1]) - cooldown)
-                print("start_time:" + start_time)
-                print("end_time_ms:" + end_time)
-                self.agent_benchmark_periods[agent_name] = Period(start_time, end_time)
+            agent_name = agent_for_worker(worker_name)
+            performance_csv_file = os.path.join(worker_dir, "performance.csv")
+            if not os.path.isfile(performance_csv_file):
+                continue
+
+            print(performance_csv_file)
+            with open(performance_csv_file, 'rb') as csv_file:
+                csv_reader = csv.reader(csv_file, delimiter=',', quotechar='|')
+                # skip first line
+                next(csv_reader)
+                first_time = float(next(csv_reader)[0])
+                start_time = str(first_time + warmup_seconds)
+                end_time = str(first_time - cooldown_seconds)
+
+                for row in csv_reader:
+                    v = float(row[0])
+                    end_time = str(v - cooldown_seconds)
+
+                print("agent:"+agent_name)
+                print(str(start_time))
+                print(str(end_time))
+                self.period = Period(start_time, end_time)
+
+        print("---------------------------------------")
 
         # load all workers
         self.workers = []
@@ -894,20 +918,17 @@ class Benchmark:
             if not subdir_name.startswith("A"):
                 continue
             agent_name = agent_for_worker(subdir_name)
-            agent_benchmark_time = self.agent_benchmark_periods[agent_name]
-            self.workers.append(Worker(subdir, agent_benchmark_time))
+            self.workers.append(Worker(subdir, self.period))
 
         # making sure there are workers; otherwise it is an invalid benchmark
         if len(self.workers) == 0:
             print("Invalid Benchmark " + self.name + " from directory [" + self.src_dir + "]; no workers found")
             exit(1)
 
-        # look for all latency info
-
         self.handles.append(
             SeriesHandle("throughput", "throughput", "Throughput", "Operations/sec", self.aggregated_throughput))
-        self.handles.extend(DstatAnalyzer(src_dir, self.agent_benchmark_periods).analyze())
-        self.handles.extend(HdrAnalyzer(src_dir).analyze())
+        self.handles.extend(DstatAnalyzer(report_dir+"/tmp/"+str(id), self.period).analyze())
+        self.handles.extend(HdrAnalyzer(report_dir+"/tmp/"+str(id)).analyze())
 
         agents = {}
         for worker in self.workers:
@@ -927,8 +948,8 @@ class Benchmark:
                     ts_list.append(handle.load())
         return Series("", "", False, False, ts_list=ts_list).items
 
-
 class Comparison:
+
     def __init__(self):
         benchmark_dirs = []
         benchmark_names = {}
@@ -955,18 +976,22 @@ class Comparison:
                 benchmark_names[benchmark_dir] = name
 
         # Make the benchmarks
+        benchmark_id=0
         self.benchmarks = []
         for benchmark_dir in benchmark_dirs:
-            cmd = simulator_home + "/conf/hdr.sh " + benchmark_dir+ " "+report_dir
-            subprocess.check_output(cmd.split())
-            self.benchmarks.append(Benchmark(benchmark_dir, benchmark_names[benchmark_dir]))
+            benchmark_id += 1
+            cmd = simulator_home + "/conf/init_report_files.sh " + benchmark_dir+ " " + report_dir + " " + str(benchmark_id) + " "+ str(warmup_seconds) + " " + str(cooldown_seconds)
+            out = subprocess.check_output(cmd.split())
+            #print(out)
+            self.benchmarks.append(Benchmark(benchmark_dir, benchmark_names[benchmark_dir], benchmark_id))
 
     def output_dir(self, name):
         output_dir = os.path.join(report_dir, name)
         ensure_dir(output_dir)
         return output_dir
 
-    def compare(self):
+    # makes the actual comparison report.
+    def make(self):
         plots = {}
 
         # plot benchmark/machine level metrics
@@ -1025,12 +1050,11 @@ class Comparison:
             print(" benchmark [" + benchmark.name + "] benchmark.dir [" + benchmark.src_dir + "]")
 
 
-performance_csv=report_dir+"/performance.csv"
-if os.path.isfile(performance_csv):
-    os.remove(performance_csv)
+import shutil
+shutil.rmtree('report')
 
 comparison = Comparison()
-comparison.compare()
+comparison.make()
 
 if not args.full and gc_logs_found:
     print("gc.log files have been found. Run with -f option to get these plotted.")
