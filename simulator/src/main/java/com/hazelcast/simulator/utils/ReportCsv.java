@@ -24,7 +24,8 @@ import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.stripExtension;
 import static java.util.Arrays.asList;
 
-public class ReportCsv {
+@SuppressWarnings("checkstyle:magicnumber")
+public final class ReportCsv {
 
     private ReportCsv() {
     }
@@ -32,14 +33,14 @@ public class ReportCsv {
     public static void main(String[] args) {
         File hgrmFile = new File(args[0]);
         File reportDir = new File(args[1]);
-        File hdrDir = new File(args[2]);
+        File sessionFile = new File(args[2]);
         File out = new File(reportDir, "report.csv");
         if (!out.exists()) {
             FileUtils.writeText(getHeader(), out);
         }
 
         StringBuffer outSb = new StringBuffer();
-        outSb.append(hdrDir.getName());
+        outSb.append(sessionFile.getName());
         outSb.append(",").append(stripExtension(hgrmFile.getName()));
         addPercentiles(hgrmFile, outSb);
         addOther(hgrmFile, outSb);

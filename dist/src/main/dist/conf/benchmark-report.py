@@ -23,6 +23,7 @@ import csv
 import os
 import re
 import subprocess
+import shutil
 from collections import Counter
 
 parser = argparse.ArgumentParser(description='Creating a benchmark report from one or more benchmarks.')
@@ -860,6 +861,11 @@ class Period:
         self.start_time = start_time
         self.end_time = end_time
 
+    def start_millis(self):
+        return long(round(float(self.start_time)*1000))
+
+    def end_millis(self):
+        return long(round(float(self.end_time)*1000))
 
 class Benchmark:
     # the directory where the original files can be found
@@ -872,15 +878,43 @@ class Benchmark:
         self.src_dir = src_dir
         self.name = name
         self.handles = []
+        self.id=id
 
-        # iterate over the worker directories and look
-        print("---------------------------------------")
+    def load_workers(self):
+        # load all workers
+        self.workers = []
+        for subdir_name in os.listdir(self.src_dir):
+            subdir = os.path.join(self.src_dir, subdir_name)
+            if not os.path.isdir(subdir):
+                continue
+            if not subdir_name.startswith("A"):
+                continue
+            agent_name = agent_for_worker(subdir_name)
+            self.workers.append(Worker(subdir, self.period))
 
-        # look up the start/end period of the benchmark
-        for worker_name in os.listdir(src_dir):
+        # making sure there are workers; otherwise it is an invalid benchmark
+        if len(self.workers) == 0:
+            print("Invalid Benchmark " + self.name + " from directory [" + self.src_dir + "]; no workers found")
+            exit(1)
+
+        self.handles.append(
+            SeriesHandle("throughput", "throughput", "Throughput", "Operations/sec", self.aggregated_throughput))
+        self.handles.extend(DstatAnalyzer(report_dir+"/tmp/"+str(self.id), self.period).analyze())
+        self.handles.extend(HdrAnalyzer(report_dir+"/tmp/"+str(self.id)).analyze())
+
+        agents = {}
+        for worker in self.workers:
+            agent = agent_for_worker(worker.name)
+            if not agents.get(agent):
+                agents[agent] = worker
+
+    def lookup_period(self):
+        #print("---------------------------------------")
+
+        for worker_name in os.listdir(self.src_dir):
             if not worker_name.startswith("A"):
                 continue
-            worker_dir = os.path.join(src_dir, worker_name)
+            worker_dir = os.path.join(self.src_dir, worker_name)
             if not os.path.isdir(worker_dir):
                 continue
 
@@ -902,41 +936,20 @@ class Benchmark:
                     v = float(row[0])
                     end_time = str(v - cooldown_seconds)
 
-                print("agent:"+agent_name)
-                print(str(start_time))
-                print(str(end_time))
+                #print("agent:"+agent_name)
+                #print(str(start_time))
+                #print(str(end_time))
                 self.period = Period(start_time, end_time)
 
-        print("---------------------------------------")
+        #print("---------------------------------------")
 
-        # load all workers
-        self.workers = []
-        for subdir_name in os.listdir(src_dir):
-            subdir = os.path.join(src_dir, subdir_name)
-            if not os.path.isdir(subdir):
-                continue
-            if not subdir_name.startswith("A"):
-                continue
-            agent_name = agent_for_worker(subdir_name)
-            self.workers.append(Worker(subdir, self.period))
+    def init_files(self):
+        cmd = simulator_home + "/conf/init_report_files.sh " + self.src_dir+ " " + report_dir + " " + str(self.id) + " "+ str(self.period.start_millis()) + " " + str(self.period.end_millis())
+        print(cmd)
+        out = subprocess.check_output(cmd.split())
+        #print(out)
 
-        # making sure there are workers; otherwise it is an invalid benchmark
-        if len(self.workers) == 0:
-            print("Invalid Benchmark " + self.name + " from directory [" + self.src_dir + "]; no workers found")
-            exit(1)
-
-        self.handles.append(
-            SeriesHandle("throughput", "throughput", "Throughput", "Operations/sec", self.aggregated_throughput))
-        self.handles.extend(DstatAnalyzer(report_dir+"/tmp/"+str(id), self.period).analyze())
-        self.handles.extend(HdrAnalyzer(report_dir+"/tmp/"+str(id)).analyze())
-
-        agents = {}
-        for worker in self.workers:
-            agent = agent_for_worker(worker.name)
-            if not agents.get(agent):
-                agents[agent] = worker
-
-    # todo: better name
+# todo: better name
     def x(self, handle):
         return handle.load().items
 
@@ -980,10 +993,11 @@ class Comparison:
         self.benchmarks = []
         for benchmark_dir in benchmark_dirs:
             benchmark_id += 1
-            cmd = simulator_home + "/conf/init_report_files.sh " + benchmark_dir+ " " + report_dir + " " + str(benchmark_id) + " "+ str(warmup_seconds) + " " + str(cooldown_seconds)
-            out = subprocess.check_output(cmd.split())
-            #print(out)
-            self.benchmarks.append(Benchmark(benchmark_dir, benchmark_names[benchmark_dir], benchmark_id))
+            benchmark = Benchmark(benchmark_dir, benchmark_names[benchmark_dir], benchmark_id)
+            benchmark.lookup_period()
+            benchmark.init_files()
+            benchmark.load_workers()
+            self.benchmarks.append(benchmark)
 
     def output_dir(self, name):
         output_dir = os.path.join(report_dir, name)
@@ -1050,8 +1064,8 @@ class Comparison:
             print(" benchmark [" + benchmark.name + "] benchmark.dir [" + benchmark.src_dir + "]")
 
 
-import shutil
-shutil.rmtree('report')
+if os.path.isdir('report'):
+    shutil.rmtree('report')
 
 comparison = Comparison()
 comparison.make()

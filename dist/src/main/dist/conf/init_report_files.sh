@@ -11,8 +11,8 @@ set -e
 session_dir=$1
 report_dir=$2
 hdr_target_dir_name=$3
-warmup_seconds=$4
-cooldown_seconds=$5
+time_start_millis=$4
+time_end_millis=$5
 
 worker_dir_names=($(ls ${session_dir}))
 # copy all the hdr files
@@ -29,7 +29,7 @@ hdr_files=($(find "${report_dir}/tmp/$hdr_target_dir_name" -name *.hdr))
 for hdr_file in "${hdr_files[@]}"
 do
     echo "trimmig $hdr_file"
-    java -cp "${SIMULATOR_HOME}/lib/*"  com.hazelcast.simulator.utils.HistogramTrimmer $hdr_file $warmup_seconds $cooldown_seconds
+    java -cp "${SIMULATOR_HOME}/lib/*"  com.hazelcast.simulator.utils.HistogramTrimmer $hdr_file $time_start_millis $time_end_millis
 done
 
 # merge all hdr files of each driver into a hdr file which gets stored in the target_directory
@@ -89,12 +89,11 @@ do
 done
 
 # generate the report.csv
-rm -fr $report_dir/performance.csv
 hgrm_files=($(find "${report_dir}/tmp/$hdr_target_dir_name" -maxdepth 1 -name *.hgrm ))
 echo HDR hgrm_files $hgrm_files
 for hgrm_file in "${hgrm_files[@]}"
 do
-    java -cp "${SIMULATOR_HOME}/lib/*"  com.hazelcast.simulator.utils.ReportCsv $hgrm_file $report_dir $report_dir
+    java -cp "${SIMULATOR_HOME}/lib/*"  com.hazelcast.simulator.utils.ReportCsv $hgrm_file $report_dir $session_dir
 done
 
 # copy the dstats files
