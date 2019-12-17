@@ -24,21 +24,23 @@ import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.stripExtension;
 import static java.util.Arrays.asList;
 
-public class PerformanceCsv {
+@SuppressWarnings("checkstyle:magicnumber")
+public final class ReportCsv {
 
-    private PerformanceCsv(){}
+    private ReportCsv() {
+    }
 
     public static void main(String[] args) {
+        File hgrmFile = new File(args[0]);
         File reportDir = new File(args[1]);
-        File sessionDir = new File(args[2]);
-        File out = new File(reportDir, "performance.csv");
+        File sessionFile = new File(args[2]);
+        File out = new File(reportDir, "report.csv");
         if (!out.exists()) {
             FileUtils.writeText(getHeader(), out);
         }
-        File hgrmFile = new File(args[0]);
 
         StringBuffer outSb = new StringBuffer();
-        outSb.append(sessionDir.getName());
+        outSb.append(sessionFile.getName());
         outSb.append(",").append(stripExtension(hgrmFile.getName()));
         addPercentiles(hgrmFile, outSb);
         addOther(hgrmFile, outSb);

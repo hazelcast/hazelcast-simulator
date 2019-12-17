@@ -250,7 +250,7 @@ public class Provisioner {
                 future.get();
             }
         } catch (Exception e) {
-            LOGGER.error("Failed to provision machines",e);
+            LOGGER.error("Failed to provision machines", e);
             throw new CommandLineExitException("Failed to provision machines: " + e.getMessage());
         }
 

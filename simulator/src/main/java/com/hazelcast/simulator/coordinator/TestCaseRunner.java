@@ -23,7 +23,6 @@ import com.hazelcast.simulator.coordinator.registry.WorkerData;
 import com.hazelcast.simulator.protocol.CoordinatorClient;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
-import com.hazelcast.simulator.utils.BashCommand;
 import com.hazelcast.simulator.worker.operations.CreateTestOperation;
 import com.hazelcast.simulator.worker.operations.StartPhaseOperation;
 import com.hazelcast.simulator.worker.operations.StopRunOperation;
@@ -47,7 +46,6 @@ import static com.hazelcast.simulator.common.TestPhase.LOCAL_TEARDOWN;
 import static com.hazelcast.simulator.common.TestPhase.LOCAL_VERIFY;
 import static com.hazelcast.simulator.common.TestPhase.RUN;
 import static com.hazelcast.simulator.common.TestPhase.SETUP;
-import static com.hazelcast.simulator.coordinator.registry.AgentData.publicAddressesString;
 import static com.hazelcast.simulator.coordinator.registry.TestData.CompletedStatus.FAILED;
 import static com.hazelcast.simulator.coordinator.registry.TestData.CompletedStatus.SUCCESS;
 import static com.hazelcast.simulator.utils.CommonUtils.await;
@@ -56,7 +54,6 @@ import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepUntilMs;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
-import static com.hazelcast.simulator.utils.FileUtils.getConfigurationFile;
 import static com.hazelcast.simulator.utils.FormatUtils.formatPercentage;
 import static com.hazelcast.simulator.utils.FormatUtils.padRight;
 import static com.hazelcast.simulator.utils.FormatUtils.secondsToHuman;
@@ -333,18 +330,7 @@ public final class TestCaseRunner {
     private Map<WorkerData, Future> startRun() {
         log(format("Starting run on %s workers", targetType.toString(targetCount)));
         log(format("Test run using workers %s", WorkerData.toAddressString(targets)));
-
-        recordTimestamp("start");
-
         return submitToTargets(false, new StartPhaseOperation(RUN, testCase.getId()));
-    }
-
-    private void recordTimestamp(String label) {
-        String startScript = getConfigurationFile("record_timestamp.sh").getAbsolutePath();
-        new BashCommand(startScript)
-                .addParams(publicAddressesString(registry), coordinatorParameters.getSessionId(), testCase.getId(), label)
-                .addEnvironment(coordinatorParameters.getSimulatorProperties().asMap())
-                .execute();
     }
 
     private void stopRun() {
@@ -358,8 +344,6 @@ public final class TestCaseRunner {
         } catch (TestCaseAbortedException e) {
             log(e.getMessage());
         }
-
-        recordTimestamp("stop");
     }
 
     private void logProgress(long elapsedMs, long durationMs) {
