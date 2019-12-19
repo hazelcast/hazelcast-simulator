@@ -26,10 +26,8 @@ import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.worker.operations.CreateTestOperation;
 import com.hazelcast.simulator.worker.operations.StartPhaseOperation;
 import com.hazelcast.simulator.worker.operations.StopRunOperation;
-import com.hazelcast.simulator.worker.performance.PerformanceStats;
 import org.apache.log4j.Logger;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -53,7 +51,6 @@ import static com.hazelcast.simulator.utils.CommonUtils.getElapsedSeconds;
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepUntilMs;
-import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FormatUtils.formatPercentage;
 import static com.hazelcast.simulator.utils.FormatUtils.padRight;
 import static com.hazelcast.simulator.utils.FormatUtils.secondsToHuman;
@@ -74,7 +71,6 @@ public final class TestCaseRunner {
     private static final int WAIT_FOR_PHASE_COMPLETION_LOG_INTERVAL_SECONDS = 30;
     private static final int WAIT_FOR_PHASE_COMPLETION_LOG_VERBOSE_DELAY_SECONDS = 300;
     private static final Logger LOGGER = Logger.getLogger(TestCaseRunner.class);
-    private static final float THOUSAND = 1000f;
 
     private final TestData test;
     private final TestCase testCase;
@@ -91,8 +87,6 @@ public final class TestCaseRunner {
     private final int logRunPhaseIntervalSeconds;
     private final List<WorkerData> targets;
     private final WorkerData globalTarget;
-    private final Registry registry;
-    private final CoordinatorParameters coordinatorParameters;
 
     @SuppressWarnings("checkstyle:parameternumber")
     public TestCaseRunner(TestData test,
@@ -104,8 +98,6 @@ public final class TestCaseRunner {
                           Registry registry,
                           PerformanceStatsCollector performanceStatsCollector) {
         this.test = test;
-        this.coordinatorParameters = coordinatorParameters;
-        this.registry = registry;
         this.testCase = test.getTestCase();
         this.testSuite = test.getTestSuite();
         this.client = client;
@@ -313,13 +305,6 @@ public final class TestCaseRunner {
             String performanceInfo = performanceStatsCollector.detailedPerformanceInfo(testCase.getId(), durationMillis);
             LOGGER.info("Performance " + testCase.getId() + "\n"
                     + performanceInfo);
-
-            PerformanceStats performanceStats = performanceStatsCollector.get(testCase.getId(), true);
-            File performanceFile = new File(coordinatorParameters.getOutputDirectory(), "performance.txt");
-            long operationCount = performanceStats.getOperationCount();
-            appendText("operations=" + operationCount + "\n", performanceFile);
-            appendText("durationMillis=" + durationMillis + "\n", performanceFile);
-            appendText("tps=" + ((THOUSAND * operationCount) / durationMillis) + "\n", performanceFile);
         }
     }
 
