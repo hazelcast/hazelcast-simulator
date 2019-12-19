@@ -78,14 +78,14 @@ public final class ReportCsv {
         outSb.append(",").append(totalCount);
 
         long endMillis = Math.round(Double.parseDouble(lastLineFields[1]) * 1000);
-        long duration = endMillis - startMillis;
-        outSb.append(",").append(duration);
+        long durationMillis = endMillis - startMillis;
+        outSb.append(",").append(durationMillis);
 
-        outSb.append(",").append(totalCount * 1000d / duration);
+        outSb.append(",").append(totalCount * 1000d / durationMillis);
     }
 
     private static String getHeader() {
         return "\"session\",\"benchmark\",\"10%\",\"20%\",\"50%\",\"75%\",\"90%\",\"95%\",\"99%\",\"99.9%\","
-                + "\"99.99%\",\"max\",\"operations\",\"duration\",\"throughput\"\n";
+                + "\"99.99%\",\"max\",\"operations\",\"duration_ms\",\"throughput\"\n";
     }
 }
