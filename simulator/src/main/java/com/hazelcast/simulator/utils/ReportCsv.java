@@ -85,7 +85,20 @@ public final class ReportCsv {
     }
 
     private static String getHeader() {
-        return "\"session\",\"benchmark\",\"10%\",\"20%\",\"50%\",\"75%\",\"90%\",\"95%\",\"99%\",\"99.9%\","
-                + "\"99.99%\",\"max\",\"operations\",\"duration_ms\",\"throughput\"\n";
+        return "\"session\","
+                + "\"benchmark\","
+                + "\"10%(us)\","
+                + "\"20%(us)\","
+                + "\"50%(us)\","
+                + "\"75%(us)\","
+                + "\"90%(us)\","
+                + "\"95%(us)\","
+                + "\"99%(us)\","
+                + "\"99.9%(us)"
+                + "\"99.99%(us)\","
+                + "\"max(us)\","
+                + "\"operations\","
+                + "\"duration(ms)\","
+                + "\"throughput\"\n";
     }
 }
