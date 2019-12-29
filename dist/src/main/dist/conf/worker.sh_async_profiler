@@ -1,0 +1,37 @@
+#!/bin/bash
+
+#
+# Script to start up a Simulator Worker.
+#
+# To customize the behavior of the Worker, including Java configuration, copy this file into the 'work dir' of Simulator.
+# See the end of this file for examples for different profilers.
+#
+
+# automatic exit on script failure
+set -e
+# printing the command being executed (useful for debugging)
+#set -x
+
+# redirecting output/error to the right log files
+exec > worker.out
+exec 2> worker.err
+
+JVM_ARGS="-XX:OnOutOfMemoryError=\"touch;-9;worker.oome\" \
+          -Dlog4j.configuration=file:log4j.xml"
+
+# Include the member/client-worker jvm options
+JVM_ARGS="$JVM_OPTIONS $JVM_ARGS"
+
+MAIN=com.hazelcast.simulator.worker.Worker
+
+java -classpath "$CLASSPATH" ${JVM_ARGS} ${MAIN} &
+
+# we sleep as long as the system hasn't warmed up.
+# it depends on the test how much warmup is actually needed; if it takes e.g. 5m for the data to be inserted, you need
+# a warmup of at least 6m.
+sleep 2m
+
+worker_pid=$(cat worker.pid)
+~/async-profiler/profiler.sh -d 2m -f profile.svg ${worker_pid}
+
+wait
