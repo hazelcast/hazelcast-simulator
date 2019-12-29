@@ -1,11 +1,10 @@
 #!/bin/bash
 
 #
-# Script to start up a Simulator Worker.
-#
-# To customize the behavior of the Worker, including Java configuration, copy this file into the 'work dir' of Simulator.
-# See the end of this file for examples for different profilers.
-#
+# Script to start up a Simulator Worker using the async profiler. So copy this
+# file to your working directory and rename it to 'worker.sh' and make sure the test runs
+# for at least 5 minutes. By default it will wait 2 minutes for setup/warmup to complete and
+# then sample for 2 minutes.
 
 # automatic exit on script failure
 set -e
