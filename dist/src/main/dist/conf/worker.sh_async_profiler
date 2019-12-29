@@ -31,7 +31,9 @@ java -classpath "$CLASSPATH" ${JVM_ARGS} ${MAIN} &
 # a warmup of at least 6m.
 sleep 2m
 
+# we sample for 120 minutes.
+duration_seconds=120
 worker_pid=$(cat worker.pid)
-~/async-profiler/profiler.sh -d 120 -f profile.svg ${worker_pid}
+~/async-profiler/profiler.sh -d ${duration_seconds} -f profile.svg ${worker_pid}
 
 wait
