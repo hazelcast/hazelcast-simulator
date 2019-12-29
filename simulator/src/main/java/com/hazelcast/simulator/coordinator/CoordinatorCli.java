@@ -33,6 +33,7 @@ import java.io.File;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import static com.hazelcast.simulator.common.AgentsFile.preferredAgentsFile;
 import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
 import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
 import static com.hazelcast.simulator.coordinator.AgentUtils.onlineCheckAgents;
@@ -361,7 +362,8 @@ final class CoordinatorCli {
     }
 
     private static File getAgentsFile() {
-        File file = new File("agents.txt");
+        File file = preferredAgentsFile();
+
         if (!file.exists()) {
             throw new CommandLineExitException(format("Agents file [%s] does not exist", file));
         }

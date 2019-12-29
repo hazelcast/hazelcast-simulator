@@ -15,7 +15,6 @@
  */
 package com.hazelcast.simulator.agent;
 
-import com.hazelcast.simulator.common.AgentsFile;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.coordinator.registry.AgentData;
 import com.hazelcast.simulator.coordinator.registry.Registry;
@@ -30,6 +29,7 @@ import org.apache.log4j.Logger;
 import java.io.File;
 import java.util.List;
 
+import static com.hazelcast.simulator.common.AgentsFile.preferredAgentsFile;
 import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
 import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
 import static com.hazelcast.simulator.coordinator.registry.AgentData.publicAddressesString;
@@ -37,7 +37,6 @@ import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.FileUtils.getConfigurationFile;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
-import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadComponentRegister;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadSimulatorProperties;
 import static java.lang.String.format;
@@ -51,7 +50,7 @@ public final class AgentsSshCli {
 
     private final OptionSpec testSpec = parser.accepts("test",
             "Checks if ssh connection to the agents can be made.");
-    private final File agentsFile = new File(getUserDir(), AgentsFile.NAME);
+    private final File agentsFile = preferredAgentsFile();
 
     private final OptionSpec<String> agentSpec = parser.accepts("agent",
             "The agent to execute the command on, e.g. A1 or its public or private ip-address.")
