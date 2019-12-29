@@ -32,6 +32,6 @@ java -classpath "$CLASSPATH" ${JVM_ARGS} ${MAIN} &
 sleep 2m
 
 worker_pid=$(cat worker.pid)
-~/async-profiler/profiler.sh -d 2m -f profile.svg ${worker_pid}
+~/async-profiler/profiler.sh -d 120 -f profile.svg ${worker_pid}
 
 wait
