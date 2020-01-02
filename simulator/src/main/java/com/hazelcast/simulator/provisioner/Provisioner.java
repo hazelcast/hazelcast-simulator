@@ -270,16 +270,21 @@ public class Provisioner {
         long started = System.nanoTime();
 
         int destroyedCount = 0;
-        List<String> privateIps = new LinkedList<String>();
+        List<String> privateIps = new LinkedList<>();
+        List<String> publicIps = new LinkedList<>();
         List<AgentData> agents = registry.getAgents();
         for (int k = 0; k < count; k++) {
-            privateIps.add(agents.get(k).getPrivateAddress());
+            AgentData agent = agents.get(k);
+            privateIps.add(agent.getPrivateAddress());
+            publicIps.add(agent.getPublicAddress());
             destroyedCount++;
         }
 
-        new BashCommand(getConfigurationFile("aws-ec2_terminate.sh").getAbsolutePath())
+        String cloudProvider = properties.get("CLOUD_PROVIDER");
+        new BashCommand(getConfigurationFile(cloudProvider + "_terminate.sh").getAbsolutePath())
                 .addEnvironment(properties.asMap())
                 .addParams(join(privateIps, ","))
+                .addParams(join(publicIps, ","))
                 .execute();
 
         for (int k = 0; k < count; k++) {
