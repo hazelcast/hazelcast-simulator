@@ -53,7 +53,7 @@ public class IntIntCacheTest extends HazelcastTest {
         cache = cacheManager.getCache(name);
     }
 
-    @Prepare(global = false)
+    @Prepare(global = true)
     public void prepare() {
         waitClusterSize(logger, targetInstance, minNumberOfMembers);
         Streamer<Integer, Integer> streamer = StreamerFactory.getInstance(cache);

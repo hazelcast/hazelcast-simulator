@@ -46,7 +46,7 @@ public class IntIntMapTest extends HazelcastTest {
         map = targetInstance.getMap(name);
     }
 
-    @Prepare(global = false)
+    @Prepare(global = true)
     public void prepare() {
         waitClusterSize(logger, targetInstance, minNumberOfMembers);
         keys = generateIntKeys(keyCount, keyLocality, targetInstance);
