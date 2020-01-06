@@ -3,7 +3,7 @@
 # exit on failure
 set -e
 
- # Check if python is installed.
+ # Check if awscli is installed.
 if ! hash aws 2>/dev/null ; then
     echo "[ERROR]awscli is not installed!"
     echo "[ERROR]On OSX type: 'brew install awscli'"
