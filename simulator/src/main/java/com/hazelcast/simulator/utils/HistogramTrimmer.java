@@ -57,7 +57,6 @@ public final class HistogramTrimmer {
             }
         }
 
-        inputFile.renameTo(new File(args[0] + ".old"));
         outputFile.renameTo(new File(args[0]));
     }
 }

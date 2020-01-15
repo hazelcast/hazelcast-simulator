@@ -67,21 +67,24 @@ public final class ReportCsv {
     }
 
     private static void addOther(File hgrmFile, StringBuffer outSb) {
-        File file = new File(hgrmFile.getParent(), FileUtils.stripExtension(hgrmFile.getName()));
+        File file = new File(hgrmFile.getParent(), stripExtension(hgrmFile.getName()));
         String[] lines = fileAsText(file).split("\n");
+
         long startMillis = Math.round(Double.parseDouble(lines[4].split(",")[1]) * 1000);
 
         String lastLine = lines[lines.length - 1];
 
         String[] lastLineFields = lastLine.split(",");
-        long totalCount = Long.parseLong(lastLineFields[16]);
-        outSb.append(",").append(totalCount);
+        long operations = Long.parseLong(lastLineFields[16]);
+        outSb.append(",").append(operations);
 
         long endMillis = Math.round(Double.parseDouble(lastLineFields[1]) * 1000);
         long durationMillis = endMillis - startMillis;
+
         outSb.append(",").append(durationMillis);
 
-        outSb.append(",").append(totalCount * 1000d / durationMillis);
+        double throughput = operations * 1000d / durationMillis;
+        outSb.append(",").append(throughput);
     }
 
     private static String getHeader() {
@@ -94,7 +97,7 @@ public final class ReportCsv {
                 + "\"90%(us)\","
                 + "\"95%(us)\","
                 + "\"99%(us)\","
-                + "\"99.9%(us)"
+                + "\"99.9%(us)\","
                 + "\"99.99%(us)\","
                 + "\"max(us)\","
                 + "\"operations\","
