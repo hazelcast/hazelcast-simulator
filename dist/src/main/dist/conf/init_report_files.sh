@@ -39,12 +39,13 @@ do
     echo "Merging probe $probe"
 
     worker_dir_names=($(ls ${report_dir}/tmp/$hdr_target_dir_name))
+    hdr_files=()
     for worker_dir_name in "${worker_dir_names[@]}"
     do
         hdr_file="${report_dir}/tmp/$hdr_target_dir_name/${worker_dir_name}/${probe}"
         if [ -f $hdr_file ] ; then
             echo "found hdr_file: $hdr_file"
-            hdr_files+=("$hdr_file" )
+            hdr_files+=("$hdr_file")
         fi
     done
     echo "${hdr_files[@]}"
