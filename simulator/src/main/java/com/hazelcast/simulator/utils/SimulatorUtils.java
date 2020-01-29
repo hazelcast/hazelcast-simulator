@@ -18,15 +18,12 @@ package com.hazelcast.simulator.utils;
 import com.hazelcast.simulator.common.AgentsFile;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.coordinator.registry.Registry;
-import joptsimple.OptionSet;
-import joptsimple.OptionSpec;
 
 import java.io.File;
 import java.net.Inet4Address;
 import java.net.UnknownHostException;
 
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
-import static com.hazelcast.simulator.utils.FileUtils.newFile;
 
 public final class SimulatorUtils {
 
@@ -66,14 +63,5 @@ public final class SimulatorUtils {
         }
 
         return simulatorProperties;
-    }
-
-    static File getPropertiesFile(OptionSet options, OptionSpec<String> propertiesFileSpec) {
-        if (options.has(propertiesFileSpec)) {
-            // a file was explicitly configured
-            return newFile(options.valueOf(propertiesFileSpec));
-        } else {
-            return null;
-        }
     }
 }
