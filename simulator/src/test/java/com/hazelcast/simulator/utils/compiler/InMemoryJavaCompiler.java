@@ -34,6 +34,7 @@ public final class InMemoryJavaCompiler {
     }
 
     public static Class<?> compile(String className, String sourceCodeInText) throws Exception {
+        System.out.println("InMemoryJavaCompiler:"+className);
         SourceCode sourceCode = new SourceCode(className, sourceCodeInText);
         CompiledCode compiledCode = new CompiledCode(className);
         DynamicClassLoader classLoader = DynamicClassLoader.getInstance();

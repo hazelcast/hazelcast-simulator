@@ -9,6 +9,7 @@ import com.hazelcast.simulator.utils.*;
 import org.apache.log4j.*;
 
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 
 public class ${className} extends TimeStepRunner {
