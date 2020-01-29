@@ -1,97 +1,66 @@
 package com.hazelcast.simulator.worker.testcontainer;
 
+import com.hazelcast.internal.util.executor.CompletableFutureTask;
 import com.hazelcast.simulator.common.TestCase;
-import com.hazelcast.simulator.common.TestPhase;
-import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.probes.impl.HdrProbe;
 import com.hazelcast.simulator.protocol.Server;
 import com.hazelcast.simulator.test.annotations.TimeStep;
-import org.HdrHistogram.Recorder;
+import com.hazelcast.simulator.utils.AssertTask;
 import org.junit.Test;
 
-import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
+import static com.hazelcast.simulator.TestSupport.spawn;
+import static com.hazelcast.simulator.common.TestPhase.RUN;
+import static com.hazelcast.simulator.common.TestPhase.SETUP;
+import static com.hazelcast.simulator.utils.TestUtils.assertCompletesEventually;
+import static com.hazelcast.simulator.utils.TestUtils.assertNoExceptions;
+import static com.hazelcast.simulator.utils.TestUtils.assertTrueEventually;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
 public class TestContainer_TimeStep_AsyncSupportTest extends TestContainer_AbstractTest {
-
     @Test
-    public void testWithoutMetronome_withSingleAsyncMethod() throws Exception {
-        StartAsyncTest_withSingleAsyncMethod testInstance = new StartAsyncTest_withSingleAsyncMethod();
-        int totalIterationCount = 50;
-        TestContainer container = createContainerAndRunTestInstance(testInstance, totalIterationCount);
-
-        long timeStepCount = getProbeTotalCount("timeStep", container);
-        assertProbeTotalCount("asyncTimeStep", (totalIterationCount - timeStepCount), container);
-    }
-
-    @Test
-    public void testWithoutMetronome_withMultipleAsyncMethod() throws Exception {
-        StartAsyncTest_withMultipleAsyncMethod testInstance = new StartAsyncTest_withMultipleAsyncMethod();
-        int totalIterationCount = 1000;
-        TestContainer container = createContainerAndRunTestInstance(testInstance, totalIterationCount);
-
-        long asyncTimeStep1 = getProbeTotalCount("asyncTimeStep1", container);
-        long asyncTimeStep2 = getProbeTotalCount("asyncTimeStep2", container);
-
-        assertTrue(asyncTimeStep1 > 0);
-        assertTrue(asyncTimeStep2 > 0);
-        assertEquals(totalIterationCount, asyncTimeStep1 + asyncTimeStep2);
-    }
-
-    private TestContainer createContainerAndRunTestInstance(Object testInstance, int totalIterationCount) throws Exception {
-        TestCase testCase = new TestCase("test")
-                .setProperty("iterations", totalIterationCount)
+    public void test() throws Exception {
+        AsyncTest testInstance = new AsyncTest();
+        TestCase testCase = new TestCase("stopRun")
+                .setProperty("iterations",100)
                 .setProperty("threadCount", 1)
                 .setProperty("class", testInstance.getClass());
 
         TestContextImpl testContext = new TestContextImpl(
                 testCase.getId(), "localhost", mock(Server.class));
-        TestContainer container = new TestContainer(testContext, testInstance, testCase);
+        final TestContainer container = new TestContainer(testContext, testInstance, testCase);
+        container.invoke(SETUP);
 
-        for (TestPhase phase : TestPhase.values()) {
-            container.invoke(phase);
-        }
-        return container;
+        Future f = spawn((Callable) () -> {
+            container.invoke(RUN);
+            return null;
+        });
+
+        assertCompletesEventually(f);
+        assertNoExceptions();
+        assertTrueEventually(() -> assertEquals(100, testInstance.asyncCount));
     }
 
-    private static void assertProbeTotalCount(String probeName, long count, TestContainer container) {
-        long totalCount = getProbeTotalCount(probeName, container);
-        assertEquals(count, totalCount);
-    }
 
-    private static long getProbeTotalCount(String probeName, TestContainer container) {
-        Map<String, Probe> probeMap = container.getProbeMap();
-        HdrProbe probe = (HdrProbe) probeMap.get(probeName);
-        Recorder recorder = probe.getRecorder();
-        return recorder.getIntervalHistogram().getTotalCount();
-    }
+    public static class AsyncTest {
+        public ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+        public volatile int asyncCount;
 
-    public static class StartAsyncTest_withSingleAsyncMethod {
-        @TimeStep(prob = 0.5)
-        public void timeStep() {
-
-        }
-
-        @TimeStep(prob = 0.5)
+        @TimeStep
         public CompletableFuture<Object> asyncTimeStep() {
-            return new CompletableFuture<>();
+            CompletableFuture completableFuture = new CompletableFuture();
+            scheduler.schedule(() -> {
+                asyncCount++;
+                completableFuture.complete("1");
+            },1000, TimeUnit.MILLISECONDS);
+            return completableFuture;
         }
     }
-
-    public static class StartAsyncTest_withMultipleAsyncMethod {
-        @TimeStep(prob = 0.5)
-        public CompletableFuture<Object> asyncTimeStep1() {
-            return new CompletableFuture();
-        }
-
-        @TimeStep(prob = 0.5)
-        public CompletableFuture<Object> asyncTimeStep2() {
-            return new CompletableFuture();
-        }
-    }
-
 }

@@ -173,7 +173,6 @@ class TimeStepRunnerCodeGenerator {
             temp.process(root, out);
 
             String javaCode = out.toString();
-
             File javaFile = new File(targetDirectory, className + ".java");
 
             writeText(javaCode, javaFile);
