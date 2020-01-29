@@ -29,14 +29,16 @@ uploadLibraryJar "simulator-*"
 
 # we don't copy all JARs to the agent to increase upload speed
 #activemq libraries
-uploadLibraryJar "activemq-core*"
+uploadLibraryJar "activemq-broker*"
+uploadLibraryJar "activemq-client*"
 uploadLibraryJar "geronimo-jms*"
 uploadLibraryJar "geronimo-j2ee*"
 uploadLibraryJar "slf4j-api*"
+uploadLibraryJar "hawtbuf-*"
 
 uploadLibraryJar "cache-api*"
-uploadLibraryJar "commons-codec*"
-uploadLibraryJar "commons-lang3*"
+#uploadLibraryJar "commons-codec*"
+#uploadLibraryJar "commons-lang3*"
 uploadLibraryJar "freemarker*"
 uploadLibraryJar "gson-*"
 uploadLibraryJar "HdrHistogram-*"
