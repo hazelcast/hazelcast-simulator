@@ -41,7 +41,7 @@
         <java.version>1.8</java.version>
         <maven.version>3.0.1</maven.version>
 
-        <hazelcast.version>4.0-SNAPSHOT</hazelcast.version>
+        <hazelcast.version>4.0</hazelcast.version>
         <jsr107.api.version>1.0.0</jsr107.api.version>
 
 
