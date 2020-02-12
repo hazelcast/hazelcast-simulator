@@ -42,25 +42,11 @@ kill_agents(){
     fi
 }
 
-start_harakiri_monitor(){
-    # we install the harakiri monitor on ec2 when it is enabled to make sure we don't run into a big bill
-
-    if [ "$CLOUD_PROVIDER" = "aws-ec2" ] && [ "$HARAKIRI_MONITOR_ENABLED" = "true" ] ; then
-        echo "[INFO]Starting Harakiri monitor. In $HARAKIRI_MONITOR_WAIT_SECONDS seconds the machines will kill themselves"
-        for agent in ${agents//,/ } ; do
-            ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "nohup hazelcast-simulator-$SIMULATOR_VERSION/bin/harakiri-monitor \
-                    --cloudProvider $CLOUD_PROVIDER --cloudIdentity $CLOUD_IDENTITY --cloudCredential $CLOUD_CREDENTIAL \
-                    --waitSeconds $HARAKIRI_MONITOR_WAIT_SECONDS > harakiri.out 2> harakiri.err < /dev/null &"
-        done
-    fi
-}
-
 # no stopping required when embedded
 if [ "$CLOUD_PROVIDER" = "embedded" ]; then
     exit 0
 fi
 
-start_harakiri_monitor
 kill_agents
 
 

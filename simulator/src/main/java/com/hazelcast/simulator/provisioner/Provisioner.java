@@ -36,7 +36,6 @@ import java.util.concurrent.Future;
 import java.util.regex.Pattern;
 
 import static com.hazelcast.simulator.coordinator.AgentUtils.onlineCheckAgents;
-import static com.hazelcast.simulator.harakiri.HarakiriMonitorUtils.getStartHarakiriMonitorCommandOrNull;
 import static com.hazelcast.simulator.provisioner.ProvisionerUtils.ensureIsCloudProviderSetup;
 import static com.hazelcast.simulator.provisioner.ProvisionerUtils.ensureIsRemoteSetup;
 import static com.hazelcast.simulator.provisioner.ProvisionerUtils.getInitScriptFile;
@@ -230,7 +229,6 @@ public class Provisioner {
         }
 
         long started = System.nanoTime();
-        String startHarakiriMonitorCommand = getStartHarakiriMonitorCommandOrNull(properties);
         try {
             log("Creating machines (can take a few minutes)...");
             String filename = properties.get("CLOUD_PROVIDER") + "_provision.sh";
@@ -243,7 +241,7 @@ public class Provisioner {
             for (int k = 0; k < delta; k++) {
                 String agentLine = agentLines[k + registry.agentCount()];
                 String publicIpAddress = agentLine.split(",")[0];
-                Future future = executor.submit(new InstallNodeTask(publicIpAddress, startHarakiriMonitorCommand));
+                Future future = executor.submit(new InstallNodeTask(publicIpAddress));
                 futures.add(future);
             }
             for (Future future : futures) {
@@ -301,10 +299,9 @@ public class Provisioner {
         if (destroyedCount != count) {
             throw new IllegalStateException("Terminated " + destroyedCount + " of " + count
                     + NEW_LINE + "1) You are trying to terminate physical hardware that you own (unsupported feature)"
-                    + NEW_LINE + "2) If and only if you are using AWS our Harakiri Monitor might have terminated them"
-                    + NEW_LINE + "3) You have not payed you bill and your instances have been terminated by your cloud provider"
-                    + NEW_LINE + "4) You have terminated your own instances (perhaps via some console interface)"
-                    + NEW_LINE + "5) Someone else has terminated your instances"
+                    + NEW_LINE + "2) You have not payed you bill and your instances have been terminated by your cloud provider"
+                    + NEW_LINE + "3) You have terminated your own instances (perhaps via some console interface)"
+                    + NEW_LINE + "4) Someone else has terminated your instances"
                     + NEW_LINE + "Please try again!");
         }
     }
@@ -343,11 +340,9 @@ public class Provisioner {
     private final class InstallNodeTask implements Runnable {
 
         private final String ip;
-        private final String startHarakiriMonitorCommand;
 
-        private InstallNodeTask(String ip, String startHarakiriMonitorCommand) {
+        private InstallNodeTask(String ip) {
             this.ip = ip;
-            this.startHarakiriMonitorCommand = startHarakiriMonitorCommand;
         }
 
         @Override
@@ -360,11 +355,6 @@ public class Provisioner {
             log(INDENTATION + ip + " Simulator installation started...");
             installSimulator(ip);
             log(INDENTATION + ip + " Simulator installed");
-
-            if (startHarakiriMonitorCommand != null) {
-                bash.ssh(ip, startHarakiriMonitorCommand);
-                log(INDENTATION + ip + " Harakiri monitor started");
-            }
         }
     }
 }
