@@ -141,9 +141,9 @@ public enum OperationType {
     @SuppressWarnings("PMD.UnusedModifier")
     static class OperationTypeRegistry {
 
-        private static final ConcurrentMap<Integer, OperationType> CLASS_IDS = new ConcurrentHashMap<Integer, OperationType>();
+        private static final ConcurrentMap<Integer, OperationType> CLASS_IDS = new ConcurrentHashMap<>();
         private static final ConcurrentMap<Class<? extends SimulatorOperation>, OperationType> OPERATION_TYPES
-                = new ConcurrentHashMap<Class<? extends SimulatorOperation>, OperationType>();
+                = new ConcurrentHashMap<>();
 
         static void register(OperationType operationType, Class<? extends SimulatorOperation> classType, int classId) {
             if (classId < 0) {

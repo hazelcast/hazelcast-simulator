@@ -26,7 +26,6 @@ import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.tests.map.helpers.MapOperationCounter;
 import com.hazelcast.simulator.tests.map.helpers.MapStoreWithCounter;
-import com.hazelcast.simulator.utils.AssertTask;
 
 import java.util.concurrent.TimeUnit;
 
@@ -190,17 +189,14 @@ public class MapStoreTest extends HazelcastTest {
         logger.info(name + ": map size = " + map.size());
         logger.info(name + ": map store = " + mapStore);
 
-        assertTrueEventually(new AssertTask() {
-            @Override
-            public void run() throws Exception {
-                for (Integer key : map.localKeySet()) {
-                    assertEquals(map.get(key), mapStore.get(key));
-                }
-                assertEquals("Map entrySets should be equal", map.getAll(map.localKeySet()).entrySet(), mapStore.entrySet());
+        assertTrueEventually(() -> {
+            for (Integer key : map.localKeySet()) {
+                assertEquals(map.get(key), mapStore.get(key));
+            }
+            assertEquals("Map entrySets should be equal", map.getAll(map.localKeySet()).entrySet(), mapStore.entrySet());
 
-                for (int key = putTTlKeyDomain; key < putTTlKeyDomain + putTTlKeyRange; key++) {
-                    assertNull(name + ": TTL key should not be in the map", map.get(key));
-                }
+            for (int key = putTTlKeyDomain; key < putTTlKeyDomain + putTTlKeyRange; key++) {
+                assertNull(name + ": TTL key should not be in the map", map.get(key));
             }
         });
     }

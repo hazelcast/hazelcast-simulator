@@ -59,7 +59,7 @@ public class StartWorkersTask {
     private final Map<SimulatorAddress, List<WorkerParameters>> clientDeploymentPlan;
     private final Map<String, String> tags;
     private long started;
-    private List<WorkerData> result = new LinkedList<WorkerData>();
+    private List<WorkerData> result = new LinkedList<>();
     private int workerStartupIndex;
 
     public StartWorkersTask(
@@ -128,10 +128,10 @@ public class StartWorkersTask {
     private static Map<SimulatorAddress, List<WorkerParameters>> filterByWorkerType(
             boolean isFullMember, Map<SimulatorAddress, List<WorkerParameters>> deploymentPlan) {
 
-        Map<SimulatorAddress, List<WorkerParameters>> result = new HashMap<SimulatorAddress, List<WorkerParameters>>();
+        Map<SimulatorAddress, List<WorkerParameters>> result = new HashMap<>();
 
         for (Map.Entry<SimulatorAddress, List<WorkerParameters>> entry : deploymentPlan.entrySet()) {
-            List<WorkerParameters> filtered = new LinkedList<WorkerParameters>();
+            List<WorkerParameters> filtered = new LinkedList<>();
 
             for (WorkerParameters workerParameters : entry.getValue()) {
                 if (workerParameters.getWorkerType().equals("member") == isFullMember) {
@@ -186,7 +186,7 @@ public class StartWorkersTask {
 
             // the worker will automatically inherit all the tags of the agent it runs on and on top of that it
             // its own tags are added.
-            Map<String, String> finalTags = new HashMap<String, String>();
+            Map<String, String> finalTags = new HashMap<>();
             finalTags.putAll(agent.getTags());
             finalTags.putAll(tags);
 

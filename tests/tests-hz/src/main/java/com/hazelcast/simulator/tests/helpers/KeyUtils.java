@@ -225,7 +225,7 @@ public final class KeyUtils {
             int partitionCount = partitionService.getPartitions().size();
             this.keysPerPartition = new Set[partitionCount];
             for (Integer partitionId : targetPartitions) {
-                keysPerPartition[partitionId] = new HashSet<K>();
+                keysPerPartition[partitionId] = new HashSet<>();
             }
         }
 
@@ -257,7 +257,7 @@ public final class KeyUtils {
         protected abstract K generateKey();
 
         private Set<Integer> getTargetPartitions() {
-            Set<Integer> targetPartitions = new HashSet<Integer>();
+            Set<Integer> targetPartitions = new HashSet<>();
             Member localMember = getLocalMember(hz);
 
             switch (keyLocality) {
@@ -291,7 +291,7 @@ public final class KeyUtils {
 
         private void verifyHasPartitions(Set<Integer> targetPartitions) {
             if (targetPartitions.isEmpty()) {
-                Map<Member, Integer> partitionsPerMember = new HashMap<Member, Integer>();
+                Map<Member, Integer> partitionsPerMember = new HashMap<>();
                 for (Partition partition : partitionService.getPartitions()) {
                     Member owner = partition.getOwner();
                     if (owner == null) {

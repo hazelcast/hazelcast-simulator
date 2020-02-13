@@ -76,7 +76,7 @@ public class LongStringMapTest extends HazelcastTest {
 
     @TimeStep(prob = 0)
     public Map<Long, String> getAll(ThreadState state) {
-        Set<Long> keys = new HashSet<Long>();
+        Set<Long> keys = new HashSet<>();
         for (int k = 0; k < getAllSize; k++) {
             keys.add(state.randomKey());
         }

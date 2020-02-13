@@ -62,12 +62,7 @@ public class PerformanceMonitor implements Closeable {
         this.server = server;
         this.updateIntervalSeconds = updateIntervalSeconds;
         this.thread = new PerformanceMonitorThread();
-        thread.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
-            @Override
-            public void uncaughtException(Thread t, Throwable e) {
-                LOGGER.fatal(e.getMessage(), e);
-            }
-        });
+        thread.setUncaughtExceptionHandler((t, e) -> LOGGER.fatal(e.getMessage(), e));
     }
 
     public void start() {
@@ -97,7 +92,7 @@ public class PerformanceMonitor implements Closeable {
         private final PerformanceLogWriter globalPerformanceLogWriter;
         private final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
         private final long updateIntervalMillis;
-        private final List<TestContainer> dirtyContainers = new ArrayList<TestContainer>();
+        private final List<TestContainer> dirtyContainers = new ArrayList<>();
 
         private PerformanceMonitorThread() {
             super("WorkerPerformanceMonitor");

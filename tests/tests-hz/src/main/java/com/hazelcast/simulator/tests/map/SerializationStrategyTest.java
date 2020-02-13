@@ -82,7 +82,7 @@ public class SerializationStrategyTest extends HazelcastTest {
     }
 
     private String[] generateUniqueStrings(int uniqueStringsCount) {
-        Set<String> stringsSet = new HashSet<String>(uniqueStringsCount);
+        Set<String> stringsSet = new HashSet<>(uniqueStringsCount);
         do {
             String randomString = RandomStringUtils.randomAlphabetic(30);
             stringsSet.add(randomString);

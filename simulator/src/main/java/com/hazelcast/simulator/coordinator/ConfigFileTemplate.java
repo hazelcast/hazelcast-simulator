@@ -38,8 +38,8 @@ import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 public class ConfigFileTemplate {
 
     private final String rawTemplate;
-    private final Map<String, String> hardReplacements = new HashMap<String, String>();
-    private final Map<String, Object> environment = new HashMap<String, Object>();
+    private final Map<String, String> hardReplacements = new HashMap<>();
+    private final Map<String, Object> environment = new HashMap<>();
     private Registry registry;
 
     public ConfigFileTemplate(String rawTemplate) {
@@ -73,7 +73,7 @@ public class ConfigFileTemplate {
             cfg.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
             cfg.setLogTemplateExceptions(false);
 
-            Map<String, Object> root = new HashMap<String, Object>();
+            Map<String, Object> root = new HashMap<>();
             root.putAll(environment);
 
             if (registry != null) {
@@ -113,7 +113,7 @@ public class ConfigFileTemplate {
                 }
 
                 Map<String, String> tags = TagUtils.parseTags(((SimpleScalar) arg).getAsString());
-                List<AgentData> result = new ArrayList<AgentData>();
+                List<AgentData> result = new ArrayList<>();
                 for (AgentData agent : registry.getAgents()) {
                     if (TagUtils.matches(tags, agent.getTags())) {
                         result.add(agent);

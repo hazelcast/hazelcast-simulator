@@ -47,7 +47,7 @@ public abstract class TimeStepRunner implements Runnable {
     protected final AtomicLong iterations = new AtomicLong();
     protected final TimeStepModel timeStepModel;
     protected final byte[] timeStepProbabilities;
-    protected final Map<String, Probe> probeMap = new HashMap<String, Probe>();
+    protected final Map<String, Probe> probeMap = new HashMap<>();
     protected long maxIterations;
 
     public TimeStepRunner(Object testInstance, TimeStepModel timeStepModel, String executionGroup) {

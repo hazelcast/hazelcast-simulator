@@ -41,17 +41,14 @@ public class ConnectDisconnectTest extends HazelcastTest {
 
     @TimeStep
     public void timestep() throws Exception {
-        Thread thread = new Thread() {
-            @Override
-            public void run() {
-                try {
-                    HazelcastInstance client = HazelcastClient.newHazelcastClient(clientConfig);
-                    client.shutdown();
-                } catch (Exception e) {
-                    ExceptionReporter.report(testContext.getTestId(), e);
-                }
+        Thread thread = new Thread(() -> {
+            try {
+                HazelcastInstance client = HazelcastClient.newHazelcastClient(clientConfig);
+                client.shutdown();
+            } catch (Exception e) {
+                ExceptionReporter.report(testContext.getTestId(), e);
             }
-        };
+        });
         thread.start();
         thread.join(timeoutMillis);
         if (thread.isAlive()) {

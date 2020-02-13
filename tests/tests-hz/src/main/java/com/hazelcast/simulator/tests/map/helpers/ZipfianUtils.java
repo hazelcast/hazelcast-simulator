@@ -33,7 +33,7 @@ final class ZipfianUtils {
     private static final long FNV_PRIME_64 = 1099511628211L;
 
     private static final Random RANDOM = new Random();
-    private static final ThreadLocal<Random> THREAD_LOCAL_RANDOM = new ThreadLocal<Random>();
+    private static final ThreadLocal<Random> THREAD_LOCAL_RANDOM = new ThreadLocal<>();
 
     private ZipfianUtils() {
     }

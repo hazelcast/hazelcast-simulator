@@ -35,7 +35,7 @@ public class WorkerData {
     private volatile boolean ignoreFailures;
 
     WorkerData(WorkerParameters parameters) {
-        this(parameters, new HashMap<String, String>());
+        this(parameters, new HashMap<>());
     }
 
     WorkerData(WorkerParameters parameters, Map<String, String> tags) {

@@ -53,7 +53,7 @@ public class CacheLoaderTest extends HazelcastTest {
     public int loadAllDelayMs = 0;
     public boolean waitForLoadAllFutureCompletion = true;
 
-    private final Set<Integer> keySet = new HashSet<Integer>();
+    private final Set<Integer> keySet = new HashSet<>();
     private IList<RecordingCacheLoader<Integer>> loaderList;
     private MutableConfiguration<Integer, Integer> config;
     private Cache<Integer, Integer> cache;
@@ -62,10 +62,10 @@ public class CacheLoaderTest extends HazelcastTest {
     public void setup() {
         loaderList = targetInstance.getList(name + "loaders");
 
-        config = new MutableConfiguration<Integer, Integer>();
+        config = new MutableConfiguration<>();
         config.setReadThrough(true);
 
-        RecordingCacheLoader<Integer> recordingCacheLoader = new RecordingCacheLoader<Integer>();
+        RecordingCacheLoader<Integer> recordingCacheLoader = new RecordingCacheLoader<>();
         recordingCacheLoader.loadAllDelayMs = loadAllDelayMs;
         config.setCacheLoaderFactory(FactoryBuilder.factoryOf(recordingCacheLoader));
 

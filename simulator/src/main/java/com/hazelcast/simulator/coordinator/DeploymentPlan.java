@@ -43,8 +43,8 @@ public final class DeploymentPlan {
     private static final Logger LOGGER = Logger.getLogger(DeploymentPlan.class);
 
     private final Map<SimulatorAddress, List<WorkerParameters>> workerDeployment
-            = new HashMap<SimulatorAddress, List<WorkerParameters>>();
-    private final List<WorkersPerAgent> workersPerAgentList = new ArrayList<WorkersPerAgent>();
+            = new HashMap<>();
+    private final List<WorkersPerAgent> workersPerAgentList = new ArrayList<>();
 
     private final VendorDriver vendorDriver;
 
@@ -66,7 +66,7 @@ public final class DeploymentPlan {
                 workersPerAgent.workers.add(worker.getParameters());
             }
             workersPerAgentList.add(workersPerAgent);
-            workerDeployment.put(agent.getAddress(), new ArrayList<WorkerParameters>());
+            workerDeployment.put(agent.getAddress(), new ArrayList<>());
         }
     }
 
@@ -137,7 +137,7 @@ public final class DeploymentPlan {
     }
 
     public Set<String> getVersionSpecs() {
-        Set<String> result = new HashSet<String>();
+        Set<String> result = new HashSet<>();
         for (WorkersPerAgent workersPerAgent : workersPerAgentList) {
             result.addAll(workersPerAgent.getVersionSpecs());
         }
@@ -180,7 +180,7 @@ public final class DeploymentPlan {
      */
     static final class WorkersPerAgent {
 
-        final List<WorkerParameters> workers = new ArrayList<WorkerParameters>();
+        final List<WorkerParameters> workers = new ArrayList<>();
         final AgentData agent;
 
         WorkersPerAgent(AgentData agent) {
@@ -188,7 +188,7 @@ public final class DeploymentPlan {
         }
 
         Set<String> getVersionSpecs() {
-            Set<String> result = new HashSet<String>();
+            Set<String> result = new HashSet<>();
             for (WorkerParameters workerParameters : workers) {
                 result.add(workerParameters.get("VERSION_SPEC"));
             }

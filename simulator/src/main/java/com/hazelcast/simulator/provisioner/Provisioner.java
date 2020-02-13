@@ -93,12 +93,9 @@ public class Provisioner {
 
         ThreadSpawner spawner = new ThreadSpawner("installJava", true);
         for (final AgentData agent : registry.getAgents()) {
-            spawner.spawn(new Runnable() {
-                @Override
-                public void run() {
-                    log("Installing Java on %s", agent.getPublicAddress());
-                    installJava(agent.getPublicAddress());
-                }
+            spawner.spawn(() -> {
+                log("Installing Java on %s", agent.getPublicAddress());
+                installJava(agent.getPublicAddress());
             });
         }
         spawner.awaitCompletion();
@@ -139,13 +136,10 @@ public class Provisioner {
 
         ThreadSpawner spawner = new ThreadSpawner("installSimulator", true);
         for (final AgentData agent : registry.getAgents()) {
-            spawner.spawn(new Runnable() {
-                @Override
-                public void run() {
-                    log("    Installing Simulator on %s", agent.getPublicAddress());
-                    installSimulator(agent.getPublicAddress());
-                    log("    Finished installing Simulator on %s", agent.getPublicAddress());
-                }
+            spawner.spawn(() -> {
+                log("    Installing Simulator on %s", agent.getPublicAddress());
+                installSimulator(agent.getPublicAddress());
+                log("    Finished installing Simulator on %s", agent.getPublicAddress());
             });
         }
         spawner.awaitCompletion();
@@ -163,12 +157,9 @@ public class Provisioner {
 
         ThreadSpawner spawner = new ThreadSpawner("killJavaProcesses", true);
         for (final AgentData agent : registry.getAgents()) {
-            spawner.spawn(new Runnable() {
-                @Override
-                public void run() {
-                    log("    Killing Java processes on %s", agent.getPublicAddress());
-                    bash.killAllJavaProcesses(agent.getPublicAddress(), sudo);
-                }
+            spawner.spawn(() -> {
+                log("    Killing Java processes on %s", agent.getPublicAddress());
+                bash.killAllJavaProcesses(agent.getPublicAddress(), sudo);
             });
         }
         spawner.awaitCompletion();
@@ -237,7 +228,7 @@ public class Provisioner {
                     .addParams(delta)
                     .execute();
             String[] agentLines = fileAsText(agentsFile).split("\n");
-            Set<Future> futures = new HashSet<Future>();
+            Set<Future> futures = new HashSet<>();
             for (int k = 0; k < delta; k++) {
                 String agentLine = agentLines[k + registry.agentCount()];
                 String publicIpAddress = agentLine.split(",")[0];

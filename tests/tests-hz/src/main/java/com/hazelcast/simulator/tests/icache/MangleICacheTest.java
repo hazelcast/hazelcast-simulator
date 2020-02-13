@@ -86,9 +86,7 @@ public class MangleICacheTest extends HazelcastTest {
             int cacheNumber = state.randomInt(maxCaches);
             state.cacheManager.getCache(name + cacheNumber);
             state.counter.create++;
-        } catch (CacheException e) {
-            state.counter.createException++;
-        } catch (IllegalStateException e) {
+        } catch (CacheException | IllegalStateException e) {
             state.counter.createException++;
         }
     }
@@ -102,9 +100,7 @@ public class MangleICacheTest extends HazelcastTest {
                 cache.close();
                 state.counter.cacheClose++;
             }
-        } catch (CacheException e) {
-            state.counter.cacheCloseException++;
-        } catch (IllegalStateException e) {
+        } catch (CacheException | IllegalStateException e) {
             state.counter.cacheCloseException++;
         }
     }
@@ -115,9 +111,7 @@ public class MangleICacheTest extends HazelcastTest {
             int cacheNumber = state.randomInt(maxCaches);
             state.cacheManager.destroyCache(name + cacheNumber);
             state.counter.destroy++;
-        } catch (CacheException e) {
-            state.counter.destroyException++;
-        } catch (IllegalStateException e) {
+        } catch (CacheException | IllegalStateException e) {
             state.counter.destroyException++;
         }
     }
@@ -131,9 +125,7 @@ public class MangleICacheTest extends HazelcastTest {
                 cache.put(state.randomInt(keyCount), state.randomInt());
                 state.counter.put++;
             }
-        } catch (CacheException e) {
-            state.counter.getPutException++;
-        } catch (IllegalStateException e) {
+        } catch (CacheException | IllegalStateException e) {
             state.counter.getPutException++;
         }
     }
@@ -166,11 +158,9 @@ public class MangleICacheTest extends HazelcastTest {
                 counter.getCache++;
                 return cache;
 
-            } catch (CacheException e) {
+            } catch (CacheException | IllegalStateException e) {
                 counter.getCacheException++;
 
-            } catch (IllegalStateException e) {
-                counter.getCacheException++;
             }
             return null;
         }

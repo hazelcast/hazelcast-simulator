@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class MapStoreWithCounterPerKey extends MapStoreWithCounter {
 
-    private final Map<Object, AtomicInteger> storeCount = new ConcurrentHashMap<Object, AtomicInteger>();
+    private final Map<Object, AtomicInteger> storeCount = new ConcurrentHashMap<>();
 
     public Set<Object> keySet() {
         return storeCount.keySet();

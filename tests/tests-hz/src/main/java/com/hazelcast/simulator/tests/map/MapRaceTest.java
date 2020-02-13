@@ -81,7 +81,7 @@ public class MapRaceTest extends HazelcastTest {
 
     public class ThreadState extends BaseThreadState {
 
-        private final Map<Integer, Long> result = new HashMap<Integer, Long>();
+        private final Map<Integer, Long> result = new HashMap<>();
 
         private void incrementMap(Map<Integer, Long> map, Integer key, long increment) {
             map.put(key, map.get(key) + increment);

@@ -64,11 +64,11 @@ public class CoordinatorClient implements Closeable {
 
     private static final Logger LOGGER = Logger.getLogger(CoordinatorClient.class);
 
-    private final BlockingQueue<SendTask> taskQueue = new LinkedBlockingQueue<SendTask>();
+    private final BlockingQueue<SendTask> taskQueue = new LinkedBlockingQueue<>();
     // the key is the agent-index
     private final ConcurrentMap<Integer, RemoteBroker> remoteBrokers
-            = new ConcurrentHashMap<Integer, RemoteBroker>();
-    private final ConcurrentMap<String, FutureImpl> futures = new ConcurrentHashMap<String, FutureImpl>();
+            = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, FutureImpl> futures = new ConcurrentHashMap<>();
     private final SendThread sendThread;
     private final ConnectionFactory connectionFactory = new ConnectionFactory();
     private ResponseHandlerThread responseHandlerThread;
@@ -139,13 +139,13 @@ public class CoordinatorClient implements Closeable {
 
     public List<String> invokeOnAllAgents(SimulatorOperation op, long timeoutMillis)
             throws TimeoutException, InterruptedException, ExecutionException {
-        Map<SimulatorAddress, Future<String>> futures = new HashMap<SimulatorAddress, Future<String>>();
+        Map<SimulatorAddress, Future<String>> futures = new HashMap<>();
         for (RemoteBroker broker : remoteBrokers.values()) {
             SimulatorAddress agent = broker.agentAddress;
             futures.put(agent, submit(agent, op));
         }
 
-        List<String> responses = new ArrayList<String>();
+        List<String> responses = new ArrayList<>();
         long deadLine = currentTimeMillis() + timeoutMillis;
 
         for (Map.Entry<SimulatorAddress, Future<String>> entry : futures.entrySet()) {

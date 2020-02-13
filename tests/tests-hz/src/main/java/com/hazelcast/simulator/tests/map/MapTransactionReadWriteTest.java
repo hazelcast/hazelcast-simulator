@@ -27,8 +27,6 @@ import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 import com.hazelcast.transaction.TransactionalMap;
 import com.hazelcast.transaction.TransactionalTask;
-import com.hazelcast.transaction.TransactionalTaskContext;
-
 import java.util.Random;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.waitClusterSize;
@@ -71,16 +69,13 @@ public class MapTransactionReadWriteTest extends HazelcastTest {
     public Object put(ThreadState state) {
         final int key = state.randomKey();
         final int value = state.randomValue();
-        return targetInstance.executeTransaction(new TransactionalTask<Object>() {
-            @Override
-            public Object execute(TransactionalTaskContext ctx) {
-                TransactionalMap<Integer, Integer> txMap = ctx.getMap(map.getName());
-                if (useSet) {
-                    txMap.set(key, value);
-                    return null;
-                } else {
-                    return txMap.put(key, value);
-                }
+        return targetInstance.executeTransaction((TransactionalTask<Object>) ctx -> {
+            TransactionalMap<Integer, Integer> txMap = ctx.getMap(map.getName());
+            if (useSet) {
+                txMap.set(key, value);
+                return null;
+            } else {
+                return txMap.put(key, value);
             }
         });
     }
@@ -88,12 +83,9 @@ public class MapTransactionReadWriteTest extends HazelcastTest {
     @TimeStep(prob = -1)
     public Object get(ThreadState state) {
         final int key = state.randomKey();
-        return targetInstance.executeTransaction(new TransactionalTask<Object>() {
-            @Override
-            public Object execute(TransactionalTaskContext ctx) {
-                TransactionalMap<Integer, Integer> txMap = ctx.getMap(map.getName());
-                return txMap.get(key);
-            }
+        return targetInstance.executeTransaction((TransactionalTask<Object>) ctx -> {
+            TransactionalMap<Integer, Integer> txMap = ctx.getMap(map.getName());
+            return txMap.get(key);
         });
     }
 

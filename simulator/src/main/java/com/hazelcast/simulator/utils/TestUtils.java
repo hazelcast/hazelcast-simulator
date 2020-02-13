@@ -159,12 +159,7 @@ public final class TestUtils {
     }
 
     public static void assertCompletesEventually(final Future f) {
-        assertTrueEventually(new AssertTask() {
-            @Override
-            public void run() throws Exception {
-                assertTrue("future has not completed", f.isDone());
-            }
-        });
+        assertTrueEventually(() -> assertTrue("future has not completed", f.isDone()));
     }
 
     public static void printAllStackTraces() {

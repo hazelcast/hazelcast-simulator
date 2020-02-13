@@ -44,7 +44,7 @@ public class TestManager {
     private static final Logger LOGGER = Logger.getLogger(TestManager.class);
     private static final String DASHES = "---------------------------";
 
-    private final ConcurrentMap<String, TestContainer> tests = new ConcurrentHashMap<String, TestContainer>();
+    private final ConcurrentMap<String, TestContainer> tests = new ConcurrentHashMap<>();
     private final Server server;
     private final VendorDriver vendorDriver;
 
@@ -54,7 +54,7 @@ public class TestManager {
     }
 
     public Collection<TestContainer> getContainers() {
-        return new ArrayList<TestContainer>(tests.values());
+        return new ArrayList<>(tests.values());
     }
 
     public void createTest(CreateTestOperation operation) {

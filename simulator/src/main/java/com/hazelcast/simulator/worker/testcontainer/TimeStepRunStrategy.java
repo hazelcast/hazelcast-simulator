@@ -46,10 +46,10 @@ class TimeStepRunStrategy extends RunStrategy {
     private final TimeStepModel timeStepModel;
     private final PropertyBinding binding;
     private volatile TimeStepRunner[] runners;
-    private final Map<String, MetronomeConstructor> metronomeSettingsMap = new HashMap<String, MetronomeConstructor>();
-    private final Map<String, Class> runnerClassMap = new HashMap<String, Class>();
-    private final Map<String, Integer> threadCountMap = new HashMap<String, Integer>();
-    private final Map<String, Long> runIterationMap = new HashMap<String, Long>();
+    private final Map<String, MetronomeConstructor> metronomeSettingsMap = new HashMap<>();
+    private final Map<String, Class> runnerClassMap = new HashMap<>();
+    private final Map<String, Integer> threadCountMap = new HashMap<>();
+    private final Map<String, Long> runIterationMap = new HashMap<>();
     private int totalThreadCount;
 
     TimeStepRunStrategy(TestContainer testContainer) {
@@ -103,23 +103,20 @@ class TimeStepRunStrategy extends RunStrategy {
 
     @Override
     public Callable getRunCallable() {
-        return new Callable() {
-            @Override
-            public Object call() throws Exception {
-                try {
-                    LOGGER.info(format("Spawning %d worker threads for running %s", totalThreadCount, testContext.getTestId()));
+        return () -> {
+            try {
+                LOGGER.info(format("Spawning %d worker threads for running %s", totalThreadCount, testContext.getTestId()));
 
-                    if (totalThreadCount <= 0) {
-                        return null;
-                    }
-                    runners = createRunners();
-                    onRunStarted();
-                    ThreadSpawner spawner = spawnThreads(runners);
-                    spawner.awaitCompletion();
+                if (totalThreadCount <= 0) {
                     return null;
-                } finally {
-                    onRunCompleted();
                 }
+                runners = createRunners();
+                onRunStarted();
+                ThreadSpawner spawner = spawnThreads(runners);
+                spawner.awaitCompletion();
+                return null;
+            } finally {
+                onRunCompleted();
             }
         };
     }

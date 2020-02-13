@@ -21,7 +21,6 @@ import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
-import com.hazelcast.simulator.utils.AssertTask;
 
 import javax.cache.expiry.CreatedExpiryPolicy;
 import javax.cache.expiry.Duration;
@@ -63,13 +62,10 @@ public class ExpiryICacheTest extends HazelcastTest {
             cache.containsKey(i);
         }
 
-        assertTrueEventually(new AssertTask() {
-            @Override
-            public void run() throws Exception {
-                int cacheSize = cache.size();
-                logger.info(name + " ICache size: " + cacheSize);
-                assertEquals(name + " ICache should be empty, but TTL events are not processed", 0, cacheSize);
-            }
+        assertTrueEventually(() -> {
+            int cacheSize = cache.size();
+            logger.info(name + " ICache size: " + cacheSize);
+            assertEquals(name + " ICache should be empty, but TTL events are not processed", 0, cacheSize);
         });
     }
 }

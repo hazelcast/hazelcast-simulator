@@ -61,7 +61,7 @@ public class AtomicLongTest extends HazelcastTest {
     @TimeStep(prob = 0)
     public void pipelinedGet(final ThreadState state, @StartNanos final long startNanos, final Probe probe) throws Exception {
         if (state.pipeline == null) {
-            state.pipeline = new Pipelining<Long>(pipelineDepth);
+            state.pipeline = new Pipelining<>(pipelineDepth);
         }
         CompletableFuture<Long> f = state.randomCounter().getAsync().toCompletableFuture();
         f.whenCompleteAsync((bytes, throwable) -> probe.done(startNanos), Runnable::run);

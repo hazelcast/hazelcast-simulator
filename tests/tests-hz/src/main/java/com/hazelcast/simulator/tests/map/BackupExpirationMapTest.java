@@ -25,7 +25,6 @@ import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
-import com.hazelcast.simulator.utils.AssertTask;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 
@@ -79,12 +78,9 @@ public class BackupExpirationMapTest extends HazelcastTest {
 
     @Verify(global = false)
     public void verify() {
-        assertTrueEventually(new AssertTask() {
-            @Override
-            public void run() throws Exception {
-                long totalEntryCount = totalEntryCountOnNode(name, targetInstance);
-                assertEquals("totalEntryCount=" + totalEntryCount, 0, totalEntryCount);
-            }
+        assertTrueEventually(() -> {
+            long totalEntryCount = totalEntryCountOnNode(name, targetInstance);
+            assertEquals("totalEntryCount=" + totalEntryCount, 0, totalEntryCount);
         }, 600);
     }
 

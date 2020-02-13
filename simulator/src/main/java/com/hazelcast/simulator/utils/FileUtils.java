@@ -379,7 +379,7 @@ public final class FileUtils {
             return emptyList();
         }
 
-        List<File> files = new LinkedList<File>();
+        List<File> files = new LinkedList<>();
         for (String filePath : classpath.split(";")) {
             File file = new File(filePath);
 

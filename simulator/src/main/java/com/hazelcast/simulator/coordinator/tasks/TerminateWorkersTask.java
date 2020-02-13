@@ -77,8 +77,8 @@ public class TerminateWorkersTask {
         client.invokeOnAllAgents(new StopTimeoutDetectionOperation(), MINUTES.toMillis(1));
 
         // prevent any failures from being printed due to killing the members.
-        Set<WorkerData> clients = new HashSet<WorkerData>();
-        Set<WorkerData> members = new HashSet<WorkerData>();
+        Set<WorkerData> clients = new HashSet<>();
+        Set<WorkerData> members = new HashSet<>();
         for (WorkerData worker : registry.getWorkers()) {
             worker.setIgnoreFailures(true);
             if (worker.getParameters().getWorkerType().equals("member")) {

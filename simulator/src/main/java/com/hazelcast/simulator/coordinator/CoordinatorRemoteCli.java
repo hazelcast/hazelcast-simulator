@@ -866,7 +866,7 @@ public final class CoordinatorRemoteCli implements Closeable {
             return null;
         }
 
-        List<String> result = new LinkedList<String>();
+        List<String> result = new LinkedList<>();
         for (String addressString : addresses.split(",")) {
 
             if (addressString != null) {

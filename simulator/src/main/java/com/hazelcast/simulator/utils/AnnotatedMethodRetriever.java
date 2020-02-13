@@ -116,7 +116,7 @@ public class AnnotatedMethodRetriever {
     }
 
     private List<Method> findAllDeclaredMethods(Class classType) {
-        List<Method> methods = new ArrayList<Method>();
+        List<Method> methods = new ArrayList<>();
         do {
             findDeclaredMethods(classType, methods);
             if (!methods.isEmpty()) {

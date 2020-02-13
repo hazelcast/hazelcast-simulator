@@ -191,7 +191,7 @@ public final class SimulatorAddress {
     }
 
     public static List<SimulatorAddress> fromString(List<String> list) {
-        List<SimulatorAddress> result = new ArrayList<SimulatorAddress>(list.size());
+        List<SimulatorAddress> result = new ArrayList<>(list.size());
         for (String address : list) {
             result.add(fromString(address));
         }

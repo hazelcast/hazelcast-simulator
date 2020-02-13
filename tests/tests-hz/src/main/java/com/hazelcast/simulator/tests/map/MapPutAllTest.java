@@ -74,7 +74,7 @@ public class MapPutAllTest extends HazelcastTest {
         Random random = new Random();
         for (int mapIndex = 0; mapIndex < mapCount; mapIndex++) {
             // generate a SortedMap or HashMap depending on the configuration
-            Map<Object, Object> tmpMap = (useSortedMap ? new TreeMap<Object, Object>() : new HashMap<Object, Object>(itemCount));
+            Map<Object, Object> tmpMap = (useSortedMap ? new TreeMap<>() : new HashMap<>(itemCount));
             while (tmpMap.size() < itemCount) {
                 Object key = keys[random.nextInt(keyCount)];
                 Object value = valueType.generateValue(random, valueSize);

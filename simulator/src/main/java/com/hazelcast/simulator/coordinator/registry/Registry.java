@@ -53,13 +53,13 @@ public class Registry {
     private final AtomicInteger agentIndex = new AtomicInteger();
     private final AtomicInteger testIndexGenerator = new AtomicInteger();
     // a map with all id's and its count. This is used to make sure each id is unique.
-    private final Map<String, AtomicLong> ids = new HashMap<String, AtomicLong>();
-    private final List<AgentData> agents = synchronizedList(new ArrayList<AgentData>());
-    private final List<WorkerData> workers = synchronizedList(new ArrayList<WorkerData>());
-    private final ConcurrentMap<String, TestData> tests = new ConcurrentHashMap<String, TestData>();
+    private final Map<String, AtomicLong> ids = new HashMap<>();
+    private final List<AgentData> agents = synchronizedList(new ArrayList<>());
+    private final List<WorkerData> workers = synchronizedList(new ArrayList<>());
+    private final ConcurrentMap<String, TestData> tests = new ConcurrentHashMap<>();
 
     public AgentData addAgent(String publicAddress, String privateAddress) {
-        return addAgent(publicAddress, privateAddress, new HashMap<String, String>());
+        return addAgent(publicAddress, privateAddress, new HashMap<>());
     }
 
     public AgentData addAgent(String publicAddress, String privateAddress, Map<String, String> tags) {
@@ -99,7 +99,7 @@ public class Registry {
     }
 
     public List<AgentData> getAgents() {
-        return unmodifiableList(new LinkedList<AgentData>(agents));
+        return unmodifiableList(new LinkedList<>(agents));
     }
 
     public AgentData getAgent(SimulatorAddress simulatorAddress) {
@@ -134,13 +134,13 @@ public class Registry {
     }
 
     public List<WorkerData> addWorkers(List<WorkerParameters> settingsList) {
-        return addWorkers(settingsList, new HashMap<String, String>());
+        return addWorkers(settingsList, new HashMap<>());
     }
 
     public synchronized List<WorkerData> addWorkers(
             List<WorkerParameters> workerParametersList,
             Map<String, String> tags) {
-        List<WorkerData> result = new ArrayList<WorkerData>(workerParametersList.size());
+        List<WorkerData> result = new ArrayList<>(workerParametersList.size());
         for (WorkerParameters workerParameters : workerParametersList) {
             WorkerData worker = new WorkerData(workerParameters, tags);
 
@@ -192,7 +192,7 @@ public class Registry {
     }
 
     public List<WorkerData> getWorkers() {
-        return new ArrayList<WorkerData>(workers);
+        return new ArrayList<>(workers);
     }
 
     public List<WorkerData> getWorkers(TargetType targetType, int targetCount) {
@@ -200,7 +200,7 @@ public class Registry {
             return emptyList();
         }
 
-        List<WorkerData> workerList = new ArrayList<WorkerData>();
+        List<WorkerData> workerList = new ArrayList<>();
         getWorkers(targetType, targetCount, workerList, true);
         return workerList;
     }
@@ -210,7 +210,7 @@ public class Registry {
             return emptyList();
         }
 
-        List<String> workerList = new ArrayList<String>();
+        List<String> workerList = new ArrayList<>();
         getWorkers(targetType, targetCount, workerList, false);
         return workerList;
     }
@@ -283,7 +283,7 @@ public class Registry {
             }
         }
 
-        List<TestData> tests = new ArrayList<TestData>(this.tests.values());
+        List<TestData> tests = new ArrayList<>(this.tests.values());
         sb.append(format("    Tests %s", tests.size())).append('\n');
         for (TestData test : tests) {
             sb.append("        ")
@@ -297,7 +297,7 @@ public class Registry {
     }
 
     public synchronized List<TestData> addTests(TestSuite testSuite) {
-        List<TestData> result = new ArrayList<TestData>(testSuite.size());
+        List<TestData> result = new ArrayList<>(testSuite.size());
         for (TestCase testCase : testSuite.getTestCaseList()) {
             String id = testCase.getId();
             AtomicLong count = ids.get(id);
@@ -321,7 +321,7 @@ public class Registry {
     }
 
     public Collection<TestData> getTests() {
-        return new ArrayList<TestData>(tests.values());
+        return new ArrayList<>(tests.values());
     }
 
     public TestData getTest(String testId) {

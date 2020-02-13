@@ -80,13 +80,13 @@ public class MapTransactionContextConflictTest extends HazelcastTest {
         public void run() {
             while (!testContext.isStopped()) {
 
-                List<KeyIncrementPair> potentialIncrements = new ArrayList<KeyIncrementPair>();
+                List<KeyIncrementPair> potentialIncrements = new ArrayList<>();
                 for (int i = 0; i < maxKeysPerTxn; i++) {
                     KeyIncrementPair p = new KeyIncrementPair(random, keyCount, MAX_INCREMENT);
                     potentialIncrements.add(p);
                 }
 
-                List<KeyIncrementPair> putIncrements = new ArrayList<KeyIncrementPair>();
+                List<KeyIncrementPair> putIncrements = new ArrayList<>();
 
                 TransactionContext context = targetInstance.newTransactionContext();
                 try {

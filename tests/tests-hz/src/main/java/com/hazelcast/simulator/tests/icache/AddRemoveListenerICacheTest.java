@@ -46,8 +46,8 @@ public class AddRemoveListenerICacheTest extends HazelcastTest {
     public int keyCount = 1000;
     public boolean syncEvents = true;
 
-    private final ICacheEntryListener<Integer, Long> listener = new ICacheEntryListener<Integer, Long>();
-    private final ICacheEntryEventFilter<Integer, Long> filter = new ICacheEntryEventFilter<Integer, Long>();
+    private final ICacheEntryListener<Integer, Long> listener = new ICacheEntryListener<>();
+    private final ICacheEntryEventFilter<Integer, Long> filter = new ICacheEntryEventFilter<>();
     private IList<ICacheListenerOperationCounter> results;
     private CacheManager cacheManager;
     private Cache<Integer, Long> cache;
@@ -64,7 +64,7 @@ public class AddRemoveListenerICacheTest extends HazelcastTest {
     public void prepare() {
         cache = cacheManager.getCache(name);
 
-        listenerConfiguration = new MutableCacheEntryListenerConfiguration<Integer, Long>(
+        listenerConfiguration = new MutableCacheEntryListenerConfiguration<>(
                 FactoryBuilder.factoryOf(listener),
                 FactoryBuilder.factoryOf(filter),
                 false, syncEvents);

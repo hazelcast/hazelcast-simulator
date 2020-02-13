@@ -57,7 +57,7 @@ public class SimulatorProperties {
 
     private static final Logger LOGGER = Logger.getLogger(SimulatorProperties.class);
 
-    private final Map<String, Value> properties = new HashMap<String, Value>();
+    private final Map<String, Value> properties = new HashMap<>();
 
     public SimulatorProperties() {
         File defaultPropFile = newFile(getSimulatorHome(), "conf", PROPERTIES_FILE_NAME);
@@ -80,7 +80,7 @@ public class SimulatorProperties {
     }
 
     public Map<String, String> asPublicMap() {
-        Map<String, String> map = new HashMap<String, String>();
+        Map<String, String> map = new HashMap<>();
         for (Map.Entry entry : properties.entrySet()) {
             String key = (String) entry.getKey();
             map.put(key, get(key));

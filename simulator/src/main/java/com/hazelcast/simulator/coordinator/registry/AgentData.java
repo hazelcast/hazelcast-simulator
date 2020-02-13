@@ -51,7 +51,7 @@ public class AgentData {
     }
 
     private AgentWorkerMode agentWorkerMode = AgentWorkerMode.MIXED;
-    private final Collection<WorkerData> workers = new ArrayList<WorkerData>();
+    private final Collection<WorkerData> workers = new ArrayList<>();
     private final AtomicInteger currentWorkerIndex = new AtomicInteger();
     private final int addressIndex;
     private final SimulatorAddress address;
@@ -60,7 +60,7 @@ public class AgentData {
     private final Map<String, String> tags;
 
     public AgentData(int addressIndex, String publicAddress, String privateAddress) {
-        this(addressIndex, publicAddress, privateAddress, new HashMap<String, String>());
+        this(addressIndex, publicAddress, privateAddress, new HashMap<>());
     }
 
     public AgentData(int addressIndex, String publicAddress, String privateAddress, Map<String, String> tags) {
@@ -144,7 +144,7 @@ public class AgentData {
     }
 
     public Set<String> getVersionSpecs() {
-        Set<String> result = new HashSet<String>();
+        Set<String> result = new HashSet<>();
         for (WorkerData worker : workers) {
             result.add(worker.getParameters().get("VERSION_SPEC"));
         }
@@ -166,7 +166,7 @@ public class AgentData {
     }
 
     public static List<String> publicAddresses(List<AgentData> agents) {
-        List<String> result = new ArrayList<String>();
+        List<String> result = new ArrayList<>();
         for (AgentData agent : agents) {
             result.add(agent.getPublicAddress());
         }

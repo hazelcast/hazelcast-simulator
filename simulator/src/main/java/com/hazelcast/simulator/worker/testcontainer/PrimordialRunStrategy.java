@@ -35,15 +35,12 @@ public class PrimordialRunStrategy extends RunStrategy {
 
     @Override
     public Callable getRunCallable() {
-        return new Callable() {
-            @Override
-            public Object call() throws Exception {
-                onRunStarted();
-                try {
-                    return method.invoke(instance, args);
-                } finally {
-                    onRunCompleted();
-                }
+        return () -> {
+            onRunStarted();
+            try {
+                return method.invoke(instance, args);
+            } finally {
+                onRunCompleted();
             }
         };
     }

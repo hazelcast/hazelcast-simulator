@@ -183,7 +183,7 @@ public class HistogramLogProcessor extends Thread {
         boolean timeIntervalLogLegendWritten = false;
 
         if (config.listTags) {
-            Set<String> tags = new TreeSet<String>();
+            Set<String> tags = new TreeSet<>();
             EncodableHistogram histogram;
             boolean nullTagFound = false;
             while ((histogram = getIntervalHistogram()) != null) {

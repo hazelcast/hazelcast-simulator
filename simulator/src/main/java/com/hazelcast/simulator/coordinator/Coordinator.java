@@ -52,7 +52,6 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Future;
@@ -142,16 +141,13 @@ public class Coordinator implements Closeable {
             return;
         }
 
-        getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run() {
-                try {
-                    close();
-                } catch (Throwable t) {
-                    LOGGER.fatal(t.getMessage(), t);
-                }
+        getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                close();
+            } catch (Throwable t) {
+                LOGGER.fatal(t.getMessage(), t);
             }
-        });
+        }));
     }
 
     private void logConfiguration() {
@@ -200,14 +196,7 @@ public class Coordinator implements Closeable {
         }
 
         for (int i = 0; i < testCompletionTimeoutSeconds; i++) {
-            Iterator<TestData> it = tests.iterator();
-            while (it.hasNext()) {
-                TestData test = it.next();
-
-                if (test.isCompleted()) {
-                    it.remove();
-                }
-            }
+            tests.removeIf(TestData::isCompleted);
 
             sleepSeconds(1);
 
@@ -281,12 +270,7 @@ public class Coordinator implements Closeable {
                 throw new IllegalArgumentException("1 test in testsuite allowed");
             }
 
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    runTestSuiteTask.run();
-                }
-            }).start();
+            new Thread(runTestSuiteTask::run).start();
 
             for (; ; ) {
                 sleepSeconds(1);
@@ -361,8 +345,8 @@ public class Coordinator implements Closeable {
     }
 
     private List<AgentData> findAgents(RcWorkerStartOperation op) {
-        List<AgentData> agents = new ArrayList<AgentData>(registry.getAgents());
-        List<AgentData> result = new ArrayList<AgentData>();
+        List<AgentData> agents = new ArrayList<>(registry.getAgents());
+        List<AgentData> result = new ArrayList<>();
         for (AgentData agent : agents) {
             List<String> expectedAgentAddresses = op.getAgentAddresses();
 
@@ -409,7 +393,7 @@ public class Coordinator implements Closeable {
 
         LOGGER.info(format("Script [%s] on %s workers ...", operation.getCommand(), workers.size()));
 
-        Map<WorkerData, Future<String>> futures = new HashMap<WorkerData, Future<String>>();
+        Map<WorkerData, Future<String>> futures = new HashMap<>();
         for (WorkerData worker : workers) {
             Future<String> f = client.submit(worker.getAddress(),
                     new ExecuteScriptOperation(operation.getCommand(), operation.isFireAndForget()));

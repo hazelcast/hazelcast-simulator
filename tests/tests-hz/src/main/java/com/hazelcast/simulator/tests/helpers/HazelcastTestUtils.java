@@ -77,11 +77,7 @@ public final class HazelcastTestUtils {
         try {
             Method method = NodeEngineImpl.class.getMethod("getOperationService");
             return (OperationService) method.invoke(nodeEngine);
-        } catch (NoSuchMethodException e) {
-            throw new IllegalStateException(e);
-        } catch (InvocationTargetException e) {
-            throw new IllegalStateException(e);
-        } catch (IllegalAccessException e) {
+        } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
             throw new IllegalStateException(e);
         }
     }

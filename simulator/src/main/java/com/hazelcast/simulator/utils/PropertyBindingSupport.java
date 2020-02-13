@@ -62,7 +62,7 @@ public final class PropertyBindingSupport {
     }
 
     public static Set<String> bindAll(Object instance, TestCase testCase) {
-        Set<String> usedProperties = new HashSet<String>();
+        Set<String> usedProperties = new HashSet<>();
 
         for (Map.Entry<String, String> entry : testCase.getProperties().entrySet()) {
             String fullPropertyPath = entry.getKey().trim();
@@ -142,9 +142,7 @@ public final class PropertyBindingSupport {
                 try {
                     child = field.getType().newInstance();
                     field.set(parent, child);
-                } catch (InstantiationException e) {
-                    throw new BindException(format("Failed to initialize null field '%s'", field), e);
-                } catch (IllegalAccessException e) {
+                } catch (InstantiationException | IllegalAccessException e) {
                     throw new BindException(format("Failed to initialize null field '%s'", field), e);
                 }
             }

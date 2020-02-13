@@ -40,19 +40,10 @@ public final class HazelcastUtils {
             return false;
         }
         try {
-            Callable<Boolean> callable = new Callable<Boolean>() {
-                @Override
-                public Boolean call() throws Exception {
-                    return isOldestMember(hazelcastInstance);
-                }
-            };
+            Callable<Boolean> callable = () -> isOldestMember(hazelcastInstance);
             ScheduledFuture<Boolean> future = executor.schedule(callable, delaySeconds, TimeUnit.SECONDS);
             return future.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            throw new IllegalStateException(e);
-        } catch (ExecutionException e) {
-            throw new IllegalStateException(e);
-        } catch (TimeoutException e) {
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
             throw new IllegalStateException(e);
         }
     }

@@ -63,12 +63,7 @@ public class Server implements Closeable {
     private Connection connection;
     private String brokerURL;
     private String selfAddressString;
-    private ExceptionListener exceptionListener = new ExceptionListener() {
-        @Override
-        public void onException(JMSException e) {
-            LOGGER.error("JMS Exception occurred", e);
-        }
-    };
+    private ExceptionListener exceptionListener = e -> LOGGER.error("JMS Exception occurred", e);
 
     private volatile boolean stop;
 

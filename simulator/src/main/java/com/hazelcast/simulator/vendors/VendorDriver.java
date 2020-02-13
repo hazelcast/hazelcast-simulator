@@ -37,8 +37,8 @@ public abstract class VendorDriver<V> implements Closeable {
     private static final Logger LOGGER = Logger.getLogger(VendorDriver.class);
 
     protected List<AgentData> agents;
-    protected Map<String, String> properties = new HashMap<String, String>();
-    private final Map<String, String> configCache = new HashMap<String, String>();
+    protected Map<String, String> properties = new HashMap<>();
+    private final Map<String, String> configCache = new HashMap<>();
 
     public static VendorDriver loadVendorDriver(String vendorName) {
         LOGGER.info(format("Loading vendor-driver [%s]", vendorName));
@@ -153,7 +153,7 @@ public abstract class VendorDriver<V> implements Closeable {
     }
 
     protected String loadWorkerScript(String workerType) {
-        List<File> files = new LinkedList<File>();
+        List<File> files = new LinkedList<>();
         File confDir = new File(getSimulatorHome(), "conf");
 
         String vendor = properties.get("VENDOR");

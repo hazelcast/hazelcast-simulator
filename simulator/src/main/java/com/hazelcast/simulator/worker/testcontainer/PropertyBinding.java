@@ -67,9 +67,9 @@ public class PropertyBinding {
     private MetronomeConstructor workerMetronomeConstructor;
     private final Class<? extends Probe> probeClass;
     private TestContextImpl testContext;
-    private final Map<String, Probe> probeMap = new ConcurrentHashMap<String, Probe>();
+    private final Map<String, Probe> probeMap = new ConcurrentHashMap<>();
     private final TestCase testCase;
-    private final Set<String> unusedProperties = new HashSet<String>();
+    private final Set<String> unusedProperties = new HashSet<>();
     private Object vendorInstance;
 
     public PropertyBinding(TestCase testCase) {

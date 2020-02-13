@@ -77,7 +77,7 @@ public class LongByteArrayMapTest extends HazelcastTest {
 
     @TimeStep(prob = -1)
     public Map<Long, byte[]> getAll(ThreadState state) {
-        Set<Long> keys = new HashSet<Long>();
+        Set<Long> keys = new HashSet<>();
         for (int k = 0; k < getAllSize; k++) {
             keys.add(state.randomKey());
         }
