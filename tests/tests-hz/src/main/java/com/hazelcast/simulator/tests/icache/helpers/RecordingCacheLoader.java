@@ -30,7 +30,7 @@ public class RecordingCacheLoader<K> implements CacheLoader<K, K>, Serializable 
     public int loadDelayMs;
     public int loadAllDelayMs;
 
-    private final ConcurrentHashMap<K, K> loaded = new ConcurrentHashMap<K, K>();
+    private final ConcurrentHashMap<K, K> loaded = new ConcurrentHashMap<>();
     private final AtomicInteger loadCount = new AtomicInteger(0);
 
     @Override
@@ -51,7 +51,7 @@ public class RecordingCacheLoader<K> implements CacheLoader<K, K>, Serializable 
             sleepMillis(loadAllDelayMs);
         }
 
-        Map<K, K> map = new HashMap<K, K>();
+        Map<K, K> map = new HashMap<>();
         for (K key : keys) {
             load(key);
             map.put(key, key);

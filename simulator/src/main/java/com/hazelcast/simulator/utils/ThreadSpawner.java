@@ -38,8 +38,8 @@ import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
  */
 public class ThreadSpawner {
 
-    private final List<Thread> threads = Collections.synchronizedList(new LinkedList<Thread>());
-    private final ConcurrentMap<String, AtomicInteger> idMap = new ConcurrentHashMap<String, AtomicInteger>();
+    private final List<Thread> threads = Collections.synchronizedList(new LinkedList<>());
+    private final ConcurrentMap<String, AtomicInteger> idMap = new ConcurrentHashMap<>();
 
     private final String testId;
     private final boolean throwException;
@@ -75,11 +75,9 @@ public class ThreadSpawner {
         if (!throwException) {
             return null;
         }
-        return new UncaughtExceptionHandler() {
-            public void uncaughtException(Thread th, Throwable ex) {
-                if (caughtException == null) {
-                    caughtException = ex;
-                }
+        return (th, ex) -> {
+            if (caughtException == null) {
+                caughtException = ex;
             }
         };
     }

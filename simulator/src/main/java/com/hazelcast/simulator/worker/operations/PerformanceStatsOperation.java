@@ -38,7 +38,7 @@ public class PerformanceStatsOperation implements SimulatorOperation {
      * The value is the PerformanceStats for that test.
      */
     @SerializedName("performanceStatsMap")
-    private final Map<String, PerformanceStats> performanceStatsMap = new HashMap<String, PerformanceStats>();
+    private final Map<String, PerformanceStats> performanceStatsMap = new HashMap<>();
 
     public void addPerformanceStats(String testId, PerformanceStats performanceStats) {
         performanceStatsMap.put(testId, performanceStats);

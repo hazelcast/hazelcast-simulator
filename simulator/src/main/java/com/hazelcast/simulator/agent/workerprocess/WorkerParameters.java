@@ -30,7 +30,7 @@ import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
  */
 public class WorkerParameters {
 
-    private final Map<String, String> map = new HashMap<String, String>();
+    private final Map<String, String> map = new HashMap<>();
 
     public WorkerParameters() {
     }
@@ -78,7 +78,7 @@ public class WorkerParameters {
         Properties p = new Properties();
         p.load(new StringReader(fileAsText(file)));
 
-        Map<String, String> properties = new HashMap<String, String>();
+        Map<String, String> properties = new HashMap<>();
         for (Map.Entry<Object, Object> entry : p.entrySet()) {
             properties.put("" + entry.getKey(), "" + entry.getValue());
         }

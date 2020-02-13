@@ -40,7 +40,7 @@ public final class TagUtils {
     }
 
     public static Map<String, String> parseTags(String s) {
-        Map<String, String> result = new HashMap<String, String>();
+        Map<String, String> result = new HashMap<>();
         if ("".equals(s)) {
             return result;
         }
@@ -79,7 +79,7 @@ public final class TagUtils {
 
     public static Map<String, String> loadTags(OptionSet options, OptionSpec<String> spec) {
         if (!options.has(spec)) {
-            return new HashMap<String, String>();
+            return new HashMap<>();
         }
 
         return parseTags(options.valueOf(spec));

@@ -130,7 +130,7 @@ public class WorkerQuery implements Serializable {
             input = randomize(input);
         }
 
-        List<WorkerData> result = new ArrayList<WorkerData>(input.size());
+        List<WorkerData> result = new ArrayList<>(input.size());
         for (WorkerData worker : input) {
             if (hasConflict(worker, isMember)) {
                 continue;
@@ -146,7 +146,7 @@ public class WorkerQuery implements Serializable {
     }
 
     private List<WorkerData> randomize(List<WorkerData> workers) {
-        List<WorkerData> result = new ArrayList<WorkerData>(workers);
+        List<WorkerData> result = new ArrayList<>(workers);
         shuffle(workers);
         return result;
     }

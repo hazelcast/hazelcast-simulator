@@ -25,7 +25,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.io.StringReader;
-import java.io.UnsupportedEncodingException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -45,7 +44,7 @@ public class TestSuite implements Serializable {
 
     private static final Pattern VALID_FILE_NAME_PATTERN = Pattern.compile("^[a-zA-Z0-9-]+$");
 
-    private final List<TestCase> testCaseList = new LinkedList<TestCase>();
+    private final List<TestCase> testCaseList = new LinkedList<>();
     private long durationSeconds;
     private boolean failFast;
     private boolean parallel;
@@ -81,8 +80,6 @@ public class TestSuite implements Serializable {
         Properties properties = new Properties();
         try {
             properties.load(new StringReader(testContent));
-        } catch (UnsupportedEncodingException e) {
-            throw rethrow(e);
         } catch (IOException e) {
             throw rethrow(e);
         }
@@ -214,7 +211,7 @@ public class TestSuite implements Serializable {
     }
 
     private static Map<String, TestCase> createTestCases(Properties properties) {
-        Map<String, TestCase> testCases = new HashMap<String, TestCase>();
+        Map<String, TestCase> testCases = new HashMap<>();
         for (String property : properties.stringPropertyNames()) {
             String value = (String) properties.get(property);
 
@@ -260,7 +257,7 @@ public class TestSuite implements Serializable {
     }
 
     private static List<String> getTestCaseIds(Map<String, TestCase> testCases) {
-        List<String> testCaseIds = new LinkedList<String>(testCases.keySet());
+        List<String> testCaseIds = new LinkedList<>(testCases.keySet());
         Collections.sort(testCaseIds);
         return testCaseIds;
     }

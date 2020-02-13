@@ -82,7 +82,7 @@ public class ExecutorTest extends HazelcastTest {
     }
 
     public class ThreadState extends BaseThreadState {
-        private List<Future> futureList = new LinkedList<Future>();
+        private List<Future> futureList = new LinkedList<>();
         private int iteration;
     }
 

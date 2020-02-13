@@ -42,8 +42,8 @@ public class BashCommand {
     private static final String WARN = "[WARN]";
     private static final String ERROR = "[ERROR]";
 
-    private final List<String> params = new ArrayList<String>();
-    private final Map<String, Object> environment = new HashMap<String, Object>();
+    private final List<String> params = new ArrayList<>();
+    private final Map<String, Object> environment = new HashMap<>();
     private boolean throwException;
     private File directory;
     private boolean dumpOutputOnError = true;

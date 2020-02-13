@@ -73,12 +73,12 @@ public class TestContainer {
     private final TestContextImpl testContext;
     private final TestCase testCase;
     private final Object testInstance;
-    private final Map<TestPhase, Callable> taskPerPhaseMap = new HashMap<TestPhase, Callable>();
+    private final Map<TestPhase, Callable> taskPerPhaseMap = new HashMap<>();
     private final PropertyBinding propertyBinding;
     private final Class testClass;
     private final RunStrategy runStrategy;
     private final TestPerformanceTracker testPerformanceTracker;
-    private final AtomicReference<TestPhase> currentPhase = new AtomicReference<TestPhase>();
+    private final AtomicReference<TestPhase> currentPhase = new AtomicReference<>();
 
     public TestContainer(TestContextImpl targetInstance, TestCase testCase, Object vendorInstance) {
         this(targetInstance, null, testCase, vendorInstance);
@@ -203,15 +203,12 @@ public class TestContainer {
             registerPrepareTasks(false);
             registerPrepareTasks(true);
 
-            taskPerPhaseMap.put(RUN, new Callable() {
-                @Override
-                public Object call() throws Exception {
-                    if (propertyBinding.recordJitter) {
-                        Probe probe = propertyBinding.getOrCreateProbe("jitter", false);
-                        new JitterThread(testContext, probe, propertyBinding.recordJitterThresholdNs).start();
-                    }
-                    return runStrategy.getRunCallable().call();
+            taskPerPhaseMap.put(RUN, () -> {
+                if (propertyBinding.recordJitter) {
+                    Probe probe = propertyBinding.getOrCreateProbe("jitter", false);
+                    new JitterThread(testContext, probe, propertyBinding.recordJitterThresholdNs).start();
                 }
+                return runStrategy.getRunCallable().call();
             });
 
             registerTask(Verify.class, new VerifyFilter(false), LOCAL_VERIFY);
@@ -233,7 +230,7 @@ public class TestContainer {
                 .withPublicNonStaticModifier()
                 .findAll();
 
-        List<Callable> callableList = new ArrayList<Callable>(setupMethods.size());
+        List<Callable> callableList = new ArrayList<>(setupMethods.size());
         for (Method setupMethod : setupMethods) {
             Class[] parameterTypes = setupMethod.getParameterTypes();
 
@@ -262,7 +259,7 @@ public class TestContainer {
 
     private RunStrategy loadRunStrategy() {
         try {
-            List<String> runAnnotations = new LinkedList<String>();
+            List<String> runAnnotations = new LinkedList<>();
             RunStrategy runStrategy = null;
 
             Method runMethod = new AnnotatedMethodRetriever(testClass, Run.class)
@@ -321,7 +318,7 @@ public class TestContainer {
     }
 
     private Callable toCallable(List<Method> methods) {
-        List<Callable> callableList = new ArrayList<Callable>(methods.size());
+        List<Callable> callableList = new ArrayList<>(methods.size());
         for (Method method : methods) {
             callableList.add(new MethodInvokingCallable(testInstance, method));
         }

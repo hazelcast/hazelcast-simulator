@@ -24,7 +24,6 @@ import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.tests.map.helpers.MapOperationCounter;
-import com.hazelcast.simulator.utils.AssertTask;
 import com.hazelcast.simulator.utils.EmptyStatement;
 import com.hazelcast.spi.exception.DistributedObjectDestroyedException;
 
@@ -131,11 +130,7 @@ public class MapTTLTest extends HazelcastTest {
         }
         logger.info(name + ": " + total + " total of " + results.size());
 
-        assertTrueEventually(new AssertTask() {
-            @Override
-            public void run() throws Exception {
-                assertEquals(name + ": Map should be empty, some TTL events are not processed", 0, map.size());
-            }
-        });
+        assertTrueEventually(
+                () -> assertEquals(name + ": Map should be empty, some TTL events are not processed", 0, map.size()));
     }
 }

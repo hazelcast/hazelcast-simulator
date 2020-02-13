@@ -98,8 +98,8 @@ public class Probability {
         // now we simplify
         for (; ; ) {
             boolean powerOfTen = true;
-            for (int k = 0; k < roundedMethodProbabilities.length; k++) {
-                if (roundedMethodProbabilities[k] % TEN != 0) {
+            for (int roundedMethodProbability : roundedMethodProbabilities) {
+                if (roundedMethodProbability % TEN != 0) {
                     powerOfTen = false;
                     break;
                 }
@@ -119,8 +119,8 @@ public class Probability {
 
     public static byte[] ratiosToMethodProbabilityArray(int... methodRatios) {
         int length = 0;
-        for (int methodIndex = 0; methodIndex < methodRatios.length; methodIndex++) {
-            length += methodRatios[methodIndex];
+        for (int methodRatio : methodRatios) {
+            length += methodRatio;
         }
 
         byte[] bytes = new byte[length];

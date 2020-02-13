@@ -43,11 +43,11 @@ public class FailureCollector {
     private static final Logger LOGGER = Logger.getLogger(FailureCollector.class);
 
     private final AtomicInteger failureNumberGenerator = new AtomicInteger();
-    private final ConcurrentMap<FailureListener, Boolean> listenerMap = new ConcurrentHashMap<FailureListener, Boolean>();
+    private final ConcurrentMap<FailureListener, Boolean> listenerMap = new ConcurrentHashMap<>();
 
     private final AtomicInteger nonCriticalFailureCounter = new AtomicInteger();
     private final AtomicInteger criticalFailureCounter = new AtomicInteger();
-    private final ConcurrentMap<String, Boolean> hasCriticalFailuresMap = new ConcurrentHashMap<String, Boolean>();
+    private final ConcurrentMap<String, Boolean> hasCriticalFailuresMap = new ConcurrentHashMap<>();
 
     private final File file;
     private final Registry registry;

@@ -66,7 +66,7 @@ public enum FailureType {
         if (propertyValue == null || propertyValue.isEmpty()) {
             return Collections.emptySet();
         }
-        Set<FailureType> result = new HashSet<FailureType>();
+        Set<FailureType> result = new HashSet<>();
         StringTokenizer tokenizer = new StringTokenizer(propertyValue, ",");
         while (tokenizer.hasMoreTokens()) {
             String id = tokenizer.nextToken().trim();

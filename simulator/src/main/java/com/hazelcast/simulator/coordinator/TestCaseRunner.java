@@ -179,7 +179,7 @@ public final class TestCaseRunner {
     }
 
     private Map<WorkerData, Future> submitToTargets(boolean singleTarget, SimulatorOperation op) {
-        Map<WorkerData, Future> futures = new HashMap<WorkerData, Future>();
+        Map<WorkerData, Future> futures = new HashMap<>();
 
         if (singleTarget) {
             Future f = client.submit(globalTarget.getAddress(), op);
@@ -386,7 +386,7 @@ public final class TestCaseRunner {
         }
 
         // verbose logging of missing workers
-        List<SimulatorAddress> missingWorkers = new ArrayList<SimulatorAddress>();
+        List<SimulatorAddress> missingWorkers = new ArrayList<>();
         for (Map.Entry<WorkerData, Future> entry : futures.entrySet()) {
             if (!entry.getValue().isDone()) {
                 missingWorkers.add(entry.getKey().getAddress());

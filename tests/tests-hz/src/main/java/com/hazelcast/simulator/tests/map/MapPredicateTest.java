@@ -155,7 +155,7 @@ public class MapPredicateTest extends HazelcastTest {
     }
 
     private List<Employee> fillListWithQueryResultSet(Iterable<Employee> iterable) {
-        List<Employee> list = new ArrayList<Employee>();
+        List<Employee> list = new ArrayList<>();
         for (Employee employee : iterable) {
             list.add(employee);
         }

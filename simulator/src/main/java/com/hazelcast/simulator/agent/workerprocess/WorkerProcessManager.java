@@ -46,7 +46,7 @@ public class WorkerProcessManager {
     private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(200);
 
     private final ConcurrentMap<SimulatorAddress, WorkerProcess> workerProcesses
-            = new ConcurrentHashMap<SimulatorAddress, WorkerProcess>();
+            = new ConcurrentHashMap<>();
     private final Server server;
     private final SimulatorAddress agentAddress;
     private final String publicAddress;
@@ -105,13 +105,8 @@ public class WorkerProcessManager {
     public void shutdown() {
         executorService.shutdown();
         ThreadSpawner spawner = new ThreadSpawner("workerJvmManagerShutdown", true);
-        for (final WorkerProcess workerProcess : new ArrayList<WorkerProcess>(workerProcesses.values())) {
-            spawner.spawn(new Runnable() {
-                @Override
-                public void run() {
-                    shutdown(workerProcess);
-                }
-            });
+        for (final WorkerProcess workerProcess : new ArrayList<>(workerProcesses.values())) {
+            spawner.spawn(() -> shutdown(workerProcess));
         }
         spawner.awaitCompletion();
     }

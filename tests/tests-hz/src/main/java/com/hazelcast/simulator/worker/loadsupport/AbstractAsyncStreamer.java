@@ -43,7 +43,7 @@ abstract class AbstractAsyncStreamer<K, V> implements Streamer<K, V> {
     private final Semaphore semaphore;
     private final StreamerExecutionCallback callback;
     private final ThrottlingLogger throttlingLogger;
-    private final AtomicReference<Throwable> storedException = new AtomicReference<Throwable>();
+    private final AtomicReference<Throwable> storedException = new AtomicReference<>();
     private final AtomicBoolean rejectedExecutionExceptionReported = new AtomicBoolean();
     private final AtomicBoolean targetDisconnectExceptionReported = new AtomicBoolean();
     private final AtomicLong counter = new AtomicLong();

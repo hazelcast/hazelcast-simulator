@@ -91,7 +91,7 @@ class TimeStepRunnerCodeGenerator {
                     + " You need to use a JDK to run Simulator! Version found: " + System.getProperty("java.version"));
         }
 
-        DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<JavaFileObject>();
+        DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
         JavaCompiler.CompilationTask task = compiler.getTask(
                 null,
                 null,
@@ -113,17 +113,12 @@ class TimeStepRunnerCodeGenerator {
             throw new IllegalTestException(sb.toString());
         }
 
-        return (Class) doPrivileged(new PrivilegedAction() {
-            @Override
-            public Object run() {
-                try {
-                    URLClassLoader classLoader = new URLClassLoader(new URL[]{targetDirectory.toURI().toURL()});
-                    return (Class) classLoader.loadClass(className);
-                } catch (ClassNotFoundException e) {
-                    throw new IllegalTestException(e.getMessage(), e);
-                } catch (MalformedURLException e) {
-                    throw new IllegalTestException(e.getMessage(), e);
-                }
+        return (Class) doPrivileged((PrivilegedAction) () -> {
+            try {
+                URLClassLoader classLoader = new URLClassLoader(new URL[]{targetDirectory.toURI().toURL()});
+                return (Class) classLoader.loadClass(className);
+            } catch (ClassNotFoundException | MalformedURLException e) {
+                throw new IllegalTestException(e.getMessage(), e);
             }
         });
     }
@@ -144,7 +139,7 @@ class TimeStepRunnerCodeGenerator {
             cfg.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
             cfg.setLogTemplateExceptions(false);
 
-            Map<String, Object> root = new HashMap<String, Object>();
+            Map<String, Object> root = new HashMap<>();
             root.put("testInstanceClass", getClassName(timeStepModel.getTestClass()));
             root.put("metronomeClass", getMetronomeClass(metronomeClass));
             root.put("timeStepMethods", timeStepModel.getActiveTimeStepMethods(executionGroup));

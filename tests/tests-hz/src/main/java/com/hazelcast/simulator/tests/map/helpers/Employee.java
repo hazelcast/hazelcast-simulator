@@ -17,6 +17,7 @@ package com.hazelcast.simulator.tests.map.helpers;
 
 import javax.annotation.Nonnull;
 import java.io.Serializable;
+import java.util.Objects;
 import java.util.Random;
 
 public class Employee implements Serializable, Comparable<Employee> {
@@ -108,7 +109,7 @@ public class Employee implements Serializable, Comparable<Employee> {
         if (Double.compare(employee.salary, salary) != 0) {
             return false;
         }
-        if (name != null ? !name.equals(employee.name) : employee.name != null) {
+        if (!Objects.equals(name, employee.name)) {
             return false;
         }
 

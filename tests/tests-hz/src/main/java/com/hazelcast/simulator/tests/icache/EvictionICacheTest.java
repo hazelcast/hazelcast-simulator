@@ -51,7 +51,7 @@ public class EvictionICacheTest extends HazelcastTest {
     // number of bytes for the value/payload of a key
     public int valueSize = 2;
 
-    private Map<Integer, Object> putAllMap = new HashMap<Integer, Object>();
+    private Map<Integer, Object> putAllMap = new HashMap<>();
 
     private byte[] value;
     private ICache<Object, Object> cache;

@@ -33,7 +33,7 @@ public class MapStoreWithCounter implements MapStore<Object, Object> {
     private static int maxDelayMs;
 
     private final Random random = new Random();
-    private final Map<Object, Object> store = new ConcurrentHashMap<Object, Object>();
+    private final Map<Object, Object> store = new ConcurrentHashMap<>();
     private final AtomicInteger storeCount = new AtomicInteger(0);
     private final AtomicInteger deleteCount = new AtomicInteger(0);
     private final AtomicInteger countLoad = new AtomicInteger(0);
@@ -91,7 +91,7 @@ public class MapStoreWithCounter implements MapStore<Object, Object> {
 
     @Override
     public Map<Object, Object> loadAll(Collection<Object> keys) {
-        Map<Object, Object> result = new HashMap<Object, Object>();
+        Map<Object, Object> result = new HashMap<>();
         for (Object key : keys) {
             final Object v = load(key);
             if (v != null) {

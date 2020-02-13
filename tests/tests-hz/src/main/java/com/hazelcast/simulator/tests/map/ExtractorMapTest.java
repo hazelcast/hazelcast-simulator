@@ -144,7 +144,7 @@ public class ExtractorMapTest extends HazelcastTest {
 
         SillySequence(int from, int count) {
             this.count = count;
-            this.payloadField = new ArrayList<Integer>(count);
+            this.payloadField = new ArrayList<>(count);
 
             int to = from + count;
             for (int i = from; i < to; i++) {

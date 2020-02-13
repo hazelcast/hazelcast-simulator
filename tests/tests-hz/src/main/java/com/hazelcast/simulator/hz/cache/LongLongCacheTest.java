@@ -69,7 +69,7 @@ public class LongLongCacheTest extends HazelcastTest {
         }
 
         private Long randomValue() {
-            return new Long(randomInt());
+            return (long) randomInt();
         }
     }
 

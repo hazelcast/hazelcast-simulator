@@ -44,7 +44,7 @@ public class KillWorkersTask {
     private final CoordinatorClient client;
     private final String command;
     private final WorkerQuery workerQuery;
-    private final List<WorkerData> result = new ArrayList<WorkerData>();
+    private final List<WorkerData> result = new ArrayList<>();
     private final int workerShutdownTimeoutSeconds;
 
     public KillWorkersTask(
@@ -92,7 +92,7 @@ public class KillWorkersTask {
     }
 
     private void awaitTermination(List<WorkerData> victims) {
-        Set<WorkerData> aliveVictims = new HashSet<WorkerData>(victims);
+        Set<WorkerData> aliveVictims = new HashSet<>(victims);
 
         long deadlineSeconds = currentTimeSeconds() + workerShutdownTimeoutSeconds;
 

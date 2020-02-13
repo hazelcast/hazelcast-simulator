@@ -37,7 +37,7 @@ public final class StreamerFactory {
     }
 
     public static <K, V> Streamer<K, V> getInstance(IMap<K, V> map, int concurrencyLevel) {
-        return new AsyncMapStreamer<K, V>(concurrencyLevel, map);
+        return new AsyncMapStreamer<>(concurrencyLevel, map);
     }
 
     public static <K, V> Streamer<K, V> getInstance(Cache<K, V> cache) {
@@ -46,8 +46,8 @@ public final class StreamerFactory {
 
     public static <K, V> Streamer<K, V> getInstance(Cache<K, V> cache, int concurrencyLevel) {
         if (cache instanceof ICache) {
-            return new AsyncCacheStreamer<K, V>(concurrencyLevel, (ICache<K, V>) cache);
+            return new AsyncCacheStreamer<>(concurrencyLevel, (ICache<K, V>) cache);
         }
-        return new SyncCacheStreamer<K, V>(cache);
+        return new SyncCacheStreamer<>(cache);
     }
 }

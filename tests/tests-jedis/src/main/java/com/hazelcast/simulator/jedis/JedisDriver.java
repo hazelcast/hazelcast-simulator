@@ -82,7 +82,7 @@ public class JedisDriver extends VendorDriver<JedisCluster> {
 
     private Set<HostAndPort> getAddresses() {
         String[] nodes = get("nodes").split(",");
-        Set<HostAndPort> addresses = new HashSet<HostAndPort>();
+        Set<HostAndPort> addresses = new HashSet<>();
         for (String node : nodes) {
             String[] addressParts = node.split(":");
             if (addressParts.length == 0 || addressParts.length > 2) {

@@ -46,7 +46,7 @@ public class TimeStepModel {
     private static final String PROB = "Prob";
     private final Class testClass;
 
-    private final Map<String, ExecutionGroup> executionGroups = new HashMap<String, ExecutionGroup>();
+    private final Map<String, ExecutionGroup> executionGroups = new HashMap<>();
     private final PropertyBinding propertyBinding;
 
     public TimeStepModel(Class testClass, PropertyBinding propertyBinding) {
@@ -67,9 +67,9 @@ public class TimeStepModel {
     // Checks if every probability has a matching timestep method. Otherwise you get confusing messages about total probability
     // not being 1.
     private void probabilitySanityCheck() {
-        Set<String> unmatchedProbabilities = new HashSet<String>();
+        Set<String> unmatchedProbabilities = new HashSet<>();
 
-        Set<String> timestepMethodNames = new HashSet<String>();
+        Set<String> timestepMethodNames = new HashSet<>();
         for (ExecutionGroup executionGroup : executionGroups.values()) {
             for (Method method : executionGroup.timeStepMethods) {
                 timestepMethodNames.add(method.getName());
@@ -115,7 +115,7 @@ public class TimeStepModel {
     }
 
     public final List<Method> getActiveTimeStepMethods(String group) {
-        List<Method> result = new ArrayList<Method>();
+        List<Method> result = new ArrayList<>();
         ExecutionGroup executionGroup = executionGroups.get(group);
         for (Method method : executionGroup.timeStepMethods) {
             if (executionGroup.probabilities.get(method).isLargerThanZero()) {
@@ -281,7 +281,7 @@ public class TimeStepModel {
     }
 
     private void validateUniqueMethodNames(List<Method> methods) {
-        Set<String> names = new HashSet<String>();
+        Set<String> names = new HashSet<>();
         for (Method method : methods) {
             String methodName = method.getName();
             if (!names.add(methodName)) {
@@ -335,9 +335,9 @@ public class TimeStepModel {
     }
 
     private final class ExecutionGroup {
-        private final List<Method> beforeRunMethods = new LinkedList<Method>();
-        private final List<Method> afterRunMethods = new LinkedList<Method>();
-        private final List<Method> timeStepMethods = new LinkedList<Method>();
+        private final List<Method> beforeRunMethods = new LinkedList<>();
+        private final List<Method> afterRunMethods = new LinkedList<>();
+        private final List<Method> timeStepMethods = new LinkedList<>();
         private final String name;
         private Class threadStateClass;
         private Constructor threadStateConstructor;
@@ -356,7 +356,7 @@ public class TimeStepModel {
         }
 
         private Class loadThreadStateClass() {
-            Set<Class> classes = new HashSet<Class>();
+            Set<Class> classes = new HashSet<>();
             collectThreadStateClass(classes, beforeRunMethods);
             collectThreadStateClass(classes, afterRunMethods);
             collectThreadStateClass(classes, timeStepMethods);
@@ -437,7 +437,7 @@ public class TimeStepModel {
         }
 
         private Map<Method, Probability> loadProbabilities() {
-            Map<Method, Probability> probMap = new HashMap<Method, Probability>();
+            Map<Method, Probability> probMap = new HashMap<>();
 
             Method defaultMethod = null;
             Probability totalProbability = new Probability(0);

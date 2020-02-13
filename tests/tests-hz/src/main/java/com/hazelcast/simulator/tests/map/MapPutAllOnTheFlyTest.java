@@ -62,7 +62,7 @@ public class MapPutAllOnTheFlyTest extends HazelcastTest {
             inputMaps = new Map[mapCount];
             Random random = new Random();
             for (int mapIndex = 0; mapIndex < mapCount; mapIndex++) {
-                Map<Integer, Integer> inputMap = new HashMap<Integer, Integer>(batchSize);
+                Map<Integer, Integer> inputMap = new HashMap<>(batchSize);
                 while (inputMap.size() < batchSize) {
                     Integer key = keys[random.nextInt(keyRange)];
                     inputMap.put(key, key);
@@ -93,7 +93,7 @@ public class MapPutAllOnTheFlyTest extends HazelcastTest {
 
     public class ThreadState extends BaseThreadState {
 
-        private final Map<Integer, Integer> inputMap = new HashMap<Integer, Integer>();
+        private final Map<Integer, Integer> inputMap = new HashMap<>();
 
         private Map<Integer, Integer> getMap() {
             inputMap.clear();

@@ -50,7 +50,7 @@ public class HazelcastDriver extends VendorDriver<HazelcastInstance> {
 
     @Override
     public WorkerParameters loadWorkerParameters(String workerType, int agentIndex) {
-        Map<String, String> s = new HashMap<String, String>(properties);
+        Map<String, String> s = new HashMap<>(properties);
         s.remove("CONFIG");
 
         if ("hazelcast-enterprise".equals(get("VENDOR"))) {

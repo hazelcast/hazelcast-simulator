@@ -174,7 +174,7 @@ class Wizard {
         echo("Defined user properties:");
         int unknownProperties = 0;
         int changedProperties = 0;
-        for (String property : new TreeSet<String>(userProperties.stringPropertyNames())) {
+        for (String property : new TreeSet<>(userProperties.stringPropertyNames())) {
             boolean commentedOutProperty = containsCommentedOutProperty(defaultPropertiesString, property);
             String userValue = userProperties.getProperty(property);
             String defaultValue = (commentedOutProperty ? getCommentedOutProperty(defaultPropertiesString, property)

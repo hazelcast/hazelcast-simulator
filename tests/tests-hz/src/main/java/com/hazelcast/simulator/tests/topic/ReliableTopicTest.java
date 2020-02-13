@@ -29,7 +29,6 @@ import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
-import com.hazelcast.simulator.utils.AssertTask;
 import com.hazelcast.simulator.utils.ExceptionReporter;
 import com.hazelcast.topic.ITopic;
 import com.hazelcast.topic.Message;
@@ -65,7 +64,7 @@ public class ReliableTopicTest extends HazelcastTest {
     public void setup() {
         totalMessagesSend = getAtomicLong(name + ":TotalExpectedCounter");
         topics = new ITopic[topicCount];
-        listeners = new LinkedList<MessageListenerImpl>();
+        listeners = new LinkedList<>();
 
         String[] names = generateStringKeys(name, topicCount, keyLocality, targetInstance);
 
@@ -106,7 +105,7 @@ public class ReliableTopicTest extends HazelcastTest {
     public class ThreadState extends BaseThreadState {
 
         private long messagesSend = 0;
-        private final Map<ITopic, AtomicLong> counterMap = new HashMap<ITopic, AtomicLong>();
+        private final Map<ITopic, AtomicLong> counterMap = new HashMap<>();
         private final String id = newSecureUuidString();
 
         private ITopic<MessageEntity> getRandomTopic() {
@@ -171,7 +170,7 @@ public class ReliableTopicTest extends HazelcastTest {
 
     private class MessageListenerImpl implements MessageListener<MessageEntity> {
 
-        private final Map<String, Long> values = new HashMap<String, Long>();
+        private final Map<String, Long> values = new HashMap<>();
         private final AtomicLong received = new AtomicLong();
 
         private final int id;
@@ -215,15 +214,12 @@ public class ReliableTopicTest extends HazelcastTest {
     @Verify(global = true)
     public void verify() {
         final long expectedCount = listenersPerTopic * totalMessagesSend.get();
-        assertTrueEventually(new AssertTask() {
-            @Override
-            public void run() throws Exception {
-                long actualCount = 0;
-                for (MessageListenerImpl topicListener : listeners) {
-                    actualCount += topicListener.received.get();
-                }
-                assertEquals("published messages don't match received messages", expectedCount, actualCount);
+        assertTrueEventually(() -> {
+            long actualCount = 0;
+            for (MessageListenerImpl topicListener : listeners) {
+                actualCount += topicListener.received.get();
             }
+            assertEquals("published messages don't match received messages", expectedCount, actualCount);
         });
         assertEquals("Failures found", 0, failures.get());
     }

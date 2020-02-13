@@ -161,7 +161,7 @@ public class FailingTest extends HazelcastTest {
     }
 
     private void createOOME() {
-        List<byte[]> list = new LinkedList<byte[]>();
+        List<byte[]> list = new LinkedList<>();
         for (; ; ) {
             try {
                 list.add(new byte[100 * 1000 * 1000]);

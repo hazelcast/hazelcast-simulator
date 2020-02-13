@@ -32,8 +32,8 @@ public class RecordingCacheWriter<K, V> implements CacheWriter<K, V>, Serializab
     public int deleteDelayMs;
     public int deleteAllDelayMs;
 
-    private final ConcurrentHashMap<K, V> writtenKeys = new ConcurrentHashMap<K, V>();
-    private final ConcurrentHashMap<K, V> deletedEntries = new ConcurrentHashMap<K, V>();
+    private final ConcurrentHashMap<K, V> writtenKeys = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<K, V> deletedEntries = new ConcurrentHashMap<>();
 
     private final AtomicLong writeCount = new AtomicLong();
     private final AtomicLong deleteCount = new AtomicLong();

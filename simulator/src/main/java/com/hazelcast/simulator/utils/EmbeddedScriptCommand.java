@@ -28,7 +28,7 @@ public class EmbeddedScriptCommand {
     private static final Logger LOGGER = Logger.getLogger(EmbeddedScriptCommand.class);
 
     private final String command;
-    private Map<String, Object> environment = new HashMap<String, Object>();
+    private Map<String, Object> environment = new HashMap<>();
     private String engineName = "js";
 
     public EmbeddedScriptCommand(String command) {

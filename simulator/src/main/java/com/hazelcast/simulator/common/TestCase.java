@@ -31,10 +31,10 @@ public class TestCase implements Serializable {
     private static final Logger LOGGER = Logger.getLogger(TestCase.class);
 
     private String id;
-    private final Map<String, String> properties = new HashMap<String, String>();
+    private final Map<String, String> properties = new HashMap<>();
 
     public TestCase(String id) {
-        this(id, Collections.EMPTY_MAP);
+        this(id, Collections.<String, String>emptyMap());
     }
 
     public TestCase(String id, Map<String, String> properties) {
@@ -87,7 +87,7 @@ public class TestCase implements Serializable {
         sb.append(NEW_LINE).append("    ").append("id=").append(id);
         sb.append(',').append(NEW_LINE).append("    ").append("class=").append(getClassname());
 
-        List<String> keys = new LinkedList<String>(properties.keySet());
+        List<String> keys = new LinkedList<>(properties.keySet());
         Collections.sort(keys);
 
         for (String key : keys) {

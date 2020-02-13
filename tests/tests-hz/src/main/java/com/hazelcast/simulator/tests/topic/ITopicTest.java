@@ -23,7 +23,6 @@ import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
-import com.hazelcast.simulator.utils.AssertTask;
 import com.hazelcast.topic.ITopic;
 import com.hazelcast.topic.Message;
 import com.hazelcast.topic.MessageListener;
@@ -64,7 +63,7 @@ public class ITopicTest extends HazelcastTest {
         totalFoundCounter = getAtomicLong(name + ":TotalFoundCounter");
 
         topics = new ITopic[topicCount];
-        listeners = new LinkedList<TopicListener>();
+        listeners = new LinkedList<>();
         for (int topicIndex = 0; topicIndex < topics.length; topicIndex++) {
             ITopic<Long> topic = targetInstance.getTopic(name + topicIndex);
             topics[topicIndex] = topic;
@@ -129,15 +128,12 @@ public class ITopicTest extends HazelcastTest {
         }
 
         final long expectedCount = totalExpectedCounter.get();
-        assertTrueEventually(new AssertTask() {
-            @Override
-            public void run() throws Exception {
-                long actualCount = 0;
-                for (TopicListener topicListener : listeners) {
-                    actualCount += topicListener.count;
-                }
-                assertEquals("published messages don't match received messages", expectedCount, actualCount);
+        assertTrueEventually(() -> {
+            long actualCount = 0;
+            for (TopicListener topicListener : listeners) {
+                actualCount += topicListener.count;
             }
+            assertEquals("published messages don't match received messages", expectedCount, actualCount);
         }, maxVerificationTimeSeconds);
     }
 

@@ -18,7 +18,6 @@ package com.hazelcast.simulator.coordinator;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.worker.performance.PerformanceStats;
 
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -53,7 +52,7 @@ public class PerformanceStatsCollector {
 
     // holds a map per Worker SimulatorAddress which contains the lastDelta PerformanceStats per testCaseId
     private final ConcurrentMap<SimulatorAddress, WorkerPerformance> workerPerformanceInfoMap
-            = new ConcurrentHashMap<SimulatorAddress, WorkerPerformance>();
+            = new ConcurrentHashMap<>();
 
     public void update(SimulatorAddress workerAddress, Map<String, PerformanceStats> performanceStatsMap) {
         WorkerPerformance workerPerformance = workerPerformanceInfoMap.get(workerAddress);
@@ -110,7 +109,7 @@ public class PerformanceStatsCollector {
 
     public String detailedPerformanceInfo(String testId, long runningTimeMs) {
         PerformanceStats totalPerformanceStats = new PerformanceStats();
-        Map<SimulatorAddress, PerformanceStats> agentPerformanceStatsMap = new HashMap<SimulatorAddress, PerformanceStats>();
+        Map<SimulatorAddress, PerformanceStats> agentPerformanceStatsMap = new HashMap<>();
         calculatePerformanceStats(testId, totalPerformanceStats, agentPerformanceStatsMap);
 
         long totalOperationCount = totalPerformanceStats.getOperationCount();
@@ -168,13 +167,8 @@ public class PerformanceStatsCollector {
     }
 
     private List<SimulatorAddress> sort(Set<SimulatorAddress> addresses) {
-        List<SimulatorAddress> list = new LinkedList<SimulatorAddress>(addresses);
-        Collections.sort(list, new Comparator<SimulatorAddress>() {
-            @Override
-            public int compare(SimulatorAddress o1, SimulatorAddress o2) {
-                return o1.toString().compareTo(o2.toString());
-            }
-        });
+        List<SimulatorAddress> list = new LinkedList<>(addresses);
+        list.sort(Comparator.comparing(SimulatorAddress::toString));
         return list;
     }
 
@@ -184,7 +178,7 @@ public class PerformanceStatsCollector {
     private final class WorkerPerformance {
         // contains the performance per test. Key is test-id.
         private final ConcurrentMap<String, TestPerformance> testPerformanceMap
-                = new ConcurrentHashMap<String, TestPerformance>();
+                = new ConcurrentHashMap<>();
 
         private void updateAll(Map<String, PerformanceStats> deltas) {
             for (Map.Entry<String, PerformanceStats> entry : deltas.entrySet()) {

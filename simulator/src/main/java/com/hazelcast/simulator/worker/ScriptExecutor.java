@@ -56,49 +56,41 @@ public class ScriptExecutor {
             task = newGenericScriptCallable(extension, command);
         }
 
-        new Thread() {
-            public void run() {
-                try {
-                    String result = task.call();
-                    promise.answer(result);
-                } catch (Exception e) {
-                    LOGGER.warn("Failed to execute script: " + command, e);
-                    promise.answer(e);
-                }
+        new Thread(() -> {
+            try {
+                String result = task.call();
+                promise.answer(result);
+            } catch (Exception e) {
+                LOGGER.warn("Failed to execute script: " + command, e);
+                promise.answer(e);
             }
-        }.start();
+        }).start();
     }
 
     private Callable<String> newBashScriptCallable(final String command) {
         Callable<String> task;
-        task = new Callable<String>() {
-            @Override
-            public String call() throws Exception {
-                Map<String, Object> environment = new HashMap<String, Object>();
-                environment.put("PID", NativeUtils.getPID());
+        task = () -> {
+            Map<String, Object> environment = new HashMap<>();
+            environment.put("PID", NativeUtils.getPID());
 
-                return new BashCommand(command)
-                        .setDirectory(getUserDir())
-                        .addEnvironment(environment)
-                        .setThrowsException(true)
-                        .execute();
-            }
+            return new BashCommand(command)
+                    .setDirectory(getUserDir())
+                    .addEnvironment(environment)
+                    .setThrowsException(true)
+                    .execute();
         };
         return task;
     }
 
     private Callable<String> newGenericScriptCallable(final String extension, final String command) {
         Callable<String> task;
-        task = new Callable<String>() {
-            @Override
-            public String call() throws Exception {
-                Object result = new EmbeddedScriptCommand(command)
-                        .addEnvironment("vendor", vendorDriver.getVendorInstance())
-                        .setEngineName(extension)
-                        .execute();
-                LOGGER.info(format("Script [%s] with [%s]", command, result));
-                return result == null ? "null" : result.toString();
-            }
+        task = () -> {
+            Object result = new EmbeddedScriptCommand(command)
+                    .addEnvironment("vendor", vendorDriver.getVendorInstance())
+                    .setEngineName(extension)
+                    .execute();
+            LOGGER.info(format("Script [%s] with [%s]", command, result));
+            return result == null ? "null" : result.toString();
         };
         return task;
     }

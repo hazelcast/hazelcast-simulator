@@ -55,7 +55,7 @@ public class RunTestSuiteTask {
     private final FailureCollector failureCollector;
     private final CoordinatorClient client;
     private final PerformanceStatsCollector performanceStatsCollector;
-    private final List<TestCaseRunner> runners = new ArrayList<TestCaseRunner>();
+    private final List<TestCaseRunner> runners = new ArrayList<>();
 
     public RunTestSuiteTask(TestSuite testSuite,
                             CoordinatorParameters coordinatorParameters,
@@ -100,7 +100,7 @@ public class RunTestSuiteTask {
     }
 
     private List<WorkerData> filter(List<WorkerData> targets, boolean isMember) {
-        List<WorkerData> result = new ArrayList<WorkerData>(targets.size());
+        List<WorkerData> result = new ArrayList<>(targets.size());
         for (WorkerData worker : targets) {
             if (worker.isMemberWorker() == isMember) {
                 result.add(worker);
@@ -158,16 +158,13 @@ public class RunTestSuiteTask {
         final AtomicBoolean success = new AtomicBoolean(true);
         ThreadSpawner spawner = new ThreadSpawner("runParallel", true);
         for (final TestCaseRunner runner : runners) {
-            spawner.spawn(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        if (!runner.run()) {
-                            success.set(false);
-                        }
-                    } catch (Exception e) {
-                        throw rethrow(e);
+            spawner.spawn(() -> {
+                try {
+                    if (!runner.run()) {
+                        success.set(false);
                     }
+                } catch (Exception e) {
+                    throw rethrow(e);
                 }
             });
         }
@@ -214,7 +211,7 @@ public class RunTestSuiteTask {
         if (!parallel) {
             return null;
         }
-        Map<TestPhase, CountDownLatch> testPhaseSyncMap = new ConcurrentHashMap<TestPhase, CountDownLatch>();
+        Map<TestPhase, CountDownLatch> testPhaseSyncMap = new ConcurrentHashMap<>();
         boolean setTestCount = true;
         for (TestPhase testPhase : TestPhase.values()) {
             testPhaseSyncMap.put(testPhase, new CountDownLatch(setTestCount ? testCount : 0));

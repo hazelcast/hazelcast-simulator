@@ -27,7 +27,6 @@ import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 import com.hazelcast.transaction.TransactionalMap;
 import com.hazelcast.transaction.TransactionalTask;
-import com.hazelcast.transaction.TransactionalTaskContext;
 
 import java.util.Random;
 
@@ -75,69 +74,54 @@ public class MapTxTest extends HazelcastTest {
 
     @TimeStep(prob = 0)
     public Object getForUpdatePut(final ThreadState state) {
-        return targetInstance.executeTransaction(new TransactionalTask<Object>() {
-            @Override
-            public Object execute(TransactionalTaskContext ctx) {
-                int key = state.randomKey();
-                byte[] value = state.randomValue();
-                TransactionalMap<Integer, byte[]> txMap = ctx.getMap(name);
-                txMap.getForUpdate(key);
-                return txMap.put(key, value);
-            }
+        return targetInstance.executeTransaction((TransactionalTask<Object>) ctx -> {
+            int key = state.randomKey();
+            byte[] value = state.randomValue();
+            TransactionalMap<Integer, byte[]> txMap = ctx.getMap(name);
+            txMap.getForUpdate(key);
+            return txMap.put(key, value);
         });
     }
 
     @TimeStep(prob = 0)
     public Object getForUpdateSet(final ThreadState state) {
-        return targetInstance.executeTransaction(new TransactionalTask<Object>() {
-            @Override
-            public Object execute(TransactionalTaskContext ctx) {
-                int key = state.randomKey();
-                byte[] value = state.randomValue();
-                TransactionalMap<Integer, byte[]> txMap = ctx.getMap(name);
-                txMap.getForUpdate(key);
-                txMap.set(key, value);
-                return null;
-            }
+        return targetInstance.executeTransaction(ctx -> {
+            int key = state.randomKey();
+            byte[] value = state.randomValue();
+            TransactionalMap<Integer, byte[]> txMap = ctx.getMap(name);
+            txMap.getForUpdate(key);
+            txMap.set(key, value);
+            return null;
         });
     }
 
     @TimeStep(prob = 0.1)
     public Object put(final ThreadState state) {
-         return targetInstance.executeTransaction(new TransactionalTask<Object>() {
-            @Override
-            public Object execute(TransactionalTaskContext ctx) {
-                int key = state.randomKey();
-                byte[] value = state.randomValue();
-                TransactionalMap<Integer, byte[]> txMap = ctx.getMap(name);
-                return txMap.put(key, value);
-            }
-        });
+         return targetInstance.executeTransaction((TransactionalTask<Object>) ctx -> {
+             int key = state.randomKey();
+             byte[] value = state.randomValue();
+             TransactionalMap<Integer, byte[]> txMap = ctx.getMap(name);
+             return txMap.put(key, value);
+         });
     }
 
     @TimeStep(prob = 0)
     public Object set(final ThreadState state) {
-        return targetInstance.executeTransaction(new TransactionalTask<Object>() {
-            @Override
-            public Object execute(TransactionalTaskContext ctx) {
-                int key = state.randomKey();
-                byte[] value = state.randomValue();
-                TransactionalMap<Integer, byte[]> txMap = ctx.getMap(name);
-                txMap.set(key, value);
-                return 0;
-            }
+        return targetInstance.executeTransaction((TransactionalTask<Object>) ctx -> {
+            int key = state.randomKey();
+            byte[] value = state.randomValue();
+            TransactionalMap<Integer, byte[]> txMap = ctx.getMap(name);
+            txMap.set(key, value);
+            return 0;
         });
     }
 
     @TimeStep(prob = -1)
     public Object get(final ThreadState state) {
         final int key = state.randomKey();
-        return targetInstance.executeTransaction(new TransactionalTask<Object>() {
-            @Override
-            public Object execute(TransactionalTaskContext ctx) {
-                TransactionalMap<Integer, byte[]> txMap = ctx.getMap(name);
-                return txMap.get(key);
-            }
+        return targetInstance.executeTransaction((TransactionalTask<Object>) ctx -> {
+            TransactionalMap<Integer, byte[]> txMap = ctx.getMap(name);
+            return txMap.get(key);
         });
     }
 

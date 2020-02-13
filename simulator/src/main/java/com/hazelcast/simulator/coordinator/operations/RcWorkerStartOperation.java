@@ -28,7 +28,7 @@ public class RcWorkerStartOperation implements SimulatorOperation {
     private String workerType = "member";
     private String hzConfig;
     private List<String> agentAddresses;
-    private Map<String, String> tags = new HashMap<String, String>();
+    private Map<String, String> tags = new HashMap<>();
     private Map<String, String> agentTags;
 
     public Map<String, String> getAgentTags() {

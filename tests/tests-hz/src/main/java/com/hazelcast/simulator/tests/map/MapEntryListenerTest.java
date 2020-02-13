@@ -70,7 +70,7 @@ public class MapEntryListenerTest extends HazelcastTest {
     @Setup
     public void setUp() {
         values = generateAsciiStrings(valueCount, valueLength);
-        listener = new EntryListenerImpl<Integer, String>(minEntryListenerDelayMs, maxEntryListenerDelayMs);
+        listener = new EntryListenerImpl<>(minEntryListenerDelayMs, maxEntryListenerDelayMs);
 
         eventCounts = targetInstance.getList(name + "eventCount");
         listeners = targetInstance.getList(name + "listeners");

@@ -64,7 +64,7 @@ public class MemcachedDriver extends VendorDriver<MemcachedClient> {
     @Override
     public void startVendorInstance() throws Exception {
         String[] nodes = get("nodes").split(",");
-        List<InetSocketAddress> addresses = new ArrayList<InetSocketAddress>();
+        List<InetSocketAddress> addresses = new ArrayList<>();
         for (String node : nodes) {
             String[] addressParts = node.split(":");
             if (addressParts.length == 0 || addressParts.length > 2) {

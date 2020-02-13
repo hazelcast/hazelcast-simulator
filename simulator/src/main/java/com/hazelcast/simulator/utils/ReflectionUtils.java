@@ -32,7 +32,7 @@ public final class ReflectionUtils {
     }
 
     public static List<Field> getFields(Class classType, Class<? extends Annotation> annotationClass) {
-        List<Field> fields = new ArrayList<Field>();
+        List<Field> fields = new ArrayList<>();
         do {
             for (Field field : classType.getDeclaredFields()) {
                 if (field.isAnnotationPresent(annotationClass)) {

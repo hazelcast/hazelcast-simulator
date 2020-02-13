@@ -47,7 +47,7 @@ public final class TestPerformanceTracker {
     private static final long ONE_SECOND_IN_MILLIS = SECONDS.toMillis(1);
 
     private final TestContainer testContainer;
-    private final Map<String, HistogramLogWriter> histogramLogWriterMap = new HashMap<String, HistogramLogWriter>();
+    private final Map<String, HistogramLogWriter> histogramLogWriterMap = new HashMap<>();
     private final PerformanceLogWriter performanceLogWriter;
     private long lastUpdateMillis;
     private Map<String, Histogram> intervalHistogramMap;
@@ -109,7 +109,7 @@ public final class TestPerformanceTracker {
 
     private void makeUpdate(long updateIntervalMillis, long currentTimeMillis) {
         Map<String, Probe> probeMap = testContainer.getProbeMap();
-        Map<String, Histogram> intervalHistograms = new HashMap<String, Histogram>(probeMap.size());
+        Map<String, Histogram> intervalHistograms = new HashMap<>(probeMap.size());
 
         long intervalPercentileLatency = -1;
         double intervalMean = -1;

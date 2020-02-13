@@ -28,8 +28,6 @@ import com.hazelcast.transaction.TransactionException;
 import com.hazelcast.transaction.TransactionOptions;
 import com.hazelcast.transaction.TransactionOptions.TransactionType;
 import com.hazelcast.transaction.TransactionalMap;
-import com.hazelcast.transaction.TransactionalTask;
-import com.hazelcast.transaction.TransactionalTaskContext;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.rethrow;
 import static com.hazelcast.transaction.TransactionOptions.TransactionType.TWO_PHASE;
@@ -71,24 +69,21 @@ public class MapTransactionTest extends HazelcastTest {
     }
 
     @TimeStep
-    public void timeStep(ThreadState state) throws Exception {
+    public void timeStep(ThreadState state) {
         final int key = state.randomInt(keyCount);
         final int increment = state.randomInt(100);
 
         try {
-            targetInstance.executeTransaction(transactionOptions, new TransactionalTask<Object>() {
-                @Override
-                public Object execute(TransactionalTaskContext txContext) {
-                    TransactionalMap<Integer, Long> txMap = txContext.getMap(name);
-                    Long value;
-                    if (getForUpdate) {
-                        value = txMap.getForUpdate(key);
-                    } else {
-                        value = txMap.get(key);
-                    }
-                    txMap.put(key, value + increment);
-                    return null;
+            targetInstance.executeTransaction(transactionOptions, txContext -> {
+                TransactionalMap<Integer, Long> txMap = txContext.getMap(name);
+                Long value;
+                if (getForUpdate) {
+                    value = txMap.getForUpdate(key);
+                } else {
+                    value = txMap.get(key);
                 }
+                txMap.put(key, value + increment);
+                return null;
             });
             state.increments[key] += increment;
         } catch (TransactionException e) {

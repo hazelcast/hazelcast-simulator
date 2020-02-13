@@ -108,7 +108,7 @@ public class WorkerProcessLauncher {
         Map<String, String> environment = processBuilder.environment();
 
         StringBuilder sb = new StringBuilder();
-        List<String> keys = new ArrayList<String>(parameters.asMap().keySet());
+        List<String> keys = new ArrayList<>(parameters.asMap().keySet());
         Collections.sort(keys);
         for (String key : keys) {
             String value = parameters.get(key);

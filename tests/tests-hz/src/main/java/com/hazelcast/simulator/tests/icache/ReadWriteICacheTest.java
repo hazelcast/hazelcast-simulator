@@ -55,14 +55,14 @@ public class ReadWriteICacheTest extends HazelcastTest {
     public void setup() {
         counters = targetInstance.getList(name + "counters");
 
-        RecordingCacheLoader<Integer> loader = new RecordingCacheLoader<Integer>();
+        RecordingCacheLoader<Integer> loader = new RecordingCacheLoader<>();
         loader.loadDelayMs = getDelayMs;
 
-        RecordingCacheWriter<Integer, Integer> writer = new RecordingCacheWriter<Integer, Integer>();
+        RecordingCacheWriter<Integer, Integer> writer = new RecordingCacheWriter<>();
         writer.writeDelayMs = putDelayMs;
         writer.deleteDelayMs = removeDelayMs;
 
-        config = new CacheConfig<Integer, Integer>();
+        config = new CacheConfig<>();
         config.setReadThrough(true);
         config.setWriteThrough(true);
         config.setCacheLoaderFactory(FactoryBuilder.factoryOf(loader));
