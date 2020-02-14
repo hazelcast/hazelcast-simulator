@@ -22,7 +22,7 @@
     </properties>
 
     <modules>
-        <module>tests-hz</module>
+        <module>tests-hazelcast</module>
         <module>tests-ignite</module>
         <module>tests-infinispan</module>
         <module>tests-couchbase</module>

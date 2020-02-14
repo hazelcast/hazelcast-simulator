@@ -27,5 +27,7 @@
 
     <!--MANAGEMENT_CENTER_CONFIG-->
 
+    <cache name="*">
+    </cache>
 </hazelcast>
 

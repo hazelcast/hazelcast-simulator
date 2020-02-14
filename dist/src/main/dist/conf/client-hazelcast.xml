@@ -13,8 +13,6 @@
         </cluster-members>
     </network>
 
-    <!--LICENSE-KEY-->
-
     <properties>
         <property name="hazelcast.logging.type">log4j</property>
     </properties>
