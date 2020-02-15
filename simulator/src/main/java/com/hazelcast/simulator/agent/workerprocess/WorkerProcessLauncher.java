@@ -226,14 +226,14 @@ public class WorkerProcessLauncher {
         String vendor = parameters.get("VENDOR");
         if ("hazelcast".equals(vendor) || "hazelcast-enterprise".equals(vendor)) {
             String hzVersionDirectory = directoryForVersionSpec(parameters.get("VERSION_SPEC"));
-            String testJarVersion = getHazelcastVersionFromJAR(simulatorHome + "/vendor-lib/tests-hz"
+            String testJarVersion = getHazelcastVersionFromJAR(simulatorHome + "/vendor-lib/tests-hazelcast"
                     + hzVersionDirectory + "/*");
             classpath += CLASSPATH_SEPARATOR + simulatorHome + "/vendor-lib/" + hzVersionDirectory + "/*";
             // the version specific tests need to be loaded in front of the 'common' one since classpath respects
             // the order of classpath elements
-            classpath += CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/tests-hz" + testJarVersion + "/*";
+            classpath += CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/tests-hazelcast" + testJarVersion + "/*";
             // the common test classes.
-            classpath += CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/tests-hz/*";
+            classpath += CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/tests-hazelcast/*";
         } else {
             classpath += CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/tests-" + vendor + "/*";
         }

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<assembly xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2"
+<assembly xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/3.1.1"
           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-          xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2 http://maven.apache.org/xsd/assembly-1.1.2.xsd">
+          xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/3.1.1 http://maven.apache.org/xsd/assembly-3.1.1.xsd">
     <id>dist</id>
     <formats>
         <format>tar.gz</format>
@@ -23,25 +23,34 @@
         </fileSet>
     </fileSets>
     <dependencySets>
+
         <dependencySet>
             <outputDirectory>lib</outputDirectory>
             <useProjectArtifact>false</useProjectArtifact>
+            <useTransitiveFiltering>true</useTransitiveFiltering>
+            <includes>
+                <include>com.hazelcast.simulator:simulator</include>
+                <include>junit:junit</include>
+            </includes>
             <excludes>
-                <exclude>com.hazelcast.simulator:tests-*</exclude>
+                <exclude>com.hazelcast:hazelcast</exclude>
             </excludes>
         </dependencySet>
 
         <dependencySet>
-            <outputDirectory>test-lib/tests-hz</outputDirectory>
+            <outputDirectory>test-lib/tests-hazelcast</outputDirectory>
             <useProjectArtifact>false</useProjectArtifact>
+            <useTransitiveFiltering>true</useTransitiveFiltering>
             <includes>
-                <include>com.hazelcast.simulator:tests-hz</include>
+                <include>com.hazelcast.simulator:tests-hazelcast</include>
+                <include>io.netty:netty-*</include>
             </includes>
         </dependencySet>
 
         <dependencySet>
             <outputDirectory>test-lib/tests-ignite</outputDirectory>
             <useProjectArtifact>false</useProjectArtifact>
+            <useTransitiveFiltering>true</useTransitiveFiltering>
             <includes>
                 <include>com.hazelcast.simulator:tests-ignite</include>
             </includes>
@@ -50,6 +59,7 @@
         <dependencySet>
             <outputDirectory>test-lib/tests-infinispan</outputDirectory>
             <useProjectArtifact>false</useProjectArtifact>
+            <useTransitiveFiltering>true</useTransitiveFiltering>
             <includes>
                 <include>com.hazelcast.simulator:tests-infinispan</include>
             </includes>
@@ -58,6 +68,7 @@
         <dependencySet>
             <outputDirectory>test-lib/tests-couchbase</outputDirectory>
             <useProjectArtifact>false</useProjectArtifact>
+            <useTransitiveFiltering>true</useTransitiveFiltering>
             <includes>
                 <include>com.hazelcast.simulator:tests-couchbase</include>
             </includes>
@@ -66,6 +77,7 @@
         <dependencySet>
             <outputDirectory>test-lib/tests-memcached</outputDirectory>
             <useProjectArtifact>false</useProjectArtifact>
+            <useTransitiveFiltering>true</useTransitiveFiltering>
             <includes>
                 <include>com.hazelcast.simulator:tests-memcached</include>
             </includes>
@@ -74,6 +86,7 @@
         <dependencySet>
             <outputDirectory>test-lib/tests-mongodb</outputDirectory>
             <useProjectArtifact>false</useProjectArtifact>
+            <useTransitiveFiltering>true</useTransitiveFiltering>
             <includes>
                 <include>com.hazelcast.simulator:tests-mongodb</include>
             </includes>
@@ -82,6 +95,7 @@
         <dependencySet>
             <outputDirectory>test-lib/tests-lettuce</outputDirectory>
             <useProjectArtifact>false</useProjectArtifact>
+            <useTransitiveFiltering>true</useTransitiveFiltering>
             <includes>
                 <include>com.hazelcast.simulator:tests-lettuce</include>
             </includes>
@@ -89,6 +103,7 @@
 
         <dependencySet>
             <outputDirectory>test-lib/tests-jedis</outputDirectory>
+            <useTransitiveFiltering>true</useTransitiveFiltering>
             <useProjectArtifact>false</useProjectArtifact>
             <includes>
                 <include>com.hazelcast.simulator:tests-jedis</include>
