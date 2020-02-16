@@ -141,8 +141,8 @@ public abstract class VendorDriver<V> implements Closeable {
      */
     public abstract WorkerParameters loadWorkerParameters(String workerType, int agentIndex);
 
-    protected String loadConfiguration(String logPrefix, String filename) {
-        File file = getConfigurationFile(filename);
+    protected String loadConfigFile(String logPrefix, String filename) {
+        File file = getConfigurationFile(filename, get("VENDOR"));
         String config = configCache.get(filename);
         if (config == null) {
             config = fileAsText(file);
@@ -153,7 +153,7 @@ public abstract class VendorDriver<V> implements Closeable {
     }
 
     protected String loadLog4jConfig() {
-        return loadConfiguration("Log4J configuration for worker", "worker-log4j.xml");
+        return loadConfigFile("Log4J configuration for worker", "worker-log4j.xml");
     }
 
     protected String loadWorkerScript(String workerType) {

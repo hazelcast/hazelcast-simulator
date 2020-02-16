@@ -21,7 +21,29 @@
                 <exclude>bin/*</exclude>
             </excludes>
         </fileSet>
+
+        <fileSet>
+            <directory>${project.basedir}/../drivers/driver-hazelcast/conf</directory>
+            <outputDirectory>drivers/driver-hazelcast/conf</outputDirectory>
+            <fileMode>0755</fileMode>
+            <directoryMode>0755</directoryMode>
+        </fileSet>
+
+        <fileSet>
+            <directory>${project.basedir}/../drivers/driver-infinispan/conf</directory>
+            <outputDirectory>drivers/driver-infinispan/conf</outputDirectory>
+            <fileMode>0755</fileMode>
+            <directoryMode>0755</directoryMode>
+        </fileSet>
+
+        <fileSet>
+            <directory>${project.basedir}/../drivers/driver-ignite/conf</directory>
+            <outputDirectory>drivers/driver-ignite/conf</outputDirectory>
+            <fileMode>0755</fileMode>
+            <directoryMode>0755</directoryMode>
+        </fileSet>
     </fileSets>
+
     <dependencySets>
 
         <dependencySet>

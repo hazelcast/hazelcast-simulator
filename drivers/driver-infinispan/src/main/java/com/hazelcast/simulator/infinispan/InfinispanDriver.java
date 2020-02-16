@@ -77,7 +77,7 @@ public class InfinispanDriver extends VendorDriver<BasicCacheContainer> {
                 + " -Djgroups.tcpping.initial_hosts=" + initialHosts(false);
 
         params.set("JVM_OPTIONS", memberArgs)
-                .set("file:infinispan.xml", loadConfiguration("Infinispan configuration", "infinispan.xml"))
+                .set("file:infinispan.xml", loadConfigFile("Infinispan configuration", "infinispan.xml"))
                 .set("file:worker.sh", loadWorkerScript("member"));
     }
 
