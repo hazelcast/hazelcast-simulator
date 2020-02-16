@@ -296,16 +296,6 @@ public final class FileUtils {
         return ensureExistingDirectory(dir);
     }
 
-    public static File ensureNewDirectory(File dir) {
-        if (dir.exists()) {
-            throw new UncheckedIOException(format("Directory [%s] already exists", dir.getAbsoluteFile()));
-        }
-        if (!dir.mkdirs()) {
-            throw new UncheckedIOException("Could not create directory [%s]" + dir.getAbsolutePath());
-        }
-        return dir;
-    }
-
     public static void rename(File source, File target) {
         if (!source.exists()) {
             return;
@@ -408,39 +398,31 @@ public final class FileUtils {
         return files;
     }
 
-    /**
-     * Copies a directory recursively.
-     *
-     * @param src    the src directory
-     * @param target the target directory
-     */
-    public static void copyDirectory(File src, File target) {
-        checkNotNull(src, "src can't be null");
-        checkNotNull(target, "target can't be null");
-
-        File[] files = src.listFiles();
-        if (files == null) {
-            return;
-        }
-
-        for (File srcFile : files) {
-            if (srcFile.isDirectory()) {
-                File targetChild = new File(target, srcFile.getName());
-                ensureExistingDirectory(targetChild);
-                copyDirectory(srcFile, targetChild);
-            } else {
-                copyFileToDirectory(srcFile, target);
-            }
-        }
-    }
-
-    public static void copyFileToDirectory(File sourceFile, File targetDirectory) {
-        File targetFile = newFile(targetDirectory, sourceFile.getName());
-        copy(sourceFile, targetFile);
-    }
-
     public static File getConfigurationFile(String filename) {
         File file = new File(getUserDir(), filename).getAbsoluteFile();
-        return file.exists() ? file : newFile(getSimulatorHome(), "conf", filename).getAbsoluteFile();
+        if (file.exists()) {
+            return file;
+        }
+
+        return newFile(getSimulatorHome(), "conf", filename).getAbsoluteFile();
+    }
+
+    public static File getConfigurationFile(String filename, String vendor) {
+        File file = new File(getUserDir(), filename).getAbsoluteFile();
+        if (file.exists()) {
+            return file;
+        }
+
+        if (vendor.equals("hazelcast-enterprise")) {
+            file = newFile(getSimulatorHome(), "drivers", "driver-hazelcast", "conf", filename);
+        } else {
+            file = newFile(getSimulatorHome(), "drivers", "driver-" + vendor, "conf", filename);
+        }
+
+        if (file.exists()) {
+            return file.getAbsoluteFile();
+        }
+
+        return newFile(getSimulatorHome(), "conf", filename).getAbsoluteFile();
     }
 }

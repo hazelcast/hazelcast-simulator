@@ -145,9 +145,9 @@ public class HazelcastDriver extends VendorDriver<HazelcastInstance> {
         }
 
         if (liteMember && new File("litemember-hazelcast.xml").exists()) {
-            return loadConfiguration("Hazelcast lite-member configuration", "litemember-hazelcast.xml");
+            return loadConfigFile("Hazelcast lite-member configuration", "litemember-hazelcast.xml");
         } else {
-            return loadConfiguration("Hazelcast member configuration", "hazelcast.xml");
+            return loadConfigFile("Hazelcast member configuration", "hazelcast.xml");
         }
     }
 
@@ -175,7 +175,7 @@ public class HazelcastDriver extends VendorDriver<HazelcastInstance> {
             return config;
         }
 
-        return loadConfiguration("Hazelcast client configuration", "client-hazelcast.xml");
+        return loadConfigFile("Hazelcast client configuration", "client-hazelcast.xml");
     }
 
     public static String createAddressConfig(String tagName, List<AgentData> agents, String port) {
@@ -203,7 +203,7 @@ public class HazelcastDriver extends VendorDriver<HazelcastInstance> {
         }
 
         String vendor = get("VENDOR");
-        String installFile = getConfigurationFile("install-" + vendor + ".sh").getPath();
+        String installFile = getConfigurationFile("install-" + vendor + ".sh", "hazelcast").getPath();
 
         LOGGER.info("Installing '" + vendor + "' version '" + versionSpec + "' on Agents using " + installFile);
 

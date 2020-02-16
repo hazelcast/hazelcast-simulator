@@ -64,7 +64,7 @@ public class IgniteDriver extends VendorDriver<Ignite> {
     }
 
     private String loadServerOrNativeClientConfig(boolean client) {
-        String config = loadConfiguration("Ignite configuration", "ignite.xml");
+        String config = loadConfigFile("Ignite configuration", "ignite.xml");
 
         ConfigFileTemplate template = new ConfigFileTemplate(config)
                 .withAgents(agents);
