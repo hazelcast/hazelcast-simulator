@@ -363,7 +363,6 @@ public class CoordinatorCliTest {
         assertEquals(TestPhase.LOCAL_VERIFY, cli.coordinatorParameters.getLastTestPhaseToSync());
     }
 
-
     @Test
     public void testInit_withLocalSetup() {
         File simulatorProperties = new File(getUserDir(), "simulator.properties").getAbsoluteFile();

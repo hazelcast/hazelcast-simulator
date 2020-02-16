@@ -9,7 +9,7 @@ import com.hazelcast.simulator.coordinator.registry.WorkerData;
 import com.hazelcast.simulator.protocol.CoordinatorClient;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.utils.CommandLineExitException;
-import com.hazelcast.simulator.vendors.StubVendorDriver;
+import com.hazelcast.simulator.fake.FakeDriver;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -93,7 +93,7 @@ public class StartWorkersTaskTest {
     private Map<SimulatorAddress, List<WorkerParameters>> getDeployment(int dedicatedMemberMachineCount,
                                                                         int memberWorkerCount,
                                                                         int clientWorkerCount) {
-        StubVendorDriver vendorDriver = new StubVendorDriver();
+        FakeDriver vendorDriver = new FakeDriver();
         registry.assignDedicatedMemberMachines(dedicatedMemberMachineCount);
 
         DeploymentPlan deploymentPlan = new DeploymentPlan(vendorDriver, registry.getAgents())

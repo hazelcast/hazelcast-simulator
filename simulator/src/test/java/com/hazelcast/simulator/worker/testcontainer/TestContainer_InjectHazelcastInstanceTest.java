@@ -1,7 +1,7 @@
 package com.hazelcast.simulator.worker.testcontainer;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.simulator.test.annotations.InjectVendor;
+import com.hazelcast.simulator.fake.FakeInstance;
 import org.junit.Test;
 
 import java.util.List;
@@ -14,36 +14,36 @@ import static org.mockito.Mockito.mock;
 public class TestContainer_InjectHazelcastInstanceTest extends TestContainer_AbstractTest {
 
     @Test
-    public void testInjectHazelcastInstance() {
+    public void testInjectVendorInstance() {
         Class list = Object.class;
         Class linkedList = mock(List.class).getClass();
 
         System.out.println(list.isAssignableFrom(linkedList));
 
 
-        HazelcastInstance hazelcastInstance = mock(HazelcastInstance.class);
-        HazelcastInstanceTest test = new HazelcastInstanceTest();
-        testContainer = createTestContainer(test, hazelcastInstance);
+        FakeInstance fakeVendorInstance = mock(FakeInstance.class);
+        InstanceTest test = new InstanceTest();
+        testContainer = createTestContainer(test, fakeVendorInstance);
 
-        assertNotNull(test.hazelcastInstance);
-        assertEquals(hazelcastInstance, test.hazelcastInstance);
+        assertNotNull(test.instance);
+        assertEquals(fakeVendorInstance, test.instance);
     }
 
     @Test
     public void whenNoAnnotation() {
-        HazelcastInstanceTest test = new HazelcastInstanceTest();
+        InstanceTest test = new InstanceTest();
         testContainer = createTestContainer(test);
 
-        assertNull(test.notAnnotatedHazelcastInstance);
+        assertNull(test.notAnnotatedInstance);
     }
 
-    private static class HazelcastInstanceTest extends BaseTest {
+    private static class InstanceTest extends BaseTest {
 
         @InjectVendor
-        private HazelcastInstance hazelcastInstance;
+        private FakeInstance instance;
 
         @SuppressWarnings("unused")
-        private HazelcastInstance notAnnotatedHazelcastInstance;
+        private FakeInstance notAnnotatedInstance;
     }
 
     @Test(expected = IllegalTestException.class)

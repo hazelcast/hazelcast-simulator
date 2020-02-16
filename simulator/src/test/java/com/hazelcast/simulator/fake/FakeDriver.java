@@ -1,18 +1,21 @@
-package com.hazelcast.simulator.vendors;
+package com.hazelcast.simulator.fake;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
+import com.hazelcast.simulator.vendors.VendorDriver;
 
 import java.io.IOException;
 
-public class StubVendorDriver extends VendorDriver {
+public class FakeDriver extends VendorDriver {
+
+    public FakeInstance instance = new FakeInstance();
+
     @Override
     public Object getVendorInstance() {
-        return null;
+        return instance;
     }
 
     @Override
     public void startVendorInstance() throws Exception {
-
     }
 
     @Override
@@ -24,6 +27,5 @@ public class StubVendorDriver extends VendorDriver {
 
     @Override
     public void close() throws IOException {
-
     }
 }

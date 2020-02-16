@@ -5,7 +5,7 @@ import com.hazelcast.simulator.coordinator.registry.AgentData;
 import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.utils.CommandLineExitException;
-import com.hazelcast.simulator.vendors.StubVendorDriver;
+import com.hazelcast.simulator.fake.FakeDriver;
 import com.hazelcast.simulator.vendors.VendorDriver;
 import org.junit.Before;
 import org.junit.Test;
@@ -32,7 +32,7 @@ public class DeploymentPlanTest {
         agent1 = registry.addAgent("192.168.0.1", "192.168.0.1").getAddress();
         agent2 = registry.addAgent("192.168.0.2", "192.168.0.2").getAddress();
         agent3 = registry.addAgent("192.168.0.3", "192.168.0.3").getAddress();
-        vendorDriver = new StubVendorDriver();
+        vendorDriver = new FakeDriver();
     }
 
     @Test

@@ -1,11 +1,15 @@
 package com.hazelcast.simulator.coordinator;
 
+import com.hazelcast.simulator.TestEnvironmentUtils;
 import com.hazelcast.simulator.agent.Agent;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.tests.FailingTest;
 import com.hazelcast.simulator.tests.SuccessTest;
+import com.hazelcast.simulator.utils.CommonUtils;
+import com.hazelcast.simulator.utils.FileUtils;
+import com.hazelcast.simulator.utils.SimulatorUtils;
 import com.hazelcast.simulator.vendors.HazelcastDriver;
 import com.hazelcast.simulator.vendors.VendorDriver;
 import org.junit.After;
@@ -14,15 +18,6 @@ import org.junit.Test;
 
 import java.io.File;
 
-import static com.hazelcast.simulator.TestEnvironmentUtils.localResourceDirectory;
-import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
-import static com.hazelcast.simulator.TestEnvironmentUtils.tearDownFakeEnvironment;
-import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
-import static com.hazelcast.simulator.utils.FileUtils.appendText;
-import static com.hazelcast.simulator.utils.FileUtils.copy;
-import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
-import static com.hazelcast.simulator.utils.SimulatorUtils.loadSimulatorProperties;
-import static com.hazelcast.simulator.utils.SimulatorUtils.localIp;
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertFalse;
 
@@ -32,16 +27,16 @@ public class CoordinatorRunMonolithTest {
     private Agent agent;
     private CoordinatorRunMonolith run;
     private Coordinator coordinator;
-    private VendorDriver hazelcastDriver;
+    private VendorDriver driver;
 
     @Before
     public void setUp() throws Exception {
-        setupFakeEnvironment();
+        TestEnvironmentUtils.setupFakeEnvironment();
 
-        File simulatorPropertiesFile = new File(getUserDir(), "simulator.properties");
-        appendText("CLOUD_PROVIDER=embedded\n", simulatorPropertiesFile);
+        File simulatorPropertiesFile = new File(FileUtils.getUserDir(), "simulator.properties");
+        FileUtils.appendText("CLOUD_PROVIDER=embedded\n", simulatorPropertiesFile);
 
-        SimulatorProperties simulatorProperties = loadSimulatorProperties();
+        SimulatorProperties simulatorProperties = SimulatorUtils.loadSimulatorProperties();
 
         CoordinatorParameters coordinatorParameters = new CoordinatorParameters()
                 .setSimulatorProperties(simulatorProperties)
@@ -51,11 +46,11 @@ public class CoordinatorRunMonolithTest {
         agent.start();
 
         registry = new Registry();
-        registry.addAgent(localIp(), localIp());
+        registry.addAgent(SimulatorUtils.localIp(), SimulatorUtils.localIp());
 
-        copy(new File(localResourceDirectory(), "hazelcast.xml"), new File(getUserDir(), "hazelcast.xml"));
+        FileUtils.copy(new File(TestEnvironmentUtils.localResourceDirectory(), "hazelcast.xml"), new File(FileUtils.getUserDir(), "hazelcast.xml"));
 
-        hazelcastDriver = new HazelcastDriver()
+        driver = new HazelcastDriver()
                 .setAgents(registry.getAgents())
                 .setAll(simulatorProperties.asPublicMap())
                 .set("SESSION_ID", coordinatorParameters.getSessionId());
@@ -67,10 +62,10 @@ public class CoordinatorRunMonolithTest {
     }
 
     @After
-    public void tearDown() throws InterruptedException {
-        closeQuietly(coordinator);
-        closeQuietly(agent);
-        tearDownFakeEnvironment();
+    public void tearDown() {
+        CommonUtils.closeQuietly(coordinator);
+        CommonUtils.closeQuietly(agent);
+        TestEnvironmentUtils.tearDownFakeEnvironment();
     }
 
     @Test
@@ -81,7 +76,7 @@ public class CoordinatorRunMonolithTest {
                         .setProperty("threadCount", 1)
                         .setProperty("class", SuccessTest.class));
 
-        DeploymentPlan deploymentPlan = new DeploymentPlan(hazelcastDriver, registry.getAgents())
+        DeploymentPlan deploymentPlan = new DeploymentPlan(driver, registry.getAgents())
                 .addToPlan(1, "member");
         run.init(deploymentPlan);
 
@@ -98,7 +93,7 @@ public class CoordinatorRunMonolithTest {
                         .setProperty("threadCount", 1)
                         .setProperty("class", FailingTest.class));
 
-        DeploymentPlan deploymentPlan = new DeploymentPlan(hazelcastDriver, registry.getAgents())
+        DeploymentPlan deploymentPlan = new DeploymentPlan(driver, registry.getAgents())
                 .addToPlan(1, "member");
 
         run.init(deploymentPlan);

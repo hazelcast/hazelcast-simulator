@@ -1,12 +1,12 @@
 package com.hazelcast.simulator.worker.testcontainer;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.protocol.Server;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.utils.ExceptionReporter;
+import com.hazelcast.simulator.fake.FakeInstance;
 import org.junit.After;
 import org.junit.Before;
 
@@ -36,15 +36,15 @@ public abstract class TestContainer_AbstractTest {
     }
 
     <T> TestContainer createTestContainer(T test) {
-        return new TestContainer(testContext, test, new TestCase("foo"), mock(HazelcastInstance.class));
+        return new TestContainer(testContext, test, new TestCase("foo"), mock(FakeInstance.class));
     }
 
-    <T> TestContainer createTestContainer(T test, HazelcastInstance hz) {
+    <T> TestContainer createTestContainer(T test, FakeInstance hz) {
         return new TestContainer(testContext, test, new TestCase("foo"), hz);
     }
 
     <T> TestContainer createTestContainer(T test, TestCase testCase) {
-        return new TestContainer(testContext, test, testCase, mock(HazelcastInstance.class));
+        return new TestContainer(testContext, test, testCase, mock(FakeInstance.class));
     }
 
     public static class BaseTest {
