@@ -43,23 +43,27 @@ public abstract class VendorDriver<V> implements Closeable {
     public static VendorDriver loadVendorDriver(String vendorName) {
         LOGGER.info(format("Loading vendor-driver [%s]", vendorName));
 
-        if (vendorName.equals("hazelcast") || vendorName.equals("hazelcast-enterprise")) {
-            return new HazelcastDriver();
+        if (vendorName.equals("hazelcast-enterprise")) {
+            return loadInstance("hazelcast");
         } else {
-            String driverName = "com.hazelcast.simulator." + vendorName + "."
-                    + vendorName.substring(0, 1).toUpperCase() + vendorName.substring(1) + "Driver";
-            Class driverClass;
-            try {
-                driverClass = VendorDriver.class.getClassLoader().loadClass(driverName);
-            } catch (ClassNotFoundException e) {
-                throw new CommandLineExitException(format("Could not locate driver class [%s]", driverName));
-            }
+            return loadInstance(vendorName);
+        }
+    }
 
-            try {
-                return (VendorDriver) driverClass.newInstance();
-            } catch (Exception e) {
-                throw new CommandLineExitException(format("Failed to create an instance of driver [%s]", driverName), e);
-            }
+    private static VendorDriver loadInstance(String vendorName) {
+        String driverName = "com.hazelcast.simulator." + vendorName + "."
+                + vendorName.substring(0, 1).toUpperCase() + vendorName.substring(1) + "Driver";
+        Class driverClass;
+        try {
+            driverClass = VendorDriver.class.getClassLoader().loadClass(driverName);
+        } catch (ClassNotFoundException e) {
+            throw new CommandLineExitException(format("Could not locate driver class [%s]", driverName));
+        }
+
+        try {
+            return (VendorDriver) driverClass.newInstance();
+        } catch (Exception e) {
+            throw new CommandLineExitException(format("Failed to create an instance of driver [%s]", driverName), e);
         }
     }
 

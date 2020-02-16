@@ -1,6 +1,5 @@
 package com.hazelcast.simulator.worker.testcontainer;
 
-import com.hazelcast.internal.util.executor.CompletableFutureTask;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.protocol.Server;
 import com.hazelcast.simulator.test.annotations.TimeStep;
@@ -25,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
 public class TestContainer_TimeStep_AsyncSupportTest extends TestContainer_AbstractTest {
+
     @Test
     public void test() throws Exception {
         AsyncTest testInstance = new AsyncTest();

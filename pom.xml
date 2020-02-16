@@ -97,6 +97,7 @@
         <module>dist</module>
         <module>simulator</module>
         <module>tests</module>
+        <module>integration-tests</module>
     </modules>
 
     <scm>

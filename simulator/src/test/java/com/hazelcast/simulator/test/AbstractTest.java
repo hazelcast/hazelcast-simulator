@@ -15,10 +15,9 @@
  */
 package com.hazelcast.simulator.test;
 
-import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.InjectTestContext;
 import com.hazelcast.simulator.test.annotations.InjectVendor;
+import com.hazelcast.simulator.fake.FakeInstance;
 import org.apache.log4j.Logger;
 
 public abstract class AbstractTest {
@@ -29,7 +28,7 @@ public abstract class AbstractTest {
     protected final Logger logger = Logger.getLogger(getClass());
 
     @InjectVendor
-    protected HazelcastInstance targetInstance;
+    protected FakeInstance targetInstance;
 
     @InjectTestContext
     protected TestContext testContext;

@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.coordinator;
 
+import com.hazelcast.simulator.TestEnvironmentUtils;
 import com.hazelcast.simulator.agent.Agent;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestCase;
@@ -14,24 +15,19 @@ import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.coordinator.registry.WorkerQuery;
 import com.hazelcast.simulator.tests.SuccessTest;
 import com.hazelcast.simulator.utils.AssertTask;
+import com.hazelcast.simulator.utils.CommonUtils;
 import com.hazelcast.simulator.utils.FileUtils;
+import com.hazelcast.simulator.utils.SimulatorUtils;
+import com.hazelcast.simulator.utils.TestUtils;
 import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
 
-import static com.hazelcast.simulator.TestEnvironmentUtils.localResourceDirectory;
-import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
-import static com.hazelcast.simulator.TestEnvironmentUtils.tearDownFakeEnvironment;
-import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
-import static com.hazelcast.simulator.utils.FileUtils.appendText;
-import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
-import static com.hazelcast.simulator.utils.SimulatorUtils.loadSimulatorProperties;
-import static com.hazelcast.simulator.utils.SimulatorUtils.localIp;
-import static com.hazelcast.simulator.utils.TestUtils.assertTrueEventually;
 import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -49,15 +45,15 @@ public class CoordinatorTest {
 
     @BeforeClass
     public static void beforeClass() throws Exception {
-        setupFakeEnvironment();
+        TestEnvironmentUtils.setupFakeEnvironment();
 
-        hzConfig = FileUtils.fileAsText(new File(localResourceDirectory(), "hazelcast.xml"));
-        hzClientConfig = FileUtils.fileAsText(new File(localResourceDirectory(), "client-hazelcast.xml"));
+        hzConfig = FileUtils.fileAsText(new File(TestEnvironmentUtils.localResourceDirectory(), "hazelcast.xml"));
+        hzClientConfig = FileUtils.fileAsText(new File(TestEnvironmentUtils.localResourceDirectory(), "client-hazelcast.xml"));
 
-        File simulatorPropertiesFile = new File(getUserDir(), "simulator.properties");
-        appendText("CLOUD_PROVIDER=embedded\n", simulatorPropertiesFile);
+        File simulatorPropertiesFile = new File(FileUtils.getUserDir(), "simulator.properties");
+        FileUtils.appendText("CLOUD_PROVIDER=embedded\n", simulatorPropertiesFile);
 
-        SimulatorProperties simulatorProperties = loadSimulatorProperties();
+        SimulatorProperties simulatorProperties = SimulatorUtils.loadSimulatorProperties();
 
         CoordinatorParameters coordinatorParameters = new CoordinatorParameters()
                 .setSimulatorProperties(simulatorProperties)
@@ -67,7 +63,7 @@ public class CoordinatorTest {
         agent.start();
 
         registry = new Registry();
-        agentData = registry.addAgent(localIp(), localIp());
+        agentData = registry.addAgent(SimulatorUtils.localIp(), SimulatorUtils.localIp());
 
         coordinator = new Coordinator(registry, coordinatorParameters);
         coordinator.start();
@@ -85,9 +81,9 @@ public class CoordinatorTest {
 
     @AfterClass
     public static void afterClass() {
-        closeQuietly(coordinator);
-        closeQuietly(agent);
-        tearDownFakeEnvironment();
+        CommonUtils.closeQuietly(coordinator);
+        CommonUtils.closeQuietly(agent);
+        TestEnvironmentUtils.tearDownFakeEnvironment();
     }
 
     private TestSuite newBasicTestSuite() {
@@ -103,7 +99,7 @@ public class CoordinatorTest {
     }
 
     private void assertTestStateEventually(final String testId, final String expectedState) {
-        assertTrueEventually(new AssertTask() {
+        TestUtils.assertTrueEventually(new AssertTask() {
             @Override
             public void run() throws Exception {
                 String status = coordinator.testStatus(new RcTestStatusOperation(testId));
@@ -115,26 +111,26 @@ public class CoordinatorTest {
 
     @Test
     public void workersStart_multipleWorkers() throws Exception {
-        assertEquals("A1_W" + (initialWorkerIndex + 1),
+        Assert.assertEquals("A1_W" + (initialWorkerIndex + 1),
                 coordinator.workerStart(new RcWorkerStartOperation()
                         .setWorkerType("member").setHzConfig(hzConfig)));
-        assertEquals("A1_W" + (initialWorkerIndex + 2),
+        Assert.assertEquals("A1_W" + (initialWorkerIndex + 2),
                 coordinator.workerStart(new RcWorkerStartOperation()
                         .setWorkerType("member").setHzConfig(hzConfig)));
-        assertEquals("A1_W" + (initialWorkerIndex + 3),
+        Assert.assertEquals("A1_W" + (initialWorkerIndex + 3),
                 coordinator.workerStart(new RcWorkerStartOperation()
                         .setWorkerType("member").setHzConfig(hzConfig)));
     }
 
     @Test
     public void workerStart_multipleClients() throws Exception {
-        assertEquals("A1_W" + (initialWorkerIndex + 1),
+        Assert.assertEquals("A1_W" + (initialWorkerIndex + 1),
                 coordinator.workerStart(new RcWorkerStartOperation()
                         .setWorkerType("member").setHzConfig(hzConfig)));
-        assertEquals("A1_W" + (initialWorkerIndex + 2),
+        Assert.assertEquals("A1_W" + (initialWorkerIndex + 2),
                 coordinator.workerStart(new RcWorkerStartOperation()
                         .setWorkerType("javaclient").setHzConfig(hzClientConfig)));
-        assertEquals("A1_W" + (initialWorkerIndex + 3),
+        Assert.assertEquals("A1_W" + (initialWorkerIndex + 3),
                 coordinator.workerStart(new RcWorkerStartOperation()
                         .setWorkerType("javaclient").setHzConfig(hzClientConfig)));
     }
@@ -142,17 +138,17 @@ public class CoordinatorTest {
     @Test
     public void workerStart_multipleLiteMembers() throws Exception {
         // start regular member
-        assertEquals("A1_W" + (initialWorkerIndex + 1),
+        Assert.assertEquals("A1_W" + (initialWorkerIndex + 1),
                 coordinator.workerStart(new RcWorkerStartOperation()
                         .setWorkerType("member").setHzConfig(hzConfig)));
 
         // start lite member
-        assertEquals("A1_W" + (initialWorkerIndex + 2),
+        Assert.assertEquals("A1_W" + (initialWorkerIndex + 2),
                 coordinator.workerStart(new RcWorkerStartOperation()
                         .setWorkerType("litemember").setHzConfig(hzConfig)));
 
         // start another lite member
-        assertEquals("A1_W" + (initialWorkerIndex + 3),
+        Assert.assertEquals("A1_W" + (initialWorkerIndex + 3),
                 coordinator.workerStart(new RcWorkerStartOperation()
                         .setWorkerType("litemember").setHzConfig(hzConfig)));
     }
@@ -166,7 +162,7 @@ public class CoordinatorTest {
                 .setDurationSeconds(10);
 
         String testId = coordinator.testRun(new RcTestRunOperation(suite).setAsync(true));
-        assertEquals(suite.getTestCaseList().get(0).getId(), testId);
+        Assert.assertEquals(suite.getTestCaseList().get(0).getId(), testId);
 
         assertTestCompletesEventually(testId);
     }

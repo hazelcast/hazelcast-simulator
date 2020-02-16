@@ -1,14 +1,13 @@
 package com.hazelcast.simulator.worker;
 
-import com.hazelcast.core.Hazelcast;
 import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.coordinator.registry.AgentData;
 import com.hazelcast.simulator.coordinator.registry.Registry;
+import com.hazelcast.simulator.fake.FakeDriver;
 import com.hazelcast.simulator.protocol.Broker;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.utils.FileUtils;
-import com.hazelcast.simulator.vendors.HazelcastDriver;
 import com.hazelcast.simulator.vendors.VendorDriver;
 import com.hazelcast.simulator.worker.operations.TerminateWorkerOperation;
 import org.junit.After;
@@ -50,7 +49,7 @@ public class WorkerTest {
         SimulatorProperties properties = new SimulatorProperties()
                 .set("MANAGEMENT_CENTER_URL", "none");
 
-        VendorDriver driver = new HazelcastDriver()
+        VendorDriver driver = new FakeDriver()
                 .setAgents(registry.getAgents())
                 .setAll(properties.asPublicMap())
                 .set("CONFIG", fileAsText(localResourceDirectory() + "/hazelcast.xml"));
@@ -85,7 +84,6 @@ public class WorkerTest {
             worker.awaitShutdown();
         }
 
-        Hazelcast.shutdownAll();
         tearDownFakeEnvironment();
     }
 

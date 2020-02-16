@@ -1,6 +1,5 @@
 package com.hazelcast.simulator.worker.testcontainer;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.protocol.Promise;
@@ -12,6 +11,7 @@ import com.hazelcast.simulator.tests.SuccessTest;
 import com.hazelcast.simulator.tests.TestWithSlowSetup;
 import com.hazelcast.simulator.utils.AssertTask;
 import com.hazelcast.simulator.utils.ExceptionReporter;
+import com.hazelcast.simulator.fake.FakeInstance;
 import com.hazelcast.simulator.vendors.VendorDriver;
 import com.hazelcast.simulator.worker.operations.CreateTestOperation;
 import com.hazelcast.simulator.worker.operations.StartPhaseOperation;
@@ -49,7 +49,7 @@ public class TestManagerTest {
         userDir = setupFakeUserDir();
         server = mock(Server.class);
         vendorDriver = mock(VendorDriver.class);
-        when(vendorDriver.getVendorInstance()).thenReturn(mock(HazelcastInstance.class));
+        when(vendorDriver.getVendorInstance()).thenReturn(mock(FakeInstance.class));
         manager = new TestManager(server, vendorDriver);
     }
 
