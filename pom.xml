@@ -5,8 +5,8 @@
     <groupId>com.hazelcast.simulator</groupId>
     <artifactId>simulator-root</artifactId>
     <version>0.12-SNAPSHOT</version>
-    <name>Hazelcast Simulator Root</name>
-    <description>Hazelcast Simulator: Stress/Performance Testing Environment for Hazelcast</description>
+    <name>Simulator Root</name>
+    <description>Simulator: Stress/Performance Testing Environment for IMDG's</description>
     <url>http://github.com/hazelcast/hazelcast-simulator</url>
     <packaging>pom</packaging>
 
@@ -96,7 +96,7 @@
         <module>archetype</module>
         <module>dist</module>
         <module>simulator</module>
-        <module>tests</module>
+        <module>drivers</module>
         <module>integration-tests</module>
     </modules>
 

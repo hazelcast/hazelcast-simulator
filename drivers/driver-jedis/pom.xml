@@ -2,15 +2,14 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>integration-tests</artifactId>
-    <name>Simulator Integration tests</name>
-    <packaging>pom</packaging>
+    <artifactId>driver-jedis</artifactId>
+    <name>Simulator Driver Jedis</name>
 
     <parent>
         <groupId>com.hazelcast.simulator</groupId>
         <artifactId>simulator-root</artifactId>
         <version>0.12-SNAPSHOT</version>
-        <relativePath>../pom.xml</relativePath>
+        <relativePath>../../pom.xml</relativePath>
     </parent>
 
     <prerequisites>
@@ -19,28 +18,34 @@
 
     <properties>
         <main.basedir>${project.parent.basedir}</main.basedir>
+        <jedis.version>3.0.1</jedis.version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>com.hazelcast.simulator</groupId>
             <artifactId>simulator</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.hazelcast.simulator</groupId>
-            <artifactId>driver-hazelcast</artifactId>
-            <version>${project.parent.version}</version>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>
             <groupId>com.hazelcast.simulator</groupId>
             <artifactId>simulator</artifactId>
-            <version>${project.parent.version}</version>
+            <version>${project.version}</version>
             <scope>test</scope>
             <classifier>tests</classifier>
         </dependency>
+
+        <dependency>
+            <groupId>redis.clients</groupId>
+            <artifactId>jedis</artifactId>
+            <version>${jedis.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-pool2</artifactId>
+            <version>2.3</version>
+        </dependency>
     </dependencies>
-
-
 </project>

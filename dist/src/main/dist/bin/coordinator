@@ -7,8 +7,8 @@ fi
 export JAVA_OPTS="-server -Xms256m -Xmx1g ${JAVA_EXTRA_OPTS}"
 
 classpath="${SIMULATOR_HOME}/lib/*"
-# automatically add all directories from tests-lib to the classpath
-for path in ${SIMULATOR_HOME}/test-lib/*/; do
+# automatically add all directories from driver-lib to the classpath
+for path in ${SIMULATOR_HOME}/drivers/*/; do
     if [ -d "$path" ]; then
         classpath="$classpath:$path/*"
     fi

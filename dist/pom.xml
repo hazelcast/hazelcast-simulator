@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>dist</artifactId>
-    <name>Hazelcast Simulator Distribution</name>
+    <name>Simulator Distribution</name>
     <packaging>pom</packaging>
 
     <parent>
@@ -28,42 +28,42 @@
         </dependency>
         <dependency>
             <groupId>com.hazelcast.simulator</groupId>
-            <artifactId>tests-hazelcast</artifactId>
+            <artifactId>driver-hazelcast</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.hazelcast.simulator</groupId>
-            <artifactId>tests-ignite</artifactId>
+            <artifactId>driver-ignite</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.hazelcast.simulator</groupId>
-            <artifactId>tests-infinispan</artifactId>
+            <artifactId>driver-infinispan</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.hazelcast.simulator</groupId>
-            <artifactId>tests-couchbase</artifactId>
+            <artifactId>driver-couchbase</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.hazelcast.simulator</groupId>
-            <artifactId>tests-memcached</artifactId>
+            <artifactId>driver-memcached</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.hazelcast.simulator</groupId>
-            <artifactId>tests-mongodb</artifactId>
+            <artifactId>driver-mongodb</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.hazelcast.simulator</groupId>
-            <artifactId>tests-lettuce</artifactId>
+            <artifactId>driver-lettuce</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.hazelcast.simulator</groupId>
-            <artifactId>tests-jedis</artifactId>
+            <artifactId>driver-jedis</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>
