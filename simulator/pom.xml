@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>simulator</artifactId>
-    <name>Hazelcast Simulator Tool</name>
+    <name>Simulator Tool</name>
 
     <parent>
         <groupId>com.hazelcast.simulator</groupId>

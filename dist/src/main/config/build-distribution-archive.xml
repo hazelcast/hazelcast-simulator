@@ -38,76 +38,76 @@
         </dependencySet>
 
         <dependencySet>
-            <outputDirectory>test-lib/tests-hazelcast</outputDirectory>
+            <outputDirectory>drivers/driver-hazelcast</outputDirectory>
             <useProjectArtifact>false</useProjectArtifact>
             <useTransitiveFiltering>true</useTransitiveFiltering>
             <includes>
-                <include>com.hazelcast.simulator:tests-hazelcast</include>
+                <include>com.hazelcast.simulator:driver-hazelcast</include>
                 <include>io.netty:netty-*</include>
             </includes>
         </dependencySet>
 
         <dependencySet>
-            <outputDirectory>test-lib/tests-ignite</outputDirectory>
+            <outputDirectory>drivers/driver-ignite</outputDirectory>
             <useProjectArtifact>false</useProjectArtifact>
             <useTransitiveFiltering>true</useTransitiveFiltering>
             <includes>
-                <include>com.hazelcast.simulator:tests-ignite</include>
+                <include>com.hazelcast.simulator:driver-ignite</include>
             </includes>
         </dependencySet>
 
         <dependencySet>
-            <outputDirectory>test-lib/tests-infinispan</outputDirectory>
+            <outputDirectory>drivers/driver-infinispan</outputDirectory>
             <useProjectArtifact>false</useProjectArtifact>
             <useTransitiveFiltering>true</useTransitiveFiltering>
             <includes>
-                <include>com.hazelcast.simulator:tests-infinispan</include>
+                <include>com.hazelcast.simulator:driver-infinispan</include>
                 <include>io.netty:netty-*</include>
             </includes>
         </dependencySet>
 
         <dependencySet>
-            <outputDirectory>test-lib/tests-couchbase</outputDirectory>
+            <outputDirectory>drivers/driver-couchbase</outputDirectory>
             <useProjectArtifact>false</useProjectArtifact>
             <useTransitiveFiltering>true</useTransitiveFiltering>
             <includes>
-                <include>com.hazelcast.simulator:tests-couchbase</include>
+                <include>com.hazelcast.simulator:driver-couchbase</include>
             </includes>
         </dependencySet>
 
         <dependencySet>
-            <outputDirectory>test-lib/tests-memcached</outputDirectory>
+            <outputDirectory>drivers/driver-memcached</outputDirectory>
             <useProjectArtifact>false</useProjectArtifact>
             <useTransitiveFiltering>true</useTransitiveFiltering>
             <includes>
-                <include>com.hazelcast.simulator:tests-memcached</include>
+                <include>com.hazelcast.simulator:driver-memcached</include>
             </includes>
         </dependencySet>
 
         <dependencySet>
-            <outputDirectory>test-lib/tests-mongodb</outputDirectory>
+            <outputDirectory>drivers/driver-mongodb</outputDirectory>
             <useProjectArtifact>false</useProjectArtifact>
             <useTransitiveFiltering>true</useTransitiveFiltering>
             <includes>
-                <include>com.hazelcast.simulator:tests-mongodb</include>
+                <include>com.hazelcast.simulator:driver-mongodb</include>
             </includes>
         </dependencySet>
 
         <dependencySet>
-            <outputDirectory>test-lib/tests-lettuce</outputDirectory>
+            <outputDirectory>drivers/driver-lettuce</outputDirectory>
             <useProjectArtifact>false</useProjectArtifact>
             <useTransitiveFiltering>true</useTransitiveFiltering>
             <includes>
-                <include>com.hazelcast.simulator:tests-lettuce</include>
+                <include>com.hazelcast.simulator:driver-lettuce</include>
             </includes>
         </dependencySet>
 
         <dependencySet>
-            <outputDirectory>test-lib/tests-jedis</outputDirectory>
+            <outputDirectory>drivers/driver-jedis</outputDirectory>
             <useTransitiveFiltering>true</useTransitiveFiltering>
             <useProjectArtifact>false</useProjectArtifact>
             <includes>
-                <include>com.hazelcast.simulator:tests-jedis</include>
+                <include>com.hazelcast.simulator:driver-jedis</include>
             </includes>
         </dependencySet>
     </dependencySets>
