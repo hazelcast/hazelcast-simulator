@@ -28,42 +28,42 @@
         </dependency>
         <dependency>
             <groupId>com.hazelcast.simulator</groupId>
-            <artifactId>tests-hazelcast</artifactId>
+            <artifactId>hazelcast</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.hazelcast.simulator</groupId>
-            <artifactId>tests-ignite</artifactId>
+            <artifactId>ignite</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.hazelcast.simulator</groupId>
-            <artifactId>tests-infinispan</artifactId>
+            <artifactId>infinispan</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.hazelcast.simulator</groupId>
-            <artifactId>tests-couchbase</artifactId>
+            <artifactId>couchbase</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.hazelcast.simulator</groupId>
-            <artifactId>tests-memcached</artifactId>
+            <artifactId>memcached</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.hazelcast.simulator</groupId>
-            <artifactId>tests-mongodb</artifactId>
+            <artifactId>mongodb</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.hazelcast.simulator</groupId>
-            <artifactId>tests-lettuce</artifactId>
+            <artifactId>lettuce</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.hazelcast.simulator</groupId>
-            <artifactId>tests-jedis</artifactId>
+            <artifactId>jedis</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>

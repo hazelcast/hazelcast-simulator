@@ -13,8 +13,8 @@ uploadLibraryJar(){
 
 uploadTestLibJar(){
     pattern=$1
-    src="$SIMULATOR_HOME/test-lib/tests-$VENDOR/$pattern"
-    rsync --checksum -avv -L -e "ssh $SSH_OPTIONS" $src $SIMULATOR_USER@$agent:hazelcast-simulator-$SIMULATOR_VERSION/test-lib/tests-$VENDOR/
+    src="$SIMULATOR_HOME/vendors/$VENDOR/$pattern"
+    rsync --checksum -avv -L -e "ssh $SSH_OPTIONS" $src $SIMULATOR_USER@$agent:hazelcast-simulator-$SIMULATOR_VERSION/vendors/$VENDOR/
 }
 
 uploadToRemoteSimulatorDir(){
@@ -55,11 +55,11 @@ uploadLibraryJar "slf4j-log4j12-*"
 
 # hack to get hz enterprise working
 if [ "$VENDOR" = "hazelcast-enterprise" ]; then
-    ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "mkdir -p hazelcast-simulator-$SIMULATOR_VERSION/test-lib/tests-hazelcast"
-    rsync --checksum -avv -L -e "ssh $SSH_OPTIONS" $SIMULATOR_HOME/test-lib/tests-hazelcast/* \
-            $SIMULATOR_USER@$agent:hazelcast-simulator-$SIMULATOR_VERSION/test-lib/tests-hazelcast/
+    ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "mkdir -p hazelcast-simulator-$SIMULATOR_VERSION/vendors/hazelcast"
+    rsync --checksum -avv -L -e "ssh $SSH_OPTIONS" $SIMULATOR_HOME/vendors/hazelcast/* \
+            $SIMULATOR_USER@$agent:hazelcast-simulator-$SIMULATOR_VERSION/vendors/hazelcast/
 else
-    ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "mkdir -p hazelcast-simulator-$SIMULATOR_VERSION/test-lib/tests-$VENDOR"
+    ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "mkdir -p hazelcast-simulator-$SIMULATOR_VERSION/vendors/$VENDOR"
     uploadTestLibJar "*"
 fi
 

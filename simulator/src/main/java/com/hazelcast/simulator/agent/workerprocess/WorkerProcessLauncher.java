@@ -227,9 +227,9 @@ public class WorkerProcessLauncher {
             String hzVersionDirectory = directoryForVersionSpec(parameters.get("VERSION_SPEC"));
             classpath += CLASSPATH_SEPARATOR + simulatorHome + "/vendor-lib/" + hzVersionDirectory + "/*";
             // the common test classes.
-            classpath += CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/tests-hazelcast/*";
+            classpath += CLASSPATH_SEPARATOR + simulatorHome + "/vendors/hazelcast/*";
         } else {
-            classpath += CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/tests-" + vendor + "/*";
+            classpath += CLASSPATH_SEPARATOR + simulatorHome + "/vendors/" + vendor + "/*";
         }
 
         return classpath;

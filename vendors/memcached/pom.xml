@@ -2,15 +2,14 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>integration-tests</artifactId>
-    <name>Hazelcast Simulator Integration tests</name>
-    <packaging>pom</packaging>
+    <artifactId>memcached</artifactId>
+    <name>Hazelcast Simulator Tests (Memcached)</name>
 
     <parent>
         <groupId>com.hazelcast.simulator</groupId>
         <artifactId>simulator-root</artifactId>
         <version>0.12-SNAPSHOT</version>
-        <relativePath>../pom.xml</relativePath>
+        <relativePath>../../pom.xml</relativePath>
     </parent>
 
     <prerequisites>
@@ -19,28 +18,29 @@
 
     <properties>
         <main.basedir>${project.parent.basedir}</main.basedir>
+        <memcached-javaclient.version>2.12.3</memcached-javaclient.version>
+        <javassist.version>3.12.1.GA</javassist.version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>com.hazelcast.simulator</groupId>
             <artifactId>simulator</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.hazelcast.simulator</groupId>
-            <artifactId>hazelcast</artifactId>
-            <version>${project.parent.version}</version>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>
             <groupId>com.hazelcast.simulator</groupId>
             <artifactId>simulator</artifactId>
-            <version>${project.parent.version}</version>
+            <version>${project.version}</version>
             <scope>test</scope>
             <classifier>tests</classifier>
         </dependency>
+
+        <dependency>
+            <groupId>net.spy</groupId>
+            <artifactId>spymemcached</artifactId>
+            <version>${memcached-javaclient.version}</version>
+        </dependency>
     </dependencies>
-
-
 </project>

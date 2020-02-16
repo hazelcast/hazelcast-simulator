@@ -10,7 +10,7 @@ import com.hazelcast.simulator.tests.SuccessTest;
 import com.hazelcast.simulator.utils.CommonUtils;
 import com.hazelcast.simulator.utils.FileUtils;
 import com.hazelcast.simulator.utils.SimulatorUtils;
-import com.hazelcast.simulator.vendors.HazelcastDriver;
+import com.hazelcast.simulator.hazelcast.HazelcastDriver;
 import com.hazelcast.simulator.vendors.VendorDriver;
 import org.junit.After;
 import org.junit.Before;

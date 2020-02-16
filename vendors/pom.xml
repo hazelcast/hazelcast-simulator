@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>vendors</artifactId>
+    <name>Hazelcast Simulator Tests</name>
+    <packaging>pom</packaging>
+
+    <parent>
+        <groupId>com.hazelcast.simulator</groupId>
+        <artifactId>simulator-root</artifactId>
+        <version>0.12-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <prerequisites>
+        <maven>${maven.version}</maven>
+    </prerequisites>
+
+    <properties>
+        <main.basedir>${project.parent.basedir}</main.basedir>
+    </properties>
+
+    <modules>
+        <module>hazelcast</module>
+        <module>ignite</module>
+        <module>infinispan</module>
+        <module>couchbase</module>
+        <module>memcached</module>
+        <module>mongodb</module>
+        <module>lettuce</module>
+        <module>jedis</module>
+    </modules>
+</project>

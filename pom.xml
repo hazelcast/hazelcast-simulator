@@ -96,7 +96,7 @@
         <module>archetype</module>
         <module>dist</module>
         <module>simulator</module>
-        <module>tests</module>
+        <module>vendors</module>
         <module>integration-tests</module>
     </modules>
 

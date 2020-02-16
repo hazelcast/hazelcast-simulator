@@ -38,76 +38,76 @@
         </dependencySet>
 
         <dependencySet>
-            <outputDirectory>test-lib/tests-hazelcast</outputDirectory>
+            <outputDirectory>vendors/hazelcast</outputDirectory>
             <useProjectArtifact>false</useProjectArtifact>
             <useTransitiveFiltering>true</useTransitiveFiltering>
             <includes>
-                <include>com.hazelcast.simulator:tests-hazelcast</include>
+                <include>com.hazelcast.simulator:hazelcast</include>
                 <include>io.netty:netty-*</include>
             </includes>
         </dependencySet>
 
         <dependencySet>
-            <outputDirectory>test-lib/tests-ignite</outputDirectory>
+            <outputDirectory>vendors/ignite</outputDirectory>
             <useProjectArtifact>false</useProjectArtifact>
             <useTransitiveFiltering>true</useTransitiveFiltering>
             <includes>
-                <include>com.hazelcast.simulator:tests-ignite</include>
+                <include>com.hazelcast.simulator:ignite</include>
             </includes>
         </dependencySet>
 
         <dependencySet>
-            <outputDirectory>test-lib/tests-infinispan</outputDirectory>
+            <outputDirectory>vendors/infinispan</outputDirectory>
             <useProjectArtifact>false</useProjectArtifact>
             <useTransitiveFiltering>true</useTransitiveFiltering>
             <includes>
-                <include>com.hazelcast.simulator:tests-infinispan</include>
+                <include>com.hazelcast.simulator:infinispan</include>
                 <include>io.netty:netty-*</include>
             </includes>
         </dependencySet>
 
         <dependencySet>
-            <outputDirectory>test-lib/tests-couchbase</outputDirectory>
+            <outputDirectory>vendors/couchbase</outputDirectory>
             <useProjectArtifact>false</useProjectArtifact>
             <useTransitiveFiltering>true</useTransitiveFiltering>
             <includes>
-                <include>com.hazelcast.simulator:tests-couchbase</include>
+                <include>com.hazelcast.simulator:couchbase</include>
             </includes>
         </dependencySet>
 
         <dependencySet>
-            <outputDirectory>test-lib/tests-memcached</outputDirectory>
+            <outputDirectory>vendors/memcached</outputDirectory>
             <useProjectArtifact>false</useProjectArtifact>
             <useTransitiveFiltering>true</useTransitiveFiltering>
             <includes>
-                <include>com.hazelcast.simulator:tests-memcached</include>
+                <include>com.hazelcast.simulator:memcached</include>
             </includes>
         </dependencySet>
 
         <dependencySet>
-            <outputDirectory>test-lib/tests-mongodb</outputDirectory>
+            <outputDirectory>vendors/mongodb</outputDirectory>
             <useProjectArtifact>false</useProjectArtifact>
             <useTransitiveFiltering>true</useTransitiveFiltering>
             <includes>
-                <include>com.hazelcast.simulator:tests-mongodb</include>
+                <include>com.hazelcast.simulator:mongodb</include>
             </includes>
         </dependencySet>
 
         <dependencySet>
-            <outputDirectory>test-lib/tests-lettuce</outputDirectory>
+            <outputDirectory>vendors/lettuce</outputDirectory>
             <useProjectArtifact>false</useProjectArtifact>
             <useTransitiveFiltering>true</useTransitiveFiltering>
             <includes>
-                <include>com.hazelcast.simulator:tests-lettuce</include>
+                <include>com.hazelcast.simulator:lettuce</include>
             </includes>
         </dependencySet>
 
         <dependencySet>
-            <outputDirectory>test-lib/tests-jedis</outputDirectory>
+            <outputDirectory>vendors/jedis</outputDirectory>
             <useTransitiveFiltering>true</useTransitiveFiltering>
             <useProjectArtifact>false</useProjectArtifact>
             <includes>
-                <include>com.hazelcast.simulator:tests-jedis</include>
+                <include>com.hazelcast.simulator:jedis</include>
             </includes>
         </dependencySet>
     </dependencySets>
