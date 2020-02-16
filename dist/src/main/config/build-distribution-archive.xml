@@ -62,6 +62,7 @@
             <useTransitiveFiltering>true</useTransitiveFiltering>
             <includes>
                 <include>com.hazelcast.simulator:tests-infinispan</include>
+                <include>io.netty:netty-*</include>
             </includes>
         </dependencySet>
 
