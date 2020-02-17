@@ -13,52 +13,41 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.infinispan.cache;
+package com.hazelcast.simulator.infinispan10.cache;
 
-import com.hazelcast.simulator.infinispan.InfinispanTest;
+import com.hazelcast.simulator.infinispan10.InfinispanTest;
 import com.hazelcast.simulator.test.BaseThreadState;
+import com.hazelcast.simulator.test.annotations.InjectVendor;
 import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
-import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
+import org.infinispan.commons.api.BasicCacheContainer;
 
-import javax.cache.Cache;
-import javax.cache.CacheManager;
-import javax.cache.Caching;
-import java.util.Random;
+import java.util.Map;
 
-import static com.hazelcast.simulator.utils.GeneratorUtils.generateAsciiStrings;
-
-public class LongStringCacheTest extends InfinispanTest {
+public class LongLongCacheTest extends InfinispanTest {
 
     // properties
     public int keyDomain = 10000;
-    public int valueCount = 10000;
-    public int valueLength = 10;
-    public int minValueLength = valueLength;
-    public int maxValueLength = valueLength;
 
-    private Cache<Long, String> cache;
-    private String[] values;
+    @InjectVendor
+    private BasicCacheContainer cacheContainer;
+    private Map<Long, Long> cache;
 
     @Setup
     public void setup() {
-        CacheManager cacheManager = Caching.getCachingProvider().getCacheManager();
-        cache = cacheManager.getCache(name);
-        values = generateAsciiStrings(valueCount, minValueLength, maxValueLength);
+        cache = cacheContainer.getCache(name);
     }
 
     @Prepare(global = true)
     public void prepare() {
-        Random random = new Random();
         for (long key = 0; key < keyDomain; key++) {
-            String value = values[random.nextInt(valueCount)];
-            cache.put(key, value);
+            cache.put(key, key);
         }
     }
 
     @TimeStep(prob = -1)
-    public String get(ThreadState state) {
+    public Long get(ThreadState state) {
         return cache.get(state.randomKey());
     }
 
@@ -69,17 +58,12 @@ public class LongStringCacheTest extends InfinispanTest {
 
     public class ThreadState extends BaseThreadState {
 
-        private long randomKey() {
+        private Long randomKey() {
             return randomLong(keyDomain);
         }
 
-        private String randomValue() {
-            return values[randomInt(values.length)];
+        private Long randomValue() {
+            return randomLong();
         }
-    }
-
-    @Teardown
-    public void tearDown() {
-        cache.close();
     }
 }

@@ -13,41 +13,48 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.infinispan.cache;
+package com.hazelcast.simulator.infinispan10.cache;
 
-import com.hazelcast.simulator.infinispan.InfinispanTest;
+import com.hazelcast.simulator.infinispan10.InfinispanTest;
 import com.hazelcast.simulator.test.BaseThreadState;
-import com.hazelcast.simulator.test.annotations.InjectVendor;
 import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.TimeStep;
-import org.infinispan.commons.api.BasicCacheContainer;
 
 import java.util.Map;
+import java.util.Random;
 
-public class LongLongCacheTest extends InfinispanTest {
+import static com.hazelcast.simulator.utils.GeneratorUtils.generateAsciiStrings;
+
+public class LongStringCacheTest extends InfinispanTest {
 
     // properties
     public int keyDomain = 10000;
+    public int valueCount = 10000;
+    public int valueLength = 10;
+    public int minValueLength = valueLength;
+    public int maxValueLength = valueLength;
 
-    @InjectVendor
-    private BasicCacheContainer cacheContainer;
-    private Map<Long, Long> cache;
+    private Map<Long, String> cache;
+    private String[] values;
 
     @Setup
     public void setup() {
         cache = cacheContainer.getCache(name);
+        values = generateAsciiStrings(valueCount, minValueLength, maxValueLength);
     }
 
     @Prepare(global = true)
     public void prepare() {
+        Random random = new Random();
         for (long key = 0; key < keyDomain; key++) {
-            cache.put(key, key);
+            String value = values[random.nextInt(valueCount)];
+            cache.put(key, value);
         }
     }
 
     @TimeStep(prob = -1)
-    public Long get(ThreadState state) {
+    public String get(ThreadState state) {
         return cache.get(state.randomKey());
     }
 
@@ -58,12 +65,17 @@ public class LongLongCacheTest extends InfinispanTest {
 
     public class ThreadState extends BaseThreadState {
 
-        private Long randomKey() {
+        private long randomKey() {
             return randomLong(keyDomain);
         }
 
-        private Long randomValue() {
-            return randomLong();
+        private String randomValue() {
+            return values[randomInt(values.length)];
         }
     }
+
+//    @Teardown
+//    public void tearDown() {
+//        cache.close();
+//    }
 }

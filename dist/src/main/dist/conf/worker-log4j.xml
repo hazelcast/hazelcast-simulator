@@ -38,7 +38,10 @@
         <level value="debug"/>
         <appender-ref ref="file"/>
     </logger>
-
+    <logger name="org.infinispan">
+        <level value="debug"/>
+        <appender-ref ref="file"/>
+    </logger>
     <root>
         <priority value="info"/>
         <appender-ref ref="file"/>

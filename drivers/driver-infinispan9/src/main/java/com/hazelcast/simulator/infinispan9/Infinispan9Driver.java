@@ -13,11 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.infinispan;
+package com.hazelcast.simulator.infinispan9;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.coordinator.registry.AgentData;
 import com.hazelcast.simulator.vendors.VendorDriver;
+import org.apache.log4j.Logger;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.configuration.Configuration;
 import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
@@ -45,7 +46,8 @@ import static java.lang.String.format;
  * - some sensible configuration for the cache
  * - right ports
  */
-public class InfinispanDriver extends VendorDriver<BasicCacheContainer> {
+public class Infinispan9Driver extends VendorDriver<BasicCacheContainer> {
+    private static final Logger LOGGER = Logger.getLogger(Infinispan9Driver.class);
 
     private BasicCacheContainer cacheContainer;
     private HotRodServer hotRodServer;
@@ -121,22 +123,19 @@ public class InfinispanDriver extends VendorDriver<BasicCacheContainer> {
         if ("javaclient".equals(workerType)) {
             Properties hotrodProperties = new Properties();
             hotrodProperties.setProperty("infinispan.client.hotrod.server_list", get("server_list"));
-            Configuration configuration = new ConfigurationBuilder().withProperties(hotrodProperties).build();
+            ConfigurationBuilder configurationBuilder = new ConfigurationBuilder().withProperties(hotrodProperties);
+            Configuration configuration = configurationBuilder.build();
             RemoteCacheManager remoteCacheManager = new RemoteCacheManager(configuration);
             this.cacheContainer = remoteCacheManager;
-            remoteCacheManager.start();
         } else {
             DefaultCacheManager defaultCacheManager = new DefaultCacheManager("infinispan.xml");
             this.cacheContainer = defaultCacheManager;
-            defaultCacheManager.start();
-
             HotRodServerConfiguration hotRodServerConfiguration = new HotRodServerConfigurationBuilder()
                     .host(get("PRIVATE_ADDRESS")).port(11222).build();
             this.hotRodServer = new HotRodServer();
             hotRodServer.start(hotRodServerConfiguration, defaultCacheManager);
         }
     }
-
     @Override
     public void close() {
         if (hotRodServer != null) {
