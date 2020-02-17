@@ -43,8 +43,8 @@ public abstract class VendorDriver<V> implements Closeable {
     public static VendorDriver loadVendorDriver(String vendorName) {
         LOGGER.info(format("Loading vendor-driver [%s]", vendorName));
 
-        if (vendorName.equals("hazelcast-enterprise")) {
-            return loadInstance("hazelcast");
+        if (vendorName.equals("hazelcast-enterprise4")) {
+            return loadInstance("hazelcast4");
         } else {
             return loadInstance(vendorName);
         }

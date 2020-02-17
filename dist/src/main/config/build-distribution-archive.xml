@@ -14,6 +14,7 @@
             <fileMode>0755</fileMode>
             <directoryMode>0755</directoryMode>
         </fileSet>
+
         <fileSet>
             <directory>${project.basedir}/src/main/dist</directory>
             <outputDirectory />
@@ -23,8 +24,15 @@
         </fileSet>
 
         <fileSet>
-            <directory>${project.basedir}/../drivers/driver-hazelcast/conf</directory>
-            <outputDirectory>drivers/driver-hazelcast/conf</outputDirectory>
+            <directory>${project.basedir}/../drivers/driver-hazelcast4/conf</directory>
+            <outputDirectory>drivers/driver-hazelcast4/conf</outputDirectory>
+            <fileMode>0755</fileMode>
+            <directoryMode>0755</directoryMode>
+        </fileSet>
+
+        <fileSet>
+            <directory>${project.basedir}/../drivers/driver-hazelcast3/conf</directory>
+            <outputDirectory>drivers/driver-hazelcast3/conf</outputDirectory>
             <fileMode>0755</fileMode>
             <directoryMode>0755</directoryMode>
         </fileSet>
@@ -60,11 +68,21 @@
         </dependencySet>
 
         <dependencySet>
-            <outputDirectory>drivers/driver-hazelcast</outputDirectory>
+            <outputDirectory>drivers/driver-hazelcast4</outputDirectory>
             <useProjectArtifact>false</useProjectArtifact>
             <useTransitiveFiltering>true</useTransitiveFiltering>
             <includes>
-                <include>com.hazelcast.simulator:driver-hazelcast</include>
+                <include>com.hazelcast.simulator:driver-hazelcast4</include>
+                <include>io.netty:netty-*</include>
+            </includes>
+        </dependencySet>
+
+        <dependencySet>
+            <outputDirectory>drivers/driver-hazelcast3</outputDirectory>
+            <useProjectArtifact>false</useProjectArtifact>
+            <useTransitiveFiltering>true</useTransitiveFiltering>
+            <includes>
+                <include>com.hazelcast.simulator:driver-hazelcast3</include>
                 <include>io.netty:netty-*</include>
             </includes>
         </dependencySet>
