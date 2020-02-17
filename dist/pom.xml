@@ -73,7 +73,7 @@
         </dependency>
         <dependency>
             <groupId>com.hazelcast.simulator</groupId>
-            <artifactId>driver-jedis</artifactId>
+            <artifactId>driver-jedis3</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>

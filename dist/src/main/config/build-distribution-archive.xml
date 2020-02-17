@@ -182,11 +182,11 @@
         </dependencySet>
 
         <dependencySet>
-            <outputDirectory>drivers/driver-jedis</outputDirectory>
+            <outputDirectory>drivers/driver-jedis3</outputDirectory>
             <useTransitiveFiltering>true</useTransitiveFiltering>
             <useProjectArtifact>false</useProjectArtifact>
             <includes>
-                <include>com.hazelcast.simulator:driver-jedis</include>
+                <include>com.hazelcast.simulator:driver-jedis3</include>
             </includes>
         </dependencySet>
     </dependencySets>
