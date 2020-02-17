@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>driver-ignite2</artifactId>
-    <name>Simulator Driver Ignite</name>
+    <name>Simulator Driver Ignite 2.x</name>
 
     <parent>
         <groupId>com.hazelcast.simulator</groupId>
