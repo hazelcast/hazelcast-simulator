@@ -35,7 +35,7 @@
 
         <dependency>
             <groupId>com.hazelcast.simulator</groupId>
-            <artifactId>driver-hazelcast</artifactId>
+            <artifactId>driver-hazelcast4</artifactId>
             <version>${hazelcast-simulator.version}</version>
             <scope>compile</scope>
         </dependency>

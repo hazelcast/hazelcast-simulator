@@ -54,10 +54,10 @@ uploadLibraryJar "log4j*"
 uploadLibraryJar "slf4j-log4j12-*"
 
 # hack to get hz enterprise working
-if [ "$VENDOR" = "hazelcast-enterprise" ]; then
-    ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "mkdir -p hazelcast-simulator-$SIMULATOR_VERSION/drivers/driver-hazelcast"
-    rsync --checksum -avv -L -e "ssh $SSH_OPTIONS" $SIMULATOR_HOME/drivers/driver-hazelcast/* \
-            $SIMULATOR_USER@$agent:hazelcast-simulator-$SIMULATOR_VERSION/drivers/driver-hazelcast/
+if [ "$VENDOR" = "hazelcast-enterprise4" ]; then
+    ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "mkdir -p hazelcast-simulator-$SIMULATOR_VERSION/drivers/driver-hazelcast4"
+    rsync --checksum -avv -L -e "ssh $SSH_OPTIONS" $SIMULATOR_HOME/drivers/driver-hazelcast4/* \
+            $SIMULATOR_USER@$agent:hazelcast-simulator-$SIMULATOR_VERSION/drivers/driver-hazelcast4/
 else
     ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "mkdir -p hazelcast-simulator-$SIMULATOR_VERSION/drivers/driver-$VENDOR"
     uploadTestLibJar "*"

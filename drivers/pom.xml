@@ -22,7 +22,8 @@
     </properties>
 
     <modules>
-        <module>driver-hazelcast</module>
+        <module>driver-hazelcast4</module>
+        <module>driver-hazelcast3</module>
         <module>driver-ignite</module>
         <module>driver-infinispan</module>
         <module>driver-couchbase</module>
