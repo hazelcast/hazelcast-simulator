@@ -173,11 +173,11 @@
         </dependencySet>
 
         <dependencySet>
-            <outputDirectory>drivers/driver-lettuce</outputDirectory>
+            <outputDirectory>drivers/driver-lettuce5</outputDirectory>
             <useProjectArtifact>false</useProjectArtifact>
             <useTransitiveFiltering>true</useTransitiveFiltering>
             <includes>
-                <include>com.hazelcast.simulator:driver-lettuce</include>
+                <include>com.hazelcast.simulator:driver-lettuce5</include>
             </includes>
         </dependencySet>
 
