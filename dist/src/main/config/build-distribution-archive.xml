@@ -52,8 +52,8 @@
         </fileSet>
 
         <fileSet>
-            <directory>${project.basedir}/../drivers/driver-ignite/conf</directory>
-            <outputDirectory>drivers/driver-ignite/conf</outputDirectory>
+            <directory>${project.basedir}/../drivers/driver-ignite2/conf</directory>
+            <outputDirectory>drivers/driver-ignite2/conf</outputDirectory>
             <fileMode>0755</fileMode>
             <directoryMode>0755</directoryMode>
         </fileSet>
@@ -95,11 +95,11 @@
         </dependencySet>
 
         <dependencySet>
-            <outputDirectory>drivers/driver-ignite</outputDirectory>
+            <outputDirectory>drivers/driver-ignite2</outputDirectory>
             <useProjectArtifact>false</useProjectArtifact>
             <useTransitiveFiltering>true</useTransitiveFiltering>
             <includes>
-                <include>com.hazelcast.simulator:driver-ignite</include>
+                <include>com.hazelcast.simulator:driver-ignite2</include>
             </includes>
         </dependencySet>
 
