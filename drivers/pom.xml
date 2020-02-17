@@ -25,7 +25,8 @@
         <module>driver-hazelcast4</module>
         <module>driver-hazelcast3</module>
         <module>driver-ignite</module>
-        <module>driver-infinispan</module>
+        <module>driver-infinispan10</module>
+        <module>driver-infinispan9</module>
         <module>driver-couchbase</module>
         <module>driver-memcached</module>
         <module>driver-mongodb</module>

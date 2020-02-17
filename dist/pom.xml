@@ -43,7 +43,12 @@
         </dependency>
         <dependency>
             <groupId>com.hazelcast.simulator</groupId>
-            <artifactId>driver-infinispan</artifactId>
+            <artifactId>driver-infinispan10</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.hazelcast.simulator</groupId>
+            <artifactId>driver-infinispan9</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

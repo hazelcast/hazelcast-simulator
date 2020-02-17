@@ -27,16 +27,19 @@
     <suppress checks="JUnitTestCase|MethodName|TypeName|ExplicitInitialization"
               files="/com/hazelcast/simulator/hz/.*Test\.java$"/>
 
-
     <!-- Ignite Tests -->
     <suppress checks="MagicNumber|VisibilityModifier" files="/com/hazelcast/simulator/ignite/"/>
     <suppress checks="JUnitTestCase|MethodName|TypeName|ExplicitInitialization"
               files="/com/hazelcast/simulator/ignite/.*Test\.java$"/>
 
     <!-- Infinispan Tests -->
-    <suppress checks="MagicNumber|VisibilityModifier" files="/com/hazelcast/simulator/infinispan/"/>
+    <suppress checks="MagicNumber|VisibilityModifier" files="/com/hazelcast/simulator/infinispan9/"/>
     <suppress checks="JUnitTestCase|MethodName|TypeName|ExplicitInitialization"
-              files="/com/hazelcast/simulator/infinispan/.*Test\.java$"/>
+              files="/com/hazelcast/simulator/infinispan9/.*Test\.java$"/>
+    <!-- Infinispan Tests -->
+    <suppress checks="MagicNumber|VisibilityModifier" files="/com/hazelcast/simulator/infinispan10/"/>
+    <suppress checks="JUnitTestCase|MethodName|TypeName|ExplicitInitialization"
+              files="/com/hazelcast/simulator/infinispan10/.*Test\.java$"/>
 
     <!-- Couchbase Tests -->
     <suppress checks="MagicNumber|VisibilityModifier" files="/com/hazelcast/simulator/couchbase/"/>
