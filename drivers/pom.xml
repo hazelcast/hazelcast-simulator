@@ -30,7 +30,7 @@
         <module>driver-couchbase</module>
         <module>driver-memcached</module>
         <module>driver-mongodb</module>
-        <module>driver-lettuce</module>
+        <module>driver-lettuce5</module>
         <module>driver-jedis3</module>
     </modules>
 </project>

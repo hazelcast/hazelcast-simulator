@@ -68,7 +68,7 @@
         </dependency>
         <dependency>
             <groupId>com.hazelcast.simulator</groupId>
-            <artifactId>driver-lettuce</artifactId>
+            <artifactId>driver-lettuce5</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
