@@ -18,8 +18,7 @@
 
     <properties>
         <main.basedir>${project.parent.basedir}</main.basedir>
-        <infinispan.version>9.4.8.Final</infinispan.version>
-        <javassist.version>3.20.0-GA</javassist.version>
+        <infinispan.version>10.1.2.Final</infinispan.version>
     </properties>
 
     <dependencies>
@@ -47,24 +46,6 @@
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-jcache-remote</artifactId>
             <version>${infinispan.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.javassist</groupId>
-            <artifactId>javassist</artifactId>
-            <version>${javassist.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>2.9.10.1</version>
-        </dependency>
-
-        <dependency>
-            <groupId>io.reactivex.rxjava2</groupId>
-            <artifactId>rxjava</artifactId>
-            <version>2.2.4</version>
         </dependency>
 
         <dependency>
