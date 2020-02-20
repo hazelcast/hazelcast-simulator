@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.ignite.cache;
+package com.hazelcast.simulator.ignite2.cache;
 
-import com.hazelcast.simulator.ignite.IgniteTest;
+import com.hazelcast.simulator.ignite2.IgniteTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.ignite;
+package com.hazelcast.simulator.ignite2;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.coordinator.ConfigFileTemplate;
@@ -28,9 +28,9 @@ import java.io.File;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static java.lang.String.format;
 
-public class IgniteDriver extends VendorDriver<Ignite> {
+public class Ignite2Driver extends VendorDriver<Ignite> {
 
-    private static final Logger LOGGER = Logger.getLogger(IgniteDriver.class);
+    private static final Logger LOGGER = Logger.getLogger(Ignite2Driver.class);
     private Ignite ignite;
 
     @Override

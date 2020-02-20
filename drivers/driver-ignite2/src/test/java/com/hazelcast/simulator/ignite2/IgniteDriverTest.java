@@ -1,4 +1,4 @@
-package com.hazelcast.simulator.ignite;
+package com.hazelcast.simulator.ignite2;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.coordinator.registry.AgentData;
@@ -45,7 +45,7 @@ public class IgniteDriverTest {
 
     @Test
     public void test() throws Exception {
-        VendorDriver<Ignite> driverAtCoordinator = new IgniteDriver()
+        VendorDriver<Ignite> driverAtCoordinator = new Ignite2Driver()
                 .setAgents(singletonList(agent));
 
         WorkerParameters workerParameters = driverAtCoordinator.loadWorkerParameters("member", agent.getAddressIndex());
@@ -56,7 +56,7 @@ public class IgniteDriverTest {
             }
         }
 
-        VendorDriver<Ignite> driverAtWorker = new IgniteDriver()
+        VendorDriver<Ignite> driverAtWorker = new Ignite2Driver()
                 .setAll(workerParameters.asMap());
 
         driverAtWorker.startVendorInstance();

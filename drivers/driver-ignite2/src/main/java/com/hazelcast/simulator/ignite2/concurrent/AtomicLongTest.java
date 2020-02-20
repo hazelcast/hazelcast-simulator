@@ -13,59 +13,52 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.ignite.cache;
+package com.hazelcast.simulator.ignite2.concurrent;
 
-import com.hazelcast.simulator.ignite.IgniteTest;
+import com.hazelcast.simulator.ignite2.IgniteTest;
 import com.hazelcast.simulator.test.BaseThreadState;
-import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
+import org.apache.ignite.IgniteAtomicLong;
 
-import javax.cache.Cache;
+public class AtomicLongTest extends IgniteTest {
 
-public class LongLongCacheTest extends IgniteTest {
+    public int countersLength = 1000;
 
-    // properties
-    public int keyDomain = 10000;
-
-    private Cache<Long, Long> cache;
+    private IgniteAtomicLong[] counters;
 
     @Setup
-    public void setUp() {
-        cache = ignite.getOrCreateCache(name);
-    }
+    public void setup() {
+        counters = new IgniteAtomicLong[countersLength];
 
-    @Prepare(global = true)
-    public void prepare() {
-        for (long key = 0; key < keyDomain; key++) {
-            cache.put(key, key);
+        for (int i = 0; i < countersLength; i++) {
+            counters[i] = ignite.atomicLong("" + i, 0, true);
         }
     }
 
     @TimeStep(prob = -1)
-    public Long get(ThreadState state) {
-        return cache.get(state.randomKey());
+    public long get(ThreadState state) {
+        return state.randomCounter().get();
     }
 
     @TimeStep(prob = 0.1)
-    public void put(ThreadState state) {
-        cache.put(state.randomKey(), state.randomValue());
+    public long inc(ThreadState state) {
+        return state.randomCounter().incrementAndGet();
     }
 
     public class ThreadState extends BaseThreadState {
 
-        private Long randomKey() {
-            return randomLong(keyDomain);
-        }
-
-        private Long randomValue() {
-            return randomLong();
+        private IgniteAtomicLong randomCounter() {
+            int index = randomInt(counters.length);
+            return counters[index];
         }
     }
 
     @Teardown
-    public void tearDown() {
-        cache.close();
+    public void teardown() {
+        for (IgniteAtomicLong counter : counters) {
+            counter.close();
+        }
     }
 }
