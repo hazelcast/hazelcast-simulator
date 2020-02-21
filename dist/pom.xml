@@ -41,11 +41,11 @@
             <artifactId>driver-ignite2</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <dependency>
-            <groupId>com.hazelcast.simulator</groupId>
-            <artifactId>driver-infinispan10</artifactId>
-            <version>${project.version}</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.hazelcast.simulator</groupId>-->
+<!--            <artifactId>driver-infinispan10</artifactId>-->
+<!--            <version>${project.version}</version>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>com.hazelcast.simulator</groupId>
             <artifactId>driver-infinispan9</artifactId>
