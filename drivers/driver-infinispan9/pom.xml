@@ -32,13 +32,13 @@
         <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-client-hotrod</artifactId>
-            <version>${infinispan.version}</version>
+            <version>9.4.8.Final</version>
         </dependency>
 
         <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-server-hotrod</artifactId>
-            <version>${infinispan.version}</version>
+            <version>9.4.8.Final</version>
 
             <exclusions>
                 <exclusion>

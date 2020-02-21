@@ -103,26 +103,26 @@
             </includes>
         </dependencySet>
 
-        <dependencySet>
-            <outputDirectory>drivers/driver-infinispan10</outputDirectory>
-            <useProjectArtifact>false</useProjectArtifact>
-            <useTransitiveFiltering>true</useTransitiveFiltering>
-            <includes>
-                <include>com.hazelcast.simulator:driver-infinispan10</include>
-                <include>org.infinispan:*</include>
-                <include>org.javassist:javassist</include>
-                <include>com.fasterxml.jackson.core:*</include>
-                <include>io.netty:netty-handler</include>
-                <include>io.netty:netty-buffer</include>
-                <include>io.netty:netty-transport</include>
-                <include>io.netty:netty-resolver</include>
-                <include>io.netty:netty-transport-native-epoll</include>
-                <include>io.netty:netty-transport-native-unix-common</include>
-                <include>io.netty:netty-codec</include>
-                <include>io.netty:netty-common</include>
-                <include>io.reactivex.rxjava2:*</include>
-            </includes>
-        </dependencySet>
+<!--        <dependencySet>-->
+<!--            <outputDirectory>drivers/driver-infinispan10</outputDirectory>-->
+<!--            <useProjectArtifact>false</useProjectArtifact>-->
+<!--            <useTransitiveFiltering>true</useTransitiveFiltering>-->
+<!--            <includes>-->
+<!--                <include>com.hazelcast.simulator:driver-infinispan10</include>-->
+<!--                <include>org.infinispan:*</include>-->
+<!--                <include>org.javassist:javassist</include>-->
+<!--                <include>com.fasterxml.jackson.core:*</include>-->
+<!--                <include>io.netty:netty-handler</include>-->
+<!--                <include>io.netty:netty-buffer</include>-->
+<!--                <include>io.netty:netty-transport</include>-->
+<!--                <include>io.netty:netty-resolver</include>-->
+<!--                <include>io.netty:netty-transport-native-epoll</include>-->
+<!--                <include>io.netty:netty-transport-native-unix-common</include>-->
+<!--                <include>io.netty:netty-codec</include>-->
+<!--                <include>io.netty:netty-common</include>-->
+<!--                <include>io.reactivex.rxjava2:*</include>-->
+<!--            </includes>-->
+<!--        </dependencySet>-->
 
         <dependencySet>
             <outputDirectory>drivers/driver-infinispan9</outputDirectory>
@@ -133,15 +133,9 @@
                 <include>org.infinispan:*</include>
                 <include>org.javassist:javassist</include>
                 <include>com.fasterxml.jackson.core:*</include>
-                <include>io.netty:netty-handler</include>
-                <include>io.netty:netty-buffer</include>
-                <include>io.netty:netty-transport</include>
-                <include>io.netty:netty-resolver</include>
-                <include>io.netty:netty-transport-native-epoll</include>
-                <include>io.netty:netty-transport-native-unix-common</include>
-                <include>io.netty:netty-codec</include>
-                <include>io.netty:netty-common</include>
+                <include>io.netty:netty-*</include>
                 <include>io.reactivex.rxjava2:*</include>
+                <include>org.reactivestreams:reactive-streams</include>
             </includes>
         </dependencySet>
 
