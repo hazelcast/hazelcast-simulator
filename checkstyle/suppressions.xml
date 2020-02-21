@@ -28,9 +28,9 @@
               files="/com/hazelcast/simulator/hz/.*Test\.java$"/>
 
     <!-- Ignite Tests -->
-    <suppress checks="MagicNumber|VisibilityModifier" files="/com/hazelcast/simulator/ignite/"/>
+    <suppress checks="MagicNumber|VisibilityModifier" files="/com/hazelcast/simulator/ignite2/"/>
     <suppress checks="JUnitTestCase|MethodName|TypeName|ExplicitInitialization"
-              files="/com/hazelcast/simulator/ignite/.*Test\.java$"/>
+              files="/com/hazelcast/simulator/ignite2/.*Test\.java$"/>
 
     <!-- Infinispan Tests -->
     <suppress checks="MagicNumber|VisibilityModifier" files="/com/hazelcast/simulator/infinispan9/"/>
