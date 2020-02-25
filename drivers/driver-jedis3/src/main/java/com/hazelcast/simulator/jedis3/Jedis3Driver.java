@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.jedis;
+package com.hazelcast.simulator.jedis3;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.vendors.VendorDriver;
@@ -28,7 +28,7 @@ import java.util.Set;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static java.lang.String.format;
 
-public class JedisDriver extends VendorDriver<JedisCluster> {
+public class Jedis3Driver extends VendorDriver<JedisCluster> {
 
     private static final int DEFAULT_REDIS_PORT = 6378;
 
