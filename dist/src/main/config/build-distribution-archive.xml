@@ -172,6 +172,7 @@
             <useTransitiveFiltering>true</useTransitiveFiltering>
             <includes>
                 <include>com.hazelcast.simulator:driver-lettuce5</include>
+                <include>io.netty:netty-*</include>
             </includes>
         </dependencySet>
 

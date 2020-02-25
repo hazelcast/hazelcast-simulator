@@ -18,7 +18,7 @@
 
     <properties>
         <main.basedir>${project.parent.basedir}</main.basedir>
-       <lettuce.version>5.1.2.RELEASE</lettuce.version>
+       <lettuce.version>5.2.2.RELEASE</lettuce.version>
     </properties>
 
     <dependencies>
