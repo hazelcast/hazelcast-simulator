@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.lettuce;
+package com.hazelcast.simulator.lettuce5;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.coordinator.registry.AgentData;
@@ -22,7 +22,7 @@ import io.lettuce.core.RedisClient;
 
 import static java.lang.String.format;
 
-public class LettuceDriver extends VendorDriver<RedisClient> {
+public class Lettuce5Driver extends VendorDriver<RedisClient> {
 
      private RedisClient client;
 
