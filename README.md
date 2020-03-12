@@ -370,9 +370,9 @@ The TestSuite defines the Simulator Tests which are executed during the Simulato
 `test.properties`, which contains a single test.
 
 ```
-IntIntMapTest@class = com.hazelcast.simulator.tests.map.IntIntMapTest
-IntIntMapTest@threadCount = 10
-IntIntMapTest@putProb = 0.1
+IntByteMapTest@class = com.hazelcast.simulator.tests.map.IntByteMapTest
+IntByteMapTest@threadCount = 10
+IntByteMapTest@putProb = 0.1
 ```
 
 Tests can be configured with properties to change the behavior of the test (e.g. the number of used keys or the probability of 
@@ -386,7 +386,7 @@ There are two special properties which are used by the Simulator framework itsel
 
 | Property | Example value | Description |
 |:-|:-|:-|
-| `class` | `com.hazelcast.simulator.tests.map.IntIntMapTest` | Defines the fully qualified class name for the Simulator Test. 
+| `class` | `com.hazelcast.simulator.tests.map.IntByteMapTest` | Defines the fully qualified class name for the Simulator Test. 
 Used to create the test class instance on the Simulator Worker.<br>This is the only mandatory property which has to be defined. |
 | `threadCount` | `5` | Defines the number of worker threads for Simulator Tests which use the @RunWithWorker annotation. |
 
