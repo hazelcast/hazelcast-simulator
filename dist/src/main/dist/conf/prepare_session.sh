@@ -95,8 +95,8 @@ start_dstat_remote(){
     # kill any dstat instances that are still running
     ssh ${SSH_OPTIONS} ${SIMULATOR_USER}@${agent} " killall -9 dstat || true"
 
-    ssh ${SSH_OPTIONS} ${SIMULATOR_USER}@${agent} \
-        "nohup dstat --epoch -m --all -l --noheaders --nocolor --output $target_dir/A${agent_index}_dstat.csv 5 > /dev/null &"
+    ssh -n ${SSH_OPTIONS} ${SIMULATOR_USER}@${agent} \
+        "nohup dstat --epoch -m --all -l --noheaders --nocolor --output $target_dir/A${agent_index}_dstat.csv 5 > /dev/null 2>&1 &"
 }
 
 start_dstat(){
