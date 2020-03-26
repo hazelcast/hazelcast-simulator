@@ -370,9 +370,9 @@ The TestSuite defines the Simulator Tests which are executed during the Simulato
 `test.properties`, which contains a single test.
 
 ```
-IntIntMapTest@class = com.hazelcast.simulator.tests.map.IntIntMapTest
-IntIntMapTest@threadCount = 10
-IntIntMapTest@putProb = 0.1
+IntByteMapTest@class = com.hazelcast.simulator.tests.map.IntByteMapTest
+IntByteMapTest@threadCount = 10
+IntByteMapTest@putProb = 0.1
 ```
 
 Tests can be configured with properties to change the behavior of the test (e.g. the number of used keys or the probability of 
@@ -386,7 +386,7 @@ There are two special properties which are used by the Simulator framework itsel
 
 | Property | Example value | Description |
 |:-|:-|:-|
-| `class` | `com.hazelcast.simulator.tests.map.IntIntMapTest` | Defines the fully qualified class name for the Simulator Test. 
+| `class` | `com.hazelcast.simulator.tests.map.IntByteMapTest` | Defines the fully qualified class name for the Simulator Test. 
 Used to create the test class instance on the Simulator Worker.<br>This is the only mandatory property which has to be defined. |
 | `threadCount` | `5` | Defines the number of worker threads for Simulator Tests which use the @RunWithWorker annotation. |
 
@@ -1120,7 +1120,7 @@ it will automatically inherit all tags from the agent.
 Tags do not need to be a single identifier, it may contain multiple identifiers such as `foo,a=1,b=true`. Quite a few commands 
 have support for filtering on tags, please see the [Querying section](#querying).
 
-You can created workers with their own tags:
+You can create workers with their own tags:
 
 ```
 coordinator-remote worker-start --tags b=10 --workerType client
@@ -1131,7 +1131,7 @@ grained way.
 
 ## Testing WAN replication
 
-???
+TBD
 
 
 # Profiling your Simulator Test
@@ -1210,7 +1210,7 @@ run is completed and the artifacts are downloaded, the diagnostics files can be 
 ## Enabling Different Profilers or Other Startup Customizations
 
 If you want to use a different profiler than JFR and you require more than simple JVM args, or you want to play with features 
-like numactrl, OpenOnload, etc., you need to override the worker startup script. This is done by copying the startup script to
+like numactl, OpenOnload, etc., you need to override the worker startup script. This is done by copying the startup script to
  the working directory. For example to modify a member worker:
 
 ```
@@ -1223,7 +1223,7 @@ This bash script controls the startup of the member. This particular file also c
 - Intel VTune
 - Linux Perf
 - HProf
-- numactrl
+- numactl
 - dstat
 - OpenOnload
 
@@ -1280,7 +1280,7 @@ class=example.MyTest
 The main property that needs to be in the property file is the `class` property which needs to point to the full class name.
 
 Just like the other annotated methods, `Timestep` methods need to be public due to the code generator and they are allowed to 
-throw `Throwable` like a checked exceptions:
+throw `Throwable` like checked exceptions:
 
 ```
   @TimeStep public void inc() throws Exception{
@@ -1723,7 +1723,7 @@ recordJitter=true
 This thread will do nothing else than measuring time and recording it in a probe. The content of this probe results in hdr files
 and can be visualized using the [benchmark report generator](#report-generator).
 
-By default jitter greater or equal 1000ns is recorded, but can b configured using the `recordJitterThresholdNs` property:
+By default jitter greater or equal 1000ns is recorded, but can be configured using the `recordJitterThresholdNs` property:
 ```
 class=example.MyTest
 threadCount=10
@@ -1735,7 +1735,7 @@ To disable the threshold, set `recordJitterThresholdNs` to 0. Warning: if the `r
 than zero, the latency distribution looks distorted because only the outliers are recorded and not the samples below the threshold.
 
 Measuring jitter is only recommended when doing a latency test because you will loose 1 core. Each test instance will create its 
-own jitter thread (if the test is configured to use a jitter thread). So it extremely unlike that you want to run tests in 
+own jitter thread (if the test is configured to use a jitter thread). So it is extremely unlikely that you want to run tests in 
 parallel with this feature enabled.
 
 ## Logging
@@ -1777,7 +1777,7 @@ This way many features can be added to the timestep test without impacting the p
 The generator timestep worker code can be found in the worker directory. Feel free to have a look at it and send any suggestions 
 how it can be improved.
 
-Currently there is no support yet for dead code elimination.
+Currently there is no support for dead code elimination.
 
 ## Stopping a Test
 
@@ -1827,7 +1827,7 @@ test will not run longer than this duration.
 # Report Generator
 
 Once a benchmark has been executed, an HTML report can be generated using the `benchmark-report` tool. This tool requires
-Gnuplot 4+ and Pyton 2.7 to be installed for generating the diagrams.
+Gnuplot 4+ and Python 2.7 to be installed for generating the diagrams.
 
 Assume that a benchmark has been executed and the directory `2016-08-02__22_08_09` has been created. To create a report for that 
 benchmark, you can use the following command:
@@ -1889,7 +1889,7 @@ Hazelcast Simulator is available under the Apache 2 License.
 
 # Copyright
 
-Copyright (c) 2008-2016, Hazelcast, Inc. All Rights Reserved.
+Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
 
-Visit [www.hazelcast.com](http://www.hazelcast.com/) for more info. Also, see the Hazelcast Simulator chapter in the Reference 
-Manual at [http://hazelcast.org/documentation/](http://hazelcast.org/documentation/). Docs for latest version can be found [here](http://docs.hazelcast.org/docs/latest/manual/html-single/index.html#hazelcast-simulator)
+Visit [https://hazelcast.org](https://hazelcast.org) for more info. Also, see the Hazelcast Simulator chapter in the Reference
+Manual at [https://hazelcast.org/imdg/docs](https://hazelcast.org/imdg/docs). Docs for the latest version can be found [here](https://docs.hazelcast.org/docs/latest/manual/html-single/index.html#hazelcast-simulator).
