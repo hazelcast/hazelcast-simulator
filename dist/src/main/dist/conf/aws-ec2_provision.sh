@@ -124,15 +124,11 @@ EOL
         args="$args --subnet $SUBNET_ID"
     fi
 
-    if [ "$PLACEMENT_GROUP" != "default" ]; then
+    if [ "$EC2_RUN_INSTANCE_ARGS" != "default" ]; then
+        args="$args $EC2_RUN_INSTANCE_ARGS"
+    elif [ "$PLACEMENT_GROUP" != "default" ]; then
         args="$args --placement GroupName=$PLACEMENT_GROUP"
     fi
-
-
-    # the following seems to work on c3.4xlarge
-    #  --block-device-mappings '[{"DeviceName":"/dev/sdb","VirtualName":"ephemeral0"},{"DeviceName":"/dev/sdc","VirtualName":"ephemeral1"}]' \
-    # comment regarding missnig mappings is fine: https://eucalyptus.atlassian.net/browse/EUCA-9148
-#        --block-device-mappings '[{"DeviceName": "/dev/sdf", "VirtualName": "ephemeral0" }, {"DeviceName": "/dev/sdg", "VirtualName": "ephemeral1" }, {"DeviceName": "/dev/sdh", "VirtualName": "ephemeral2" }, {"DeviceName": "/dev/sdi", "VirtualName": "ephemeral3" }, {"DeviceName": "/dev/sdj", "VirtualName": "ephemeral4" }, {"DeviceName": "/dev/sdk", "VirtualName": "ephemeral5" }, {"DeviceName": "/dev/sdl", "VirtualName": "ephemeral6" }, {"DeviceName": "/dev/sdm", "VirtualName": "ephemeral7" }, {"DeviceName": "/dev/sdn", "VirtualName": "ephemeral8" }, {"DeviceName": "/dev/sdo", "VirtualName": "ephemeral9" } ]' \
 
     output=$(aws ec2 run-instances \
         $args \
