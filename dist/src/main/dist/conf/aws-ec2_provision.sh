@@ -12,13 +12,6 @@ if ! hash aws 2>/dev/null ; then
     exit 1
 fi
 
-# todo:
-# - security-group: automatic create
-# --ebs-optimized
-# - INSTANCE_STORAGE_MKFS_OPTIONS
-# - INSTANCE_STORAGE_MOUNT_OPTIONS
-# - EC2_SPOT_PRICE
-
 count=$1
 
 export AWS_ACCESS_KEY_ID=$CLOUD_IDENTITY
@@ -134,7 +127,6 @@ EOL
         $args \
         --user-data file://$temp_file \
         --output text \
-        --key-name peter \
         --query 'Instances[*].InstanceId')
 
     rm -fr $temp_file
