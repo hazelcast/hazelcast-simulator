@@ -177,6 +177,16 @@
         </dependencySet>
 
         <dependencySet>
+            <outputDirectory>drivers/driver-lettucecluster5</outputDirectory>
+            <useProjectArtifact>false</useProjectArtifact>
+            <useTransitiveFiltering>true</useTransitiveFiltering>
+            <includes>
+                <include>com.hazelcast.simulator:driver-lettucecluster5</include>
+                <include>io.netty:netty-*</include>
+            </includes>
+        </dependencySet>
+
+        <dependencySet>
             <outputDirectory>drivers/driver-jedis3</outputDirectory>
             <useTransitiveFiltering>true</useTransitiveFiltering>
             <useProjectArtifact>false</useProjectArtifact>
