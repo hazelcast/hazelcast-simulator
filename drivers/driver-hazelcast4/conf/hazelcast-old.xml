@@ -60,13 +60,17 @@
     <map name="SerializationStrategyTest*">
         <in-memory-format>BINARY</in-memory-format>
         <indexes>
-            <index ordered="false">stringVal</index>
+            <index type="SORTED">
+                <attributes>
+                    <attribute>stringVal</attribute>
+                </attributes>
+            </index>
         </indexes>
     </map>
 
     <map name="ExtractorMapTest*">
         <attributes>
-            <attribute extractor="com.hazelcast.simulator.tests.map.ExtractorMapTest$PayloadExtractor">
+            <attribute extractor-class-name="com.hazelcast.simulator.tests.map.ExtractorMapTest$PayloadExtractor">
                 payloadFromExtractor
             </attribute>
         </attributes>
@@ -74,7 +78,7 @@
 
     <map name="PortableExtractorMapTest*">
         <attributes>
-            <attribute extractor="com.hazelcast.simulator.tests.map.ExtractorMapTest$PayloadPortableExtractor">
+            <attribute extractor-class-name="com.hazelcast.simulator.tests.map.ExtractorMapTest$PayloadPortableExtractor">
                 payloadFromExtractor
             </attribute>
         </attributes>
@@ -85,23 +89,23 @@
         <backup-count>2</backup-count>
     </map>
 
-    <map name="quorum-map"> 
+    <map name="split-brain-protection-map">
         <backup-count>1</backup-count>
-        <quorum-ref>map-quorum-ref</quorum-ref>
+        <split-brain-protection-ref>map-split-brain-protection-ref</split-brain-protection-ref>
     </map>
     
-    <cache name="quorum-cache"> 
+    <cache name="split-brain-protection-cache">
         <backup-count>1</backup-count>
-        <quorum-ref>cache-quorum-ref</quorum-ref>
+        <split-brain-protection-ref>cache-quorum-ref</split-brain-protection-ref>
     </cache>
     
-    <quorum name="map-quorum-ref" enabled="true">
-        <quorum-size>3</quorum-size>
-    </quorum>
+    <split-brain-protection name="map-split-brain-protection-ref" enabled="true">
+        <minimum-cluster-size>3</minimum-cluster-size>
+    </split-brain-protection>
     
-    <quorum name="cache-quorum-ref" enabled="true">
-        <quorum-size>3</quorum-size>
-    </quorum>
+    <split-brain-protection name="cache-split-brain-protection-ref" enabled="true">
+        <minimum-cluster-size>3</minimum-cluster-size>
+    </split-brain-protection>
 
     <serialization>
         <portable-version>1</portable-version>
