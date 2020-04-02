@@ -25,7 +25,6 @@ import re
 import subprocess
 import shutil
 from collections import Counter
-from yattag import Doc
 import base64
 
 parser = argparse.ArgumentParser(description='Creating a benchmark report from one or more benchmarks.')
@@ -1069,25 +1068,24 @@ class Comparison:
 class HTMLReport:
 
     def __init__(self):
-        self.doc = Doc()
-        self.tag = self.doc.tag
-        self.text = self.doc.text
+        self.report = ""
+        self.images = ""
         self.metrics = []
         print("Initialising HTML Report Generation.")
 
     def addImage(self, plot):
         metric_name = plot.image_path.split('/')[-2]
         
-        with self.tag('div', klass=('image-container '+metric_name)):
-            encoded_image = ""
-            with open(plot.image_path, "rb") as image_file:
-                encoded_image = base64.b64encode(image_file.read())    
-            encoded_image = "data:image/png;base64,%s" % encoded_image
+        encoded_image = ""
+        with open(plot.image_path, "rb") as image_file:
+            encoded_image = base64.b64encode(image_file.read())    
+        encoded_image = "data:image/png;base64,%s" % encoded_image
 
-            self.doc.stag('img', src=encoded_image, onclick="toggleZoom(this);")
-            with self.tag('p', klass='image-text'):
-                self.text(plot.title)
-
+        self.images = self.images + '<div class="image-container ' + metric_name + '">'
+        self.images = self.images + '<img src="' + encoded_image + '" onclick="toggleZoom(this);" />'
+        self.images = self.images + '<p class="image-text">' + plot.title + "</p>"
+        self.images = self.images + '</div>'
+        
     def getCSVContents(self):
         contents = []
         with open(os.path.join(report_dir + "/report.csv"), 'rb') as csvfile:
@@ -1099,65 +1097,53 @@ class HTMLReport:
         return contents
 
     def generate(self):
-        image_tags = self.doc.getvalue()
-
-        self.doc = Doc()
-        self.tag = self.doc.tag
-        self.text = self.doc.text
         csvContents = self.getCSVContents()
 
-        self.doc.asis('<!DOCTYPE html>')
-        with self.tag('html'):
-            with self.tag('head'):
-                with self.tag('style'):
-                    self.text(' body { background-color: #cdcdcd; text-align: center; } img { width: 40vw; } .images-block { display: flex; flex-wrap: wrap; justify-content: space-evenly;} h1,h2,h3,h4,h5,h6 { width: 100vw; }')
-                    self.text(' .tabs { display: flex; border-bottom: 1px solid black; margin-bottom: 3vh; } .tab { flex: 33.33%; } .tab:hover, .active-tab { background-color: #dedede; }')
-                    self.text(' img:hover { cursor: zoom-in; } .zoomin { zoom: 2; -moz-transform: scale(2); } .zoomout { zoom: normal; -moz-transform: scale(1); } ')
-                    self.text(' tr,td { border: 1px solid black; } td { padding: 3px; } ')
-            with self.tag('body'):
-                with self.tag('h1'):
-                    self.text('Benchmark Report')
-                self.doc.stag('hr')
-                        
-                with self.tag('div', klass='tabs'):
-                    with self.tag('div', id="csv", klass="tab", style="border-right: 1px solid black;"):
-                        with self.tag('p'):
-                            self.text('Summary')
-                    with self.tag('div', klass="tab", id="throughput", style="border-right: 1px solid black;"):
-                        with self.tag('p'):
-                            self.text('Throughput')
-                    with self.tag('div', id="latency", klass="tab", style="border-right: 1px solid black;"):
-                        with self.tag('p'):
-                            self.text('Latency')
-                    with self.tag('div', id="dstat", klass="tab"):
-                        with self.tag('p'):
-                            self.text('dstat')
-                with self.tag('div', klass='images-block'):
-                    self.doc.asis(image_tags)
-                with self.tag('table'):
-                    with self.tag('tbody'):
-                        for i in range(len(csvContents[0].split(','))):
-                            with self.tag('tr'):
-                                for j in range(len(csvContents)):
-                                    with self.tag('td'):
-                                        self.text(csvContents[j].split(',')[i].replace('"', ''))
-            
-                with self.tag('script'):
-                    self.text("var activeTab = 'throughput'; var throughputdom = document.getElementById('throughput'); var latencydom = document.getElementById('latency');  var dstatdom = document.getElementById('dstat'); var csvdom = document.getElementById('csv'); var imageContainer = document.getElementsByClassName('image-container'); var tabledom = document.getElementsByTagName('table')[0]; ")
-                    self.text(" function addClass(classname, element){ while(element.classList.contains(classname)) { element.classList.remove(classname); } element.classList.add(classname); } ")
-                    self.text(" function removeClass(classname, element){ while(element.classList.contains(classname)) { element.classList.remove(classname); } } ")
-                    self.text(" function filter() { tabledom.style.display = 'none'; for(let item of imageContainer){ if(item.classList.contains(activeTab)) item.style.display='block'; else item.style.display = 'none';} } ")
-                    self.text(" function showcsv() { for(let item of imageContainer){ item.style.display = 'none'; } tabledom.style.display = 'inline'; } ")
-                    self.text(" throughputdom.addEventListener('click', function(e){ e.preventDefault(); addClass('active-tab', throughputdom); removeClass('active-tab', latencydom); removeClass('active-tab', dstatdom); removeClass('active-tab', csvdom); activeTab = 'throughput'; filter(); }); ")
-                    self.text(" latencydom.addEventListener('click', function(e){ e.preventDefault(); addClass('active-tab', latencydom); removeClass('active-tab', throughputdom); removeClass('active-tab', dstatdom); removeClass('active-tab', csvdom); activeTab = 'latency'; filter(); }); ")
-                    self.text(" dstatdom.addEventListener('click', function(e){ e.preventDefault(); addClass('active-tab', dstatdom); removeClass('active-tab', throughputdom); removeClass('active-tab', latencydom); removeClass('active-tab', csvdom); activeTab = 'dstat'; filter(); }); ")
-                    self.text(" csvdom.addEventListener('click', function(e){ e.preventDefault(); addClass('active-tab', csvdom); removeClass('active-tab', throughputdom); removeClass('active-tab', latencydom); removeClass('active-tab', dstatdom); activeTab = 'csv'; showcsv(); }); ")
-                    self.text(" csvdom.click(); ")
-                    self.text(" function toggleZoom(element){ if(element){ if(element.classList.contains('zoomin')) { removeClass('zoomin', element); addClass('zoomout', element); } else { removeClass('zoomout', element); addClass('zoomin', element); } } } ")
+        self.report = self.report + '<!DOCTYPE html>'
+        self.report = self.report + '<html>'
+        self.report = self.report + '<head>'
+        self.report = self.report + '<style>'
+        self.report = self.report + 'body { background-color: #cdcdcd; text-align: center; } img { width: 40vw; } .images-block { display: block; } h1,h2,h3,h4,h5,h6 { width: 100vw; }'
+        self.report = self.report + '.tabs { display: flex; border-bottom: 1px solid black; margin-bottom: 3vh; } .tab { flex: 33.33%; } .tab:hover, .active-tab { background-color: #dedede; }'
+        self.report = self.report + 'img:hover { cursor: zoom-in; } .zoomin { zoom: 2; -moz-transform: scale(2); } .zoomout { zoom: normal; -moz-transform: scale(1); }'
+        self.report = self.report + 'tr,td { border: 1px solid black; } td { padding: 3px; }'   
+        self.report = self.report + '</style>'
+        self.report = self.report + '<body>'
+        self.report = self.report + '<h1>Benchmark Report</h1>'
+        self.report = self.report + '<div class="tabs">'
+        self.report = self.report + '<div class="tab" id="csv" style="border-right: 1px solid black;"><p>Summary</p></div>'
+        self.report = self.report + '<div class="tab" id="throughput" style="border-right: 1px solid black;"><p>Throughput</p></div>'
+        self.report = self.report + '<div class="tab" id="latency" style="border-right: 1px solid black;"><p>Latency</p></div>'
+        self.report = self.report + '<div class="tab" id="dstat"><p>dstat</p></div>'        
+        self.report = self.report + '</div>'
+        self.report = self.report + '<div class="images-block">' + self.images + '</div>'
+        self.report = self.report + '<table><tbody>'
+        for i in range(len(csvContents[0].split(','))):
+            self.report = self.report + '<tr>'
+            for j in range(len(csvContents)):
+                self.report = self.report + '<td>' + csvContents[j].split(',')[i].replace('"', '') + '</td>'
+            self.report = self.report + '</tr>'
+        self.report = self.report + '</table></tbody>'
+        self.report = self.report + '<script>'
+        self.report = self.report + "var activeTab = 'throughput'; var throughputdom = document.getElementById('throughput'); var latencydom = document.getElementById('latency');  var dstatdom = document.getElementById('dstat'); var csvdom = document.getElementById('csv'); var imageContainer = document.getElementsByClassName('image-container'); var tabledom = document.getElementsByTagName('table')[0]; "
+        self.report = self.report + "function addClass(classname, element){ while(element.classList.contains(classname)) { element.classList.remove(classname); } element.classList.add(classname); } "
+        self.report = self.report + "function removeClass(classname, element){ while(element.classList.contains(classname)) { element.classList.remove(classname); } } "
+        self.report = self.report + "function filter() { tabledom.style.display = 'none'; for(let item of imageContainer){ if(item.classList.contains(activeTab)) item.style.display='block'; else item.style.display = 'none';} } "
+        self.report = self.report + "function showcsv() { for(let item of imageContainer){ item.style.display = 'none'; } tabledom.style.display = 'inline'; }"
+        self.report = self.report + "throughputdom.addEventListener('click', function(e){ e.preventDefault(); addClass('active-tab', throughputdom); removeClass('active-tab', latencydom); removeClass('active-tab', dstatdom); removeClass('active-tab', csvdom); activeTab = 'throughput'; filter(); }); "
+        self.report = self.report + "latencydom.addEventListener('click', function(e){ e.preventDefault(); addClass('active-tab', latencydom); removeClass('active-tab', throughputdom); removeClass('active-tab', dstatdom); removeClass('active-tab', csvdom); activeTab = 'latency'; filter(); }); "
+        self.report = self.report + "dstatdom.addEventListener('click', function(e){ e.preventDefault(); addClass('active-tab', dstatdom); removeClass('active-tab', throughputdom); removeClass('active-tab', latencydom); removeClass('active-tab', csvdom); activeTab = 'dstat'; filter(); }); "
+        self.report = self.report + "csvdom.addEventListener('click', function(e){ e.preventDefault(); addClass('active-tab', csvdom); removeClass('active-tab', throughputdom); removeClass('active-tab', latencydom); removeClass('active-tab', dstatdom); activeTab = 'csv'; showcsv(); }); "
+        self.report = self.report + "csvdom.click(); "
+        self.report = self.report + "function toggleZoom(element){ if(element){ if(element.classList.contains('zoomin')) { removeClass('zoomin', element); addClass('zoomout', element); } else { removeClass('zoomout', element); addClass('zoomin', element); } } } "
+        self.report = self.report + '</script>'
+        self.report = self.report + '</body>'
+        self.report = self.report + '</head>'
+        self.report = self.report + '</html>'
 
         file_name = os.path.join(report_dir + "/report.html")
         with open(file_name, 'w') as f:
-            f.write(self.doc.getvalue())
+            f.write(self.report)
         
         print("HTML report generated at: " + file_name)
 
