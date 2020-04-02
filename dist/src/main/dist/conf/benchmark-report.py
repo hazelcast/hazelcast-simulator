@@ -1138,10 +1138,9 @@ class HTMLReport:
                     with self.tag('tbody'):
                         for i in range(len(csvContents[0].split(','))):
                             with self.tag('tr'):
-                                with self.tag('td'):
-                                    self.text(csvContents[0].split(',')[i].replace('"', ''))
-                                with self.tag('td'):
-                                    self.text(csvContents[1].split(',')[i].replace('"', ''))
+                                for j in range(len(csvContents)):
+                                    with self.tag('td'):
+                                        self.text(csvContents[j].split(',')[i].replace('"', ''))
             
                 with self.tag('script'):
                     self.text("var activeTab = 'throughput'; var throughputdom = document.getElementById('throughput'); var latencydom = document.getElementById('latency');  var dstatdom = document.getElementById('dstat'); var csvdom = document.getElementById('csv'); var imageContainer = document.getElementsByClassName('image-container'); var tabledom = document.getElementsByTagName('table')[0]; ")
