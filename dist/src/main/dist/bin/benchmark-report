@@ -28,24 +28,4 @@ if ! hash gnuplot 2>/dev/null ; then
     exit 1
 fi
 
- # Check if pip and yattag module is installed on system.
-if ! hash pip 2>/dev/null ; 
-then
-    echo pip is not installed! Aborting.
-    exit 1
-else
-    echo Installing yattag...
-
-    # Install yattag package 
-    pip install yattag
-
-    # Check if yattag gets installed
-    yattag=$(pip list | grep -F yattag)
-    if [ -z $yattag ] ; then
-        echo pip could not install yattag package.
-        echo To install yattag using pip, type: 'pip install yattag'
-        echo For more details, refer: https://www.yattag.org/download-install 
-    fi 
-fi
-
 python ${SIMULATOR_HOME}/conf/benchmark-report.py "$@"
