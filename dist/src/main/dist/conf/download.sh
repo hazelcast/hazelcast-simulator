@@ -29,7 +29,7 @@ function download_remote(){
 
     # copy the files
     # we exclude the uploads directory because it could be very big e.g jars
-    rsync --copy-links -avv -e "ssh ${SSH_OPTIONS}" --exclude 'upload' $SIMULATOR_USER@$agent:$download_path $root_dir
+    rsync --copy-links -avvz --compress-level=9 -e "ssh ${SSH_OPTIONS}" --exclude 'upload' $SIMULATOR_USER@$agent:$download_path $root_dir
 
     # delete the files on the agent (no point in keeping them around if they are already copied locally)
     if [ "$session_id" = "*" ] ; then
