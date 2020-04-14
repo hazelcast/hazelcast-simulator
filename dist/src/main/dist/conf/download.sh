@@ -27,6 +27,12 @@ function download_remote(){
          download_path="hazelcast-simulator-$SIMULATOR_VERSION/workers/$session_id"
     fi
 
+    # mask the license key in the benchmark result before downloading
+    ssh ${SSH_OPTIONS} $SIMULATOR_USER@$agent "find ${download_path} -type f -name parameters -exec \
+        sed -i 's/LICENCE_KEY=.*/LICENSE_KEY=###MASKED###/gi' {} \; || true"
+    ssh ${SSH_OPTIONS} $SIMULATOR_USER@$agent "find ${download_path} -type f -name \"*.xml\" -exec \
+        sed -i 's/<license-key>.*<\/license-key>/<license-key>###MASKED###<\/license-key>/gi' {} \; || true"
+
     # copy the files
     # we exclude the uploads directory because it could be very big e.g jars
     rsync --copy-links -avvz --compress-level=9 -e "ssh ${SSH_OPTIONS}" --exclude 'upload' $SIMULATOR_USER@$agent:$download_path $root_dir
@@ -54,6 +60,12 @@ function download_local(){
         then
             target_dir="$root_dir/$worker_dir_name"
             mkdir -p $target_dir
+
+            # mask the license key in the benchmark result before moving to the target dir
+            find $worker_dir -type f -name parameters -exec
+                sed -i 's/LICENCE_KEY=.*/LICENSE_KEY=###MASKED###/gi' {} \;
+            find $worker_dir -type f -name "*.xml" -exec
+                sed -i 's/<license-key>.*<\/license-key>/<license-key>###MASKED###<\/license-key>/gi' {} \;
 
             mv "$worker_dir"/* $target_dir
 
