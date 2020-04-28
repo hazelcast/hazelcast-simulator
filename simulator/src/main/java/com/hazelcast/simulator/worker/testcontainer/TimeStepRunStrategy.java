@@ -27,6 +27,7 @@ import java.util.concurrent.Callable;
 
 import static com.hazelcast.simulator.worker.testcontainer.PropertyBinding.toPropertyName;
 import static java.lang.String.format;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * A {@link RunStrategy} used for tests containing methods with {@link com.hazelcast.simulator.test.annotations.TimeStep}
@@ -46,7 +47,7 @@ class TimeStepRunStrategy extends RunStrategy {
     private final TimeStepModel timeStepModel;
     private final PropertyBinding binding;
     private volatile TimeStepRunner[] runners;
-    private final Map<String, MetronomeConstructor> metronomeSettingsMap = new HashMap<>();
+    private final Map<String, MetronomeSupplier> metronomeSettingsMap = new HashMap<>();
     private final Map<String, Class> runnerClassMap = new HashMap<>();
     private final Map<String, Integer> threadCountMap = new HashMap<>();
     private final Map<String, Long> runIterationMap = new HashMap<>();
@@ -63,7 +64,7 @@ class TimeStepRunStrategy extends RunStrategy {
             totalThreadCount += threadCount;
             threadCountMap.put(executionGroup, threadCount);
 
-            MetronomeConstructor metronomeConstructor = new MetronomeConstructor(executionGroup, binding, threadCount);
+            MetronomeSupplier metronomeConstructor = new MetronomeSupplier(executionGroup, binding, threadCount);
             metronomeSettingsMap.put(executionGroup, metronomeConstructor);
 
             LOGGER.info(format("executionGroup [%s] using interval: %s class=%s",
@@ -147,13 +148,21 @@ class TimeStepRunStrategy extends RunStrategy {
             Constructor<TimeStepRunner> constructor = runnerClass
                     .getConstructor(testInstance.getClass(), TimeStepModel.class, String.class);
 
-            MetronomeConstructor metronomeConstructor = metronomeSettingsMap.get(executionGroup);
+            MetronomeSupplier metronomeSupplier = metronomeSettingsMap.get(executionGroup);
 
-            for (int thread = 0; thread < threadCountMap.get(executionGroup); thread++) {
+            String rampupSecondsProperty = toPropertyName(executionGroup, "rampupSeconds");
+            long rampupSeconds = binding.loadAsLong(rampupSecondsProperty, 0);
+            if (rampupSeconds < 0) {
+                throw new RuntimeException(rampupSecondsProperty + " can't be smaller than 0");
+            }
+            int threadCount = threadCountMap.get(executionGroup);
+            long delayMs = SECONDS.toMillis(rampupSeconds) / threadCount;
+            for (int threadIndex = 0; threadIndex < threadCount; threadIndex++) {
                 TimeStepRunner runner = constructor.newInstance(testInstance, timeStepModel, executionGroup);
                 runner.testContext = binding.getTestContext();
                 runner.maxIterations = runIterationMap.get(executionGroup);
-                runner.metronome = metronomeConstructor.newInstance();
+                runner.metronome = metronomeSupplier.get();
+                runner.delayMillis = delayMs * threadIndex;
                 runner.bind(binding);
                 runners[k] = runner;
                 k++;

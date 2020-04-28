@@ -21,6 +21,7 @@ import com.hazelcast.simulator.worker.metronome.SleepingMetronome;
 
 import java.lang.reflect.Constructor;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 import static com.hazelcast.simulator.worker.testcontainer.PropertyBinding.toPropertyName;
 import static java.lang.Math.round;
@@ -33,13 +34,13 @@ import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
-public class MetronomeConstructor {
+public class MetronomeSupplier implements Supplier<Metronome> {
 
     private final Class<? extends Metronome> metronomeClass;
     private final Metronome masterMetronome;
     private final long intervalNanos;
 
-    public MetronomeConstructor(String executionGroup, PropertyBinding binding, int threadCount) {
+    public MetronomeSupplier(String executionGroup, PropertyBinding binding, int threadCount) {
         String property = toPropertyName(executionGroup, "interval");
         String intervalString = binding.load(property);
 
@@ -124,7 +125,8 @@ public class MetronomeConstructor {
         return metronomeClass;
     }
 
-    Metronome newInstance() {
+    @Override
+    public Metronome get() {
         if (metronomeClass == EmptyMetronome.class) {
             return EmptyMetronome.INSTANCE;
         }

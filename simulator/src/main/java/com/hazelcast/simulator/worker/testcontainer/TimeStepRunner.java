@@ -49,6 +49,7 @@ public abstract class TimeStepRunner implements Runnable {
     protected final byte[] timeStepProbabilities;
     protected final Map<String, Probe> probeMap = new HashMap<>();
     protected long maxIterations;
+    protected long delayMillis;
 
     public TimeStepRunner(Object testInstance, TimeStepModel timeStepModel, String executionGroup) {
         this.testInstance = testInstance;
@@ -78,6 +79,16 @@ public abstract class TimeStepRunner implements Runnable {
     @Override
     public final void run() {
         String threadName = Thread.currentThread().getName();
+        if (delayMillis > 0) {
+            try {
+                Thread.sleep(delayMillis);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException(
+                       threadName + " got interrupted while waiting during rampup.");
+            }
+        }
+
         logger.info(threadName + " started");
         try {
             beforeRun();
@@ -111,7 +122,7 @@ public abstract class TimeStepRunner implements Runnable {
                 : new Object[]{testInstance};
 
         try {
-            return constructor.newInstance((Object[]) args);
+            return constructor.newInstance(args);
         } catch (Exception e) {
             throw new IllegalTestException(
                     format("Failed to create an instance of thread state class '%s'",
