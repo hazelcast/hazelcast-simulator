@@ -16,7 +16,7 @@ import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.Assert.assertEquals;
 
-public class MetronomeConstructorTest {
+public class MetronomeSupplierTest {
 
     @Test
     public void test() {
@@ -31,9 +31,9 @@ public class MetronomeConstructorTest {
 
     public void test(long expectedInterval, String actualInterval) {
         PropertyBinding propertyBinding = new PropertyBinding(new TestCase("foo").setProperty("interval", actualInterval));
-        MetronomeConstructor metronomeConstructor = new MetronomeConstructor("", propertyBinding, 1);
+        MetronomeSupplier supplier = new MetronomeSupplier("", propertyBinding, 1);
 
-        Metronome m = metronomeConstructor.newInstance();
+        Metronome m = supplier.get();
         assertEquals(SleepingMetronome.class, m.getClass());
         SleepingMetronome metronome = (SleepingMetronome) m;
 
@@ -43,27 +43,27 @@ public class MetronomeConstructorTest {
     @Test(expected = IllegalTestException.class)
     public void testNotInteger() {
         PropertyBinding propertyBinding = new PropertyBinding(new TestCase("foo").setProperty("interval", "foo"));
-        new MetronomeConstructor("", propertyBinding, 1);
+        new MetronomeSupplier("", propertyBinding, 1);
     }
 
     @Test(expected = IllegalTestException.class)
     public void testMissingTimeUnit() {
         PropertyBinding propertyBinding = new PropertyBinding(new TestCase("foo").setProperty("interval", "10"));
-        new MetronomeConstructor("", propertyBinding, 1);
+        new MetronomeSupplier("", propertyBinding, 1);
     }
 
     @Test(expected = IllegalTestException.class)
     public void negativeInterval() {
         PropertyBinding propertyBinding = new PropertyBinding(new TestCase("foo").setProperty("interval", "-1ns"));
-        new MetronomeConstructor("", propertyBinding, 1);
+        new MetronomeSupplier("", propertyBinding, 1);
     }
 
     @Test
     public void testThreadCount() {
         PropertyBinding propertyBinding = new PropertyBinding(new TestCase("foo").setProperty("interval", "20ns"));
-        MetronomeConstructor metronomeConstructor = new MetronomeConstructor("", propertyBinding, 10);
+        MetronomeSupplier supplier = new MetronomeSupplier("", propertyBinding, 10);
 
-        Metronome m = metronomeConstructor.newInstance();
+        Metronome m = supplier.get();
         assertEquals(SleepingMetronome.class, m.getClass());
         SleepingMetronome metronome = (SleepingMetronome) m;
 
@@ -76,9 +76,9 @@ public class MetronomeConstructorTest {
                 new TestCase("foo")
                         .setProperty("interval", "10ns")
                         .setProperty("metronomeClass", BusySpinningMetronome.class));
-        MetronomeConstructor metronomeConstructor = new MetronomeConstructor("", propertyBinding, 1);
+        MetronomeSupplier supplier = new MetronomeSupplier("", propertyBinding, 1);
 
-        Metronome m = metronomeConstructor.newInstance();
+        Metronome m = supplier.get();
         assertEquals(BusySpinningMetronome.class, m.getClass());
         BusySpinningMetronome metronome = (BusySpinningMetronome) m;
 
@@ -88,9 +88,9 @@ public class MetronomeConstructorTest {
     @Test
     public void whenZeroInterval() {
         PropertyBinding propertyBinding = new PropertyBinding(new TestCase("foo"));
-        MetronomeConstructor metronomeConstructor = new MetronomeConstructor("", propertyBinding, 5);
+        MetronomeSupplier supplier = new MetronomeSupplier("", propertyBinding, 5);
 
-        Metronome m = metronomeConstructor.newInstance();
+        Metronome m = supplier.get();
         assertEquals(EmptyMetronome.class, m.getClass());
     }
 }

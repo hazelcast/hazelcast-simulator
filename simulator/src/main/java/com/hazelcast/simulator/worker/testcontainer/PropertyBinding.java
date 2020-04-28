@@ -64,7 +64,7 @@ public class PropertyBinding {
     public int recordJitterThresholdNs = DEFAULT_RECORD_JITTER_THRESHOLD_NS;
 
     // this can be removed as soon as the @InjectMetronome/worker functionality is dropped
-    private MetronomeConstructor workerMetronomeConstructor;
+    private MetronomeSupplier workerMetronomeConstructor;
     private final Class<? extends Probe> probeClass;
     private TestContextImpl testContext;
     private final Map<String, Probe> probeMap = new ConcurrentHashMap<>();
@@ -76,7 +76,7 @@ public class PropertyBinding {
         this.testCase = testCase;
         this.unusedProperties.addAll(testCase.getProperties().keySet());
         unusedProperties.remove("class");
-        unusedProperties.remove("warmupMillis");
+        unusedProperties.remove("rampupSeconds");
 
         bind(this);
 
@@ -84,7 +84,7 @@ public class PropertyBinding {
             throw new IllegalTestException("recordJitterThresholdNs can't be smaller than 0");
         }
 
-        this.workerMetronomeConstructor = new MetronomeConstructor(
+        this.workerMetronomeConstructor = new MetronomeSupplier(
                 "", this, loadAsInt("threadCount", DEFAULT_THREAD_COUNT));
         this.probeClass = loadProbeClass();
     }
@@ -187,11 +187,7 @@ public class PropertyBinding {
     }
 
     public static String toPropertyName(String prefix, String name) {
-        if (prefix.equals("")) {
-            return name;
-        }
-
-        return prefix + capitalizeFirst(name);
+        return prefix.equals("") ? name : prefix + capitalizeFirst(name);
     }
 
     public static String capitalizeFirst(String s) {

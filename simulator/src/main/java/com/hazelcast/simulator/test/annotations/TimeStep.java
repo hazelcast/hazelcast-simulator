@@ -282,6 +282,20 @@ import java.lang.annotation.Target;
  * }
  * </pre>
  *
+ * <h1>Stress testing</h1>
+ * With stress testing you try to find the highest performance until you run into the breaking point of the system. In Simulator
+ * this is done by increasing the number of threads until the `threadCount` number of threads are all running. This can be done
+ * using the rampupSeconds:
+ * <pre>
+ * {@code
+ *     class=yourtest
+ *     threadCount=10
+ *     rampupSeconds=60
+ * }
+ * </pre>
+ * In this case every 6 seconds a new thread is added to the test until the maximum number of 10 threads; so after 60 seconds
+ * all the threads are running.
+ *
  * <h1>Measure latency</h1>
  * In some cases measuring the latency can be very expensive due to contention on HDR or because reading out the clock
  * can be expensive on certain environments (e.g. EC2 with XEN clock. By adding 'measureLatency=false' to the test,
