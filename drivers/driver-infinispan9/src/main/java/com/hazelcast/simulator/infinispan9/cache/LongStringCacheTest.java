@@ -59,8 +59,8 @@ public class LongStringCacheTest extends InfinispanTest {
     }
 
     @TimeStep(prob = 0.1)
-    public void put(ThreadState state) {
-        cache.put(state.randomKey(), state.randomValue());
+    public String put(ThreadState state) {
+        return cache.put(state.randomKey(), state.randomValue());
     }
 
     public class ThreadState extends BaseThreadState {
