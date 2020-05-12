@@ -41,6 +41,8 @@ uploadLibraryJar "geronimo-jms*"
 uploadLibraryJar "geronimo-j2ee*"
 uploadLibraryJar "slf4j-api*"
 uploadLibraryJar "hawtbuf-*"
+uploadLibraryJar "affinity*"
+uploadLibraryJar "jna*"
 
 uploadLibraryJar "cache-api*"
 uploadLibraryJar "commons-codec*"
