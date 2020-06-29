@@ -8,7 +8,7 @@ if [ -z "${SIMULATOR_HOME}" ] ; then
     export SIMULATOR_HOME=$(cd $(dirname $(readlink -f $0 2> /dev/null || readlink $0 2> /dev/null || echo $0))/.. && pwd)
 fi
 
-export JAVA_OPTS="-server -Xmx1g -Xms512m -XX:+HeapDumpOnOutOfMemoryError ${JAVA_EXTRA_OPTS}"
+export JAVA_OPTS="-server -Xmx2g -Xms512m -XX:+HeapDumpOnOutOfMemoryError ${JAVA_EXTRA_OPTS}"
 
 echo SIMULATOR_HOME = ${SIMULATOR_HOME}
 echo JAVA_OPTS = ${JAVA_OPTS}

@@ -38,6 +38,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 import static com.hazelcast.simulator.utils.SimulatorUtils.localIp;
 import static java.lang.String.format;
+import static java.util.concurrent.TimeUnit.MINUTES;
 import static javax.jms.DeliveryMode.NON_PERSISTENT;
 
 
@@ -162,10 +163,10 @@ public class Server implements Closeable {
 
             Destination topic = session.createTopic("coordinator");
             MessageProducer producer = session.createProducer(topic);
+            producer.setTimeToLive(MINUTES.toMillis(1));
             producer.setDeliveryMode(NON_PERSISTENT);
 
             Message message = session.createMessage();
-
             message.setStringProperty("source", selfAddressString);
             message.setStringProperty("payload", OperationCodec.toJson(op));
             message.setIntProperty("operationType", getOperationType(op).toInt());
