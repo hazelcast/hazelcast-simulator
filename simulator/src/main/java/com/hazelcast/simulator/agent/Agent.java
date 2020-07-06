@@ -48,7 +48,6 @@ public class Agent implements Closeable {
     private final WorkerProcessFailureMonitor workerProcessFailureMonitor;
     private final Server server;
     private final Broker broker;
-    private final WorkerSniffer workerSniffer;
     private final String parentPid;
 
     public Agent(int addressIndex,
@@ -69,8 +68,6 @@ public class Agent implements Closeable {
                 .setSelfAddress(agentAddress);
 
         this.processManager = new WorkerProcessManager(server, agentAddress, publicAddress);
-
-        this.workerSniffer = new WorkerSniffer(processManager);
 
         this.workerProcessFailureMonitor = new WorkerProcessFailureMonitor(
                 new WorkerProcessFailureHandler(publicAddress, server),
@@ -95,9 +92,6 @@ public class Agent implements Closeable {
         broker.start();
 
         server.setBrokerURL(broker.getBrokerURL())
-                .start();
-
-        workerSniffer.setConnection(server.getConnection())
                 .start();
 
         workerProcessFailureMonitor.start();
@@ -130,7 +124,6 @@ public class Agent implements Closeable {
             LOGGER.info("Stopping WorkerProcessFailureMonitor...");
             workerProcessFailureMonitor.shutdown();
 
-            workerSniffer.stop();
             closeQuietly(server);
             closeQuietly(broker);
 
