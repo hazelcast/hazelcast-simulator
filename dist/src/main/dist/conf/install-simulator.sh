@@ -60,6 +60,10 @@ if [ "$VENDOR" = "hazelcast-enterprise4" ]; then
     ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "mkdir -p hazelcast-simulator-$SIMULATOR_VERSION/drivers/driver-hazelcast4"
     rsync --checksum -avv -L -e "ssh $SSH_OPTIONS" $SIMULATOR_HOME/drivers/driver-hazelcast4/* \
             $SIMULATOR_USER@$agent:hazelcast-simulator-$SIMULATOR_VERSION/drivers/driver-hazelcast4/
+elif [ "$VENDOR" = "hazelcast-enterprise3" ]; then
+    ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "mkdir -p hazelcast-simulator-$SIMULATOR_VERSION/drivers/driver-hazelcast3"
+    rsync --checksum -avv -L -e "ssh $SSH_OPTIONS" $SIMULATOR_HOME/drivers/driver-hazelcast3/* \
+            $SIMULATOR_USER@$agent:hazelcast-simulator-$SIMULATOR_VERSION/drivers/driver-hazelcast3/
 else
     ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "mkdir -p hazelcast-simulator-$SIMULATOR_VERSION/drivers/driver-$VENDOR"
     uploadTestLibJar "*"

@@ -45,6 +45,8 @@ public abstract class VendorDriver<V> implements Closeable {
 
         if (vendorName.equals("hazelcast-enterprise4")) {
             return loadInstance("hazelcast4");
+        } else if (vendorName.equals("hazelcast-enterprise3")) {
+            return loadInstance("hazelcast3");
         } else {
             return loadInstance(vendorName);
         }
