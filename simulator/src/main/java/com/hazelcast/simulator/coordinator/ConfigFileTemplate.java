@@ -44,6 +44,11 @@ public class ConfigFileTemplate {
 
     public ConfigFileTemplate(String rawTemplate) {
         this.rawTemplate = checkNotNull(rawTemplate, "rawTemplate can't be null");
+        environment.putAll(System.getenv());
+
+        for (Map.Entry<Object, Object> entry : System.getProperties().entrySet()) {
+            environment.put("" + entry.getKey(), "" + entry.getValue());
+        }
     }
 
     public ConfigFileTemplate addEnvironment(String key, Object value) {
@@ -62,7 +67,7 @@ public class ConfigFileTemplate {
     }
 
     public ConfigFileTemplate withAgents(List<AgentData> agents) {
-      //  this.agents = agents;
+        //  this.agents = agents;
         return this;
     }
 
