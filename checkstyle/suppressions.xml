@@ -40,6 +40,10 @@
     <suppress checks="MagicNumber|VisibilityModifier" files="/com/hazelcast/simulator/infinispan10/"/>
     <suppress checks="JUnitTestCase|MethodName|TypeName|ExplicitInitialization"
               files="/com/hazelcast/simulator/infinispan10/.*Test\.java$"/>
+    <!-- Infinispan Tests -->
+    <suppress checks="MagicNumber|VisibilityModifier" files="/com/hazelcast/simulator/infinispan11/"/>
+    <suppress checks="JUnitTestCase|MethodName|TypeName|ExplicitInitialization"
+              files="/com/hazelcast/simulator/infinispan11/.*Test\.java$"/>
 
     <!-- Couchbase Tests -->
     <suppress checks="MagicNumber|VisibilityModifier" files="/com/hazelcast/simulator/couchbase/"/>

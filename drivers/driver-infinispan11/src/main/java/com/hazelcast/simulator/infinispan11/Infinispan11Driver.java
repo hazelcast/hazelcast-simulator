@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.infinispan10;
+package com.hazelcast.simulator.infinispan11;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.coordinator.registry.AgentData;
@@ -32,9 +32,9 @@ import java.util.Properties;
 
 import static java.lang.String.format;
 
-public class Infinispan10Driver extends VendorDriver<BasicCacheContainer> {
+public class Infinispan11Driver extends VendorDriver<BasicCacheContainer> {
 
-    private static final Logger LOGGER = Logger.getLogger(Infinispan10Driver.class);
+    private static final Logger LOGGER = Logger.getLogger(Infinispan11Driver.class);
 
     private BasicCacheContainer cacheContainer;
     private HotRodServer hotRodServer;

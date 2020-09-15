@@ -3,8 +3,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>driver-hazelcast3</artifactId>
-    <name>Simulator Driver Hazelcast 3.x</name>
+    <artifactId>driver-infinispan11</artifactId>
+    <name>Simulator Driver Infinispan 11.x</name>
 
     <parent>
         <groupId>com.hazelcast.simulator</groupId>
@@ -18,12 +18,8 @@
     </prerequisites>
 
     <properties>
-        <hazelcast.version>3.12.6</hazelcast.version>
         <main.basedir>${project.parent.basedir}</main.basedir>
-        <netty.version>4.1.43.Final</netty.version>
-        <netty-tcnative.version>2.0.27.Final</netty-tcnative.version>
-        <netty-tcnative.artifactId>netty-tcnative-boringssl-static</netty-tcnative.artifactId>
-        <netty-tcnative.classifier/>
+        <infinispan.version>11.0.3.Final</infinispan.version>
     </properties>
 
     <build>
@@ -57,72 +53,71 @@
         <dependency>
             <groupId>com.hazelcast.simulator</groupId>
             <artifactId>simulator</artifactId>
-            <version>${project.parent.version}</version>
+            <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
 
         <dependency>
-            <groupId>com.hazelcast.simulator</groupId>
-            <artifactId>simulator</artifactId>
-            <version>${project.parent.version}</version>
-            <scope>provided</scope>
-            <classifier>tests</classifier>
+            <groupId>org.infinispan</groupId>
+            <artifactId>infinispan-client-hotrod</artifactId>
+            <version>${infinispan.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>com.hazelcast</groupId>
-            <artifactId>hazelcast-all</artifactId>
-            <version>${hazelcast.version}</version>
+            <groupId>org.infinispan</groupId>
+            <artifactId>infinispan-commons</artifactId>
+            <version>${infinispan.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>javax.cache</groupId>
-            <artifactId>cache-api</artifactId>
-            <version>${jsr107.api.version}</version>
+            <groupId>org.infinispan</groupId>
+            <artifactId>infinispan-jcache-remote</artifactId>
+            <version>${infinispan.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>${netty-tcnative.artifactId}</artifactId>
-            <version>${netty-tcnative.version}</version>
-            <classifier>${netty-tcnative.classifier}</classifier>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <version>2.11.0</version>
         </dependency>
 
         <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-buffer</artifactId>
-            <version>${netty.version}</version>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.11.0</version>
         </dependency>
 
         <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-codec</artifactId>
-            <version>${netty.version}</version>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>2.11.0</version>
         </dependency>
 
         <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-common</artifactId>
-            <version>${netty.version}</version>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jdk8</artifactId>
+            <version>2.11.0</version>
         </dependency>
 
         <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-handler</artifactId>
-            <version>${netty.version}</version>
-        </dependency>
+            <groupId>org.infinispan</groupId>
+            <artifactId>infinispan-server-hotrod</artifactId>
+            <version>${infinispan.version}</version>
 
-        <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-resolver</artifactId>
-            <version>${netty.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.logging.log4j</groupId>
+                    <artifactId>log4j-slf4j-impl</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.logging.log4j</groupId>
+                    <artifactId>log4j-core</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
-
-        <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-transport</artifactId>
-            <version>${netty.version}</version>
-        </dependency>
-
     </dependencies>
 </project>
