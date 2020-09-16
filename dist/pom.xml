@@ -26,61 +26,6 @@
             <artifactId>simulator</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <dependency>
-            <groupId>com.hazelcast.simulator</groupId>
-            <artifactId>driver-hazelcast4</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.hazelcast.simulator</groupId>
-            <artifactId>driver-hazelcast3</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.hazelcast.simulator</groupId>
-            <artifactId>driver-ignite2</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-<!--        <dependency>-->
-<!--            <groupId>com.hazelcast.simulator</groupId>-->
-<!--            <artifactId>driver-infinispan10</artifactId>-->
-<!--            <version>${project.version}</version>-->
-<!--        </dependency>-->
-        <dependency>
-            <groupId>com.hazelcast.simulator</groupId>
-            <artifactId>driver-infinispan9</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.hazelcast.simulator</groupId>
-            <artifactId>driver-couchbase</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.hazelcast.simulator</groupId>
-            <artifactId>driver-memcached</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.hazelcast.simulator</groupId>
-            <artifactId>driver-mongodb</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.hazelcast.simulator</groupId>
-            <artifactId>driver-lettuce5</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.hazelcast.simulator</groupId>
-            <artifactId>driver-lettucecluster5</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.hazelcast.simulator</groupId>
-            <artifactId>driver-jedis3</artifactId>
-            <version>${project.version}</version>
-        </dependency>
     </dependencies>
 
     <build>

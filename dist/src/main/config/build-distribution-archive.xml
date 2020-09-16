@@ -24,10 +24,13 @@
         </fileSet>
 
         <fileSet>
-            <directory>${project.basedir}/../drivers/driver-hazelcast4/conf</directory>
-            <outputDirectory>drivers/driver-hazelcast4/conf</outputDirectory>
+            <directory>${project.basedir}/../drivers/driver-couchbase/target</directory>
+            <outputDirectory>drivers/driver-couchbase/</outputDirectory>
             <fileMode>0755</fileMode>
             <directoryMode>0755</directoryMode>
+            <includes>
+                <include>*.jar</include>
+            </includes>
         </fileSet>
 
         <fileSet>
@@ -36,12 +39,46 @@
             <fileMode>0755</fileMode>
             <directoryMode>0755</directoryMode>
         </fileSet>
-
         <fileSet>
-            <directory>${project.basedir}/../drivers/driver-infinispan10/conf</directory>
-            <outputDirectory>drivers/driver-infinispan10/conf</outputDirectory>
+            <directory>${project.basedir}/../drivers/driver-hazelcast3/target/</directory>
+            <outputDirectory>drivers/driver-hazelcast3/</outputDirectory>
             <fileMode>0755</fileMode>
             <directoryMode>0755</directoryMode>
+            <includes>
+                <include>*.jar</include>
+            </includes>
+        </fileSet>
+
+        <fileSet>
+            <directory>${project.basedir}/../drivers/driver-hazelcast4/conf</directory>
+            <outputDirectory>drivers/driver-hazelcast4/conf</outputDirectory>
+            <fileMode>0755</fileMode>
+            <directoryMode>0755</directoryMode>
+        </fileSet>
+        <fileSet>
+            <directory>${project.basedir}/../drivers/driver-hazelcast4/target/</directory>
+            <outputDirectory>drivers/driver-hazelcast4/</outputDirectory>
+            <fileMode>0755</fileMode>
+            <directoryMode>0755</directoryMode>
+            <includes>
+                <include>*.jar</include>
+            </includes>
+        </fileSet>
+
+        <fileSet>
+            <directory>${project.basedir}/../drivers/driver-ignite2/conf</directory>
+            <outputDirectory>drivers/driver-ignite2/conf</outputDirectory>
+            <fileMode>0755</fileMode>
+            <directoryMode>0755</directoryMode>
+        </fileSet>
+        <fileSet>
+            <directory>${project.basedir}/../drivers/driver-ignite2/target/</directory>
+            <outputDirectory>drivers/driver-ignite2/</outputDirectory>
+            <fileMode>0755</fileMode>
+            <directoryMode>0755</directoryMode>
+            <includes>
+                <include>*.jar</include>
+            </includes>
         </fileSet>
 
         <fileSet>
@@ -50,12 +87,87 @@
             <fileMode>0755</fileMode>
             <directoryMode>0755</directoryMode>
         </fileSet>
-
         <fileSet>
-            <directory>${project.basedir}/../drivers/driver-ignite2/conf</directory>
-            <outputDirectory>drivers/driver-ignite2/conf</outputDirectory>
+            <directory>${project.basedir}/../drivers/driver-infinispan9/target/</directory>
+            <outputDirectory>drivers/driver-infinispan9/</outputDirectory>
             <fileMode>0755</fileMode>
             <directoryMode>0755</directoryMode>
+            <includes>
+                <include>*.jar</include>
+            </includes>
+        </fileSet>
+
+        <fileSet>
+            <directory>${project.basedir}/../drivers/driver-infinispan10/conf</directory>
+            <outputDirectory>drivers/driver-infinispan10/conf</outputDirectory>
+            <fileMode>0755</fileMode>
+            <directoryMode>0755</directoryMode>
+        </fileSet>
+        <fileSet>
+            <directory>${project.basedir}/../drivers/driver-infinispan10/target/</directory>
+            <outputDirectory>drivers/driver-infinispan10/</outputDirectory>
+            <fileMode>0755</fileMode>
+            <directoryMode>0755</directoryMode>
+            <includes>
+                <include>*.jar</include>
+            </includes>
+        </fileSet>
+
+        <fileSet>
+            <directory>${project.basedir}/../drivers/driver-infinispan11/conf</directory>
+            <outputDirectory>drivers/driver-infinispan11/conf</outputDirectory>
+            <fileMode>0755</fileMode>
+            <directoryMode>0755</directoryMode>
+        </fileSet>
+        <fileSet>
+            <directory>${project.basedir}/../drivers/driver-infinispan11/target/</directory>
+            <outputDirectory>drivers/driver-infinispan11/</outputDirectory>
+            <fileMode>0755</fileMode>
+            <directoryMode>0755</directoryMode>
+            <includes>
+                <include>*.jar</include>
+            </includes>
+        </fileSet>
+
+
+        <fileSet>
+            <directory>${project.basedir}/../drivers/driver-jedis3/target/</directory>
+            <outputDirectory>drivers/driver-jedis3/</outputDirectory>
+            <fileMode>0755</fileMode>
+            <directoryMode>0755</directoryMode>
+            <includes>
+                <include>*.jar</include>
+            </includes>
+        </fileSet>
+
+        <fileSet>
+            <directory>${project.basedir}/../drivers/driver-lettuce5/target/</directory>
+            <outputDirectory>drivers/driver-lettuce5/</outputDirectory>
+            <fileMode>0755</fileMode>
+            <directoryMode>0755</directoryMode>
+            <includes>
+                <include>*.jar</include>
+            </includes>
+        </fileSet>
+
+        <fileSet>
+            <directory>${project.basedir}/../drivers/driver-mongodb/target/</directory>
+            <outputDirectory>drivers/driver-memcached/</outputDirectory>
+            <fileMode>0755</fileMode>
+            <directoryMode>0755</directoryMode>
+            <includes>
+                <include>*.jar</include>
+            </includes>
+        </fileSet>
+
+        <fileSet>
+            <directory>${project.basedir}/../drivers/driver-memcached/target/</directory>
+            <outputDirectory>drivers/driver-mongodb/</outputDirectory>
+            <fileMode>0755</fileMode>
+            <directoryMode>0755</directoryMode>
+            <includes>
+                <include>*.jar</include>
+            </includes>
         </fileSet>
     </fileSets>
 
@@ -74,125 +186,5 @@
             </excludes>
         </dependencySet>
 
-        <dependencySet>
-            <outputDirectory>drivers/driver-hazelcast4</outputDirectory>
-            <useProjectArtifact>false</useProjectArtifact>
-            <useTransitiveFiltering>true</useTransitiveFiltering>
-            <includes>
-                <include>com.hazelcast.simulator:driver-hazelcast4</include>
-                <include>io.netty:netty-*</include>
-            </includes>
-        </dependencySet>
-
-        <dependencySet>
-            <outputDirectory>drivers/driver-hazelcast3</outputDirectory>
-            <useProjectArtifact>false</useProjectArtifact>
-            <useTransitiveFiltering>true</useTransitiveFiltering>
-            <includes>
-                <include>com.hazelcast.simulator:driver-hazelcast3</include>
-                <include>io.netty:netty-*</include>
-            </includes>
-        </dependencySet>
-
-        <dependencySet>
-            <outputDirectory>drivers/driver-ignite2</outputDirectory>
-            <useProjectArtifact>false</useProjectArtifact>
-            <useTransitiveFiltering>true</useTransitiveFiltering>
-            <includes>
-                <include>com.hazelcast.simulator:driver-ignite2</include>
-            </includes>
-        </dependencySet>
-
-<!--        <dependencySet>-->
-<!--            <outputDirectory>drivers/driver-infinispan10</outputDirectory>-->
-<!--            <useProjectArtifact>false</useProjectArtifact>-->
-<!--            <useTransitiveFiltering>true</useTransitiveFiltering>-->
-<!--            <includes>-->
-<!--                <include>com.hazelcast.simulator:driver-infinispan10</include>-->
-<!--                <include>org.infinispan:*</include>-->
-<!--                <include>org.javassist:javassist</include>-->
-<!--                <include>com.fasterxml.jackson.core:*</include>-->
-<!--                <include>io.netty:netty-handler</include>-->
-<!--                <include>io.netty:netty-buffer</include>-->
-<!--                <include>io.netty:netty-transport</include>-->
-<!--                <include>io.netty:netty-resolver</include>-->
-<!--                <include>io.netty:netty-transport-native-epoll</include>-->
-<!--                <include>io.netty:netty-transport-native-unix-common</include>-->
-<!--                <include>io.netty:netty-codec</include>-->
-<!--                <include>io.netty:netty-common</include>-->
-<!--                <include>io.reactivex.rxjava2:*</include>-->
-<!--            </includes>-->
-<!--        </dependencySet>-->
-
-        <dependencySet>
-            <outputDirectory>drivers/driver-infinispan9</outputDirectory>
-            <useProjectArtifact>false</useProjectArtifact>
-            <useTransitiveFiltering>true</useTransitiveFiltering>
-            <includes>
-                <include>com.hazelcast.simulator:driver-infinispan9</include>
-                <include>org.infinispan:*</include>
-                <include>org.javassist:javassist</include>
-                <include>com.fasterxml.jackson.core:*</include>
-                <include>io.netty:netty-*</include>
-                <include>io.reactivex.rxjava2:*</include>
-                <include>org.reactivestreams:reactive-streams</include>
-            </includes>
-        </dependencySet>
-
-        <dependencySet>
-            <outputDirectory>drivers/driver-couchbase</outputDirectory>
-            <useProjectArtifact>false</useProjectArtifact>
-            <useTransitiveFiltering>true</useTransitiveFiltering>
-            <includes>
-                <include>com.hazelcast.simulator:driver-couchbase</include>
-            </includes>
-        </dependencySet>
-
-        <dependencySet>
-            <outputDirectory>drivers/driver-memcached</outputDirectory>
-            <useProjectArtifact>false</useProjectArtifact>
-            <useTransitiveFiltering>true</useTransitiveFiltering>
-            <includes>
-                <include>com.hazelcast.simulator:driver-memcached</include>
-            </includes>
-        </dependencySet>
-
-        <dependencySet>
-            <outputDirectory>drivers/driver-mongodb</outputDirectory>
-            <useProjectArtifact>false</useProjectArtifact>
-            <useTransitiveFiltering>true</useTransitiveFiltering>
-            <includes>
-                <include>com.hazelcast.simulator:driver-mongodb</include>
-            </includes>
-        </dependencySet>
-
-        <dependencySet>
-            <outputDirectory>drivers/driver-lettuce5</outputDirectory>
-            <useProjectArtifact>false</useProjectArtifact>
-            <useTransitiveFiltering>true</useTransitiveFiltering>
-            <includes>
-                <include>com.hazelcast.simulator:driver-lettuce5</include>
-                <include>io.netty:netty-*</include>
-            </includes>
-        </dependencySet>
-
-        <dependencySet>
-            <outputDirectory>drivers/driver-lettucecluster5</outputDirectory>
-            <useProjectArtifact>false</useProjectArtifact>
-            <useTransitiveFiltering>true</useTransitiveFiltering>
-            <includes>
-                <include>com.hazelcast.simulator:driver-lettucecluster5</include>
-                <include>io.netty:netty-*</include>
-            </includes>
-        </dependencySet>
-
-        <dependencySet>
-            <outputDirectory>drivers/driver-jedis3</outputDirectory>
-            <useTransitiveFiltering>true</useTransitiveFiltering>
-            <useProjectArtifact>false</useProjectArtifact>
-            <includes>
-                <include>com.hazelcast.simulator:driver-jedis3</include>
-            </includes>
-        </dependencySet>
     </dependencySets>
 </assembly>
