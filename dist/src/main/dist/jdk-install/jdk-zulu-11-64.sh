@@ -3,4 +3,4 @@
 set -e
 source jdk-support.sh
 
-installZuluJdk 8 "https://cdn.azul.com/zulu/bin/zulu11.1+23-ea-jdk11-linux_x64.tar.gz" "~/zulu11.1+23-ea-jdk11-linux_x64"
+installZuluJdk zulu11.41.23-ca-fx-jdk11.0.8-linux_x64

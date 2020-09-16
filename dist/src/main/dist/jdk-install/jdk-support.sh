@@ -110,20 +110,21 @@ function installOracleJdk {
 }
 
 function installZuluJdk {
-    JDK_VERSION=$1
-    JDK_FILE=$2
-    TMP_JAVA_HOME=$3
+    VERSION=$1
 
     installPackage wget
     installPackage tar
 
-    echo "Installing Zulu JDK $JDK_FILE"
+    echo "Installing Zulu JDK $VERSION"
 
     cd ~
-    wget --no-verbose -N --referer=http://www.azul.com/downloads/zulu/zulu-linux ${JDK_FILE} -O zulu-${JDK_VERSION}.tar.gz
-    tar xfz zulu-${JDK_VERSION}.tar.gz
+    if [ ! -d $VERSION ]; then
+        wget --no-verbose -N --referer=http://www.azul.com/downloads/zulu/zulu-linux http://cdn.azul.com/zulu/bin/${VERSION}.tar.gz -O ${VERSION}.tar.gz
+        tar xfz ${VERSION}.tar.gz
+        echo [INFO] INSTALLING
+    fi
 
-    addJavaHome ${TMP_JAVA_HOME}
+    addJavaHome ${VERSION}
 }
 
 function addJavaHome {
