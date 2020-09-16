@@ -76,6 +76,17 @@ public final class FileUtils {
         return new File(path);
     }
 
+    public static File newTmpFile(String content) {
+        try {
+            File file = File.createTempFile("simulator", "simulator");
+            file.deleteOnExit();
+            writeText(content, file);
+            return file;
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
     public static File newFile(File file, String... items) {
         for (String item : items) {
             file = new File(file, item);

@@ -22,6 +22,7 @@ import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.utils.Bash;
 import com.hazelcast.simulator.utils.BashCommand;
 import com.hazelcast.simulator.utils.CommandLineExitException;
+import com.hazelcast.simulator.utils.FileUtils;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 import org.apache.log4j.Logger;
 
@@ -116,7 +117,22 @@ public class Provisioner {
     private File getJavaInstallScript() {
         String flavor = properties.getJdkFlavor();
         String version = properties.getJdkVersion();
+        if ("zulu".equals(flavor)) {
+            boolean simpleVersion;
+            try {
+                Integer.parseInt(version);
+                simpleVersion = true;
+            } catch (Exception e) {
+                simpleVersion = false;
+            }
 
+            if (!simpleVersion) {
+                File file = new File(new File(simulatorPath, "jdk-install"), "jdk-zulu.sh");
+                String content = FileUtils.fileAsText(file);
+                content = content.replace("%VERSION%", version.replace(".tar.gz", ""));
+                return FileUtils.newTmpFile(content);
+            }
+        }
         String script = "jdk-" + flavor + '-' + version + "-64.sh";
         File scriptDir = new File(simulatorPath, "jdk-install");
         return new File(scriptDir, script);
