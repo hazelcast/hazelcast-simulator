@@ -159,7 +159,7 @@ upload_to_single_agent() {
 
     echo "[INFO]    Upload to $public_ip started"
 
-    remote_hz_lib=${simulator_basename}/vendor-lib
+    remote_hz_lib=${simulator_basename}/driver-lib
 
     echo "Uploading Hazelcast $local_install_dir to $public_ip:$remote_hz_lib"
     ssh ${SSH_OPTIONS} ${user}@${public_ip} "mkdir -p $remote_hz_lib"

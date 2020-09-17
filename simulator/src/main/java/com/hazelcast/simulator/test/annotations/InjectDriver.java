@@ -21,9 +21,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotation that should be put on a field where a 'vendor' instance like a HazelcastInstance needs to be injected.
+ * Annotation that should be put on a field where a 'driver' instance like a HazelcastInstance needs to be injected.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
-public @interface InjectVendor {
+public @interface InjectDriver {
 }

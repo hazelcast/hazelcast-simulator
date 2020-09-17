@@ -17,7 +17,7 @@ package com.hazelcast.simulator.infinispan10.cache;
 
 import com.hazelcast.simulator.infinispan10.InfinispanTest;
 import com.hazelcast.simulator.test.BaseThreadState;
-import com.hazelcast.simulator.test.annotations.InjectVendor;
+import com.hazelcast.simulator.test.annotations.InjectDriver;
 import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.TimeStep;
@@ -30,7 +30,7 @@ public class LongLongCacheTest extends InfinispanTest {
     // properties
     public int keyDomain = 10000;
 
-    @InjectVendor
+    @InjectDriver
     private BasicCacheContainer cacheContainer;
     private Map<Long, Long> cache;
 

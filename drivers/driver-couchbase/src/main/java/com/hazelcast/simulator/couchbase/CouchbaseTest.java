@@ -18,7 +18,7 @@ package com.hazelcast.simulator.couchbase;
 import com.couchbase.client.java.CouchbaseCluster;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.InjectTestContext;
-import com.hazelcast.simulator.test.annotations.InjectVendor;
+import com.hazelcast.simulator.test.annotations.InjectDriver;
 import edu.umd.cs.findbugs.annotations.SuppressWarnings;
 import org.apache.log4j.Logger;
 
@@ -34,7 +34,7 @@ public abstract class CouchbaseTest {
 
     protected final Logger logger = Logger.getLogger(getClass());
 
-    @InjectVendor
+    @InjectDriver
     protected CouchbaseCluster cluster;
 
     @InjectTestContext

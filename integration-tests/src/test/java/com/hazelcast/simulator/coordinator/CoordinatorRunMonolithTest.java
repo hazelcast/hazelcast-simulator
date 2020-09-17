@@ -11,7 +11,7 @@ import com.hazelcast.simulator.utils.CommonUtils;
 import com.hazelcast.simulator.utils.FileUtils;
 import com.hazelcast.simulator.utils.SimulatorUtils;
 import com.hazelcast.simulator.hazelcast4.Hazelcast4Driver;
-import com.hazelcast.simulator.vendors.VendorDriver;
+import com.hazelcast.simulator.drivers.Driver;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,7 +27,7 @@ public class CoordinatorRunMonolithTest {
     private Agent agent;
     private CoordinatorRunMonolith run;
     private Coordinator coordinator;
-    private VendorDriver driver;
+    private Driver driver;
 
     @Before
     public void setUp() throws Exception {

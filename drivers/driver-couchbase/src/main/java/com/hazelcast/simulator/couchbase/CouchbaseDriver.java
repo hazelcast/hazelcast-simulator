@@ -17,14 +17,14 @@ package com.hazelcast.simulator.couchbase;
 
 import com.couchbase.client.java.CouchbaseCluster;
 import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
-import com.hazelcast.simulator.vendors.VendorDriver;
+import com.hazelcast.simulator.drivers.Driver;
 
 import java.io.IOException;
 
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static java.lang.String.format;
 
-public class CouchbaseDriver extends VendorDriver<CouchbaseCluster> {
+public class CouchbaseDriver extends Driver<CouchbaseCluster> {
 
     private CouchbaseCluster cluster;
 
@@ -51,12 +51,12 @@ public class CouchbaseDriver extends VendorDriver<CouchbaseCluster> {
     }
 
     @Override
-    public CouchbaseCluster getVendorInstance() {
+    public CouchbaseCluster getDriverInstance() {
         return cluster;
     }
 
     @Override
-    public void startVendorInstance() throws Exception {
+    public void startDriverInstance() throws Exception {
         String[] nodes = get("nodes").split(",");
         this.cluster = CouchbaseCluster.create(nodes);
     }

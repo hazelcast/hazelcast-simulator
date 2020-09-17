@@ -7,7 +7,7 @@
 #
 # TODO
 # - use rsync instead of scp for upload
-# - vendor-lib git: enterprise
+# - driver-lib git: enterprise
 #
 # IDEAS
 # - instead of download artifacts to local machine and then uploading; download them on the target machine

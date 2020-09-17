@@ -17,7 +17,7 @@ package com.hazelcast.simulator.infinispan10;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.coordinator.registry.AgentData;
-import com.hazelcast.simulator.vendors.VendorDriver;
+import com.hazelcast.simulator.drivers.Driver;
 import org.apache.log4j.Logger;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.configuration.Configuration;
@@ -32,7 +32,7 @@ import java.util.Properties;
 
 import static java.lang.String.format;
 
-public class Infinispan10Driver extends VendorDriver<BasicCacheContainer> {
+public class Infinispan10Driver extends Driver<BasicCacheContainer> {
 
     private static final Logger LOGGER = Logger.getLogger(Infinispan10Driver.class);
 
@@ -100,12 +100,12 @@ public class Infinispan10Driver extends VendorDriver<BasicCacheContainer> {
     }
 
     @Override
-    public BasicCacheContainer getVendorInstance() {
+    public BasicCacheContainer getDriverInstance() {
         return cacheContainer;
     }
 
     @Override
-    public void startVendorInstance() throws Exception {
+    public void startDriverInstance() throws Exception {
         String workerType = get("WORKER_TYPE");
         if ("javaclient".equals(workerType)) {
              Properties hotrodProperties = new Properties();

@@ -12,7 +12,7 @@ import com.hazelcast.simulator.tests.TestWithSlowSetup;
 import com.hazelcast.simulator.utils.AssertTask;
 import com.hazelcast.simulator.utils.ExceptionReporter;
 import com.hazelcast.simulator.fake.FakeInstance;
-import com.hazelcast.simulator.vendors.VendorDriver;
+import com.hazelcast.simulator.drivers.Driver;
 import com.hazelcast.simulator.worker.operations.CreateTestOperation;
 import com.hazelcast.simulator.worker.operations.StartPhaseOperation;
 import com.hazelcast.simulator.worker.operations.StopRunOperation;
@@ -40,7 +40,7 @@ public class TestManagerTest {
 
     private TestManager manager;
     private Server server;
-    private VendorDriver vendorDriver;
+    private Driver driver;
     private File userDir;
 
     @Before
@@ -48,9 +48,9 @@ public class TestManagerTest {
         ExceptionReporter.reset();
         userDir = setupFakeUserDir();
         server = mock(Server.class);
-        vendorDriver = mock(VendorDriver.class);
-        when(vendorDriver.getVendorInstance()).thenReturn(mock(FakeInstance.class));
-        manager = new TestManager(server, vendorDriver);
+        driver = mock(Driver.class);
+        when(driver.getDriverInstance()).thenReturn(mock(FakeInstance.class));
+        manager = new TestManager(server, driver);
     }
 
     @After

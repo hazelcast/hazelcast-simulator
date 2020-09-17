@@ -17,7 +17,7 @@ package com.hazelcast.simulator.lettucecluster5;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.coordinator.registry.AgentData;
-import com.hazelcast.simulator.vendors.VendorDriver;
+import com.hazelcast.simulator.drivers.Driver;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.cluster.RedisClusterClient;
 import io.lettuce.core.resource.DefaultClientResources;
@@ -28,7 +28,7 @@ import java.util.List;
 
 import static java.lang.String.format;
 
-public class LettuceCluster5Driver extends VendorDriver<RedisClusterClient> {
+public class LettuceCluster5Driver extends Driver<RedisClusterClient> {
 
     private RedisClusterClient client;
 
@@ -78,12 +78,12 @@ public class LettuceCluster5Driver extends VendorDriver<RedisClusterClient> {
     }
 
     @Override
-    public RedisClusterClient getVendorInstance() {
+    public RedisClusterClient getDriverInstance() {
         return client;
     }
 
     @Override
-    public void startVendorInstance() throws Exception {
+    public void startDriverInstance() throws Exception {
         String workerType = get("WORKER_TYPE");
         if ("javaclient".equals(workerType)) {
             String[] uris = get("URI").split(",");

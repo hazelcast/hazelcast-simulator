@@ -21,7 +21,7 @@ import com.hazelcast.simulator.common.ShutdownThread;
 import com.hazelcast.simulator.protocol.Server;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.utils.ExceptionReporter;
-import com.hazelcast.simulator.vendors.VendorDriver;
+import com.hazelcast.simulator.drivers.Driver;
 import com.hazelcast.simulator.worker.operations.TerminateWorkerOperation;
 import com.hazelcast.simulator.worker.performance.PerformanceMonitor;
 import com.hazelcast.simulator.worker.testcontainer.TestManager;
@@ -43,7 +43,7 @@ import static com.hazelcast.simulator.utils.NativeUtils.getInputArgs;
 import static com.hazelcast.simulator.utils.NativeUtils.getPID;
 import static com.hazelcast.simulator.utils.NativeUtils.writePid;
 import static com.hazelcast.simulator.utils.SimulatorUtils.localIp;
-import static com.hazelcast.simulator.vendors.VendorDriver.loadVendorDriver;
+import static com.hazelcast.simulator.drivers.Driver.loadDriver;
 import static java.lang.Integer.parseInt;
 import static java.lang.String.format;
 
@@ -57,7 +57,7 @@ public class Worker {
     private final PerformanceMonitor performanceMonitor;
     private final Server server;
     private final TestManager testManager;
-    private final VendorDriver vendorDriver;
+    private final Driver driver;
     private final WorkerParameters parameters;
     private final SimulatorAddress workerAddress;
     private ShutdownThread shutdownThread;
@@ -66,14 +66,14 @@ public class Worker {
         this.parameters = parameters;
         this.publicAddress = parameters.get("PUBLIC_ADDRESS");
         this.workerAddress = SimulatorAddress.fromString(parameters.get("WORKER_ADDRESS"));
-        this.vendorDriver = loadVendorDriver(parameters.get("VENDOR"))
+        this.driver = loadDriver(parameters.get("DRIVER"))
                 .setAll(parameters.asMap());
         this.server = new Server("workers")
                 .setBrokerURL(localIp(), parseInt(parameters.get("AGENT_PORT")))
                 .setSelfAddress(workerAddress);
-        this.testManager = new TestManager(server, vendorDriver);
+        this.testManager = new TestManager(server, driver);
 
-        ScriptExecutor scriptExecutor = new ScriptExecutor(vendorDriver);
+        ScriptExecutor scriptExecutor = new ScriptExecutor(driver);
         server.setProcessor(new WorkerOperationProcessor(this, testManager, scriptExecutor));
 
         Runtime.getRuntime().addShutdownHook(new WorkerShutdownThread(true));
@@ -87,7 +87,7 @@ public class Worker {
 
         server.start();
         performanceMonitor.start();
-        vendorDriver.startVendorInstance();
+        driver.startDriverInstance();
 
         new ProcessSuicideThread(parameters.get("agent.pid"), parameters.intGet("WORKER_ORPHAN_INTERVAL_SECONDS")).start();
 
@@ -178,7 +178,7 @@ public class Worker {
 
         @Override
         public void doRun() {
-            closeQuietly(vendorDriver);
+            closeQuietly(driver);
             closeQuietly(performanceMonitor);
         }
     }

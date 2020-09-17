@@ -26,13 +26,13 @@ do
 	agent-ssh "sudo killall -9 java || true"
 
 	coordinator --duration 3m \
-            --sessionId "hz3.8/@it" \
-            --clients $clients \
-            --clientType "javaclient" \
-            --clientArgs "-Xms3g -Xmx3g $gc_log" \
-            --members $members \
-            --dedicatedMemberMachines $members \
-            --memberArgs "-Xms3G -Xmx3G $gc_log \
-                          -Dhazelcast.initial.min.cluster.size=$members" \
-            test.properties
+	            --driver hazelcast4 \
+              --sessionId "hz3.8/@it" \
+              --clients $clients \
+              --clientType "javaclient" \
+              --clientArgs "-Xms3g -Xmx3g $gc_log" \
+              --members $members \
+              --dedicatedMemberMachines $members \
+              --memberArgs "-Xms3G -Xmx3G $gc_log -Dhazelcast.initial.min.cluster.size=$members" \
+              test.properties
 done

@@ -24,11 +24,11 @@ uploadToRemoteSimulatorDir(){
 }
 
 # purge Hazelcast JARs
-ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "rm -fr hazelcast-simulator-$SIMULATOR_VERSION/vendor-lib/ || true"
 ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "rm -fr hazelcast-simulator-$SIMULATOR_VERSION/user-lib/ || true"
 
 ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "mkdir -p hazelcast-simulator-$SIMULATOR_VERSION/lib/"
 ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "mkdir -p hazelcast-simulator-$SIMULATOR_VERSION/user-lib/"
+ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "mkdir -p hazelcast-simulator-$SIMULATOR_VERSION/drivers/"
 
 #upload Simulator JARs
 uploadLibraryJar "simulator-*"
@@ -55,23 +55,7 @@ uploadLibraryJar "junit*"
 uploadLibraryJar "log4j*"
 uploadLibraryJar "slf4j-log4j12-*"
 
-# hack to get hz enterprise working
-if [ "$VENDOR" = "hazelcast-enterprise4" ]; then
-    ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "mkdir -p hazelcast-simulator-$SIMULATOR_VERSION/drivers/driver-hazelcast4"
-    rsync --checksum -avv -L -e "ssh $SSH_OPTIONS" $SIMULATOR_HOME/drivers/driver-hazelcast4/* \
-            $SIMULATOR_USER@$agent:hazelcast-simulator-$SIMULATOR_VERSION/drivers/driver-hazelcast4/
-elif [ "$VENDOR" = "hazelcast-enterprise3" ]; then
-    ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "mkdir -p hazelcast-simulator-$SIMULATOR_VERSION/drivers/driver-hazelcast3"
-    rsync --checksum -avv -L -e "ssh $SSH_OPTIONS" $SIMULATOR_HOME/drivers/driver-hazelcast3/* \
-            $SIMULATOR_USER@$agent:hazelcast-simulator-$SIMULATOR_VERSION/drivers/driver-hazelcast3/
-else
-    ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "mkdir -p hazelcast-simulator-$SIMULATOR_VERSION/drivers/driver-$VENDOR"
-    uploadTestLibJar "*"
-fi
 
-#
-
-# upload remaining files
 uploadToRemoteSimulatorDir "$SIMULATOR_HOME/bin/" "bin"
 uploadToRemoteSimulatorDir "$SIMULATOR_HOME/conf/" "conf"
 uploadToRemoteSimulatorDir "$SIMULATOR_HOME/jdk-install/" "jdk-install"

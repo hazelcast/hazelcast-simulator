@@ -1865,7 +1865,7 @@ Following steps guide you to run any Simulator test from `driver-mongodb` tests 
 
 1. Create Simulator project by `simulator-wizard` as usual.
 2. In created directory create text file with name `node.txt` and content like `<IP_ADDRESS>:<PORT>` (e.g. `127.0.0.1:27017`) which says where to find running MongoDB.
-3. In `simulator.properties` define `VENDOR=mongodb`.
+3. In `simulator.properties` define `DRIVER=mongodb`.
 4. Change content of `test.properties` to run any MongoDB test:
 ```
 class = com.hazelcast.simulator.mongodb.ReadWriteTest

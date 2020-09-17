@@ -16,7 +16,7 @@
 package com.hazelcast.simulator.mongodb;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
-import com.hazelcast.simulator.vendors.VendorDriver;
+import com.hazelcast.simulator.drivers.Driver;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import java.io.IOException;
@@ -24,7 +24,7 @@ import java.io.IOException;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static java.lang.String.format;
 
-public class MongodbDriver extends VendorDriver<MongoClient> {
+public class MongodbDriver extends Driver<MongoClient> {
 
     private MongoClient client;
 
@@ -52,12 +52,12 @@ public class MongodbDriver extends VendorDriver<MongoClient> {
     }
 
     @Override
-    public MongoClient getVendorInstance() {
+    public MongoClient getDriverInstance() {
         return client;
     }
 
     @Override
-    public void startVendorInstance() throws Exception {
+    public void startDriverInstance() throws Exception {
         String address = get("node");
         String[] addressParts = address.split(":");
         if (addressParts.length == 0 || addressParts.length > 2) {

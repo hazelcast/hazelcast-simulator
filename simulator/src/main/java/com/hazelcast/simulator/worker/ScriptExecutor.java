@@ -19,7 +19,7 @@ import com.hazelcast.simulator.protocol.Promise;
 import com.hazelcast.simulator.utils.BashCommand;
 import com.hazelcast.simulator.utils.EmbeddedScriptCommand;
 import com.hazelcast.simulator.utils.NativeUtils;
-import com.hazelcast.simulator.vendors.VendorDriver;
+import com.hazelcast.simulator.drivers.Driver;
 import com.hazelcast.simulator.worker.operations.ExecuteScriptOperation;
 import org.apache.log4j.Logger;
 
@@ -33,10 +33,10 @@ import static java.lang.String.format;
 public class ScriptExecutor {
     private static final Logger LOGGER = Logger.getLogger(ScriptExecutor.class);
 
-    private final VendorDriver vendorDriver;
+    private final Driver driver;
 
-    public ScriptExecutor(VendorDriver vendorDriver) {
-        this.vendorDriver = vendorDriver;
+    public ScriptExecutor(Driver driver) {
+        this.driver = driver;
     }
 
     public void execute(final ExecuteScriptOperation operation, final Promise promise) {
@@ -86,7 +86,7 @@ public class ScriptExecutor {
         Callable<String> task;
         task = () -> {
             Object result = new EmbeddedScriptCommand(command)
-                    .addEnvironment("vendor", vendorDriver.getVendorInstance())
+                    .addEnvironment("driver", driver.getDriverInstance())
                     .setEngineName(extension)
                     .execute();
             LOGGER.info(format("Script [%s] with [%s]", command, result));

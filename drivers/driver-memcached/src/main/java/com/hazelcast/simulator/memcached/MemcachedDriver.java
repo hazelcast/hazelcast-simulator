@@ -16,7 +16,7 @@
 package com.hazelcast.simulator.memcached;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
-import com.hazelcast.simulator.vendors.VendorDriver;
+import com.hazelcast.simulator.drivers.Driver;
 import net.spy.memcached.ConnectionFactoryBuilder;
 import net.spy.memcached.MemcachedClient;
 import net.spy.memcached.auth.AuthDescriptor;
@@ -30,7 +30,7 @@ import java.util.List;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static java.lang.String.format;
 
-public class MemcachedDriver extends VendorDriver<MemcachedClient> {
+public class MemcachedDriver extends Driver<MemcachedClient> {
 
     private MemcachedClient client;
 
@@ -57,12 +57,12 @@ public class MemcachedDriver extends VendorDriver<MemcachedClient> {
     }
 
     @Override
-    public MemcachedClient getVendorInstance() {
+    public MemcachedClient getDriverInstance() {
         return client;
     }
 
     @Override
-    public void startVendorInstance() throws Exception {
+    public void startDriverInstance() throws Exception {
         String[] nodes = get("nodes").split(",");
         List<InetSocketAddress> addresses = new ArrayList<>();
         for (String node : nodes) {

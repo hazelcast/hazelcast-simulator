@@ -19,7 +19,7 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.InjectTestContext;
-import com.hazelcast.simulator.test.annotations.InjectVendor;
+import com.hazelcast.simulator.test.annotations.InjectDriver;
 import org.apache.log4j.Logger;
 
 /**
@@ -42,7 +42,7 @@ public abstract class HazelcastTest {
     @InjectTestContext
     protected TestContext testContext;
 
-    @InjectVendor
+    @InjectDriver
     protected HazelcastInstance targetInstance;
 
     public IAtomicLong getAtomicLong(String name) {
