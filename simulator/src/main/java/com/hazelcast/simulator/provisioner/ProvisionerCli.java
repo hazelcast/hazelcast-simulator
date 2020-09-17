@@ -47,8 +47,9 @@ final class ProvisionerCli {
                     + " desired number of machines is smaller than the actual number of machines, machines are terminated.")
             .withRequiredArg().ofType(Integer.class);
 
-    private final OptionSpec installJavaSpec = parser.accepts("installJava",
-            "Installs JAVA on all provisioned machines.");
+    private final OptionSpec<String> installJavaSpec = parser.accepts("installJava",
+            "Installs JAVA on all provisioned machines. The url to the tar.gz file can be provided.")
+            .withOptionalArg().ofType(String.class);
 
     private final OptionSpec installSpec = parser.accepts("install",
             "Installs Simulator on all provisioned machines. Previous Simulator installation for that version will be removed.");
@@ -86,7 +87,7 @@ final class ProvisionerCli {
                 int size = options.valueOf(scaleSpec);
                 provisioner.scale(size, tags);
             } else if (options.has(installJavaSpec)) {
-                provisioner.installJava();
+                provisioner.installJava(options.valueOf(installJavaSpec));
             } else if (options.has(installSpec)) {
                 provisioner.installSimulator();
             } else if (options.has(killSpec)) {

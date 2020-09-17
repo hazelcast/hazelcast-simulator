@@ -11,8 +11,6 @@
 # https://adopt-openjdk.ci.cloudbees.com/job/openjdk-1.9-linux-x86_64/lastSuccessfulBuild/artifact/openjdk-1.9-linux-x86_64-jdk.tar.gz
 #
 # Oracle
-# http://download.oracle.com/otn/java/jdk/6u45-b06/jdk-6u45-linux-x64.bin
-# http://download.oracle.com/otn/java/jdk/7u80-b15/jdk-7u80-linux-x64.tar.gz
 # http://download.oracle.com/otn-pub/java/jdk/8u121-b13/e9e7ea248e2c4826b92b3f075a80e441/jdk-8u121-linux-x64.tar.gz
 # http://www.java.net/download/java/jdk9/archive/158/binaries/jdk-9-ea+158_linux-x64_bin.tar.gz
 #
