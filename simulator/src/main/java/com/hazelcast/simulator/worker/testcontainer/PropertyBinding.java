@@ -21,7 +21,7 @@ import com.hazelcast.simulator.probes.impl.EmptyProbe;
 import com.hazelcast.simulator.probes.impl.HdrProbe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.InjectTestContext;
-import com.hazelcast.simulator.test.annotations.InjectVendor;
+import com.hazelcast.simulator.test.annotations.InjectDriver;
 import com.hazelcast.simulator.utils.BindException;
 import com.hazelcast.simulator.utils.PropertyBindingSupport;
 
@@ -43,7 +43,7 @@ import static java.lang.String.format;
  * <ol>
  * <li>values in public fields</li>
  * <li>TestContext in fields annotated with {@link InjectTestContext}</li>
- * <li>HazelcastInstance in fields annotated with @{@link InjectVendor}</li>
+ * <li>HazelcastInstance in fields annotated with @{@link InjectDriver}</li>
  * </ol>
  * <p>
  * The {@link PropertyBinding} also keeps track of all used properties. This makes it possible to detect if there are any unused
@@ -70,7 +70,7 @@ public class PropertyBinding {
     private final Map<String, Probe> probeMap = new ConcurrentHashMap<>();
     private final TestCase testCase;
     private final Set<String> unusedProperties = new HashSet<>();
-    private Object vendorInstance;
+    private Object driverInstance;
 
     public PropertyBinding(TestCase testCase) {
         this.testCase = testCase;
@@ -89,8 +89,8 @@ public class PropertyBinding {
         this.probeClass = loadProbeClass();
     }
 
-    public PropertyBinding setVendorInstance(Object vendorInstance) {
-        this.vendorInstance = vendorInstance;
+    public PropertyBinding setDriverInstance(Object driverInstance) {
+        this.driverInstance = driverInstance;
         return this;
     }
 
@@ -214,14 +214,14 @@ public class PropertyBinding {
         if (field.isAnnotationPresent(InjectTestContext.class)) {
             assertFieldType(fieldType, TestContext.class, InjectTestContext.class);
             setFieldValue(object, field, testContext);
-        } else if (field.isAnnotationPresent(InjectVendor.class)) {
-            if (vendorInstance == null) {
-                throw new IllegalTestException("No vendor found");
+        } else if (field.isAnnotationPresent(InjectDriver.class)) {
+            if (driverInstance == null) {
+                throw new IllegalTestException("No driver found");
             }
 
-            Class vendorType = vendorInstance.getClass();
-            assertFieldType(vendorType, fieldType, InjectVendor.class);
-            setFieldValue(object, field, vendorInstance);
+            Class driverType = driverInstance.getClass();
+            assertFieldType(driverType, fieldType, InjectDriver.class);
+            setFieldValue(object, field, driverInstance);
         }
     }
 

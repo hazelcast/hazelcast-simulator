@@ -1,21 +1,21 @@
 package com.hazelcast.simulator.fake;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
-import com.hazelcast.simulator.vendors.VendorDriver;
+import com.hazelcast.simulator.drivers.Driver;
 
 import java.io.IOException;
 
-public class FakeDriver extends VendorDriver {
+public class FakeDriver extends Driver {
 
     public FakeInstance instance = new FakeInstance();
 
     @Override
-    public Object getVendorInstance() {
+    public Object getDriverInstance() {
         return instance;
     }
 
     @Override
-    public void startVendorInstance() throws Exception {
+    public void startDriverInstance() throws Exception {
     }
 
     @Override

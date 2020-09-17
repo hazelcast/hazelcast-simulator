@@ -28,7 +28,7 @@ import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.coordinator.ConfigFileTemplate;
 import com.hazelcast.simulator.coordinator.registry.AgentData;
 import com.hazelcast.simulator.utils.BashCommand;
-import com.hazelcast.simulator.vendors.VendorDriver;
+import com.hazelcast.simulator.drivers.Driver;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -43,7 +43,7 @@ import static com.hazelcast.simulator.utils.FileUtils.getConfigurationFile;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static java.lang.String.format;
 
-public class Hazelcast3Driver extends VendorDriver<HazelcastInstance> {
+public class Hazelcast3Driver extends Driver<HazelcastInstance> {
     private static final long PARTITION_WARMUP_TIMEOUT_NANOS = TimeUnit.MINUTES.toNanos(5);
     private static final int PARTITION_WARMUP_SLEEP_INTERVAL_MILLIS = 500;
     private static final Logger LOGGER = Logger.getLogger(Hazelcast3Driver.class);
@@ -54,10 +54,10 @@ public class Hazelcast3Driver extends VendorDriver<HazelcastInstance> {
         Map<String, String> s = new HashMap<>(properties);
         s.remove("CONFIG");
 
-        if ("hazelcast-enterprise3".equals(get("VENDOR"))) {
+        if ("hazelcast-enterprise3".equals(get("DRIVER"))) {
             String licenceKey = get("LICENCE_KEY");
             if (licenceKey == null) {
-                throw new IllegalStateException("licenceKey needs to be set with 'hazelcast-enterprise3' as vendor");
+                throw new IllegalStateException("licenceKey needs to be set with 'hazelcast-enterprise3' as driver");
             }
         }
 
@@ -102,7 +102,7 @@ public class Hazelcast3Driver extends VendorDriver<HazelcastInstance> {
     }
 
     @Override
-    public HazelcastInstance getVendorInstance() {
+    public HazelcastInstance getDriverInstance() {
         return hazelcastInstance;
     }
 
@@ -202,23 +202,23 @@ public class Hazelcast3Driver extends VendorDriver<HazelcastInstance> {
             publicIps = AgentData.publicAddressesString(agents);
         }
 
-        String vendor = get("VENDOR");
-        String installFile = getConfigurationFile("install-" + vendor + ".sh", vendor).getPath();
+        String driver = get("DRIVER");
+        String installFile = getConfigurationFile("install-" + driver + ".sh", driver).getPath();
 
-        LOGGER.info("Installing '" + vendor + "' version '" + versionSpec + "' on Agents using " + installFile);
+        LOGGER.info("Installing '" + driver + "' version '" + versionSpec + "' on Agents using " + installFile);
 
         new BashCommand(installFile)
                 .addParams(get("SESSION_ID"), versionSpec, publicIps)
                 .addEnvironment(properties)
                 .execute();
 
-        LOGGER.info("Successfully installed '" + vendor + "'");
+        LOGGER.info("Successfully installed '" + driver + "'");
 
         LOGGER.info("Install successful!");
     }
 
     @Override
-    public void startVendorInstance() throws Exception {
+    public void startDriverInstance() throws Exception {
         String workerType = get("WORKER_TYPE");
 
         LOGGER.info(format("%s HazelcastInstance starting", workerType));

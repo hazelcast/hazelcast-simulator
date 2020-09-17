@@ -16,7 +16,7 @@
 package com.hazelcast.simulator.test;
 
 import com.hazelcast.simulator.test.annotations.InjectTestContext;
-import com.hazelcast.simulator.test.annotations.InjectVendor;
+import com.hazelcast.simulator.test.annotations.InjectDriver;
 import com.hazelcast.simulator.fake.FakeInstance;
 import org.apache.log4j.Logger;
 
@@ -27,7 +27,7 @@ public abstract class AbstractTest {
 
     protected final Logger logger = Logger.getLogger(getClass());
 
-    @InjectVendor
+    @InjectDriver
     protected FakeInstance targetInstance;
 
     @InjectTestContext

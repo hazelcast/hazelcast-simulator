@@ -132,7 +132,6 @@ public final class CoordinatorRemoteCli implements Closeable {
                 "Command         Description                                                                 \n"
                         + "--------------------------                                                                  \n"
                         + "download        Downloads all artifacts from the workers                                    \n"
-                        + "install         Installs vendor software on the remote machines                             \n"
                         + "print-layout    Prints the cluster-layout                                                   \n"
                         + "test-run        Runs a test and wait for completion                                         \n"
                         + "test-start      Starts a test asynchronously                                                \n"

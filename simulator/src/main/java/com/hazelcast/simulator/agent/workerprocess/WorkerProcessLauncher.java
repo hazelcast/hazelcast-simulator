@@ -222,19 +222,19 @@ public class WorkerProcessLauncher {
                 + uploadDirToClassPath(workerHome)
                 + CLASSPATH_SEPARATOR + CLASSPATH;
 
-        String vendor = parameters.get("VENDOR");
-        if ("hazelcast3".equals(vendor) || "hazelcast-enterprise3".equals(vendor)) {
+        String driver = parameters.get("DRIVER");
+        if ("hazelcast3".equals(driver) || "hazelcast-enterprise3".equals(driver)) {
             String hzVersionDirectory = directoryForVersionSpec(parameters.get("VERSION_SPEC"));
-            classpath += CLASSPATH_SEPARATOR + simulatorHome + "/vendor-lib/" + hzVersionDirectory + "/*";
+            classpath += CLASSPATH_SEPARATOR + simulatorHome + "/driver-lib/" + hzVersionDirectory + "/*";
             // the common test classes.
             classpath += CLASSPATH_SEPARATOR + simulatorHome + "/drivers/driver-hazelcast3/*";
-        } else if ("hazelcast4".equals(vendor) || "hazelcast-enterprise4".equals(vendor)) {
+        } else if ("hazelcast4".equals(driver) || "hazelcast-enterprise4".equals(driver)) {
             String hzVersionDirectory = directoryForVersionSpec(parameters.get("VERSION_SPEC"));
-            classpath += CLASSPATH_SEPARATOR + simulatorHome + "/vendor-lib/" + hzVersionDirectory + "/*";
+            classpath += CLASSPATH_SEPARATOR + simulatorHome + "/driver-lib/" + hzVersionDirectory + "/*";
             // the common test classes.
             classpath += CLASSPATH_SEPARATOR + simulatorHome + "/drivers/driver-hazelcast4/*";
         } else {
-            classpath += CLASSPATH_SEPARATOR + simulatorHome + "/drivers/driver-" + vendor + "/*";
+            classpath += CLASSPATH_SEPARATOR + simulatorHome + "/drivers/driver-" + driver + "/*";
         }
 
         return classpath;

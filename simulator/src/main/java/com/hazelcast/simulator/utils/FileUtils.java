@@ -418,18 +418,18 @@ public final class FileUtils {
         return newFile(getSimulatorHome(), "conf", filename).getAbsoluteFile();
     }
 
-    public static File getConfigurationFile(String filename, String vendor) {
+    public static File getConfigurationFile(String filename, String driver) {
         File file = new File(getUserDir(), filename).getAbsoluteFile();
         if (file.exists()) {
             return file;
         }
 
-        if (vendor.equals("hazelcast-enterprise4")) {
+        if (driver.equals("hazelcast-enterprise4")) {
             file = newFile(getSimulatorHome(), "drivers", "driver-hazelcast4", "conf", filename);
-        } else if (vendor.equals("hazelcast-enterprise3")) {
+        } else if (driver.equals("hazelcast-enterprise3")) {
             file = newFile(getSimulatorHome(), "drivers", "driver-hazelcast3", "conf", filename);
         } else {
-            file = newFile(getSimulatorHome(), "drivers", "driver-" + vendor, "conf", filename);
+            file = newFile(getSimulatorHome(), "drivers", "driver-" + driver, "conf", filename);
         }
 
         file = file.getAbsoluteFile();

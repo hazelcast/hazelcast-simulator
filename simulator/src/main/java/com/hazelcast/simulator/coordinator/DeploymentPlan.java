@@ -21,7 +21,7 @@ import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.coordinator.registry.WorkerData;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.utils.CommandLineExitException;
-import com.hazelcast.simulator.vendors.VendorDriver;
+import com.hazelcast.simulator.drivers.Driver;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
@@ -46,14 +46,14 @@ public final class DeploymentPlan {
             = new HashMap<>();
     private final List<WorkersPerAgent> workersPerAgentList = new ArrayList<>();
 
-    private final VendorDriver vendorDriver;
+    private final Driver driver;
 
-    public DeploymentPlan(VendorDriver vendorDriver, Registry registry) {
-        this(vendorDriver, registry.getAgents());
+    public DeploymentPlan(Driver driver, Registry registry) {
+        this(driver, registry.getAgents());
     }
 
-    public DeploymentPlan(VendorDriver vendorDriver, List<AgentData> agents) {
-        this.vendorDriver = vendorDriver;
+    public DeploymentPlan(Driver driver, List<AgentData> agents) {
+        this.driver = driver;
 
         if (agents.isEmpty()) {
             throw new CommandLineExitException("You need at least one agent in your cluster!"
@@ -74,7 +74,7 @@ public final class DeploymentPlan {
         for (int i = 0; i < workerCount; i++) {
             WorkersPerAgent workersPerAgent = nextAgent(workerType);
             AgentData agent = workersPerAgent.agent;
-            WorkerParameters workerParameters = vendorDriver.loadWorkerParameters(workerType, agent.getAddressIndex());
+            WorkerParameters workerParameters = driver.loadWorkerParameters(workerType, agent.getAddressIndex());
             workersPerAgent.registerWorker(workerParameters);
 
             List<WorkerParameters> workerParametersList = workerDeployment.get(agent.getAddress());

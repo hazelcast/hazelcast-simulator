@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.vendors;
+package com.hazelcast.simulator.drivers;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.coordinator.registry.AgentData;
@@ -33,37 +33,37 @@ import static com.hazelcast.simulator.utils.FileUtils.getConfigurationFile;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static java.lang.String.format;
 
-public abstract class VendorDriver<V> implements Closeable {
-    private static final Logger LOGGER = Logger.getLogger(VendorDriver.class);
+public abstract class Driver<V> implements Closeable {
+    private static final Logger LOGGER = Logger.getLogger(Driver.class);
 
     protected List<AgentData> agents;
     protected Map<String, String> properties = new HashMap<>();
     private final Map<String, String> configCache = new HashMap<>();
 
-    public static VendorDriver loadVendorDriver(String vendorName) {
-        LOGGER.info(format("Loading vendor-driver [%s]", vendorName));
+    public static Driver loadDriver(String driver) {
+        LOGGER.info(format("Loading driver [%s]", driver));
 
-        if (vendorName.equals("hazelcast-enterprise4")) {
+        if ("hazelcast-enterprise4".equals(driver)) {
             return loadInstance("hazelcast4");
-        } else if (vendorName.equals("hazelcast-enterprise3")) {
+        } else if ("hazelcast-enterprise3".equals(driver)) {
             return loadInstance("hazelcast3");
         } else {
-            return loadInstance(vendorName);
+            return loadInstance(driver);
         }
     }
 
-    private static VendorDriver loadInstance(String vendorName) {
-        String driverName = "com.hazelcast.simulator." + vendorName + "."
-                + vendorName.substring(0, 1).toUpperCase() + vendorName.substring(1) + "Driver";
+    private static Driver loadInstance(String driver) {
+        String driverName = "com.hazelcast.simulator." + driver + "."
+                + driver.substring(0, 1).toUpperCase() + driver.substring(1) + "Driver";
         Class driverClass;
         try {
-            driverClass = VendorDriver.class.getClassLoader().loadClass(driverName);
+            driverClass = Driver.class.getClassLoader().loadClass(driverName);
         } catch (ClassNotFoundException e) {
             throw new CommandLineExitException(format("Could not locate driver class [%s]", driverName));
         }
 
         try {
-            return (VendorDriver) driverClass.newInstance();
+            return (Driver) driverClass.newInstance();
         } catch (Exception e) {
             throw new CommandLineExitException(format("Failed to create an instance of driver [%s]", driverName), e);
         }
@@ -76,7 +76,7 @@ public abstract class VendorDriver<V> implements Closeable {
     }
 
     /**
-     * This method closes any active vendor instance. Method is called on the worker-side.
+     * This method closes any active driver instance. Method is called on the worker-side.
      */
     @Override
     public void close() throws IOException {
@@ -97,22 +97,22 @@ public abstract class VendorDriver<V> implements Closeable {
      * @param agents the agents
      * @return this
      */
-    public VendorDriver<V> setAgents(List<AgentData> agents) {
+    public Driver<V> setAgents(List<AgentData> agents) {
         this.agents = agents;
         return this;
     }
 
-    public VendorDriver<V> setAll(Map<String, String> properties) {
+    public Driver<V> setAll(Map<String, String> properties) {
         this.properties.putAll(properties);
         return this;
     }
 
-    public VendorDriver<V> set(String key, Object value) {
+    public Driver<V> set(String key, Object value) {
         properties.put(key, "" + value);
         return this;
     }
 
-    public VendorDriver<V> setIfNotNull(String key, Object value) {
+    public Driver<V> setIfNotNull(String key, Object value) {
         if (value == null) {
             return this;
         }
@@ -120,19 +120,19 @@ public abstract class VendorDriver<V> implements Closeable {
     }
 
     /**
-     * Gets the created Vendor instance. Method is called on the worker-side
+     * Gets the created Driver instance. Method is called on the worker-side
      *
-     * @return the created vendor driver.
+     * @return the created driver.
      */
-    public abstract V getVendorInstance();
+    public abstract V getDriverInstance();
 
     /**
      * Starts a Vendor instance. Method is called on the worker-side
      *
-     * @throws Exception when something fails starting the vendor instance. Checked exception to prevent forcing to handle
+     * @throws Exception when something fails starting the driver instance. Checked exception to prevent forcing to handle
      *                   exceptions
      */
-    public abstract void startVendorInstance() throws Exception;
+    public abstract void startDriverInstance() throws Exception;
 
     /**
      * Loads the parameters to create a worker. Method is called on the coordinator-side
@@ -144,7 +144,7 @@ public abstract class VendorDriver<V> implements Closeable {
     public abstract WorkerParameters loadWorkerParameters(String workerType, int agentIndex);
 
     protected String loadConfigFile(String logPrefix, String filename) {
-        File file = getConfigurationFile(filename, get("VENDOR"));
+        File file = getConfigurationFile(filename, get("DRIVER"));
         String config = configCache.get(filename);
         if (config == null) {
             config = fileAsText(file);
@@ -162,15 +162,15 @@ public abstract class VendorDriver<V> implements Closeable {
         List<File> files = new LinkedList<>();
         File confDir = new File(getSimulatorHome(), "conf");
 
-        String vendor = properties.get("VENDOR");
+        String driver = properties.get("DRIVER");
 
-        files.add(new File("worker-" + vendor + "-" + workerType + ".sh").getAbsoluteFile());
+        files.add(new File("worker-" + driver + "-" + workerType + ".sh").getAbsoluteFile());
         files.add(new File("worker-" + workerType + ".sh").getAbsoluteFile());
-        files.add(new File("worker-" + vendor + ".sh").getAbsoluteFile());
+        files.add(new File("worker-" + driver + ".sh").getAbsoluteFile());
         files.add(new File("worker.sh").getAbsoluteFile());
 
-        files.add(new File(confDir, "worker-" + vendor + "-" + workerType + ".sh").getAbsoluteFile());
-        files.add(new File(confDir, "worker-" + vendor + ".sh").getAbsoluteFile());
+        files.add(new File(confDir, "worker-" + driver + "-" + workerType + ".sh").getAbsoluteFile());
+        files.add(new File(confDir, "worker-" + driver + ".sh").getAbsoluteFile());
         files.add(new File(confDir, "worker.sh").getAbsoluteFile());
 
         for (File file : files) {
@@ -180,7 +180,7 @@ public abstract class VendorDriver<V> implements Closeable {
                 if (config == null) {
                     config = fileAsText(file);
                     configCache.put(key, config);
-                    LOGGER.info("Loading " + vendor + " " + workerType + " worker script: " + file.getAbsolutePath());
+                    LOGGER.info("Loading " + driver + " " + workerType + " worker script: " + file.getAbsolutePath());
                 }
                 return config;
             }

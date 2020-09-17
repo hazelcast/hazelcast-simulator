@@ -113,6 +113,15 @@ public class SimulatorProperties {
         LOGGER.info(format("Loading additional %s: %s", PROPERTIES_FILE_NAME, file.getAbsolutePath()));
         check(file);
         load(file, false);
+
+        if (properties.containsKey("VENDOR")) {
+            LOGGER.warn("The VENDOR property in the simulator.properties is deprecated. "
+                    + "Remove it from simulator.properties and use `coordinator --driver " + get("VENDOR") + " instead.");
+            if (!properties.containsKey("DRIVER")) {
+                properties.put("DRIVER", properties.get("VENDOR"));
+            }
+        }
+
         return this;
     }
 

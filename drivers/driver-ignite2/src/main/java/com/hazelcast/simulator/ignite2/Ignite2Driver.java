@@ -18,7 +18,7 @@ package com.hazelcast.simulator.ignite2;
 import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.coordinator.ConfigFileTemplate;
 import com.hazelcast.simulator.coordinator.registry.AgentData;
-import com.hazelcast.simulator.vendors.VendorDriver;
+import com.hazelcast.simulator.drivers.Driver;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.Ignition;
 import org.apache.log4j.Logger;
@@ -28,7 +28,7 @@ import java.io.File;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static java.lang.String.format;
 
-public class Ignite2Driver extends VendorDriver<Ignite> {
+public class Ignite2Driver extends Driver<Ignite> {
 
     private static final Logger LOGGER = Logger.getLogger(Ignite2Driver.class);
     private Ignite ignite;
@@ -80,12 +80,12 @@ public class Ignite2Driver extends VendorDriver<Ignite> {
     }
 
     @Override
-    public Ignite getVendorInstance() {
+    public Ignite getDriverInstance() {
         return ignite;
     }
 
     @Override
-    public void startVendorInstance() {
+    public void startDriverInstance() {
         String workerType = get("WORKER_TYPE");
         LOGGER.info(format("%s Ignite instance starting", workerType));
         ignite = Ignition.start(new File(getUserDir(), "ignite.xml").getAbsolutePath());

@@ -80,19 +80,19 @@ public class TestContainer {
     private final TestPerformanceTracker testPerformanceTracker;
     private final AtomicReference<TestPhase> currentPhase = new AtomicReference<>();
 
-    public TestContainer(TestContextImpl targetInstance, TestCase testCase, Object vendorInstance) {
-        this(targetInstance, null, testCase, vendorInstance);
+    public TestContainer(TestContextImpl targetInstance, TestCase testCase, Object driverInstance) {
+        this(targetInstance, null, testCase, driverInstance);
     }
 
     public TestContainer(TestContextImpl testContext, Object givenTestInstance, TestCase testCase) {
         this(testContext, givenTestInstance, testCase, null);
     }
 
-    public TestContainer(TestContextImpl testContext, Object givenTestInstance, TestCase testCase, Object vendorInstance) {
+    public TestContainer(TestContextImpl testContext, Object givenTestInstance, TestCase testCase, Object driverInstance) {
         this.testContext = checkNotNull(testContext, "testContext can't null!");
         this.testCase = checkNotNull(testCase, "testCase can't be null!");
         this.propertyBinding = new PropertyBinding(testCase)
-                .setVendorInstance(vendorInstance)
+                .setDriverInstance(driverInstance)
                 .setTestContext(testContext);
 
         propertyBinding.bind(this);

@@ -22,8 +22,8 @@ import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.coordinator.registry.WorkerQuery;
 import com.hazelcast.simulator.coordinator.tasks.ArtifactCleanTask;
 import com.hazelcast.simulator.coordinator.tasks.DownloadTask;
+import com.hazelcast.simulator.drivers.Driver;
 import com.hazelcast.simulator.utils.CommandLineExitException;
-import com.hazelcast.simulator.vendors.VendorDriver;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
@@ -38,6 +38,7 @@ import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
 import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
 import static com.hazelcast.simulator.coordinator.AgentUtils.onlineCheckAgents;
 import static com.hazelcast.simulator.coordinator.registry.AgentData.publicAddresses;
+import static com.hazelcast.simulator.drivers.Driver.loadDriver;
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isLocal;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
@@ -46,7 +47,6 @@ import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadComponentRegister;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadSimulatorProperties;
-import static com.hazelcast.simulator.vendors.VendorDriver.loadVendorDriver;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.DAYS;
 import static java.util.concurrent.TimeUnit.HOURS;
@@ -64,9 +64,9 @@ final class CoordinatorCli {
     TestSuite testSuite;
     CoordinatorParameters coordinatorParameters;
     Registry registry;
-    SimulatorProperties simulatorProperties;
+    SimulatorProperties properties;
     DeploymentPlan deploymentPlan;
-    VendorDriver vendorDriver;
+    Driver driver;
 
     private final OptionParser parser = new OptionParser();
 
@@ -74,6 +74,11 @@ final class CoordinatorCli {
             "Amount of time in milliseconds to wait between starting up the next worker. This is useful to prevent"
                     + "duplicate connection issues.")
             .withRequiredArg().ofType(Integer.class).defaultsTo(0);
+
+    private final OptionSpec<String> driverSpec = parser.accepts("driver",
+            "The driver to run. Available options hazelcast4,hazelcast-enterprise4,hazelcast3,hazelcast-enterprise3,"
+                    + "ignite2,infinispan9,infinispan10,infinispan11,couchbase,lettuce5,lettucecluster5,jedis3")
+            .withRequiredArg().ofType(String.class).defaultsTo("hazelcast4");
 
     private final OptionSpec<String> durationSpec = parser.accepts("duration",
             "Amount of time to execute the RUN phase per test, e.g. 10s, 1m, 2h or 3d. If duration is set to 0, "
@@ -163,18 +168,24 @@ final class CoordinatorCli {
 
     CoordinatorCli(String[] args) {
         this.options = initOptionsWithHelp(parser, args);
-        this.simulatorProperties = loadSimulatorProperties()
-                .setIfNotNull("LICENCE_KEY", options.valueOf(licenseKeySpec));
-        this.registry = newRegistry(simulatorProperties);
 
-        onlineCheckAgents(simulatorProperties, registry);
+        this.properties = loadSimulatorProperties()
+                .setIfNotNull("LICENCE_KEY", options.valueOf(licenseKeySpec));
+
+        if (!properties.get("DRIVER").equals("fake")) {
+            properties.set("DRIVER", options.valueOf(driverSpec));
+        }
+
+        this.registry = newRegistry(properties);
+
+        onlineCheckAgents(properties, registry);
 
         if (!(options.has(downloadSpec) || options.has(cleanSpec))) {
             this.coordinatorParameters = loadCoordinatorParameters();
-            this.simulatorProperties.set("SESSION_ID", coordinatorParameters.getSessionId());
+            this.properties.set("SESSION_ID", coordinatorParameters.getSessionId());
             this.coordinator = new Coordinator(registry, coordinatorParameters);
-            this.vendorDriver = loadVendorDriver(simulatorProperties.get("VENDOR"))
-                    .setAll(simulatorProperties.asPublicMap())
+            this.driver = loadDriver(properties.get("DRIVER"))
+                    .setAll(properties.asPublicMap())
                     .setAgents(registry.getAgents())
                     .set("CLIENT_ARGS", options.valueOf(clientArgsSpec))
                     .set("MEMBER_ARGS", options.valueOf(memberArgsSpec));
@@ -182,7 +193,7 @@ final class CoordinatorCli {
             this.testSuite = loadTestSuite();
 
             if (testSuite == null) {
-                int coordinatorPort = simulatorProperties.getCoordinatorPort();
+                int coordinatorPort = properties.getCoordinatorPort();
                 if (coordinatorPort == 0) {
                     throw new CommandLineExitException("Can't run without a testSuite, and not have a coordinator port enabled."
                             + "Please add COORDINATOR_PORT=5000 to your simulator.properties or run with a testsuite.");
@@ -197,9 +208,9 @@ final class CoordinatorCli {
     void run() throws Exception {
         if (options.has(downloadSpec)) {
             String sessionId = options.has(sessionIdSpec) ? options.valueOf(sessionIdSpec) : "*";
-            new DownloadTask(publicAddresses(registry.getAgents()), simulatorProperties.asMap(), getUserDir(), sessionId).run();
+            new DownloadTask(publicAddresses(registry.getAgents()), properties.asMap(), getUserDir(), sessionId).run();
         } else if (options.has(cleanSpec)) {
-            new ArtifactCleanTask(registry, simulatorProperties).run();
+            new ArtifactCleanTask(registry, properties).run();
         } else {
             coordinator.start();
             if (testSuite == null) {
@@ -216,7 +227,7 @@ final class CoordinatorCli {
 
     private CoordinatorParameters loadCoordinatorParameters() {
         CoordinatorParameters coordinatorParameters = new CoordinatorParameters()
-                .setSimulatorProperties(simulatorProperties)
+                .setSimulatorProperties(properties)
                 .setLastTestPhaseToSync(options.valueOf(syncToTestPhaseSpec))
                 .setSkipDownload(options.has(skipDownloadSpec))
                 .setWorkerVmStartupDelayMs(options.valueOf(workerVmStartupDelayMsSpec));
@@ -354,7 +365,7 @@ final class CoordinatorCli {
             throw new CommandLineExitException("No workers have been defined!");
         }
 
-        DeploymentPlan plan = new DeploymentPlan(vendorDriver, registry.getAgents())
+        DeploymentPlan plan = new DeploymentPlan(driver, registry.getAgents())
                 .addToPlan(members, "member")
                 .addToPlan(clients, options.valueOf(clientTypeSpec));
         plan.printLayout();

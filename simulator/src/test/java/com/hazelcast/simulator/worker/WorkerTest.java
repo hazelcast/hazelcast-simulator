@@ -8,7 +8,7 @@ import com.hazelcast.simulator.fake.FakeDriver;
 import com.hazelcast.simulator.protocol.Broker;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.utils.FileUtils;
-import com.hazelcast.simulator.vendors.VendorDriver;
+import com.hazelcast.simulator.drivers.Driver;
 import com.hazelcast.simulator.worker.operations.TerminateWorkerOperation;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -47,9 +47,10 @@ public class WorkerTest {
         AgentData agent = registry.addAgent(PUBLIC_ADDRESS, PUBLIC_ADDRESS);
 
         SimulatorProperties properties = new SimulatorProperties()
+                .set("DRIVER","fake")
                 .set("MANAGEMENT_CENTER_URL", "none");
 
-        VendorDriver driver = new FakeDriver()
+        Driver driver = new FakeDriver()
                 .setAgents(registry.getAgents())
                 .setAll(properties.asPublicMap())
                 .set("CONFIG", fileAsText(localResourceDirectory() + "/hazelcast.xml"));

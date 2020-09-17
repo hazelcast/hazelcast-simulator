@@ -1,6 +1,6 @@
 package com.hazelcast.simulator.worker.testcontainer;
 
-import com.hazelcast.simulator.test.annotations.InjectVendor;
+import com.hazelcast.simulator.test.annotations.InjectDriver;
 import com.hazelcast.simulator.fake.FakeInstance;
 import org.junit.Test;
 
@@ -39,7 +39,7 @@ public class TestContainer_InjectHazelcastInstanceTest extends TestContainer_Abs
 
     private static class InstanceTest extends BaseTest {
 
-        @InjectVendor
+        @InjectDriver
         private FakeInstance instance;
 
         @SuppressWarnings("unused")
@@ -54,7 +54,7 @@ public class TestContainer_InjectHazelcastInstanceTest extends TestContainer_Abs
 
     private static class WrongFieldTypeTest extends BaseTest {
 
-        @InjectVendor
+        @InjectDriver
         private String noProbeField;
     }
 }

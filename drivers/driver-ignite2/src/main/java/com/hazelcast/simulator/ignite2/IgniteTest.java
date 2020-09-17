@@ -18,7 +18,7 @@ package com.hazelcast.simulator.ignite2;
 
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.InjectTestContext;
-import com.hazelcast.simulator.test.annotations.InjectVendor;
+import com.hazelcast.simulator.test.annotations.InjectDriver;
 import edu.umd.cs.findbugs.annotations.SuppressWarnings;
 import org.apache.ignite.Ignite;
 import org.apache.log4j.Logger;
@@ -35,7 +35,7 @@ public abstract class IgniteTest {
 
     protected final Logger logger = Logger.getLogger(getClass());
 
-    @InjectVendor
+    @InjectDriver
     protected Ignite ignite;
 
     @InjectTestContext

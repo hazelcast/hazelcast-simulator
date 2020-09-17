@@ -17,7 +17,7 @@ package com.hazelcast.simulator.jedis3;
 
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.InjectTestContext;
-import com.hazelcast.simulator.test.annotations.InjectVendor;
+import com.hazelcast.simulator.test.annotations.InjectDriver;
 import edu.umd.cs.findbugs.annotations.SuppressWarnings;
 import org.apache.log4j.Logger;
 import redis.clients.jedis.JedisCluster;
@@ -34,7 +34,7 @@ public abstract class JedisTest {
 
     protected final Logger logger = Logger.getLogger(getClass());
 
-    @InjectVendor
+    @InjectDriver
     protected JedisCluster client;
 
     @InjectTestContext

@@ -17,7 +17,7 @@ package com.hazelcast.simulator.mongodb;
 
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.InjectTestContext;
-import com.hazelcast.simulator.test.annotations.InjectVendor;
+import com.hazelcast.simulator.test.annotations.InjectDriver;
 import com.mongodb.client.MongoClient;
 import org.apache.log4j.Logger;
 
@@ -33,7 +33,7 @@ public abstract class MongodbTest {
 
     protected final Logger logger = Logger.getLogger(getClass());
 
-    @InjectVendor
+    @InjectDriver
     protected MongoClient client;
 
     @InjectTestContext

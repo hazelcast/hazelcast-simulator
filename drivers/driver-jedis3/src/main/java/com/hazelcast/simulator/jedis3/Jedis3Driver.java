@@ -16,7 +16,7 @@
 package com.hazelcast.simulator.jedis3;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
-import com.hazelcast.simulator.vendors.VendorDriver;
+import com.hazelcast.simulator.drivers.Driver;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.JedisCluster;
@@ -28,7 +28,7 @@ import java.util.Set;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static java.lang.String.format;
 
-public class Jedis3Driver extends VendorDriver<JedisCluster> {
+public class Jedis3Driver extends Driver<JedisCluster> {
 
     private static final int DEFAULT_REDIS_PORT = 6378;
 
@@ -57,12 +57,12 @@ public class Jedis3Driver extends VendorDriver<JedisCluster> {
     }
 
     @Override
-    public JedisCluster getVendorInstance() {
+    public JedisCluster getDriverInstance() {
         return client;
     }
 
     @Override
-    public void startVendorInstance() throws Exception {
+    public void startDriverInstance() throws Exception {
         Set<HostAndPort> addresses = getAddresses();
         GenericObjectPoolConfig poolConfig = new GenericObjectPoolConfig();
         poolConfig.setMaxTotal(100);

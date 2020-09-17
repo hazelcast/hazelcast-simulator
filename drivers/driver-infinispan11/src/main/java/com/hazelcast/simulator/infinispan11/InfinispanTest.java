@@ -17,7 +17,7 @@ package com.hazelcast.simulator.infinispan11;
 
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.InjectTestContext;
-import com.hazelcast.simulator.test.annotations.InjectVendor;
+import com.hazelcast.simulator.test.annotations.InjectDriver;
 import edu.umd.cs.findbugs.annotations.SuppressWarnings;
 import org.apache.log4j.Logger;
 import org.infinispan.commons.api.BasicCacheContainer;
@@ -34,7 +34,7 @@ public abstract class InfinispanTest {
 
     protected final Logger logger = Logger.getLogger(getClass());
 
-    @InjectVendor
+    @InjectDriver
     protected BasicCacheContainer cacheContainer;
 
     @InjectTestContext

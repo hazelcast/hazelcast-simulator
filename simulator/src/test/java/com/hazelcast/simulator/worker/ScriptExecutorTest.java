@@ -1,7 +1,7 @@
 package com.hazelcast.simulator.worker;
 
 import com.hazelcast.simulator.protocol.StubPromise;
-import com.hazelcast.simulator.vendors.VendorDriver;
+import com.hazelcast.simulator.drivers.Driver;
 import com.hazelcast.simulator.worker.operations.ExecuteScriptOperation;
 import org.junit.Before;
 import org.junit.Test;
@@ -11,13 +11,13 @@ import static org.mockito.Mockito.mock;
 
 public class ScriptExecutorTest {
 
-    private VendorDriver vendorDriver;
+    private Driver driver;
     private ScriptExecutor scriptExecutor;
 
     @Before
     public void setup() {
-        vendorDriver = mock(VendorDriver.class);
-        scriptExecutor = new ScriptExecutor(vendorDriver);
+        driver = mock(Driver.class);
+        scriptExecutor = new ScriptExecutor(driver);
     }
 
     @Test

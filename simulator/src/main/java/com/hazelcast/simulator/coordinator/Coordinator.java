@@ -36,9 +36,10 @@ import com.hazelcast.simulator.coordinator.tasks.StartWorkersTask;
 import com.hazelcast.simulator.coordinator.tasks.TerminateWorkersTask;
 import com.hazelcast.simulator.protocol.CoordinatorClient;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.utils.BashCommand;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.CommonUtils;
-import com.hazelcast.simulator.vendors.VendorDriver;
+import com.hazelcast.simulator.drivers.Driver;
 import com.hazelcast.simulator.worker.operations.ExecuteScriptOperation;
 import org.apache.log4j.Logger;
 
@@ -60,9 +61,11 @@ import static com.hazelcast.simulator.coordinator.AgentUtils.startAgents;
 import static com.hazelcast.simulator.coordinator.AgentUtils.stopAgents;
 import static com.hazelcast.simulator.coordinator.registry.AgentData.publicAddresses;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
+import static com.hazelcast.simulator.utils.FileUtils.getConfigurationFile;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
+import static com.hazelcast.simulator.utils.FormatUtils.join;
 import static com.hazelcast.simulator.utils.TagUtils.matches;
-import static com.hazelcast.simulator.vendors.VendorDriver.loadVendorDriver;
+import static com.hazelcast.simulator.drivers.Driver.loadDriver;
 import static java.lang.Runtime.getRuntime;
 import static java.lang.String.format;
 
@@ -117,7 +120,7 @@ public class Coordinator implements Closeable {
                 new File(getUserDir(), "upload").getAbsoluteFile(),
                 parameters.getSessionId()).run();
 
-        installVendor(properties.getVersionSpec());
+        installDriver(properties.getVersionSpec());
 
         initCoordinatorRemote();
 
@@ -249,8 +252,14 @@ public class Coordinator implements Closeable {
         }).start();
     }
 
-    public void installVendor(String versionSpec) {
-        loadVendorDriver(properties.get("VENDOR"))
+    public void installDriver(String versionSpec) {
+        new BashCommand(getConfigurationFile("upload-driver.sh").getAbsolutePath())
+                .addParams(join((publicAddresses(registry.getAgents())), ","))
+                .ensureJavaOnPath()
+                .addEnvironment(properties.asMap())
+                .execute();
+
+        loadDriver(properties.get("DRIVER"))
                 .setAll(properties.asPublicMap())
                 .set("VERSION_SPEC", versionSpec)
                 .setAgents(registry.getAgents())
@@ -320,7 +329,7 @@ public class Coordinator implements Closeable {
 
         LOGGER.info("Starting " + op.getCount() + " [" + workerType + "] workers...");
 
-        VendorDriver vendorDriver = loadVendorDriver(properties.get("VENDOR"))
+        Driver driver = loadDriver(properties.get("DRIVER"))
                 .setAgents(registry.getAgents())
                 .setAll(properties.asPublicMap())
                 .set("CLIENT_ARGS", op.getVmOptions())
@@ -336,7 +345,7 @@ public class Coordinator implements Closeable {
 
         LOGGER.info("Suitable agents: " + agents);
 
-        DeploymentPlan deploymentPlan = new DeploymentPlan(vendorDriver, agents)
+        DeploymentPlan deploymentPlan = new DeploymentPlan(driver, agents)
                 .addToPlan(op.getCount(), workerType);
 
         List<WorkerData> workers = createStartWorkersTask(deploymentPlan.getWorkerDeployment(), op.getTags()).run();
