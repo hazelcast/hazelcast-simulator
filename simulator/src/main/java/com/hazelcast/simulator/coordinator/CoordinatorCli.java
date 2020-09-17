@@ -172,7 +172,7 @@ final class CoordinatorCli {
         this.properties = loadSimulatorProperties()
                 .setIfNotNull("LICENCE_KEY", options.valueOf(licenseKeySpec));
 
-        if (!properties.get("DRIVER").equals("fake")) {
+        if (!"fake".equals(properties.get("DRIVER"))) {
             properties.set("DRIVER", options.valueOf(driverSpec));
         }
 

@@ -85,7 +85,10 @@ public class Provisioner {
         return registry;
     }
 
-    void installJava() {
+    void installJava(String jdkUrl) {
+        if (jdkUrl != null) {
+            properties.set("JDK_URL", jdkUrl);
+        }
         onlineCheckAgents(properties, registry);
         ensureIsRemoteSetup(properties, "installJava");
 
@@ -96,7 +99,7 @@ public class Provisioner {
         for (final AgentData agent : registry.getAgents()) {
             spawner.spawn(() -> {
                 log("Installing Java on %s", agent.getPublicAddress());
-                installJava(agent.getPublicAddress());
+                installJavaOnAgent(agent.getPublicAddress());
             });
         }
         spawner.awaitCompletion();
@@ -105,10 +108,23 @@ public class Provisioner {
         logWithRuler("Finished installing Java on %d machines (%s seconds)", registry.agentCount(), elapsed);
     }
 
-    private void installJava(String ip) {
+    private void installJavaOnAgent(String ip) {
+        String jdkUrl = properties.get("JDK_URL");
+        if (jdkUrl != null) {
+            File file = new File(new File(simulatorPath, "jdk-install"), "jdk_url.sh");
+            String content = FileUtils.fileAsText(file);
+            content = content.replace("%JDK_URL%", jdkUrl);
+            file = FileUtils.newTmpFile(content);
+            bash.scpToRemote(ip, getJavaSupportScript(), "jdk-support.sh");
+            bash.scpToRemote(ip, file, "install-java.sh");
+            bash.ssh(ip, "bash install-java.sh");
+            return;
+        }
+
         if ("outofthebox".equals(properties.getJdkFlavor())) {
             return;
         }
+
         bash.scpToRemote(ip, getJavaSupportScript(), "jdk-support.sh");
         bash.scpToRemote(ip, getJavaInstallScript(), "install-java.sh");
         bash.ssh(ip, "bash install-java.sh");
@@ -117,22 +133,6 @@ public class Provisioner {
     private File getJavaInstallScript() {
         String flavor = properties.getJdkFlavor();
         String version = properties.getJdkVersion();
-        if ("zulu".equals(flavor)) {
-            boolean simpleVersion;
-            try {
-                Integer.parseInt(version);
-                simpleVersion = true;
-            } catch (Exception e) {
-                simpleVersion = false;
-            }
-
-            if (!simpleVersion) {
-                File file = new File(new File(simulatorPath, "jdk-install"), "jdk-zulu.sh");
-                String content = FileUtils.fileAsText(file);
-                content = content.replace("%VERSION%", version.replace(".tar.gz", ""));
-                return FileUtils.newTmpFile(content);
-            }
-        }
         String script = "jdk-" + flavor + '-' + version + "-64.sh";
         File scriptDir = new File(simulatorPath, "jdk-install");
         return new File(scriptDir, script);
@@ -356,7 +356,7 @@ public class Provisioner {
         public void run() {
             if (!"outofthebox".equals(properties.getJdkFlavor())) {
                 log(INDENTATION + ip + " Java installation started...");
-                installJava(ip);
+                installJavaOnAgent(ip);
                 log(INDENTATION + ip + " Java Installed");
             }
             log(INDENTATION + ip + " Simulator installation started...");
