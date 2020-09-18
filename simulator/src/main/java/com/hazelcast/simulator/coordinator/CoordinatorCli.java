@@ -80,6 +80,10 @@ final class CoordinatorCli {
                     + "ignite2,infinispan9,infinispan10,infinispan11,couchbase,lettuce5,lettucecluster5,jedis3")
             .withRequiredArg().ofType(String.class).defaultsTo("hazelcast4");
 
+    private final OptionSpec<String> versionSpec = parser.accepts("version",
+            "The version of the vendor to use. Only hazelcast3/4 (and enterprise) will use this version")
+            .withRequiredArg().ofType(String.class);
+
     private final OptionSpec<String> durationSpec = parser.accepts("duration",
             "Amount of time to execute the RUN phase per test, e.g. 10s, 1m, 2h or 3d. If duration is set to 0, "
                     + "the test will run until the test decides to stop.")
@@ -174,6 +178,10 @@ final class CoordinatorCli {
 
         if (!"fake".equals(properties.get("DRIVER"))) {
             properties.set("DRIVER", options.valueOf(driverSpec));
+        }
+
+        if (options.hasArgument(versionSpec)) {
+            properties.set("VERSION_SPEC", options.valueOf(versionSpec));
         }
 
         this.registry = newRegistry(properties);
