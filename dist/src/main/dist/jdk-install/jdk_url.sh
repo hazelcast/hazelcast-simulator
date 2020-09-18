@@ -11,10 +11,10 @@ FILE_NAME=$(echo "$JDK_URL" | sed 's:.*/::')
 cd ~
 
 if [ ! -f "$FILE_NAME" ]; then
-  echo "[INFO] Downloading $JDK_URL"
+  echo "[INFO]    Downloading $JDK_URL"
   wget -N --no-verbose  --no-check-certificate -c --header "Cookie: oraclelicense=accept-securebackup-cookie"  "$JDK_URL"
 else
-  echo "[INFO] Skip download $JDK_URL; file already downloaded."
+  echo "[INFO]    Skipping download $JDK_URL; file already downloaded."
 fi
 
 # extract the directory name

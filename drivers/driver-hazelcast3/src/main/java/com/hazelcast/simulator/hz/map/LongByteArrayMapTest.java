@@ -16,12 +16,16 @@
 
 package com.hazelcast.simulator.hz.map;
 
+import com.hazelcast.core.ExecutionCallback;
+import com.hazelcast.core.ICompletableFuture;
 import com.hazelcast.core.IMap;
 import com.hazelcast.core.Pipelining;
 import com.hazelcast.simulator.hz.HazelcastTest;
+import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.annotations.StartNanos;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
@@ -89,6 +93,32 @@ public class LongByteArrayMapTest extends HazelcastTest {
     @TimeStep(prob = 0)
     public void set(ThreadState state) {
         map.set(state.randomKey(), state.randomValue());
+    }
+
+    @TimeStep(prob = 0)
+    public void pipelinedGet(final ThreadState state, @StartNanos final long startNanos, final Probe probe) throws Exception {
+        if (state.pipeline == null) {
+            state.pipeline = new Pipelining<>(pipelineDepth);
+        }
+        ICompletableFuture<byte[]> f = map.getAsync(state.randomKey());
+        f.andThen(new ExecutionCallback<byte[]>() {
+            @Override
+            public void onResponse(byte[] response) {
+                probe.done(startNanos);
+            }
+
+            @Override
+            public void onFailure(Throwable t) {
+                probe.done(startNanos);
+            }
+        }, callerRuns);
+        state.pipeline.add(f);
+        state.i++;
+        if (state.i == pipelineIterations) {
+            state.i = 0;
+            state.pipeline.results();
+            state.pipeline = null;
+        }
     }
 
     public class ThreadState extends BaseThreadState {

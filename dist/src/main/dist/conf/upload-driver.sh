@@ -16,11 +16,11 @@ else
   driver_dir=drivers/driver-$DRIVER
 fi
 
-echo "[INFO] Uploading driver $DRIVER"
+echo "[INFO]Uploading driver $DRIVER"
 
 for agent in ${agents//,/ }; do
   echo "[INFO]     Uploading driver to $agent"
   upload_driver ${agent}
 done
 
-echo "[INFO] Finished Uploading driver $DRIVER"
+echo "[INFO]Finished Uploading driver $DRIVER"
