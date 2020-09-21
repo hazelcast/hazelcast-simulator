@@ -47,6 +47,10 @@ final class ProvisionerCli {
                     + " desired number of machines is smaller than the actual number of machines, machines are terminated.")
             .withRequiredArg().ofType(Integer.class);
 
+    private final OptionSpec<String> instanceTypeSpec = parser.accepts("instanceType",
+            "The type of instance to create.")
+            .withRequiredArg().ofType(String.class);
+
     private final OptionSpec<String> installJavaSpec = parser.accepts("installJava",
             "Installs JAVA on all provisioned machines. The url to the tar.gz file can be provided.")
             .withOptionalArg().ofType(String.class);
@@ -75,6 +79,10 @@ final class ProvisionerCli {
         this.options = initOptionsWithHelp(parser, args);
 
         SimulatorProperties properties = loadSimulatorProperties();
+        if (options.hasArgument(instanceTypeSpec)) {
+            properties.set("INSTANCE_TYPE", options.valueOf(instanceTypeSpec));
+        }
+
         Bash bash = new Bash(properties);
 
         this.tags = loadTags(options, tagsSpec);
