@@ -32,9 +32,8 @@ public class LongStringCacheTest extends IgniteTest {
     // properties
     public int keyDomain = 10000;
     public int valueCount = 10000;
-    public int valueLength = 10;
-    public int minValueLength = valueLength;
-    public int maxValueLength = valueLength;
+    public int minValueLength = 10;
+    public int maxValueLength = 10;
 
     private Cache<Long, String> cache;
     private String[] values;
