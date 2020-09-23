@@ -23,18 +23,18 @@ uploadToRemoteSimulatorDir(){
     rsync --checksum -avv -L -e "ssh $SSH_OPTIONS" $src $SIMULATOR_USER@$agent:hazelcast-simulator-$SIMULATOR_VERSION/$target
 }
 
-# purge Hazelcast JARs
-ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "rm -fr hazelcast-simulator-$SIMULATOR_VERSION/user-lib/ || true"
+# Remove the hazelcast simulator directory.
+ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "rm -fr hazelcast-simulator-$SIMULATOR_VERSION/ || true"
 
 ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "mkdir -p hazelcast-simulator-$SIMULATOR_VERSION/lib/"
 ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "mkdir -p hazelcast-simulator-$SIMULATOR_VERSION/user-lib/"
 ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "mkdir -p hazelcast-simulator-$SIMULATOR_VERSION/drivers/"
 
-#upload Simulator JARs
+# Upload Simulator JARs
 uploadLibraryJar "simulator-*"
 
-# we don't copy all JARs to the agent to increase upload speed
-#activemq libraries
+# We don't copy all JARs to the agent to increase upload speed
+# ActiveMQ libraries
 uploadLibraryJar "activemq-broker*"
 uploadLibraryJar "activemq-client*"
 uploadLibraryJar "geronimo-jms*"
@@ -54,7 +54,6 @@ uploadLibraryJar "jopt*"
 uploadLibraryJar "junit*"
 uploadLibraryJar "log4j*"
 uploadLibraryJar "slf4j-log4j12-*"
-
 
 uploadToRemoteSimulatorDir "$SIMULATOR_HOME/bin/" "bin"
 uploadToRemoteSimulatorDir "$SIMULATOR_HOME/conf/" "conf"
