@@ -58,6 +58,8 @@ public class LongStringCacheTest extends InfinispanTest {
         return cache.get(state.randomKey());
     }
 
+    // If the cache is a RemoteCache, it will always return null on the put.
+    // https://docs.jboss.org/infinispan/9.1/apidocs/org/infinispan/client/hotrod/RemoteCache.html
     @TimeStep(prob = 0.1)
     public String put(ThreadState state) {
         return cache.put(state.randomKey(), state.randomValue());
