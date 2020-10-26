@@ -4,7 +4,7 @@
 
     <groupId>com.hazelcast.simulator</groupId>
     <artifactId>simulator-root</artifactId>
-    <version>0.12-SNAPSHOT</version>
+    <version>0.12</version>
     <name>Simulator Root</name>
     <description>Simulator: Stress/Performance Testing Environment for IMDG's</description>
     <url>http://github.com/hazelcast/hazelcast-simulator</url>
@@ -101,7 +101,7 @@
         <connection>scm:git:git@github.com:hazelcast/hazelcast-simulator.git</connection>
         <developerConnection>scm:git:git@github.com:hazelcast/hazelcast-simulator.git</developerConnection>
         <url>https://github.com/hazelcast/hazelcast-simulator</url>
-        <tag>HEAD</tag>
+        <tag>0.12</tag>
     </scm>
 
     <issueManagement>
