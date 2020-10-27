@@ -62,56 +62,6 @@ LICENSE_ACCEPTED=TRUE" >> ~/installer.properties
     addJavaHome ${TMP_JAVA_HOME}
 }
 
-function installOpenJdk {
-    JDK_BASE_NAME=$1
-    TMP_JAVA_HOME=$2
-
-    installPackage wget
-    installPackage unzip
-
-    echo "Installing OpenJDK $JDK_BASE_NAME"
-
-    cd ~
-    wget --no-verbose -N "$BASE_URL/$JDK_BASE_NAME.zip"
-    unzip -q -o "$JDK_BASE_NAME.zip"
-
-    addJavaHome ${TMP_JAVA_HOME}
-}
-
-function installOracleJdk {
-    JDK_FILE=$1
-    TMP_JAVA_HOME=$2
-
-    installPackage wget
-    installPackage tar
-
-    echo "Installing Oracle JDK $JDK_FILE"
-
-    cd ~
-    wget --no-verbose -N "$BASE_URL/$JDK_FILE"
-    tar xfz ${JDK_FILE}
-
-    addJavaHome ${TMP_JAVA_HOME}
-}
-
-function installZuluJdk {
-    VERSION=$1
-
-    installPackage wget
-    installPackage tar
-
-    echo "Installing Zulu JDK $VERSION"
-
-    cd ~
-    if [ ! -d $VERSION ]; then
-        wget --no-verbose -N --referer=http://www.azul.com/downloads/zulu/zulu-linux http://cdn.azul.com/zulu/bin/${VERSION}.tar.gz -O ${VERSION}.tar.gz
-        tar xfz ${VERSION}.tar.gz
-        echo [INFO] INSTALLING
-    fi
-
-    addJavaHome ${VERSION}
-}
-
 function addJavaHome {
     TMP_JAVA_HOME=$1
 
