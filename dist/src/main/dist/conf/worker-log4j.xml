@@ -19,16 +19,6 @@
         </layout>
     </appender>
 
-    <!--
-    <appender name="file" class="org.apache.log4j.FileAppender">
-        <param name="File" value="worker.log"/>
-        <param name="Threshold" value="debug"/>
-        <layout class="org.apache.log4j.PatternLayout">
-            <param name="ConversionPattern" value="%-5p %d [%t] %c: %m%n"/>
-        </layout>
-    </appender>
-    -->
-
     <logger name="org.jgroups">
         <level value="debug"/>
         <appender-ref ref="file"/>
@@ -38,12 +28,15 @@
         <level value="debug"/>
         <appender-ref ref="file"/>
     </logger>
+
     <logger name="org.infinispan">
         <level value="info"/>
         <appender-ref ref="file"/>
     </logger>
+
     <root>
         <priority value="info"/>
         <appender-ref ref="file"/>
     </root>
+
 </log4j:configuration>
