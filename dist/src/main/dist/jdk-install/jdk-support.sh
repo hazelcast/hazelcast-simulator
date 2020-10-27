@@ -5,19 +5,6 @@
 # IBM
 # http://public.dhe.ibm.com/ibmdl/export/pub/systems/cloud/runtimes/java/
 #
-# OpenJDK
-# https://github.com/alexkasko/openjdk-unofficial-builds
-# https://github.com/ojdkbuild/ojdkbuild
-# https://adopt-openjdk.ci.cloudbees.com/job/openjdk-1.9-linux-x86_64/lastSuccessfulBuild/artifact/openjdk-1.9-linux-x86_64-jdk.tar.gz
-#
-# Oracle
-# http://download.oracle.com/otn-pub/java/jdk/8u121-b13/e9e7ea248e2c4826b92b3f075a80e441/jdk-8u121-linux-x64.tar.gz
-# http://www.java.net/download/java/jdk9/archive/158/binaries/jdk-9-ea+158_linux-x64_bin.tar.gz
-#
-# Zulu
-# http://cdn.azul.com/zulu/bin/zulu7.17.0.5-jdk7.0.131-linux_x64.tar.gz
-# http://cdn.azul.com/zulu/bin/zulu8.20.0.5-jdk8.0.121-linux_x64.tar.gz
-#
 
 set -e
 #set -x
