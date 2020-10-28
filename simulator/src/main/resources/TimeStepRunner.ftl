@@ -73,12 +73,12 @@ public class ${className} extends TimeStepRunner {
     <#assign resultType=method.getReturnType().getName()>
     <#if hasProbe(method)|| !probeClass?? || isAsyncResult(resultType)>
             <#assign resultName = "result">
-            <#if isAsyncResult(resultType)>${resultType} ${resultName} = </#if><@timestepMethodCall m=method/>;
+            <#if isAsyncResult(resultType)>${resultType} ${resultName} = </#if><@timestepMethodCall m=method/>
             <#if isAsyncResult(resultType)>
                 <@handleAsyncResult m=method/>
             </#if>
     <#else>
-            <@timestepMethodCall m=method/>;
+            <@timestepMethodCall m=method/>
             ${method.name}Probe.recordValue(System.nanoTime() - startNanos);
     </#if>
 <#else>
@@ -91,12 +91,12 @@ public class ${className} extends TimeStepRunner {
         <#if hasProbe(method) || !probeClass?? || isAsyncResult(resultType)>
             <#assign resultName = "result" + index>
             <#if isAsyncResult(resultType)>
-                    ${resultType} ${resultName} = </#if><@timestepMethodCall m=method/>;
+                    ${resultType} ${resultName} = </#if><@timestepMethodCall m=method/>
             <#if isAsyncResult(resultType)>
                     <@handleAsyncResult m=method/>
             </#if>
         <#else>
-                    <@timestepMethodCall m=method/>;
+                    <@timestepMethodCall m=method/>
                     ${method.name}Probe.recordValue(System.nanoTime() - startNanos);
         </#if>
                     break;
@@ -131,6 +131,22 @@ public class ${className} extends TimeStepRunner {
 
 <#macro timestepMethodCall m>
     <@compress single_line=true>
+       <#assign resultType=m.getReturnType().getName()>
+
+       <#if resultType != "void" && !isAsyncResult(resultType)>
+            <#if resultType == "boolean">
+                   atomicBoolean.lazySet(
+            <#elseif resultType == "byte" || resultType == "char" || resultType == "int" || resultType == "short">
+                   atomicInteger.lazySet(
+            <#elseif resultType == "long">
+                   atomicLong.lazySet(
+            <#elseif resultType == "double" || resultType == "float">
+                   atomicDouble.lazySet(
+            <#else>
+                   atomicReference.lazySet(
+            </#if>
+       </#if>
+
        testInstance.${m.getName()}(
         <#list  m.parameterTypes as param>
             <#if param?counter gt 1>,</#if>
@@ -143,7 +159,8 @@ public class ${className} extends TimeStepRunner {
                 threadState
             </#if>
         </#list>
-    )
+     <#if resultType != "void" && !isAsyncResult(resultType)>)</#if>
+    );
     </@compress>
 </#macro>
 }
