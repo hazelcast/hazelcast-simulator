@@ -16,6 +16,7 @@
 package com.hazelcast.simulator.worker.testcontainer;
 
 
+import com.google.common.util.concurrent.AtomicDouble;
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.StopException;
 import com.hazelcast.simulator.test.TestContext;
@@ -27,7 +28,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static java.lang.String.format;
@@ -50,6 +54,13 @@ public abstract class TimeStepRunner implements Runnable {
     protected final Map<String, Probe> probeMap = new HashMap<>();
     protected long maxIterations;
     protected long delayMillis;
+
+    // There are used to prevent dead code optimization
+    protected final AtomicReference atomicReference = new AtomicReference();
+    protected final AtomicBoolean atomicBoolean = new AtomicBoolean();
+    protected final AtomicInteger atomicInteger = new AtomicInteger();
+    protected final AtomicLong atomicLong = new AtomicLong();
+    protected final AtomicDouble atomicDouble = new AtomicDouble();
 
     public TimeStepRunner(Object testInstance, TimeStepModel timeStepModel, String executionGroup) {
         this.testInstance = testInstance;
