@@ -16,7 +16,6 @@
 package com.hazelcast.simulator.worker.testcontainer;
 
 
-import com.google.common.util.concurrent.AtomicDouble;
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.StopException;
 import com.hazelcast.simulator.test.TestContext;
@@ -60,7 +59,6 @@ public abstract class TimeStepRunner implements Runnable {
     protected final AtomicBoolean atomicBoolean = new AtomicBoolean();
     protected final AtomicInteger atomicInteger = new AtomicInteger();
     protected final AtomicLong atomicLong = new AtomicLong();
-    protected final AtomicDouble atomicDouble = new AtomicDouble();
 
     public TimeStepRunner(Object testInstance, TimeStepModel timeStepModel, String executionGroup) {
         this.testInstance = testInstance;
@@ -96,7 +94,7 @@ public abstract class TimeStepRunner implements Runnable {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 throw new RuntimeException(
-                       threadName + " got interrupted while waiting during rampup.");
+                        threadName + " got interrupted while waiting during rampup.");
             }
         }
 
