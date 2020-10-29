@@ -141,7 +141,7 @@ public class ${className} extends TimeStepRunner {
             <#elseif resultType == "long">
                    atomicLong.lazySet(
             <#elseif resultType == "double" || resultType == "float">
-                   atomicDouble.lazySet(
+                   atomicLong.lazySet(Double.doubleToLongBits(
             <#else>
                    atomicReference.lazySet(
             </#if>
@@ -159,7 +159,11 @@ public class ${className} extends TimeStepRunner {
                 threadState
             </#if>
         </#list>
-     <#if resultType != "void" && !isAsyncResult(resultType)>)</#if>
+     <#if resultType != "void" && !isAsyncResult(resultType)>
+        <#if resultType == "double" || resultType == "float">)</#if>
+
+     )
+     </#if>
     );
     </@compress>
 </#macro>
