@@ -185,7 +185,7 @@ public class SimulatorProperties {
     }
 
     public String getJdkFlavor() {
-        return get("JDK_FLAVOR", "outofthebox");
+        return get("JDK_FLAVOR");
     }
 
     public String getJdkVersion() {

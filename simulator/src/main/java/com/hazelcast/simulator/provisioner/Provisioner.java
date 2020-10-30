@@ -228,7 +228,10 @@ public class Provisioner {
         log("Using init script: " + initScriptFile.getAbsolutePath());
 
         String jdkFlavor = properties.getJdkFlavor();
-        if ("outofthebox".equals(jdkFlavor)) {
+        String jdkUrl = properties.get("JDK_URL");
+        if (jdkUrl != null) {
+            log("JDK spec: " + jdkUrl);
+        } else if ("outofthebox".equals(jdkFlavor)) {
             log("JDK spec: outofthebox");
         } else {
             String jdkVersion = properties.getJdkVersion();
