@@ -18,6 +18,7 @@ package com.hazelcast.simulator.wizard;
 import com.hazelcast.simulator.common.AgentsFile;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.coordinator.registry.AgentData;
+import com.hazelcast.simulator.coordinator.registry.IpAndPort;
 import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.utils.Bash;
 import com.hazelcast.simulator.utils.CommandLineExitException;
@@ -135,8 +136,9 @@ class Wizard {
         ensureExistingFile(SSH_COPY_ID_FILE);
         writeText("#!/bin/bash" + NEW_LINE + NEW_LINE, SSH_COPY_ID_FILE);
         for (AgentData agent : registry.getAgents()) {
-            String publicAddress = agent.getPublicAddress();
-            appendText(format("ssh-copy-id -i ~/.ssh/id_rsa.pub %s@%s%n", userName, publicAddress), SSH_COPY_ID_FILE);
+            IpAndPort ipAndPort = agent.getPublicSshAddress();
+            appendText(format("ssh-copy-id -i ~/.ssh/id_rsa.pub %s@%s%n -p %s",
+                    userName, ipAndPort.getIp(), ipAndPort.getPort()), SSH_COPY_ID_FILE);
         }
         execute(format("chmod u+x %s", SSH_COPY_ID_FILE.getAbsoluteFile()));
 
@@ -152,9 +154,9 @@ class Wizard {
         String userName = simulatorProperties.getUser();
 
         for (AgentData agent : registry.getAgents()) {
-            String publicAddress = agent.getPublicAddress();
-            echo("Connecting to %s@%s...", userName, publicAddress);
-            bash.ssh(publicAddress, "echo ok 2>&1");
+            IpAndPort ipAndPort = agent.getPublicSshAddress();
+            echo("Connecting to %s@%s...", userName, ipAndPort);
+            bash.ssh(ipAndPort, "echo ok 2>&1");
         }
 
         echo("Connected successfully to all remote machines!");

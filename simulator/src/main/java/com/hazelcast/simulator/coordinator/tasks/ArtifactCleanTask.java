@@ -74,8 +74,8 @@ public class ArtifactCleanTask {
         ThreadSpawner spawner = new ThreadSpawner("clean", true);
         for (final AgentData agent : registry.getAgents()) {
             spawner.spawn(() -> {
-                LOGGER.info(format("Cleaning %s", agent.getPublicAddress()));
-                bash.ssh(agent.getPublicAddress(), cleanCommand);
+                LOGGER.info(format("Cleaning %s", agent.getPublicSshAddress()));
+                bash.ssh(agent.getPublicSshAddress(), cleanCommand);
             });
         }
         spawner.awaitCompletion();

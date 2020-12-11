@@ -17,6 +17,7 @@ package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.coordinator.registry.AgentData;
+import com.hazelcast.simulator.coordinator.registry.IpAndPort;
 import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.coordinator.registry.WorkerData;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
@@ -212,7 +213,9 @@ public final class DeploymentPlan {
             int workerIndex = agent.getNextWorkerIndex();
             SimulatorAddress workerAddress = workerAddress(agent.getAddressIndex(), workerIndex);
 
-            String workerDirName = workerAddress.toString() + '-' + agent.getPublicAddress() + '-' + parameters.getWorkerType();
+            IpAndPort agentIpAndPort = agent.getPublicSshAddress();
+            String workerDirName = workerAddress.toString() + '-' + agentIpAndPort.getIp() + '-'
+                    + agentIpAndPort.getPort() + '-' + parameters.getWorkerType();
             parameters.set("WORKER_ADDRESS", workerAddress)
                     .set("WORKER_INDEX", workerIndex)
                     .set("PUBLIC_ADDRESS", agent.getPublicAddress())

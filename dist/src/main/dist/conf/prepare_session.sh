@@ -22,10 +22,12 @@ prepare_session_dir_local(){
 
 prepare_session_dir_remote(){
     agent=$1
+    ip=${agent%%:*}
+    port=${agent##*:}
     agent_index=$2
     # we remove the session directory first; in case of multiple executions with the same session-id
-    ssh ${SSH_OPTIONS} ${SIMULATOR_USER}@${agent} "rm -fr $target_dir"
-    ssh ${SSH_OPTIONS} ${SIMULATOR_USER}@${agent} "mkdir -p $target_dir"
+    ssh ${SSH_OPTIONS} -p $port ${SIMULATOR_USER}@${ip} "rm -fr $target_dir"
+    ssh ${SSH_OPTIONS} -p $port ${SIMULATOR_USER}@${ip} "mkdir -p $target_dir"
 }
 
 prepare_session_dir(){
@@ -45,12 +47,14 @@ prepare_session_dir(){
 
 upload_remote(){
     agent=$1
+    ip=${agent%%:*}
+    port=${agent##*:}
     agent_index=$2
 
     echo "[INFO]    Upload [A$agent_index] $agent starting..."
     # if the local upload directory exist, it needs to be uploaded
     echo "Uploading upload directory $src_dir to $agent:$target_dir"
-    scp ${SSH_OPTIONS} -r ${src_dir} ${SIMULATOR_USER}@${agent}:${target_dir}
+    scp ${SSH_OPTIONS} -p $port -r ${src_dir} ${SIMULATOR_USER}@${ip}:${target_dir}
     echo "[INFO]    Upload [A$agent_index] $agent completed"
 }
 
@@ -90,12 +94,14 @@ start_dstat_local(){
 
 start_dstat_remote(){
     agent=$1
+    ip=${agent%%:*}
+    port=${agent##*:}
     agent_index=$2
 
     # kill any dstat instances that are still running
-    ssh ${SSH_OPTIONS} ${SIMULATOR_USER}@${agent} " killall -9 dstat || true"
+    ssh ${SSH_OPTIONS} -p $port ${SIMULATOR_USER}@${ip} " killall -9 dstat || true"
 
-    ssh -n ${SSH_OPTIONS} ${SIMULATOR_USER}@${agent} \
+    ssh -n ${SSH_OPTIONS} -p $port ${SIMULATOR_USER}@${ip} \
         "nohup dstat --epoch -m --all -l --noheaders --nocolor --output $target_dir/A${agent_index}_dstat.csv 5 > /dev/null 2>&1 &"
 }
 

@@ -1,5 +1,7 @@
 package com.hazelcast.simulator.protocol;
 
+import com.hazelcast.simulator.common.SimulatorProperties;
+import com.hazelcast.simulator.coordinator.registry.IpAndPort;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
@@ -63,7 +65,7 @@ public class MessagingTest {
         client = new CoordinatorClient()
                 .setProcessor(mock(OperationProcessor.class))
                 .start()
-                .connectToAgentBroker(agentAddress, localIp());
+                .connectToAgentBroker(agentAddress, new IpAndPort(localIp(), SimulatorProperties.DEFAULT_BROKER_PORT));
 
         final Future f = client.submit(agentAddress, new LogOperation("", Level.DEBUG));
         assertTrueEventually(
@@ -95,7 +97,7 @@ public class MessagingTest {
         client = new CoordinatorClient()
                 .setProcessor(mock(OperationProcessor.class));
         client.getConnectionFactory().setMaxReconnectAttempts(1);
-        client.start().connectToAgentBroker(agentAddress, localIp());
+        client.start().connectToAgentBroker(agentAddress, new IpAndPort(localIp(), SimulatorProperties.DEFAULT_BROKER_PORT));
 
         final Future f = client.submit(agentAddress, new LogOperation("", Level.DEBUG));
 
@@ -127,7 +129,7 @@ public class MessagingTest {
         client = new CoordinatorClient()
                 .setProcessor(clientOperationProcessor);
         client.getConnectionFactory().setMaxReconnectAttempts(1);
-        client.start().connectToAgentBroker(agentAddress, localIp());
+        client.start().connectToAgentBroker(agentAddress, new IpAndPort(localIp(), SimulatorProperties.DEFAULT_BROKER_PORT));
 
         agentServer.sendCoordinator(new LogOperation("Foo"));
 

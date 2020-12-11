@@ -4,31 +4,33 @@
 set -e
 
 agent=$1
+ip=${agent%%:*}
+port=${agent##*:}
 
 uploadLibraryJar(){
     pattern=$1
     src="$SIMULATOR_HOME/lib/$pattern"
-    rsync --checksum -avv -L -e "ssh $SSH_OPTIONS" $src $SIMULATOR_USER@$agent:hazelcast-simulator-$SIMULATOR_VERSION/lib
+    rsync --checksum -avv -L -e "ssh $SSH_OPTIONS -p $port" $src $SIMULATOR_USER@$ip:hazelcast-simulator-$SIMULATOR_VERSION/lib
 }
 
 uploadTestLibJar(){
     pattern=$1
     src="$SIMULATOR_HOME/drivers/driver-$VENDOR/$pattern"
-    rsync --checksum -avv -L -e "ssh $SSH_OPTIONS" $src $SIMULATOR_USER@$agent:hazelcast-simulator-$SIMULATOR_VERSION/drivers/driver-$VENDOR/
+    rsync --checksum -avv -L -e "ssh $SSH_OPTIONS -p $port" $src $SIMULATOR_USER@$ip:hazelcast-simulator-$SIMULATOR_VERSION/drivers/driver-$VENDOR/
 }
 
 uploadToRemoteSimulatorDir(){
     src=$1
     target=$2
-    rsync --checksum -avv -L -e "ssh $SSH_OPTIONS" $src $SIMULATOR_USER@$agent:hazelcast-simulator-$SIMULATOR_VERSION/$target
+    rsync --checksum -avv -L -e "ssh $SSH_OPTIONS -p $port" $src $SIMULATOR_USER@$ip:hazelcast-simulator-$SIMULATOR_VERSION/$target
 }
 
 # Remove the hazelcast simulator directory.
-ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "rm -fr hazelcast-simulator-$SIMULATOR_VERSION/ || true"
+ssh $SSH_OPTIONS -p $port $SIMULATOR_USER@$ip "rm -fr hazelcast-simulator-$SIMULATOR_VERSION/ || true"
 
-ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "mkdir -p hazelcast-simulator-$SIMULATOR_VERSION/lib/"
-ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "mkdir -p hazelcast-simulator-$SIMULATOR_VERSION/user-lib/"
-ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "mkdir -p hazelcast-simulator-$SIMULATOR_VERSION/drivers/"
+ssh $SSH_OPTIONS -p $port $SIMULATOR_USER@$ip "mkdir -p hazelcast-simulator-$SIMULATOR_VERSION/lib/"
+ssh $SSH_OPTIONS -p $port $SIMULATOR_USER@$ip "mkdir -p hazelcast-simulator-$SIMULATOR_VERSION/user-lib/"
+ssh $SSH_OPTIONS -p $port $SIMULATOR_USER@$ip "mkdir -p hazelcast-simulator-$SIMULATOR_VERSION/drivers/"
 
 # Upload Simulator JARs
 uploadLibraryJar "simulator-*"

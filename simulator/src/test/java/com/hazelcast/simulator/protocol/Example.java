@@ -15,6 +15,8 @@
  */
 package com.hazelcast.simulator.protocol;
 
+import com.hazelcast.simulator.common.SimulatorProperties;
+import com.hazelcast.simulator.coordinator.registry.IpAndPort;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
@@ -36,7 +38,7 @@ public class Example {
                 .start();
 
         CoordinatorClient coordinatorClient = new CoordinatorClient()
-                .connectToAgentBroker(SimulatorAddress.fromString("A1"), Inet4Address.getLocalHost().getHostAddress())
+                .connectToAgentBroker(SimulatorAddress.fromString("A1"), new IpAndPort(Inet4Address.getLocalHost().getHostAddress(), SimulatorProperties.DEFAULT_BROKER_PORT))
                 .start();
 
         Server agentServer = new Server("agents")

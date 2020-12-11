@@ -59,7 +59,7 @@ import java.util.concurrent.Future;
 
 import static com.hazelcast.simulator.coordinator.AgentUtils.startAgents;
 import static com.hazelcast.simulator.coordinator.AgentUtils.stopAgents;
-import static com.hazelcast.simulator.coordinator.registry.AgentData.publicAddresses;
+import static com.hazelcast.simulator.coordinator.registry.AgentData.publicSshAddresses;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.getConfigurationFile;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
@@ -115,7 +115,7 @@ public class Coordinator implements Closeable {
         startClient();
 
         new PrepareSessionTask(
-                publicAddresses(registry.getAgents()),
+                publicSshAddresses(registry.getAgents()),
                 properties.asMap(),
                 new File(getUserDir(), "upload").getAbsoluteFile(),
                 parameters.getSessionId()).run();
@@ -183,7 +183,7 @@ public class Coordinator implements Closeable {
 
         if (!parameters.skipDownload()) {
             new DownloadTask(
-                    publicAddresses(registry.getAgents()),
+                    publicSshAddresses(registry.getAgents()),
                     properties.asMap(),
                     parameters.getOutputDirectory().getParentFile(),
                     parameters.getSessionId()).run();
@@ -215,10 +215,10 @@ public class Coordinator implements Closeable {
         // todo: should be async to speed things up
         for (AgentData agent : registry.getAgents()) {
             try {
-                client.connectToAgentBroker(agent.getAddress(), agent.getPublicAddress());
+                client.connectToAgentBroker(agent.getAddress(), agent.getPublicBrokerAddress());
             } catch (Exception e) {
                 LOGGER.debug(e.getMessage(), e);
-                throw new CommandLineExitException("Failed to connect to agent [" + agent.getPublicAddress() + "], "
+                throw new CommandLineExitException("Failed to connect to agent [" + agent.getPublicSshAddress() + "], "
                         + "cause [" + e.getMessage() + "]");
             }
         }
@@ -227,7 +227,7 @@ public class Coordinator implements Closeable {
     }
 
     public void download() {
-        new DownloadTask(publicAddresses(registry.getAgents()),
+        new DownloadTask(publicSshAddresses(registry.getAgents()),
                 properties.asMap(),
                 parameters.getOutputDirectory().getParentFile(),
                 parameters.getSessionId()).run();
@@ -254,7 +254,7 @@ public class Coordinator implements Closeable {
 
     public void installDriver(String versionSpec) {
         new BashCommand(getConfigurationFile("upload-driver.sh").getAbsolutePath())
-                .addParams(join((publicAddresses(registry.getAgents())), ","))
+                .addParams(join((publicSshAddresses(registry.getAgents())), ","))
                 .ensureJavaOnPath()
                 .addEnvironment(properties.asMap())
                 .execute();

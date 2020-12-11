@@ -18,6 +18,8 @@ agents=$3
 # Downloads the files from the remote machines.
 function download_remote(){
     agent=$1
+    ip=${agent%%:*}
+    port=${agent##*:}
 
     echo "[INFO]    Download from $agent started"
 
@@ -29,13 +31,13 @@ function download_remote(){
 
     # copy the files
     # we exclude the uploads directory because it could be very big e.g jars
-    rsync --copy-links -avvz --compress-level=9 -e "ssh ${SSH_OPTIONS}" --exclude 'upload' $SIMULATOR_USER@$agent:$download_path $root_dir
+    rsync --copy-links -avvz --compress-level=9 -e "ssh ${SSH_OPTIONS} -p $port" --exclude 'upload' $SIMULATOR_USER@$ip:$download_path $root_dir
 
     # delete the files on the agent (no point in keeping them around if they are already copied locally)
     if [ "$session_id" = "*" ] ; then
-        ssh ${SSH_OPTIONS} $SIMULATOR_USER@$agent "rm -fr $download_path/*"
+        ssh ${SSH_OPTIONS} -p $port $SIMULATOR_USER@$agent "rm -fr $download_path/*"
     else
-        ssh ${SSH_OPTIONS} $SIMULATOR_USER@$agent "rm -fr $download_path"
+        ssh ${SSH_OPTIONS} -p $port $SIMULATOR_USER@$agent "rm -fr $download_path"
     fi
 
     echo "[INFO]    Download from $agent completed"

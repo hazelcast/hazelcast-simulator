@@ -2,6 +2,7 @@ package com.hazelcast.simulator.wizard;
 
 import com.hazelcast.simulator.common.AgentsFile;
 import com.hazelcast.simulator.common.SimulatorProperties;
+import com.hazelcast.simulator.coordinator.registry.IpAndPort;
 import com.hazelcast.simulator.utils.Bash;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.junit.After;
@@ -180,8 +181,8 @@ public class WizardTest {
 
         wizard.sshConnectionCheck(simulatorProperties, bash);
 
-        verify(bash).ssh(eq("172.16.16.1"), anyString());
-        verify(bash).ssh(eq("172.16.16.2"), anyString());
+        verify(bash).ssh(eq(new IpAndPort("172.16.16.1", SimulatorProperties.DEFAULT_SSH_PORT)), anyString());
+        verify(bash).ssh(eq(new IpAndPort("172.16.16.2", SimulatorProperties.DEFAULT_SSH_PORT)), anyString());
         verifyNoMoreInteractions(bash);
     }
 

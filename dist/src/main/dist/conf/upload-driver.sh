@@ -4,8 +4,10 @@ agents=$1
 
 upload_driver() {
   agent=$1
-  rsync --checksum -avv -L -e "ssh $SSH_OPTIONS" \
-    $SIMULATOR_HOME/$driver_dir/* $SIMULATOR_USER@$agent:hazelcast-simulator-$SIMULATOR_VERSION/$driver_dir/
+  ip=${agent%%:*}
+  port=${agent##*:}
+  rsync --checksum -avv -L -e "ssh $SSH_OPTIONS -p $port" \
+    $SIMULATOR_HOME/$driver_dir/* $SIMULATOR_USER@$ip:hazelcast-simulator-$SIMULATOR_VERSION/$driver_dir/
 }
 
 if [ "$DRIVER" = "hazelcast-enterprise4" ]; then

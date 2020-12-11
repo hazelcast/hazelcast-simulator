@@ -32,7 +32,7 @@ public final class AgentUtils {
         new BashCommand(getConfigurationFile("agent_online_check.sh").getAbsolutePath())
                 .addParams(publicAddressesString(registry))
                 .addEnvironment(properties.asMap())
-                .dumpOutputOnError(false)
+                .dumpOutputOnError(true)
                 .execute();
     }
 

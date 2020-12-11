@@ -20,6 +20,8 @@ import com.hazelcast.simulator.agent.workerprocess.WorkerProcessFailureMonitor;
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessManager;
 import com.hazelcast.simulator.common.ProcessSuicideThread;
 import com.hazelcast.simulator.common.ShutdownThread;
+import com.hazelcast.simulator.common.SimulatorProperties;
+import com.hazelcast.simulator.coordinator.registry.IpAndPort;
 import com.hazelcast.simulator.protocol.Broker;
 import com.hazelcast.simulator.protocol.Server;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
@@ -37,7 +39,6 @@ import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.NativeUtils.writePid;
 
 public class Agent implements Closeable {
-
     private static final Logger LOGGER = Logger.getLogger(Agent.class);
 
     private final AtomicBoolean shutdownStarted = new AtomicBoolean();
@@ -78,8 +79,8 @@ public class Agent implements Closeable {
         Runtime.getRuntime().addShutdownHook(new AgentShutdownThread(true));
     }
 
-    public String getPublicAddress() {
-        return publicAddress;
+    public IpAndPort getSshAddress() {
+        return new IpAndPort(publicAddress, SimulatorProperties.DEFAULT_SSH_PORT);
     }
 
     public WorkerProcessManager getProcessManager() {

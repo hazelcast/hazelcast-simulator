@@ -48,10 +48,13 @@ public class SimulatorProperties {
 
     public static final String PROPERTIES_FILE_NAME = "simulator.properties";
 
-    public static final int DEFAULT_AGENT_PORT = 9000;
+    public static final int DEFAULT_SSH_PORT = 22;
+    public static final int DEFAULT_BROKER_PORT = 9000;
     public static final String CLOUD_PROVIDER = "CLOUD_PROVIDER";
     public static final String CLOUD_IDENTITY = "CLOUD_IDENTITY";
     public static final String CLOUD_CREDENTIAL = "CLOUD_CREDENTIAL";
+    public static final String PUBLIC_SSH_PORT_TAG = "public-ssh";
+    public static final String PUBLIC_BROKER_PORT_TAG = "public-broker";
 
     private static final int WORKER_TIMEOUT_FACTOR = 3;
 

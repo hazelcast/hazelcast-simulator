@@ -16,6 +16,7 @@
 package com.hazelcast.simulator.utils;
 
 import com.hazelcast.simulator.common.SimulatorProperties;
+import com.hazelcast.simulator.coordinator.registry.IpAndPort;
 
 import java.io.File;
 
@@ -37,34 +38,35 @@ public class Bash {
         return new BashCommand(command).execute();
     }
 
-    public String sshTTY(String ip, String command) {
-        return ssh(ip, command, false, true);
+    public String sshTTY(IpAndPort ipAndPort, String command) {
+        return ssh(ipAndPort, command, false, true);
     }
 
-    public String ssh(String ip, String command) {
-        return ssh(ip, command, false, false);
+    public String ssh(IpAndPort ipAndPort, String command) {
+        return ssh(ipAndPort, command, false, false);
     }
 
-    public String ssh(String ip, String command, boolean throwException, boolean forceTTy) {
+    public String ssh(IpAndPort ipAndPort, String command, boolean throwException, boolean forceTTy) {
         String options = sshOptions + (forceTTy ? " -tt" : "");
-        String sshCommand = format("ssh %s %s@%s \"%s\"", options, user, ip, command);
+        String sshCommand = format("ssh -p %s %s %s@%s \"%s\"", ipAndPort.getPort(), options, user, ipAndPort.getIp(), command);
         return new BashCommand(sshCommand).setThrowsException(throwException).execute();
     }
 
-    public void sshQuiet(String ip, String command) {
-        ssh(ip, command + " || true");
+    public void sshQuiet(IpAndPort ipAndPort, String command) {
+        ssh(ipAndPort, command + " || true");
     }
 
-    public void killAllJavaProcesses(String ip, boolean sudo) {
+    public void killAllJavaProcesses(IpAndPort ipAndPort, boolean sudo) {
         if (sudo) {
-            sshQuiet(ip, "sudo killall -9 java");
+            sshQuiet(ipAndPort, "sudo killall -9 java");
         } else {
-            sshQuiet(ip, "killall -9 java");
+            sshQuiet(ipAndPort, "killall -9 java");
         }
     }
 
-    public void scpToRemote(String ip, File src, String target) {
-        String command = format("scp -r %s %s %s@%s:%s", scpOptions, src.getAbsolutePath(), user, ip, target);
+    public void scpToRemote(IpAndPort ipAndPort, File src, String target) {
+        String command = format("scp -P %s -r %s %s %s@%s:%s", ipAndPort.getPort(), scpOptions, src.getAbsolutePath(), user,
+                ipAndPort.getIp(), target);
         execute(command);
     }
 }

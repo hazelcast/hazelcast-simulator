@@ -37,7 +37,7 @@ import static com.hazelcast.simulator.common.AgentsFile.preferredAgentsFile;
 import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
 import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
 import static com.hazelcast.simulator.coordinator.AgentUtils.onlineCheckAgents;
-import static com.hazelcast.simulator.coordinator.registry.AgentData.publicAddresses;
+import static com.hazelcast.simulator.coordinator.registry.AgentData.publicSshAddresses;
 import static com.hazelcast.simulator.drivers.Driver.loadDriver;
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isLocal;
@@ -216,7 +216,7 @@ final class CoordinatorCli {
     void run() throws Exception {
         if (options.has(downloadSpec)) {
             String sessionId = options.has(sessionIdSpec) ? options.valueOf(sessionIdSpec) : "*";
-            new DownloadTask(publicAddresses(registry.getAgents()), properties.asMap(), getUserDir(), sessionId).run();
+            new DownloadTask(publicSshAddresses(registry.getAgents()), properties.asMap(), getUserDir(), sessionId).run();
         } else if (options.has(cleanSpec)) {
             new ArtifactCleanTask(registry, properties).run();
         } else {

@@ -15,6 +15,7 @@
  */
 package com.hazelcast.simulator.coordinator.tasks;
 
+import com.hazelcast.simulator.coordinator.registry.IpAndPort;
 import com.hazelcast.simulator.utils.BashCommand;
 
 import java.io.File;
@@ -32,12 +33,12 @@ import static com.hazelcast.simulator.utils.FormatUtils.join;
  * The real work is done by the 'prepare_session.sh' script.
  */
 public class PrepareSessionTask {
-    private final List<String> agents;
+    private final List<IpAndPort> agents;
     private final Map<String, String> simulatorProperties;
     private final File uploadDir;
     private final String sessionId;
 
-    public PrepareSessionTask(List<String> agents,
+    public PrepareSessionTask(List<IpAndPort> agents,
                               Map<String, String> simulatorProperties,
                               File uploadDir,
                               String sessionId) {

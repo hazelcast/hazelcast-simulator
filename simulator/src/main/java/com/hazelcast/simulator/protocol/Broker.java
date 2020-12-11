@@ -24,7 +24,7 @@ import org.apache.log4j.Logger;
 
 import java.io.Closeable;
 
-import static com.hazelcast.simulator.common.SimulatorProperties.DEFAULT_AGENT_PORT;
+import static com.hazelcast.simulator.common.SimulatorProperties.DEFAULT_BROKER_PORT;
 import static java.util.Collections.singletonList;
 
 /**
@@ -74,7 +74,7 @@ public class Broker implements Closeable {
     private String password;
 
     public Broker() {
-        setBrokerAddress(SimulatorUtils.localIp(), DEFAULT_AGENT_PORT);
+        setBrokerAddress(SimulatorUtils.localIp(), DEFAULT_BROKER_PORT);
     }
 
     public Broker setCredentials(String userName, String password) {

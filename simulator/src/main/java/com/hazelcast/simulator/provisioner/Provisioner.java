@@ -18,6 +18,7 @@ package com.hazelcast.simulator.provisioner;
 import com.hazelcast.simulator.common.AgentsFile;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.coordinator.registry.AgentData;
+import com.hazelcast.simulator.coordinator.registry.IpAndPort;
 import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.utils.Bash;
 import com.hazelcast.simulator.utils.BashCommand;
@@ -98,8 +99,8 @@ public class Provisioner {
         ThreadSpawner spawner = new ThreadSpawner("installJava", true);
         for (final AgentData agent : registry.getAgents()) {
             spawner.spawn(() -> {
-                log("Installing Java on %s", agent.getPublicAddress());
-                installJavaOnAgent(agent.getPublicAddress());
+                log("Installing Java on %s", agent.getPublicSshAddress());
+                installJavaOnAgent(agent.getPublicSshAddress());
             });
         }
         spawner.awaitCompletion();
@@ -108,16 +109,16 @@ public class Provisioner {
         logWithRuler("Finished installing Java on %d machines (%s seconds)", registry.agentCount(), elapsed);
     }
 
-    private void installJavaOnAgent(String ip) {
+    private void installJavaOnAgent(IpAndPort ipAndPort) {
         String jdkUrl = properties.get("JDK_URL");
         if (jdkUrl != null) {
             File file = new File(new File(simulatorPath, "jdk-install"), "jdk_url.sh");
             String content = FileUtils.fileAsText(file);
             content = content.replace("%JDK_URL%", jdkUrl);
             file = FileUtils.newTmpFile(content);
-            bash.scpToRemote(ip, getJavaSupportScript(), "jdk-support.sh");
-            bash.scpToRemote(ip, file, "install-java.sh");
-            bash.ssh(ip, "bash install-java.sh");
+            bash.scpToRemote(ipAndPort, getJavaSupportScript(), "jdk-support.sh");
+            bash.scpToRemote(ipAndPort, file, "install-java.sh");
+            bash.ssh(ipAndPort, "bash install-java.sh");
             return;
         }
 
@@ -125,9 +126,9 @@ public class Provisioner {
             return;
         }
 
-        bash.scpToRemote(ip, getJavaSupportScript(), "jdk-support.sh");
-        bash.scpToRemote(ip, getJavaInstallScript(), "install-java.sh");
-        bash.ssh(ip, "bash install-java.sh");
+        bash.scpToRemote(ipAndPort, getJavaSupportScript(), "jdk-support.sh");
+        bash.scpToRemote(ipAndPort, getJavaInstallScript(), "install-java.sh");
+        bash.ssh(ipAndPort, "bash install-java.sh");
     }
 
     private File getJavaInstallScript() {
@@ -153,9 +154,9 @@ public class Provisioner {
         ThreadSpawner spawner = new ThreadSpawner("installSimulator", true);
         for (final AgentData agent : registry.getAgents()) {
             spawner.spawn(() -> {
-                log("    Installing Simulator on %s", agent.getPublicAddress());
-                installSimulator(agent.getPublicAddress());
-                log("    Finished installing Simulator on %s", agent.getPublicAddress());
+                log("    Installing Simulator on %s", agent.getPublicSshAddress());
+                installSimulator(agent.getPublicSshAddress());
+                log("    Finished installing Simulator on %s", agent.getPublicSshAddress());
             });
         }
         spawner.awaitCompletion();
@@ -174,8 +175,8 @@ public class Provisioner {
         ThreadSpawner spawner = new ThreadSpawner("killJavaProcesses", true);
         for (final AgentData agent : registry.getAgents()) {
             spawner.spawn(() -> {
-                log("    Killing Java processes on %s", agent.getPublicAddress());
-                bash.killAllJavaProcesses(agent.getPublicAddress(), sudo);
+                log("    Killing Java processes on %s", agent.getPublicSshAddress());
+                bash.killAllJavaProcesses(agent.getPublicSshAddress(), sudo);
             });
         }
         spawner.awaitCompletion();
@@ -251,7 +252,9 @@ public class Provisioner {
             for (int k = 0; k < delta; k++) {
                 String agentLine = agentLines[k + registry.agentCount()];
                 String publicIpAddress = agentLine.split(",")[0];
-                Future future = executor.submit(new InstallNodeTask(publicIpAddress));
+                //todo: parse SSH port from tags
+                IpAndPort publicIpAndPort = new IpAndPort(publicIpAddress, SimulatorProperties.DEFAULT_SSH_PORT);
+                Future future = executor.submit(new InstallNodeTask(publicIpAndPort));
                 futures.add(future);
             }
             for (Future future : futures) {
@@ -284,7 +287,7 @@ public class Provisioner {
         for (int k = 0; k < count; k++) {
             AgentData agent = agents.get(k);
             privateIps.add(agent.getPrivateAddress());
-            publicIps.add(agent.getPublicAddress());
+            publicIps.add(agent.getPublicSshAddress().getIp());
             destroyedCount++;
         }
 
@@ -316,17 +319,17 @@ public class Provisioner {
         }
     }
 
-    private void installSimulator(String ip) {
+    private void installSimulator(IpAndPort ipAndPort) {
         new BashCommand(getConfigurationFile("install-simulator.sh").getAbsolutePath())
                 .addEnvironment(properties.asMap())
-                .addParams(ip)
+                .addParams(ipAndPort)
                 .execute();
 
         // execute the init.sh script
         File initFile = newFile("init-" + newUnsecureUuidString() + ".sh");
         writeText(loadInitScript(), initFile);
-        bash.scpToRemote(ip, initFile, "init.sh");
-        bash.sshTTY(ip, "bash init.sh");
+        bash.scpToRemote(ipAndPort, initFile, "init.sh");
+        bash.sshTTY(ipAndPort, "bash init.sh");
         deleteQuiet(initFile);
     }
 
@@ -349,22 +352,22 @@ public class Provisioner {
 
     private final class InstallNodeTask implements Runnable {
 
-        private final String ip;
+        private final IpAndPort ipAndPort;
 
-        private InstallNodeTask(String ip) {
-            this.ip = ip;
+        private InstallNodeTask(IpAndPort ipAndPort) {
+            this.ipAndPort = ipAndPort;
         }
 
         @Override
         public void run() {
             if (!"outofthebox".equals(properties.getJdkFlavor())) {
-                log(INDENTATION + ip + " Java installation started...");
-                installJavaOnAgent(ip);
-                log(INDENTATION + ip + " Java Installed");
+                log(INDENTATION + ipAndPort + " Java installation started...");
+                installJavaOnAgent(ipAndPort);
+                log(INDENTATION + ipAndPort + " Java Installed");
             }
-            log(INDENTATION + ip + " Simulator installation started...");
-            installSimulator(ip);
-            log(INDENTATION + ip + " Simulator installed");
+            log(INDENTATION + ipAndPort + " Simulator installation started...");
+            installSimulator(ipAndPort);
+            log(INDENTATION + ipAndPort + " Simulator installed");
         }
     }
 }

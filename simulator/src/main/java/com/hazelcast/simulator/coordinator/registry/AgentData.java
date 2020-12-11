@@ -25,10 +25,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
+import static com.hazelcast.simulator.common.SimulatorProperties.DEFAULT_BROKER_PORT;
+import static com.hazelcast.simulator.common.SimulatorProperties.DEFAULT_SSH_PORT;
+import static com.hazelcast.simulator.common.SimulatorProperties.PUBLIC_BROKER_PORT_TAG;
+import static com.hazelcast.simulator.common.SimulatorProperties.PUBLIC_SSH_PORT_TAG;
 import static com.hazelcast.simulator.utils.FormatUtils.formatIpAddress;
 import static com.hazelcast.simulator.utils.FormatUtils.join;
 import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
+import static java.util.stream.Collectors.toList;
 
 /**
  * Contains the metadata of a Simulator Agent.
@@ -58,6 +64,8 @@ public class AgentData {
     private final String publicAddress;
     private final String privateAddress;
     private final Map<String, String> tags;
+    private final int publicSshPort;
+    private final int publicBrokerPort;
 
     public AgentData(int addressIndex, String publicAddress, String privateAddress) {
         this(addressIndex, publicAddress, privateAddress, new HashMap<>());
@@ -72,6 +80,16 @@ public class AgentData {
         this.publicAddress = checkNotNull(publicAddress, "publicAddress can't be null");
         this.privateAddress = checkNotNull(privateAddress, "privateAddress can't be null");
         this.tags = checkNotNull(tags, "tags can't be null");
+        this.publicSshPort = portFromTagsOrDefault(tags, PUBLIC_SSH_PORT_TAG, DEFAULT_SSH_PORT);
+        this.publicBrokerPort = portFromTagsOrDefault(tags, PUBLIC_BROKER_PORT_TAG, DEFAULT_BROKER_PORT);
+    }
+
+    private static int portFromTagsOrDefault(Map<String, String> allTags, String tag, int defaultPort) {
+        String portString = allTags.get(tag);
+        if (portString != null) {
+            return Integer.parseInt(portString);
+        }
+        return defaultPort;
     }
 
     public Map<String, String> getTags() {
@@ -97,6 +115,15 @@ public class AgentData {
     public String getPublicAddress() {
         return publicAddress;
     }
+
+    public IpAndPort getPublicSshAddress() {
+        return new IpAndPort(publicAddress, publicSshPort);
+    }
+
+    public IpAndPort getPublicBrokerAddress() {
+        return new IpAndPort(publicAddress, publicBrokerPort);
+    }
+
 
     public String getPrivateAddress() {
         return privateAddress;
@@ -152,12 +179,18 @@ public class AgentData {
     }
 
     public String formatIpAddresses() {
-        String publicIp = formatIpAddress(getPublicAddress());
-        String privateIp = formatIpAddress(getPrivateAddress());
-        if (publicIp.equals(privateIp)) {
-            return publicIp;
+        String publicIp = getPublicSshAddress().getIp();
+        int sshPort = getPublicSshAddress().getPort();
+        String formattedPublicIp = formatIpAddress(publicIp);
+        if (sshPort != DEFAULT_SSH_PORT) {
+            formattedPublicIp += ":" + sshPort;
         }
-        return publicIp + " " + privateIp;
+
+        String formattedPrivateIp = formatIpAddress(getPrivateAddress());
+        if (formattedPublicIp.equals(formattedPrivateIp)) {
+            return formattedPublicIp;
+        }
+        return formattedPublicIp + " " + formattedPrivateIp;
     }
 
     @Override
@@ -165,16 +198,12 @@ public class AgentData {
         return "AgentData{address=" + address + '}';
     }
 
-    public static List<String> publicAddresses(List<AgentData> agents) {
-        List<String> result = new ArrayList<>();
-        for (AgentData agent : agents) {
-            result.add(agent.getPublicAddress());
-        }
-        return result;
+    public static List<IpAndPort> publicSshAddresses(List<AgentData> agents) {
+        return agents.stream().map(AgentData::getPublicSshAddress).collect(toList());
     }
 
     public static String publicAddressesString(List<AgentData> agents) {
-        return join(publicAddresses(agents), ",");
+        return join(publicSshAddresses(agents), ",");
     }
 
     public static String publicAddressesString(Registry registry) {

@@ -117,7 +117,7 @@ public final class AgentsFile {
     public static void save(File agentsFile, Registry registry) {
         StringBuilder sb = new StringBuilder();
         for (AgentData agent : registry.getAgents()) {
-            String publicAddress = agent.getPublicAddress();
+            String publicAddress = agent.getPublicSshAddress().getIp();
             String privateAddress = agent.getPrivateAddress();
 
             if (publicAddress.equals(privateAddress)) {

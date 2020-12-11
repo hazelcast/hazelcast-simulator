@@ -1,5 +1,7 @@
 package com.hazelcast.simulator.agent;
 
+import com.hazelcast.simulator.common.SimulatorProperties;
+import com.hazelcast.simulator.coordinator.registry.IpAndPort;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.junit.After;
 import org.junit.Before;
@@ -42,7 +44,7 @@ public class AgentCliTest {
         startAgent();
 
         assertEquals(5, agent.getProcessManager().getAgentAddress().getAgentIndex());
-        assertEquals("127.0.0.1", agent.getPublicAddress());
+        assertEquals(new IpAndPort("127.0.0.1", SimulatorProperties.DEFAULT_SSH_PORT), agent.getSshAddress());
     }
 
     @Test(expected = CommandLineExitException.class)

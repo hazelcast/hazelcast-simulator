@@ -32,7 +32,7 @@ import javax.jms.Session;
 import javax.jms.Topic;
 import java.io.Closeable;
 
-import static com.hazelcast.simulator.common.SimulatorProperties.DEFAULT_AGENT_PORT;
+import static com.hazelcast.simulator.common.SimulatorProperties.DEFAULT_BROKER_PORT;
 import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
@@ -70,7 +70,7 @@ public class Server implements Closeable {
 
     public Server(String topic) {
         this.topic = checkNotNull(topic, "topic can't be null");
-        setBrokerURL(localIp(), DEFAULT_AGENT_PORT);
+        setBrokerURL(localIp(), DEFAULT_BROKER_PORT);
     }
 
     public Server setExceptionListener(ExceptionListener exceptionListener) {

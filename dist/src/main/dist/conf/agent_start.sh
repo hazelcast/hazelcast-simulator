@@ -9,7 +9,9 @@ agents=$1
 verify_installation(){
     if [ "$CLOUD_PROVIDER" != "local" ]; then
         for agent in ${agents//,/ } ; do
-            status=$(ssh $SSH_OPTIONS $SIMULATOR_USER@$agent \
+            ip=${agent%%:*}
+            port=${agent##*:}
+            status=$(ssh $SSH_OPTIONS -p $port $SIMULATOR_USER@$ip \
                 "[[ -f hazelcast-simulator-$SIMULATOR_VERSION/bin/agent ]] && echo OK || echo FAIL")
 
              if [ $status != "OK" ] ; then
@@ -22,21 +24,23 @@ verify_installation(){
 
 start_remote(){
     agent=$1
+    ip=${agent%%:*}
+    port=${agent##*:}
     agent_index=$2
 
     echo "[INFO]    Agent [A$agent_index] $agent starting"
 
-    ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "killall -9 java || true"
-    ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "rm -f agent.pid"
-    ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "rm -f agent.out"
-    ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "rm -f agent.err"
+    ssh $SSH_OPTIONS -p $port $SIMULATOR_USER@$ip "killall -9 java || true"
+    ssh $SSH_OPTIONS -p $port $SIMULATOR_USER@$ip "rm -f agent.pid"
+    ssh $SSH_OPTIONS -p $port $SIMULATOR_USER@$ip "rm -f agent.out"
+    ssh $SSH_OPTIONS -p $port $SIMULATOR_USER@$ip "rm -f agent.err"
 
     args="--addressIndex $agent_index --publicAddress $agent --port $AGENT_PORT"
 
-    ssh $SSH_OPTIONS $SIMULATOR_USER@$agent \
+    ssh $SSH_OPTIONS -p $port $SIMULATOR_USER@$ip \
         "nohup hazelcast-simulator-$SIMULATOR_VERSION/bin/agent $args > agent.out 2> agent.err < /dev/null &"
 
-    ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "hazelcast-simulator-$SIMULATOR_VERSION/bin/.await-file-exists agent.pid"
+    ssh $SSH_OPTIONS -p $port $SIMULATOR_USER@$ip "hazelcast-simulator-$SIMULATOR_VERSION/bin/.await-file-exists agent.pid"
 
     echo "[INFO]    Agent [A$agent_index] $agent started successfully"
 }

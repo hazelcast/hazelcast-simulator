@@ -15,6 +15,7 @@
  */
 package com.hazelcast.simulator.coordinator.tasks;
 
+import com.hazelcast.simulator.coordinator.registry.IpAndPort;
 import com.hazelcast.simulator.utils.BashCommand;
 import org.apache.log4j.Logger;
 
@@ -33,12 +34,12 @@ import static com.hazelcast.simulator.utils.FormatUtils.join;
 public class DownloadTask {
     private static final Logger LOGGER = Logger.getLogger(DownloadTask.class);
 
-    private final List<String> agents;
+    private final List<IpAndPort> agents;
     private final Map<String, String> simulatorProperties;
     private final File rootDir;
     private final String sessionId;
 
-    public DownloadTask(List<String> agents,
+    public DownloadTask(List<IpAndPort> agents,
                         Map<String, String> simulatorProperties,
                         File rootDir,
                         String sessionId) {

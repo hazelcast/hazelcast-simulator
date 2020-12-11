@@ -82,9 +82,9 @@ public final class AgentsSshCli {
         String simulatorUser = properties.get("SIMULATOR_USER");
 
         for (AgentData agent : findAgents()) {
-            System.out.println("[" + agent.getPublicAddress() + "]");
+            System.out.println("[" + agent.getPublicSshAddress() + "]");
             new BashCommand("ssh -n -o LogLevel=quiet " + sshOptions + " " + simulatorUser
-                    + "@" + agent.getPublicAddress() + " '" + command + "'")
+                    + "@" + agent.getPublicSshAddress() + " '" + command + "'")
                     .setSystemOut(true)
                     .addEnvironment(properties.asMap())
                     .execute();
@@ -100,7 +100,7 @@ public final class AgentsSshCli {
         }
 
         for (AgentData agent : agents) {
-            if (agent.getPublicAddress().equals(agentAddress)
+            if (agent.getPublicSshAddress().getIp().equals(agentAddress)
                     || agent.getPrivateAddress().equals(agentAddress)
                     || agent.getAddress().toString().equals(agentAddress)) {
                 return singletonList(agent);

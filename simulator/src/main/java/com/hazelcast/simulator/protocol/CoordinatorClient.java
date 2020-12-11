@@ -18,6 +18,7 @@ package com.hazelcast.simulator.protocol;
 import com.hazelcast.simulator.common.FailureType;
 import com.hazelcast.simulator.coordinator.FailureCollector;
 import com.hazelcast.simulator.coordinator.operations.FailureOperation;
+import com.hazelcast.simulator.coordinator.registry.IpAndPort;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.OperationCodec;
 import com.hazelcast.simulator.protocol.operation.OperationType;
@@ -47,7 +48,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static com.hazelcast.simulator.common.SimulatorProperties.DEFAULT_AGENT_PORT;
+import static com.hazelcast.simulator.common.SimulatorProperties.DEFAULT_BROKER_PORT;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.coordinatorAddress;
 import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
@@ -73,7 +74,7 @@ public class CoordinatorClient implements Closeable {
     private final ConnectionFactory connectionFactory = new ConnectionFactory();
     private ResponseHandlerThread responseHandlerThread;
     private OperationProcessor processor;
-    private int remoteBrokerPort = DEFAULT_AGENT_PORT;
+    private int remoteBrokerPort = DEFAULT_BROKER_PORT;
     private FailureCollector failureCollector;
     private volatile boolean stop;
 
@@ -96,11 +97,11 @@ public class CoordinatorClient implements Closeable {
         return this;
     }
 
-    public CoordinatorClient connectToAgentBroker(SimulatorAddress agentAddress, String agentIp) throws JMSException {
-        if (agentIp.equals("localhost")) {
-            agentIp = SimulatorUtils.localIp();
+    public CoordinatorClient connectToAgentBroker(SimulatorAddress agentAddress, IpAndPort agentip) throws JMSException {
+        if (agentip.getIp().equals("localhost")) {
+            agentip = new IpAndPort(SimulatorUtils.localIp(), agentip.getPort());
         }
-        remoteBrokers.put(agentAddress.getAgentIndex(), new RemoteBroker(agentIp, agentAddress));
+        remoteBrokers.put(agentAddress.getAgentIndex(), new RemoteBroker(agentip, agentAddress));
         return this;
     }
 
@@ -322,10 +323,10 @@ public class CoordinatorClient implements Closeable {
         private final SimulatorAddress agentAddress;
         private boolean connected;
 
-        private RemoteBroker(String ip, SimulatorAddress agentAddress) throws JMSException {
+        private RemoteBroker(IpAndPort ipAndPort, SimulatorAddress agentAddress) throws JMSException {
             this.agentAddress = agentAddress;
 
-            connection = connectionFactory.newConnection("tcp://" + ip + ":" + remoteBrokerPort, this);
+            connection = connectionFactory.newConnection("tcp://" + ipAndPort.getIp() + ":" + remoteBrokerPort, this);
             connected = true;
             session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 

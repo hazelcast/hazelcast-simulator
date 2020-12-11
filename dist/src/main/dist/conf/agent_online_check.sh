@@ -13,14 +13,16 @@ ssh_test_errors=0
 
 ssh_test(){
     agent=$1
+    ip=${agent%%:*}
+    port=${agent##*:}
 
-    if [ "$agent" = "127.0.0.1" ]; then
+    if [ "$ip" = "127.0.0.1" ]; then
         # we skip ssl check for local case
         return
     fi
 
     set +e
-    ssh $SSH_OPTIONS -o ConnectTimeout=3 -q $SIMULATOR_USER@$agent exit
+    ssh $SSH_OPTIONS -p $port -o ConnectTimeout=3 -q $SIMULATOR_USER@$ip exit
     status=$?
     set -e
 
