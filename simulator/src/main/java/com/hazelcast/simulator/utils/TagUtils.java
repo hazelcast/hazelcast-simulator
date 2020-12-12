@@ -84,4 +84,12 @@ public final class TagUtils {
 
         return parseTags(options.valueOf(spec));
     }
+
+    public static int portFromTagsOrDefault(Map<String, String> allTags, String tag, int defaultPort) {
+        String portString = allTags.get(tag);
+        if (portString != null) {
+            return Integer.parseInt(portString);
+        }
+        return defaultPort;
+    }
 }

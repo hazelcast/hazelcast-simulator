@@ -1,11 +1,7 @@
 FROM ubuntu:20.04
 
-RUN apt-get update && apt-get install -y openssh-server rsync sudo net-tools vim
+RUN apt-get update && apt-get install -y openssh-server rsync sudo net-tools vim openjdk-14-jdk-headless
 RUN mkdir /var/run/sshd
-
-# SSH login fix. Otherwise user is kicked off after login
-#RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd
-
 RUN adduser --gecos "" simulator --disabled-password
 RUN usermod -a -G sudo simulator
 

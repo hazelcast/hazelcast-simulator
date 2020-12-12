@@ -24,6 +24,7 @@ import com.hazelcast.simulator.utils.Bash;
 import com.hazelcast.simulator.utils.BashCommand;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.FileUtils;
+import com.hazelcast.simulator.utils.TagUtils;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 import org.apache.log4j.Logger;
 
@@ -37,6 +38,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.regex.Pattern;
 
+import static com.hazelcast.simulator.common.SimulatorProperties.DEFAULT_SSH_PORT;
+import static com.hazelcast.simulator.common.SimulatorProperties.PUBLIC_SSH_PORT_TAG;
 import static com.hazelcast.simulator.coordinator.AgentUtils.onlineCheckAgents;
 import static com.hazelcast.simulator.provisioner.ProvisionerUtils.ensureIsCloudProviderSetup;
 import static com.hazelcast.simulator.provisioner.ProvisionerUtils.ensureIsRemoteSetup;
@@ -191,7 +194,7 @@ public class Provisioner {
         scaleDown(Integer.MAX_VALUE);
     }
 
-    public void scale(int size, Map<String, String> tags) {
+    public void scale(int size) {
         ensureIsCloudProviderSetup(properties, "scale");
 
         int agentSize = registry.agentCount();
@@ -201,7 +204,7 @@ public class Provisioner {
             log("Desired number of machines: " + (agentSize + delta));
             log("Ignoring spawn machines, desired number of machines already exists.");
         } else if (delta > 0) {
-            scaleUp(delta, tags);
+            scaleUp(delta);
         } else {
             scaleDown(-delta);
         }
@@ -218,7 +221,7 @@ public class Provisioner {
     }
 
     @SuppressWarnings("PMD.PreserveStackTrace")
-    private void scaleUp(int delta, Map<String, String> tags) {
+    private void scaleUp(int delta) {
         logWithRuler("Provisioning %s %s machines", delta, properties.getCloudProvider());
         log("Current number of machines: " + registry.agentCount());
         log("Desired number of machines: " + (registry.agentCount() + delta));
@@ -252,8 +255,12 @@ public class Provisioner {
             for (int k = 0; k < delta; k++) {
                 String agentLine = agentLines[k + registry.agentCount()];
                 String publicIpAddress = agentLine.split(",")[0];
-                //todo: parse SSH port from tags
-                IpAndPort publicIpAndPort = new IpAndPort(publicIpAddress, SimulatorProperties.DEFAULT_SSH_PORT);
+                int tagsIndex = agentLine.indexOf('|');
+                String tagsString = tagsIndex == -1 ? "" : agentLine.substring(tagsIndex + 1);
+                Map<String, String> tags = TagUtils.parseTags(tagsString);
+                int sshPort = TagUtils.portFromTagsOrDefault(tags, PUBLIC_SSH_PORT_TAG, DEFAULT_SSH_PORT);
+                // TODO: DRY, this parsers is surely implemented elsewhere
+                IpAndPort publicIpAndPort = new IpAndPort(publicIpAddress, sshPort);
                 Future future = executor.submit(new InstallNodeTask(publicIpAndPort));
                 futures.add(future);
             }

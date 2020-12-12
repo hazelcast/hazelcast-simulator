@@ -16,6 +16,7 @@
 package com.hazelcast.simulator.coordinator.registry;
 
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.utils.TagUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -79,16 +80,8 @@ public class AgentData {
         this.publicAddress = checkNotNull(publicAddress, "publicAddress can't be null");
         this.privateAddress = checkNotNull(privateAddress, "privateAddress can't be null");
         this.tags = checkNotNull(tags, "tags can't be null");
-        this.publicSshPort = portFromTagsOrDefault(tags, PUBLIC_SSH_PORT_TAG, DEFAULT_SSH_PORT);
-        this.publicBrokerPort = portFromTagsOrDefault(tags, PUBLIC_BROKER_PORT_TAG, DEFAULT_BROKER_PORT);
-    }
-
-    private static int portFromTagsOrDefault(Map<String, String> allTags, String tag, int defaultPort) {
-        String portString = allTags.get(tag);
-        if (portString != null) {
-            return Integer.parseInt(portString);
-        }
-        return defaultPort;
+        this.publicSshPort = TagUtils.portFromTagsOrDefault(tags, PUBLIC_SSH_PORT_TAG, DEFAULT_SSH_PORT);
+        this.publicBrokerPort = TagUtils.portFromTagsOrDefault(tags, PUBLIC_BROKER_PORT_TAG, DEFAULT_BROKER_PORT);
     }
 
     public Map<String, String> getTags() {

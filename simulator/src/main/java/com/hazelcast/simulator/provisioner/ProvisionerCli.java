@@ -67,12 +67,7 @@ final class ProvisionerCli {
     private final OptionSpec terminateSpec = parser.accepts("terminate",
             "Terminates all provisioned machines.");
 
-    private final OptionSpec<String> tagsSpec = parser.accepts("tags",
-            "Tags for an agent.")
-            .withRequiredArg().ofType(String.class);
-
     private final OptionSet options;
-    private final Map<String, String> tags;
     private Provisioner provisioner;
 
     ProvisionerCli(String[] args) {
@@ -85,7 +80,6 @@ final class ProvisionerCli {
 
         Bash bash = new Bash(properties);
 
-        this.tags = loadTags(options, tagsSpec);
         this.provisioner = new Provisioner(properties, bash);
     }
 
@@ -93,7 +87,7 @@ final class ProvisionerCli {
         try {
             if (options.has(scaleSpec)) {
                 int size = options.valueOf(scaleSpec);
-                provisioner.scale(size, tags);
+                provisioner.scale(size);
             } else if (options.has(installJavaSpec)) {
                 provisioner.installJava(options.valueOf(installJavaSpec));
             } else if (options.has(installSpec)) {

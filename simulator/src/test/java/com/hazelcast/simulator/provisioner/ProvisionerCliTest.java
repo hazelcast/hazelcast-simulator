@@ -73,7 +73,7 @@ public class ProvisionerCliTest {
         cli.setProvisioner(provisioner);
         cli.run();
 
-        verify(provisioner).scale(0, new HashMap<String, String>());
+        verify(provisioner).scale(0);
         verify(provisioner).shutdown();
         verifyNoMoreInteractions(provisioner);
     }
@@ -87,7 +87,7 @@ public class ProvisionerCliTest {
         cli.setProvisioner(provisioner);
         cli.run();
 
-        verify(provisioner).scale(10, new HashMap<String, String>());
+        verify(provisioner).scale(10);
         verify(provisioner).shutdown();
         verifyNoMoreInteractions(provisioner);
     }
