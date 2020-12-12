@@ -93,7 +93,10 @@ public class CoordinatorClient implements Closeable {
     }
 
     public CoordinatorClient setAgentBrokerPort(int port) {
-        this.remoteBrokerPort = port;
+        //todo: this method probably should not be there at all
+        if (remoteBrokerPort == DEFAULT_BROKER_PORT) {
+            this.remoteBrokerPort = port;
+        }
         return this;
     }
 
@@ -326,7 +329,8 @@ public class CoordinatorClient implements Closeable {
         private RemoteBroker(IpAndPort ipAndPort, SimulatorAddress agentAddress) throws JMSException {
             this.agentAddress = agentAddress;
 
-            connection = connectionFactory.newConnection("tcp://" + ipAndPort.getIp() + ":" + remoteBrokerPort, this);
+            String brokerUrl = "tcp://" + ipAndPort.getIp() + ":" + ipAndPort.getPort();
+            connection = connectionFactory.newConnection(brokerUrl, this);
             connected = true;
             session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
