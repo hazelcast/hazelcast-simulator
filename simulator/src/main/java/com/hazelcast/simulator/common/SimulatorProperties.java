@@ -53,8 +53,8 @@ public class SimulatorProperties {
     public static final String CLOUD_PROVIDER = "CLOUD_PROVIDER";
     public static final String CLOUD_IDENTITY = "CLOUD_IDENTITY";
     public static final String CLOUD_CREDENTIAL = "CLOUD_CREDENTIAL";
-    public static final String PUBLIC_SSH_PORT_TAG = "public-ssh";
-    public static final String PUBLIC_BROKER_PORT_TAG = "public-broker";
+    public static final String PUBLIC_SSH_PORT_TAG = "ssh";
+    public static final String PUBLIC_BROKER_PORT_TAG = "broker";
 
     private static final int WORKER_TIMEOUT_FACTOR = 3;
 

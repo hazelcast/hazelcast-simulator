@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 import static com.hazelcast.simulator.common.SimulatorProperties.DEFAULT_BROKER_PORT;
 import static com.hazelcast.simulator.common.SimulatorProperties.DEFAULT_SSH_PORT;
