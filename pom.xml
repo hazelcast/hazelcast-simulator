@@ -20,12 +20,7 @@
             <name>Main Repository</name>
             <url>http://repo1.maven.org/maven2</url>
         </repository>
-        <repository>
-            <id>backup-repo</id>
-            <name>Backup Repository</name>
-            <url>http://repo2.maven.org/maven2/</url>
-        </repository>
-
+       
         <repository>
             <id>snapshot-repository</id>
             <name>Hazelcast Snapshot Repository</name>
@@ -47,10 +42,10 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- we want to remain java 1.6 compatible -->
-        <java.version>1.6</java.version>
+        <java.version>1.8</java.version>
         <maven.version>3.0.1</maven.version>
 
-        <hazelcast.version>3.12-SNAPSHOT</hazelcast.version>
+        <hazelcast.version>3.12</hazelcast.version>
         <jsr107.api.version>1.0.0</jsr107.api.version>
 
         <junit.version>4.12</junit.version>
