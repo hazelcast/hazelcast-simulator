@@ -13,10 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.hz.map;
 
+package com.hazelcast.simulator.tests.map;
+
+import com.hazelcast.core.ExecutionCallback;
+import com.hazelcast.core.ICompletableFuture;
+import com.hazelcast.core.IMap;
 import com.hazelcast.core.Pipelining;
-import com.hazelcast.map.IMap;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.BaseThreadState;
@@ -32,12 +35,11 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
-import static com.hazelcast.simulator.utils.GeneratorUtils.generateAsciiStrings;
+import static com.hazelcast.simulator.utils.GeneratorUtils.generateByteArrays;
 
-public class LongStringMapTest extends HazelcastTest {
+public class LongByteArrayMapTest extends HazelcastTest {
 
     // properties
     public int keyDomain = 10000;
@@ -48,34 +50,34 @@ public class LongStringMapTest extends HazelcastTest {
     public int pipelineIterations = 100;
     public int getAllSize = 5;
 
-    private IMap<Long, String> map;
-    private String[] values;
+    private IMap<Long, byte[]> map;
+    private byte[][] values;
     private final Executor callerRuns = Runnable::run;
 
     @Setup
     public void setUp() {
         map = targetInstance.getMap(name);
-        values = generateAsciiStrings(valueCount, minValueLength, maxValueLength);
+        values = generateByteArrays(valueCount, minValueLength, maxValueLength);
     }
 
     @Prepare(global = true)
     public void prepare() {
         Random random = new Random();
-        Streamer<Long, String> streamer = StreamerFactory.getInstance(map);
+        Streamer<Long, byte[]> streamer = StreamerFactory.getInstance(map);
         for (long key = 0; key < keyDomain; key++) {
-            String value = values[random.nextInt(valueCount)];
+            byte[] value = values[random.nextInt(valueCount)];
             streamer.pushEntry(key, value);
         }
         streamer.await();
     }
 
     @TimeStep(prob = -1)
-    public String get(ThreadState state) {
+    public byte[] get(ThreadState state) {
         return map.get(state.randomKey());
     }
 
-    @TimeStep(prob = 0)
-    public Map<Long, String> getAll(ThreadState state) {
+    @TimeStep(prob = -1)
+    public Map<Long, byte[]> getAll(ThreadState state) {
         Set<Long> keys = new HashSet<>();
         for (int k = 0; k < getAllSize; k++) {
             keys.add(state.randomKey());
@@ -83,19 +85,9 @@ public class LongStringMapTest extends HazelcastTest {
         return map.getAll(keys);
     }
 
-    @TimeStep(prob = 0)
-    public CompletableFuture<String> getAsync(ThreadState state) {
-        return map.getAsync(state.randomKey()).toCompletableFuture();
-    }
-
     @TimeStep(prob = 0.1)
-    public String put(ThreadState state) {
+    public byte[] put(ThreadState state) {
         return map.put(state.randomKey(), state.randomValue());
-    }
-
-    @TimeStep(prob = 0.0)
-    public CompletableFuture putAsync(ThreadState state) {
-        return map.putAsync(state.randomKey(), state.randomValue()).toCompletableFuture();
     }
 
     @TimeStep(prob = 0)
@@ -104,17 +96,22 @@ public class LongStringMapTest extends HazelcastTest {
     }
 
     @TimeStep(prob = 0)
-    public void setAsync(ThreadState state) {
-        map.setAsync(state.randomKey(), state.randomValue()).toCompletableFuture();
-    }
-
-    @TimeStep(prob = 0)
     public void pipelinedGet(final ThreadState state, @StartNanos final long startNanos, final Probe probe) throws Exception {
         if (state.pipeline == null) {
             state.pipeline = new Pipelining<>(pipelineDepth);
         }
-        CompletableFuture<String> f = map.getAsync(state.randomKey()).toCompletableFuture();
-        f.whenCompleteAsync((s, throwable) -> probe.done(startNanos), callerRuns);
+        ICompletableFuture<byte[]> f = map.getAsync(state.randomKey());
+        f.andThen(new ExecutionCallback<byte[]>() {
+            @Override
+            public void onResponse(byte[] response) {
+                probe.done(startNanos);
+            }
+
+            @Override
+            public void onFailure(Throwable t) {
+                probe.done(startNanos);
+            }
+        }, callerRuns);
         state.pipeline.add(f);
         state.i++;
         if (state.i == pipelineIterations) {
@@ -125,14 +122,14 @@ public class LongStringMapTest extends HazelcastTest {
     }
 
     public class ThreadState extends BaseThreadState {
-        private Pipelining<String> pipeline;
+        private Pipelining<byte[]> pipeline;
         private int i;
 
         private long randomKey() {
             return randomLong(keyDomain);
         }
 
-        private String randomValue() {
+        private byte[] randomValue() {
             return values[randomInt(values.length)];
         }
     }

@@ -15,22 +15,22 @@
  */
 package com.hazelcast.simulator.tests.map;
 
-import com.hazelcast.map.IMap;
+import com.hazelcast.core.IMap;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
-import com.hazelcast.simulator.tests.helpers.KeyLocality;
+import com.hazelcast.simulator.utils.KeyLocality;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntKeys;
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateByteArray;
+import static com.hazelcast.simulator.utils.KeyUtils.generateIntKeys;
 
 public class IntByteMapTest extends HazelcastTest {
 
