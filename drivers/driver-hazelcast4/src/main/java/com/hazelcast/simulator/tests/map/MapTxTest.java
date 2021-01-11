@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.hz.map;
+package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.map.IMap;
 import com.hazelcast.simulator.hz.HazelcastTest;
