@@ -91,10 +91,10 @@
 
     <modules>
         <module>archetype</module>
-        <module>dist</module>
         <module>simulator</module>
         <module>drivers</module>
         <module>integration-tests</module>
+        <module>dist</module>
     </modules>
 
     <scm>
