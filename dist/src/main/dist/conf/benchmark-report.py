@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 # todo:
@@ -1079,7 +1079,8 @@ class HTMLReport:
 
         encoded_image = ""
         with open(plot.image_path, "rb") as image_file:
-            encoded_image = base64.b64encode(image_file.read()).decode()
+           encoded_image = str(base64.b64encode(image_file.read()), encoding='utf-8')
+
         encoded_image = "data:image/png;base64,%s" % encoded_image
 
         self.images = self.images + '<div class="image-container ' + metric_name + '">'
