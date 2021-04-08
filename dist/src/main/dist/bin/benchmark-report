@@ -8,9 +8,9 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 export SIMULATOR_HOME=$(cd $DIR/.. && pwd)
 
- # Check if python is installed.
-if ! hash python 2>/dev/null ; then
-    echo python is not installed! Aborting.
+ # Check if python3 is installed.
+if ! hash python3 2>/dev/null ; then
+    echo python3 is not installed! Aborting.
     exit 1
 fi
 
@@ -28,4 +28,4 @@ if ! hash gnuplot 2>/dev/null ; then
     exit 1
 fi
 
-python ${SIMULATOR_HOME}/conf/benchmark-report.py "$@"
+python3 ${SIMULATOR_HOME}/conf/benchmark-report.py "$@"

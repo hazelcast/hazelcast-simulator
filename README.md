@@ -1827,7 +1827,7 @@ test will not run longer than this duration.
 # Report Generator
 
 Once a benchmark has been executed, an HTML report can be generated using the `benchmark-report` tool. This tool requires
-Gnuplot 4+ and Python 2.7 to be installed for generating the diagrams.
+Gnuplot 4+ and Python 3.0 to be installed for generating the diagrams.
 
 Assume that a benchmark has been executed and the directory `2016-08-02__22_08_09` has been created. To create a report for that 
 benchmark, you can use the following command:

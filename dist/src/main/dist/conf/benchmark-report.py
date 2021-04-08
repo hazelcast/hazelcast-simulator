@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 # todo:
@@ -46,6 +46,7 @@ benchmark_args = args.benchmarks
 gc_logs_found = False
 
 simulator_home = os.environ['SIMULATOR_HOME']
+os.environ['LC_CTYPE'] = "en_US.UTF-8"
 
 if not args.output:
     report_dir = "report"
@@ -63,7 +64,7 @@ print("Report directory '" + report_dir + "'")
 
 def dump(obj):
     for attr in dir(obj):
-        print "obj.%s = %s" % (attr, getattr(obj, attr))
+        print(("obj.%s = %s" % (attr, getattr(obj, attr))))
 
 
 def ensure_dir(file_path):
@@ -317,7 +318,7 @@ class GoogleCharts:
 
         with open(filepath, 'w') as f:
             f.write(chart)
-        print filepath
+        print(filepath)
 
 
 seriesCounter = Counter()
@@ -517,7 +518,7 @@ class HdrAnalyzer:
 
     def _load_latency_ts(self, path, column):
         result = []
-        with open(path, 'rb') as csvfile:
+        with open(path) as csvfile:
             csvreader = csv.reader(csvfile, delimiter=',', quotechar='|')
             # we need to skip the first 7 lines
             for x in range(0, 3):
@@ -656,7 +657,7 @@ class GcAnalyzer:
 
         result = []
         if os.path.exists(gc_csv):
-            with open(gc_csv, 'rb') as csvfile:
+            with open(gc_csv) as csvfile:
                 csvreader = csv.reader(csvfile, delimiter=',', quotechar='|')
                 # we need to skip the first line
                 next(csvreader)
@@ -789,7 +790,7 @@ class DstatAnalyzer:
     def __load_dstat(self, column, dstat_csv):
         result = []
         if os.path.exists(dstat_csv):
-            with open(dstat_csv, 'rb') as csvfile:
+            with open(dstat_csv) as csvfile:
                 csvreader = csv.reader(csvfile, delimiter=',', quotechar='|')
                 # we need to skip the first 7 lines
                 for x in range(0, 8):
@@ -803,7 +804,7 @@ class DstatAnalyzer:
     def __load_dstat_cpu_total_ts(self, dstat_csv):
         result = []
         if os.path.exists(dstat_csv):
-            with open(dstat_csv, 'rb') as csvfile:
+            with open(dstat_csv) as csvfile:
                 csvreader = csv.reader(csvfile, delimiter=',', quotechar='|')
                 # we need to skip the first 7 lines
                 for x in range(0, 8):
@@ -834,7 +835,7 @@ class ThroughputAnalyzer:
         performance_csv = os.path.join(self.worker_dir, "performance.csv")
         result = []
         if os.path.exists(performance_csv):
-            with open(performance_csv, 'rb') as csvfile:
+            with open(performance_csv) as csvfile:
                 csvreader = csv.reader(csvfile, delimiter=',', quotechar='|')
                 # skip the first line
                 next(csvreader)
@@ -863,10 +864,10 @@ class Period:
         self.end_time = end_time
 
     def start_millis(self):
-        return long(round(float(self.start_time)*1000))
+        return int(round(float(self.start_time)*1000))
 
     def end_millis(self):
-        return long(round(float(self.end_time)*1000))
+        return int(round(float(self.end_time)*1000))
 
 class Benchmark:
     # the directory where the original files can be found
@@ -925,7 +926,7 @@ class Benchmark:
                 continue
 
             print(performance_csv_file)
-            with open(performance_csv_file, 'rb') as csv_file:
+            with open(performance_csv_file) as csv_file:
                 csv_reader = csv.reader(csv_file, delimiter=',', quotechar='|')
                 # skip first line
                 next(csv_reader)
@@ -1057,7 +1058,7 @@ class Comparison:
 
                             plot.add(handle.load(), benchmark.name)
 
-        for plot in plots.values():
+        for plot in list(plots.values()):
             plot.plot()
             htmlReport.addImage(plot)
 
@@ -1075,25 +1076,26 @@ class HTMLReport:
 
     def addImage(self, plot):
         metric_name = plot.image_path.split('/')[-2]
-        
+
         encoded_image = ""
         with open(plot.image_path, "rb") as image_file:
-            encoded_image = base64.b64encode(image_file.read())    
+           encoded_image = str(base64.b64encode(image_file.read()), encoding='utf-8')
+
         encoded_image = "data:image/png;base64,%s" % encoded_image
 
         self.images = self.images + '<div class="image-container ' + metric_name + '">'
         self.images = self.images + '<img src="' + encoded_image + '" onclick="toggleZoom(this);" />'
         self.images = self.images + '<p class="image-text">' + plot.title + "</p>"
         self.images = self.images + '</div>'
-        
+
     def getCSVContents(self):
         contents = []
-        with open(os.path.join(report_dir + "/report.csv"), 'rb') as csvfile:
+        with open(os.path.join(report_dir + "/report.csv")) as csvfile:
             line = csvfile.readline()
             while line != '':
                 contents.append(line)
                 line = csvfile.readline()
-            
+
         return contents
 
     def generate(self):
@@ -1106,7 +1108,7 @@ class HTMLReport:
         self.report = self.report + 'body { background-color: #cdcdcd; text-align: center; } img { width: 40vw; } .images-block { display: block; } h1,h2,h3,h4,h5,h6 { width: 100vw; }'
         self.report = self.report + '.tabs { display: flex; border-bottom: 1px solid black; margin-bottom: 3vh; } .tab { flex: 33.33%; } .tab:hover, .active-tab { background-color: #dedede; }'
         self.report = self.report + 'img:hover { cursor: zoom-in; } .zoomin { zoom: 2; -moz-transform: scale(2); } .zoomout { zoom: normal; -moz-transform: scale(1); }'
-        self.report = self.report + 'tr,td { border: 1px solid black; } td { padding: 3px; }'   
+        self.report = self.report + 'tr,td { border: 1px solid black; } td { padding: 3px; }'
         self.report = self.report + '</style>'
         self.report = self.report + '<body>'
         self.report = self.report + '<h1>Benchmark Report</h1>'
@@ -1114,7 +1116,7 @@ class HTMLReport:
         self.report = self.report + '<div class="tab" id="csv" style="border-right: 1px solid black;"><p>Summary</p></div>'
         self.report = self.report + '<div class="tab" id="throughput" style="border-right: 1px solid black;"><p>Throughput</p></div>'
         self.report = self.report + '<div class="tab" id="latency" style="border-right: 1px solid black;"><p>Latency</p></div>'
-        self.report = self.report + '<div class="tab" id="dstat"><p>dstat</p></div>'        
+        self.report = self.report + '<div class="tab" id="dstat"><p>dstat</p></div>'
         self.report = self.report + '</div>'
         self.report = self.report + '<div class="images-block">' + self.images + '</div>'
         self.report = self.report + '<table><tbody>'
@@ -1144,13 +1146,13 @@ class HTMLReport:
         file_name = os.path.join(report_dir + "/report.html")
         with open(file_name, 'w') as f:
             f.write(self.report)
-        
+
         print("HTML report generated at: " + file_name)
 
 if os.path.isdir('report'):
     shutil.rmtree('report')
 
-htmlReport = HTMLReport()   
+htmlReport = HTMLReport()
 comparison = Comparison()
 comparison.make()
 htmlReport.generate()
