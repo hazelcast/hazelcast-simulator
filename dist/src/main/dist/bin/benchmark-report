@@ -28,4 +28,4 @@ if ! hash gnuplot 2>/dev/null ; then
     exit 1
 fi
 
-python ${SIMULATOR_HOME}/conf/benchmark-report.py "$@"
+python3 ${SIMULATOR_HOME}/conf/benchmark-report.py "$@"
