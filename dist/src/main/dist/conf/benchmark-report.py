@@ -1147,9 +1147,9 @@ class HTMLReport:
         with open(file_name, 'w') as f:
             f.write(self.report)
 
+        file_url = "file://" + file_name
         # print a clickable link to report file
-        print("HTML report generated at: "+"\u001b]8;;file://"
-              + file_name + "\u001b\\" + file_name + "\u001b]8;;\u001b\\")
+        print(f"HTML report generated at: \u001b]8;;{file_url}\u001b\\{file_url}\u001b]8;;\u001b\\")
 
 if os.path.isdir('report'):
     shutil.rmtree('report')
