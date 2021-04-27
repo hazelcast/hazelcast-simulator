@@ -22,6 +22,7 @@
     </properties>
 
     <modules>
+        <module>driver-hazelcast5</module>
         <module>driver-hazelcast4</module>
         <module>driver-hazelcast3</module>
         <module>driver-ignite2</module>

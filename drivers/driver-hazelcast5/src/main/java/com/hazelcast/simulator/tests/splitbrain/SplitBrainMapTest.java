@@ -1,0 +1,118 @@
+/*
+ * Copyright (c) 2008-2016, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.hazelcast.simulator.tests.splitbrain;
+
+import com.hazelcast.map.IMap;
+import com.hazelcast.splitbrainprotection.SplitBrainProtectionException;
+import com.hazelcast.simulator.hz.HazelcastTest;
+import com.hazelcast.simulator.test.BaseThreadState;
+import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.annotations.TimeStep;
+import org.junit.Assert;
+
+/**
+ * The QuorumMapTest can be used to verify the Quorum behavior wherein
+ * a continuous tests will assert the
+ * 1. Adding member
+ * 2. Removing member
+ * and the tests will pass or fail accordingly.
+ */
+
+public class SplitBrainMapTest extends HazelcastTest {
+
+    // properties
+    public int keyCount = 100;
+    public int gracePeriodMillis = 2000;
+
+    private volatile LastClusterSizeChange lastClusterSizeChange;
+    private IMap<Long, Long> map;
+    private int minimalClusterSize;
+
+    @Setup
+    @SuppressWarnings("unchecked")
+    public void setup() {
+        this.lastClusterSizeChange = new LastClusterSizeChange(0L,
+                getMemberCount());
+        this.map = targetInstance.getMap(name);
+        this.minimalClusterSize = targetInstance.getConfig()
+                .getSplitBrainProtectionConfig("map-quorum-ref").getMinimumClusterSize();
+    }
+
+    private int getMemberCount() {
+        return targetInstance.getCluster().getMembers().size();
+    }
+
+    @TimeStep
+    public void testPut(BaseThreadState state) {
+        final long key = state.randomInt(keyCount);
+        LastClusterSizeChange lastChange = lastClusterSizeChange;
+
+        if (lastChange.timestamp + gracePeriodMillis > System.currentTimeMillis()) {
+            doProtectedOperation(key, 0L);
+            return;
+        }
+
+        try {
+            map.put(key, 0L);
+            checkGracePeriod(lastChange, true);
+        } catch (SplitBrainProtectionException qe) {
+            checkGracePeriod(lastChange, false);
+        }
+    }
+
+    private void doProtectedOperation(Long key, long value) {
+        try {
+            map.put(key, value);
+            logger.warn("Detected Grace Period. Ignoring Operation succeeded behaviour.");
+        } catch (SplitBrainProtectionException qe) {
+            logger.warn("Detected Grace Period. Ignoring Quorum Exception.");
+        }
+    }
+
+    private void checkGracePeriod(LastClusterSizeChange lastChange,
+                                  boolean operationPassed) {
+        boolean hadQuorum = lastChange.clusterSize >= minimalClusterSize;
+        if (operationPassed == hadQuorum) {
+            return;
+        }
+        int memberCount = getMemberCount();
+        if (lastChange.clusterSize != memberCount) {
+            logger.warn("Detected cluster change from "
+                    + lastChange.clusterSize + " to " + memberCount);
+            lastChange = new LastClusterSizeChange(
+                    System.currentTimeMillis(), memberCount);
+            this.lastClusterSizeChange = lastChange;
+        }
+        if (lastChange.timestamp + gracePeriodMillis > System.currentTimeMillis()) {
+            return;
+        }
+        Assert.fail(String
+                .format("Quorum count was %s and the member count was %s but the operation %s.",
+                        minimalClusterSize, lastChange.clusterSize,
+                        hadQuorum ? "failed" : "succeeded"));
+    }
+
+    private static final class LastClusterSizeChange {
+        final long timestamp;
+        final int clusterSize;
+
+        private LastClusterSizeChange(long timestamp, int clusterSize) {
+            this.timestamp = timestamp;
+            this.clusterSize = clusterSize;
+        }
+    }
+}

@@ -1,0 +1,149 @@
+<hazelcast xsi:schemaLocation="http://www.hazelcast.com/schema/config
+                               http://www.hazelcast.com/schema/config/hazelcast-config-4.0.xsd"
+           xmlns="http://www.hazelcast.com/schema/config"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+    <cluster-name>workers</cluster-name>
+
+    <!--LITE_MEMBER_CONFIG-->
+
+    <network>
+        <port port-count="200" auto-increment="true">5701</port>
+        <join>
+            <multicast enabled="false"/>
+            <tcp-ip enabled="true">
+                <!--MEMBERS-->
+            </tcp-ip>
+        </join>
+    </network>
+
+    <properties>
+        <property name="hazelcast.phone.home.enabled">false</property>
+        <property name="hazelcast.logging.type">log4j</property>
+    </properties>
+
+    <!--LICENSE-KEY-->
+
+    <!--MANAGEMENT_CENTER_CONFIG-->
+
+    <map name="MapStore*">
+        <map-store enabled="true">
+            <class-name>com.hazelcast.simulator.tests.map.helpers.MapStoreWithCounter</class-name>
+            <write-delay-seconds>5</write-delay-seconds>
+        </map-store>
+    </map>
+
+    <map name="MapEvictAndStore*">
+        <map-store enabled="true">
+            <class-name>com.hazelcast.simulator.tests.map.helpers.MapStoreWithCounterPerKey</class-name>
+            <write-delay-seconds>5</write-delay-seconds>
+            <write-coalescing>false</write-coalescing>
+        </map-store>
+        <time-to-live-seconds>10</time-to-live-seconds>
+        <eviction size="5000" max-size-policy="PER_NODE"/>
+    </map>
+
+    <map name="MapMaxSize*">
+        <eviction max-size-policy="PER_NODE" size="1000" eviction-policy="LRU"/>
+    </map>
+
+    <map name="NoBackup*">
+        <statistics-enabled>false</statistics-enabled>
+        <backup-count>0</backup-count>
+        <async-backup-count>0</async-backup-count>
+    </map>
+
+    <map name="ObjectMap*">
+        <in-memory-format>OBJECT</in-memory-format>
+    </map>
+
+    <map name="SerializationStrategyTest*">
+        <in-memory-format>BINARY</in-memory-format>
+        <indexes>
+            <index type="SORTED">
+                <attributes>
+                    <attribute>stringVal</attribute>
+                </attributes>
+            </index>
+        </indexes>
+    </map>
+
+    <map name="ExtractorMapTest*">
+        <attributes>
+            <attribute extractor-class-name="com.hazelcast.simulator.tests.map.ExtractorMapTest$PayloadExtractor">
+                payloadFromExtractor
+            </attribute>
+        </attributes>
+    </map>
+
+    <map name="PortableExtractorMapTest*">
+        <attributes>
+            <attribute extractor-class-name="com.hazelcast.simulator.tests.map.ExtractorMapTest$PayloadPortableExtractor">
+                payloadFromExtractor
+            </attribute>
+        </attributes>
+    </map>
+
+    <map name="backup_expiration">
+        <max-idle-seconds>10</max-idle-seconds>
+        <backup-count>2</backup-count>
+    </map>
+
+    <map name="split-brain-protection-map">
+        <backup-count>1</backup-count>
+        <split-brain-protection-ref>map-split-brain-protection-ref</split-brain-protection-ref>
+    </map>
+    
+    <cache name="split-brain-protection-cache">
+        <backup-count>1</backup-count>
+        <split-brain-protection-ref>cache-quorum-ref</split-brain-protection-ref>
+    </cache>
+    
+    <split-brain-protection name="map-split-brain-protection-ref" enabled="true">
+        <minimum-cluster-size>3</minimum-cluster-size>
+    </split-brain-protection>
+    
+    <split-brain-protection name="cache-split-brain-protection-ref" enabled="true">
+        <minimum-cluster-size>3</minimum-cluster-size>
+    </split-brain-protection>
+
+    <serialization>
+        <portable-version>1</portable-version>
+
+        <data-serializable-factories>
+            <data-serializable-factory factory-id="4000">
+                com.hazelcast.simulator.tests.map.domain.IdentifiedDataSerializableObjectFactory
+            </data-serializable-factory>
+        </data-serializable-factories>
+
+        <portable-factories>
+            <portable-factory factory-id="10000001">
+                com.hazelcast.simulator.tests.map.domain.PortableObjectFactory
+            </portable-factory>
+            <portable-factory factory-id="10000002">
+                com.hazelcast.simulator.tests.map.helpers.ComplexDomainObjectPortableFactory
+            </portable-factory>
+            <portable-factory factory-id="5000">
+                com.hazelcast.simulator.tests.map.ExtractorMapTest$SillySequencePortableFactory
+            </portable-factory>
+            <portable-factory factory-id="5001">
+                com.hazelcast.simulator.tests.map.MultiValueMapTest$SillySequencePortableFactory
+            </portable-factory>
+        </portable-factories>
+    </serialization>
+
+    <cache name="*">
+    </cache>
+
+    <cache name="maxCacheSmall*">
+        <eviction max-size-policy="ENTRY_COUNT" size="271" eviction-policy="LFU"/>
+    </cache>
+
+    <cache name="maxCacheMedium*">
+        <eviction max-size-policy="ENTRY_COUNT" size="1000" eviction-policy="LFU"/>
+    </cache>
+
+    <cache name="maxCacheLarge*">
+        <eviction max-size-policy="ENTRY_COUNT" size="10000" eviction-policy="LFU"/>
+    </cache>
+</hazelcast>
