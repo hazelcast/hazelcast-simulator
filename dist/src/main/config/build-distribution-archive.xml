@@ -66,6 +66,22 @@
         </fileSet>
 
         <fileSet>
+            <directory>${project.basedir}/../drivers/driver-hazelcast5/conf</directory>
+            <outputDirectory>drivers/driver-hazelcast5/conf</outputDirectory>
+            <fileMode>0755</fileMode>
+            <directoryMode>0755</directoryMode>
+        </fileSet>
+        <fileSet>
+            <directory>${project.basedir}/../drivers/driver-hazelcast5/target/</directory>
+            <outputDirectory>drivers/driver-hazelcast5/</outputDirectory>
+            <fileMode>0755</fileMode>
+            <directoryMode>0755</directoryMode>
+            <includes>
+                <include>*.jar</include>
+            </includes>
+        </fileSet>
+
+        <fileSet>
             <directory>${project.basedir}/../drivers/driver-ignite2/conf</directory>
             <outputDirectory>drivers/driver-ignite2/conf</outputDirectory>
             <fileMode>0755</fileMode>
