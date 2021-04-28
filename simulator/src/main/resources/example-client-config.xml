@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hazelcast-client
+        xsi:schemaLocation="http://www.hazelcast.com/schema/client-config
+            http://www.hazelcast.com/schema/client-config/hazelcast-client-config-4.2.xsd"
+        xmlns="http://www.hazelcast.com/schema/client-config"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+    <cluster-name>workers</cluster-name>
+
+    <network>
+        <cluster-members>
+            <!-- Don't remove the comment below. The IP addresses of the members are auto-filled by Simulator using this marker. -->
+            <!--MEMBERS-->
+        </cluster-members>
+    </network>
+
+    <properties>
+        <property name="hazelcast.logging.type">log4j</property>
+    </properties>
+
+</hazelcast-client>

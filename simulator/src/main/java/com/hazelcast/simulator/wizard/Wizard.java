@@ -94,6 +94,8 @@ class Wizard {
 
         copyResourceFile(workDir, "runScript", "run");
         copyResourceFile(workDir, "testSuite", "test.properties");
+        copyResourceFile(workDir, "example-member-config.xml", "hazelcast.xml");
+        copyResourceFile(workDir, "example-client-config.xml", "client-hazelcast.xml");
 
         if (isLocal(cloudProvider)) {
             return;
