@@ -24,6 +24,7 @@ import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.apache.log4j.Logger;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Properties;
 import java.util.TreeSet;
 
@@ -31,12 +32,7 @@ import static com.hazelcast.simulator.common.AgentsFile.preferredAgentsFile;
 import static com.hazelcast.simulator.common.SimulatorProperties.CLOUD_CREDENTIAL;
 import static com.hazelcast.simulator.common.SimulatorProperties.CLOUD_IDENTITY;
 import static com.hazelcast.simulator.common.SimulatorProperties.CLOUD_PROVIDER;
-import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_EC2;
-import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_LOCAL;
-import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_STATIC;
-import static com.hazelcast.simulator.utils.CloudProviderUtils.isEC2;
-import static com.hazelcast.simulator.utils.CloudProviderUtils.isLocal;
-import static com.hazelcast.simulator.utils.CloudProviderUtils.isStatic;
+import static com.hazelcast.simulator.utils.CloudProviderUtils.*;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
@@ -87,6 +83,10 @@ class Wizard {
         File workDir = new File(pathName).getAbsoluteFile();
         if (workDir.exists()) {
             throw new CommandLineExitException(format("Working directory '%s' already exists!", workDir));
+        }
+
+        if (!isSupported(cloudProvider)) {
+            throw new CommandLineExitException(format("Unsupported cloud provider %s. Must be one of: %s", workDir, Arrays.asList(SUPPORTED_CLOUD_PROVIDERS)));
         }
 
         echo("Will create working directory '%s' for cloud provider '%s'", workDir, cloudProvider);

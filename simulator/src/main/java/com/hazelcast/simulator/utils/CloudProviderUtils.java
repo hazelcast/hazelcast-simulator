@@ -17,11 +17,15 @@ package com.hazelcast.simulator.utils;
 
 import com.hazelcast.simulator.common.SimulatorProperties;
 
+import java.util.Arrays;
+
 public final class CloudProviderUtils {
 
     public static final String PROVIDER_LOCAL = "local";
     public static final String PROVIDER_STATIC = "static";
     public static final String PROVIDER_EC2 = "aws-ec2";
+
+    public static final String[] SUPPORTED_CLOUD_PROVIDERS = { PROVIDER_LOCAL, PROVIDER_STATIC, PROVIDER_EC2 };
 
     private CloudProviderUtils() {
     }
@@ -58,5 +62,9 @@ public final class CloudProviderUtils {
 
     public static boolean isEC2(String cloudProvider) {
         return PROVIDER_EC2.equals(cloudProvider);
+    }
+
+    public static boolean isSupported(String cloudProvider) {
+        return Arrays.asList(SUPPORTED_CLOUD_PROVIDERS).contains(cloudProvider);
     }
 }
