@@ -9,3 +9,4 @@ vtune/
 .DS_Store
 *.class
 simulator-git.properties
+logs/
