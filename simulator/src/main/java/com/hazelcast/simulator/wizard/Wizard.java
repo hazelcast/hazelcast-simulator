@@ -29,10 +29,15 @@ import java.util.Properties;
 import java.util.TreeSet;
 
 import static com.hazelcast.simulator.common.AgentsFile.preferredAgentsFile;
-import static com.hazelcast.simulator.common.SimulatorProperties.CLOUD_CREDENTIAL;
-import static com.hazelcast.simulator.common.SimulatorProperties.CLOUD_IDENTITY;
 import static com.hazelcast.simulator.common.SimulatorProperties.CLOUD_PROVIDER;
-import static com.hazelcast.simulator.utils.CloudProviderUtils.*;
+import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_EC2;
+import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_LOCAL;
+import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_STATIC;
+import static com.hazelcast.simulator.utils.CloudProviderUtils.SUPPORTED_CLOUD_PROVIDERS;
+import static com.hazelcast.simulator.utils.CloudProviderUtils.isEC2;
+import static com.hazelcast.simulator.utils.CloudProviderUtils.isLocal;
+import static com.hazelcast.simulator.utils.CloudProviderUtils.isStatic;
+import static com.hazelcast.simulator.utils.CloudProviderUtils.isSupported;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
@@ -86,7 +91,11 @@ class Wizard {
         }
 
         if (!isSupported(cloudProvider)) {
-            throw new CommandLineExitException(format("Unsupported cloud provider %s. Must be one of: %s", workDir, Arrays.asList(SUPPORTED_CLOUD_PROVIDERS)));
+            throw new CommandLineExitException(
+                    format("Unsupported cloud provider %s. Must be one of: %s",
+                            workDir,
+                            Arrays.asList(SUPPORTED_CLOUD_PROVIDERS))
+            );
         }
 
         echo("Will create working directory '%s' for cloud provider '%s'", workDir, cloudProvider);
@@ -106,14 +115,7 @@ class Wizard {
         File simulatorPropertiesFile = ensureExistingFile(workDir, SimulatorProperties.PROPERTIES_FILE_NAME);
         writeText(format("%s=%s%n", CLOUD_PROVIDER, cloudProvider), simulatorPropertiesFile);
         if (isEC2(cloudProvider)) {
-            appendText(format(
-                    "%n# These files contain your AWS access key ID and secret access key (change if needed)%n#%s=%s%n#%s=%s%n",
-                    CLOUD_IDENTITY, simulatorProperties.get(CLOUD_IDENTITY),
-                    CLOUD_CREDENTIAL, simulatorProperties.get(CLOUD_CREDENTIAL)),
-                    simulatorPropertiesFile);
-            appendText(format(
-                    "%n# Machine specification used for AWS (change if needed)%n#MACHINE_SPEC=%s%n",
-                    simulatorProperties.get("MACHINE_SPEC")), simulatorPropertiesFile);
+            copyResourceFile(workDir, "awsEc2SimulatorProperties", "simulator.properties");
         }
 
         if (isStatic(cloudProvider)) {
