@@ -1,3 +1,5 @@
-IntByteMapTest@class = com.hazelcast.simulator.tests.map.IntByteMapTest
-IntByteMapTest@threadCount = 10
-IntByteMapTest@putProb = 0.1
+class = com.hazelcast.simulator.tests.map.IntByteMapTest
+threadCount = 10
+
+getProb = 0.9
+putProb = 0.1
