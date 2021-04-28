@@ -44,9 +44,9 @@ final class WizardUtils {
     }
 
     static void copyResourceFile(File workDir, String sourceFileName, String destinationFileName) {
-        File runScript = ensureExistingFile(workDir, destinationFileName);
-        writeText(toTextFromResourceFile(sourceFileName), runScript);
-        execute(format("chmod u+x %s", runScript.getAbsolutePath()));
+        File file = ensureExistingFile(workDir, destinationFileName);
+        writeText(toTextFromResourceFile(sourceFileName), file);
+        execute(format("chmod u+x %s", file.getAbsolutePath()));
     }
 
     static File getProfileFile(String directory) {
