@@ -111,8 +111,9 @@ EOL
     args="$args --instance-type $INSTANCE_TYPE"
     args="$args --instance-initiated-shutdown-behavior terminate"
 
-    if [ "$SUBNET_ID" = "default" ]; then
-        args="$args --security-groups $SECURITY_GROUP"
+    if [ "$SUBNET_ID" = "default" ] || [ "$SUBNET_ID" = "" ]; then
+        echo "[ERROR] Please specify a subnet ID via SUBNET_ID property."
+        exit 1
     else
         args="$args --subnet $SUBNET_ID"
     fi
