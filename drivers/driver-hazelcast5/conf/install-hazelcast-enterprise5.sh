@@ -6,7 +6,7 @@
 # All properties from the 'simulator.properties' are passed as environment variables.
 #
 
-. ${SIMULATOR_HOME}/drivers/driver-hazelcast4/conf/install-hazelcast-support4.sh
+. ${SIMULATOR_HOME}/drivers/driver-hazelcast5/conf/install-hazelcast-support5.sh
 
 session_id=$1
 version_spec=$2

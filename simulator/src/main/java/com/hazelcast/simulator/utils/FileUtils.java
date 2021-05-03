@@ -424,7 +424,9 @@ public final class FileUtils {
             return file;
         }
 
-        if (driver.equals("hazelcast-enterprise4")) {
+        if (driver.equals("hazelcast-enterprise5")) {
+            file = newFile(getSimulatorHome(), "drivers", "driver-hazelcast5", "conf", filename);
+        } else if (driver.equals("hazelcast-enterprise4")) {
             file = newFile(getSimulatorHome(), "drivers", "driver-hazelcast4", "conf", filename);
         } else if (driver.equals("hazelcast-enterprise3")) {
             file = newFile(getSimulatorHome(), "drivers", "driver-hazelcast3", "conf", filename);
