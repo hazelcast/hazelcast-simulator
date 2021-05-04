@@ -198,7 +198,7 @@ upload() {
         echo "Local install"
         mkdir -p ${SIMULATOR_HOME}/workers/${session_id}/lib
 
-        for dir in $(find ${local_install_dir} -maxdepth 1 -type d); do
+        for dir in $(find ${local_install_dir} -maxdepth 1 -type d -not -empty); do
           cp -r ${dir}/* ${SIMULATOR_HOME}/workers/${session_id}/lib
         done
 
