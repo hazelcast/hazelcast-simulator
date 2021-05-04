@@ -79,9 +79,15 @@ prepare_using_maven() {
     sed -i'' "s|@hz-version|${version}|" pom.xml
     sed -i'' "s|@hz-output|${destination}|" pom.xml
 
+    custom_maven_settings=""
+    if [ ! -z ${CUSTOM_MAVEN_SETTINGS} ]; then
+        echo "Using custom Maven settings: ${CUSTOM_MAVEN_SETTINGS}"
+        custom_maven_settings="-s ${CUSTOM_MAVEN_SETTINGS}"
+    fi
+
     # The Maven Dependency plugin actually checks whether the artifact is already present and picks it if it is.
     # Therefore, it won't re-download it every time and there's no need for extra handling of this case.
-    ${SIMULATOR_HOME}/conf/mvnw/mvnw dependency:copy-dependencies -Dmaven.repo.local=${SIMULATOR_HOME}/m2 -q -U
+    ${SIMULATOR_HOME}/conf/mvnw/mvnw $custom_maven_settings dependency:copy-dependencies -Dmaven.repo.local=${SIMULATOR_HOME}/m2 -q -U
 
     rm pom.xml
     rm -r .mvn
