@@ -1853,6 +1853,8 @@ benchmark-report mybenchmark 2016-08-02__22_08_09 2016-08-02__22_18_21
 The file `simulator.properties` is placed at the `conf` folder of your Hazelcast Simulator. This file is used to prepare the 
 Simulator tests for their proper executions according to your business needs.
 
+For the full reference of available settings and their explanation, please refer to [default simulator.properties](dist/src/main/dist/conf/simulator.properties).
+
 ![](images/NoteSmall.jpg)***NOTE:*** *Currently, the main focuses are on the Simulator tests of Hazelcast on Amazon EC2 and
  Google Compute Engine (GCE). For the preparation of `simulator.properties` for GCE, please refer to the
   [Setting Up For GCE section](#setting-up-for-google-compute-engine). The following `simulator.properties` file description is mainly for Amazon EC2.*
