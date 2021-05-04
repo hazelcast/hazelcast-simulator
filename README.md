@@ -34,8 +34,7 @@
 
 Hazelcast Simulator is a production simulator used to test Hazelcast and Hazelcast-based applications in clustered environments. 
 It also allows you to create your own tests and perform them on your Hazelcast clusters and applications that are deployed to 
-cloud computing environments. In your tests, you can provide any property that can be specified on these environments (Amazon EC2, 
-Google Compute Engine(GCE), or your own environment): properties such as hardware specifications, operating system, Java version, etc.
+cloud computing environments. In your tests, you can provide any property that can be specified on these environments (Amazon EC2 or your own environment): properties such as hardware specifications, operating system, Java version, etc.
 
 Hazelcast Simulator allows you to add potential production problems, such as real-life failures, network problems, overloaded CPU,
  and failing nodes to your tests. It also provides a benchmarking and performance testing platform by supporting performance 
@@ -164,7 +163,7 @@ Congratulations, you successfully ran Simulator for the first time! Please refer
 ## Preparations to setup Remote Machines
 
 Beside the local setup, there are also static setups (fixed list of given remote machines, e.g. your local machines, a test laboratory) 
-and cloud setups (e.g. Amazon EC2, Google Compute Engine). For all those remote machines, you need to configure a password free SSH
+and cloud setups (e.g. Amazon EC2). For all those remote machines, you need to configure a password free SSH
  access. You may also need to configure the firewall between your local and the remote machines.
 
 ## Firewall Settings
@@ -1854,10 +1853,6 @@ The file `simulator.properties` is placed at the `conf` folder of your Hazelcast
 Simulator tests for their proper executions according to your business needs.
 
 For the full reference of available settings and their explanation, please refer to [default simulator.properties](dist/src/main/dist/conf/simulator.properties).
-
-![](images/NoteSmall.jpg)***NOTE:*** *Currently, the main focuses are on the Simulator tests of Hazelcast on Amazon EC2 and
- Google Compute Engine (GCE). For the preparation of `simulator.properties` for GCE, please refer to the
-  [Setting Up For GCE section](#setting-up-for-google-compute-engine). The following `simulator.properties` file description is mainly for Amazon EC2.*
 
 # Run Simulator with MongoDB
 
