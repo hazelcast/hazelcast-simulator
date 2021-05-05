@@ -47,10 +47,20 @@ prepare_using_maven() {
     destination=${local_install_dir}/maven-${version}
     mkdir -p ${destination}
 
+    # get the configured local Maven repository
+    pushd ${local_install_dir} > /dev/null
+    cp -r ${SIMULATOR_HOME}/conf/mvnw/.mvn .
+
+    local_repository_path=`${SIMULATOR_HOME}/conf/mvnw/mvnw help:evaluate -Dexpression=settings.localRepository -q -DforceStdout`
+
+    rm -r .mvn
+    popd > /dev/null
+
+    hazelcast_jar="$local_repository_path/com/hazelcast/${artifact_id}/${version}/${artifact_id}-${version}.jar"
+
     # we first have a look at the local Maven repository, so it's easy to provide a custom built version
-    hazelcast_jar="$HOME/.m2/repository/com/hazelcast/${artifact_id}/${version}/${artifact_id}-${version}.jar"
     if [[ "${SKIP_LOCAL_MAVEN_REPO_LOOKUP}" == "false" ]] ; then
-        echo "Searching for $hazelcast_jar in local Maven repo"
+        echo "Searching for $hazelcast_jar in local Maven repo ($local_repository_path)"
         if [[ -f "${hazelcast_jar}" ]] ; then
             echo "Found $hazelcast_jar in local Maven repo, copying to $destination"
             cp ${hazelcast_jar} ${destination}
@@ -70,7 +80,15 @@ prepare_using_maven() {
     sed -i'' "s|@hz-version|${version}|" pom.xml
     sed -i'' "s|@hz-output|${destination}|" pom.xml
 
-    ${SIMULATOR_HOME}/conf/mvnw/mvnw dependency:copy-dependencies -Dmaven.repo.local=${SIMULATOR_HOME}/m2 -q -U
+    custom_maven_settings=""
+    if [ ! -z ${CUSTOM_MAVEN_SETTINGS} ]; then
+        echo "Using custom Maven settings: ${CUSTOM_MAVEN_SETTINGS}"
+        custom_maven_settings="-s ${CUSTOM_MAVEN_SETTINGS}"
+    fi
+
+    # The Maven Dependency plugin actually checks whether the artifact is already present and picks it if it is.
+    # Therefore, it won't re-download it every time and there's no need for extra handling of this case.
+    ${SIMULATOR_HOME}/conf/mvnw/mvnw $custom_maven_settings dependency:copy-dependencies -Dmaven.repo.local=${SIMULATOR_HOME}/m2 -q -U
 
     rm pom.xml
     rm -r .mvn
@@ -180,7 +198,11 @@ upload() {
     if [ -z "$public_ips" ] ; then
         echo "Local install"
         mkdir -p ${SIMULATOR_HOME}/workers/${session_id}/lib
-        cp -r ${local_install_dir} ${SIMULATOR_HOME}/workers/${session_id}/lib
+
+        for dir in $(find ${local_install_dir} -maxdepth 1 -type d -not -empty); do
+          cp -r ${dir}/* ${SIMULATOR_HOME}/workers/${session_id}/lib
+        done
+
         return
     fi
 
