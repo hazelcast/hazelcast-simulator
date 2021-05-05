@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
+ * Copyright (c) 2008-2016, Hazelcast, Inc. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,8 +55,8 @@ public class Q06AvgSellingPrice extends BenchmarkBase {
                 .<Object>readFrom(eventSource("auctions", bidsPerSecond / bidsPerAuction, INITIAL_SOURCE_DELAY_MILLIS,
                         (seq, timestamp) -> {
                             long sellerId = getRandom(137 * seq, numDistinctKeys);
-                            long duration = auctionMinDuration +
-                                    getRandom(271 * seq, auctionMaxDuration - auctionMinDuration);
+                            long duration = auctionMinDuration
+                                    + getRandom(271 * seq, auctionMaxDuration - auctionMinDuration);
                             int category = (int) getRandom(743 * seq, 128);
                             return new Auction(seq, timestamp, sellerId, category, timestamp + duration);
                         }))

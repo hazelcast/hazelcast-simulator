@@ -1,8 +1,24 @@
+/*
+ * Copyright (c) 2008-2016, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.hazelcast.simulator.tests.platform.nexmark;
 
+import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.function.FunctionEx;
 import com.hazelcast.internal.util.HashUtil;
-import com.hazelcast.jet.Jet;
 import com.hazelcast.jet.JetInstance;
 import com.hazelcast.jet.Job;
 import com.hazelcast.jet.accumulator.LongLongAccumulator;
@@ -55,18 +71,8 @@ public abstract class BenchmarkBase {
     BenchmarkBase() {
     }
 
-    public static void main(String[] args) throws Exception {
-        if (args.length != 1) {
-            System.out.println("Supply one argument: the simple class name of a benchmark");
-            return;
-        }
-        String pkgName = BenchmarkBase.class.getPackage().getName();
-        BenchmarkBase benchmark = (BenchmarkBase)
-                Class.forName(pkgName + '.' + args[0]).newInstance();
-        benchmark.run();
-    }
-
-    void run() {
+    @SuppressWarnings("checkstyle:methodlength")
+    public Job run(HazelcastInstance instance) {
         String benchmarkName = getClass().getSimpleName();
         Properties props = loadProps();
         JobConfig jobCfg = new JobConfig();
@@ -75,7 +81,7 @@ public abstract class BenchmarkBase {
         jobCfg.registerSerializer(Bid.class, Bid.BidSerializer.class);
         jobCfg.registerSerializer(Person.class, Person.PersonSerializer.class);
         jobCfg.registerSerializer(PickAnyAccumulator.class, PickAnyAccumulator.PickAnyAccumulatorSerializer.class);
-        JetInstance jet = Jet.bootstrappedInstance();
+        JetInstance jet = instance.getJetInstance();
         try {
             int eventsPerSecond = parseIntProp(props, PROP_EVENTS_PER_SECOND);
             int numDistinctKeys = parseIntProp(props, PROP_NUM_DISTINCT_KEYS);
@@ -89,17 +95,17 @@ public abstract class BenchmarkBase {
             latencyReportingThresholdMs = parseIntProp(props, PROP_LATENCY_REPORTING_THRESHOLD_MILLIS);
             String outputPath = ensureProp(props, PROP_OUTPUT_PATH);
             System.out.printf(
-                    "Benchmark name               %s%n" +
-                    "Events per second            %,d%n" +
-                    "Distinct keys                %,d%n" +
-                    "Window size                  %,d ms%n" +
-                    "Sliding step                 %,d ms%n" +
-                    "Processing guarantee         %s%n" +
-                    "Snapshot interval            %,d ms%n" +
-                    "Warmup period                %,d s%n" +
-                    "Measurement period           %,d s%n" +
-                    "Latency reporting threshold  %,d ms%n" +
-                    "Output path                  %s%n",
+                    "Benchmark name               %s%n"
+                            + "Events per second            %,d%n"
+                            + "Distinct keys                %,d%n"
+                            + "Window size                  %,d ms%n"
+                            + "Sliding step                 %,d ms%n"
+                            + "Processing guarantee         %s%n"
+                            + "Snapshot interval            %,d ms%n"
+                            + "Warmup period                %,d s%n"
+                            + "Measurement period           %,d s%n"
+                            + "Latency reporting threshold  %,d ms%n"
+                            + "Output path                  %s%n",
                     benchmarkName,
                     eventsPerSecond,
                     numDistinctKeys,
@@ -128,12 +134,13 @@ public abstract class BenchmarkBase {
 
             jobCfg.setProcessingGuarantee(guarantee);
             jobCfg.setSnapshotIntervalMillis(snapshotInterval);
-            Job job = jet.newJob(pipeline, jobCfg);
+            Job job = jet.newJobIfAbsent(pipeline, jobCfg);
             Runtime.getRuntime().addShutdownHook(new Thread(job::cancel));
-            job.join();
+            return job;
         } catch (ValidationException e) {
             System.err.println(e.getMessage());
         }
+        return null;
     }
 
     abstract StreamStage<Tuple2<Long, Long>> addComputation(
@@ -176,7 +183,9 @@ public abstract class BenchmarkBase {
         return Math.abs(HashUtil.fastLongMix(seq)) % range;
     }
 
-    <T> FunctionEx<StreamStage<T>, StreamStage<Tuple2<Long, Long>>> determineLatency(FunctionEx<? super T, ? extends Long> timestampFn) {
+    <T> FunctionEx<StreamStage<T>, StreamStage<Tuple2<Long, Long>>> determineLatency(
+            FunctionEx<? super T, ? extends Long> timestampFn
+    ) {
         int latencyReportingThresholdLocal = this.latencyReportingThresholdMs;
         return stage ->
                 stage.map(timestampFn)
