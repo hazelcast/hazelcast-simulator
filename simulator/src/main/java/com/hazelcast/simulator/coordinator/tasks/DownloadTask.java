@@ -53,10 +53,14 @@ public class DownloadTask {
 
         String installFile = getConfigurationFile("download.sh").getAbsolutePath();
         String agentIps = join(agents, ",");
+        // setThrowsException(true), which causes to throw and exception rather than
+        // calling System.exit(), is set on purpose. DownloadTask is run in the shutdown hook mechanism.
+        // If an error occurs during DownloadTask in the shutdown process, without "true" it yields to deadlock.
         new BashCommand(installFile)
                 .ensureJavaOnPath()
                 .addEnvironment(simulatorProperties)
                 .addParams(rootDir.getAbsolutePath(), sessionId, agentIps)
+                .setThrowsException(true)
                 .execute();
 
         LOGGER.info("Downloading complete!");
