@@ -16,31 +16,46 @@
 
 package com.hazelcast.simulator.tests.platform.nexmark;
 
+import com.hazelcast.jet.Job;
+import com.hazelcast.jet.config.ProcessingGuarantee;
 import com.hazelcast.jet.datamodel.Tuple2;
 import com.hazelcast.jet.datamodel.Tuple3;
 import com.hazelcast.jet.pipeline.Pipeline;
 import com.hazelcast.jet.pipeline.StreamStage;
+import com.hazelcast.simulator.test.annotations.Prepare;
+import com.hazelcast.simulator.test.annotations.Run;
+import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.tests.platform.nexmark.model.Auction;
 import com.hazelcast.simulator.tests.platform.nexmark.model.Bid;
+
+import java.io.Serializable;
 
 import static com.hazelcast.function.ComparatorEx.comparingLong;
 import static com.hazelcast.jet.aggregate.AggregateOperations.allOf;
 import static com.hazelcast.jet.aggregate.AggregateOperations.averagingLong;
 import static com.hazelcast.jet.aggregate.AggregateOperations.maxBy;
 import static com.hazelcast.jet.datamodel.Tuple3.tuple3;
-import static com.hazelcast.simulator.tests.platform.nexmark.EventSourceP.eventSource;
-import static com.hazelcast.simulator.tests.platform.nexmark.JoinAuctionToWinningBidP.joinAuctionToWinningBid;
+import static com.hazelcast.simulator.tests.platform.nexmark.processor.EventSourceP.eventSource;
+import static com.hazelcast.simulator.tests.platform.nexmark.processor.JoinAuctionToWinningBidP.joinAuctionToWinningBid;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-public class Q04AveragePriceForCategory extends BenchmarkBase {
+public class Q04AveragePriceForCategoryTest extends BenchmarkBase implements Serializable {
+
+    // properties
+    public int eventsPerSecond = 100_000;
+    public int numDistinctKeys = 1_000;
+    public String pgString = "none"; // none, at-least-once or exactly-once:
+    public long snapshotIntervalMillis = 1_000;
+    public int warmupSeconds = 5;
+    public int measurementSeconds = 55;
+    public int latencyReportingThresholdMs = 10;
+
+    private Job job;
 
     @Override
-    StreamStage<Tuple2<Long, Long>> addComputation(
-            Pipeline pipeline, BenchmarkProperties props
-    ) throws ValidationException {
-        int numDistinctKeys = props.numDistinctKeys;
-        int bidsPerSecond = props.eventsPerSecond;
+    StreamStage<Tuple2<Long, Long>> addComputation(Pipeline pipeline) throws ValidationException {
+        int bidsPerSecond = eventsPerSecond;
         int auctionsPerSecond = min(1000, max(1000, bidsPerSecond));
         int bidsPerAuction = bidsPerSecond / auctionsPerSecond;
 
@@ -91,5 +106,30 @@ public class Q04AveragePriceForCategory extends BenchmarkBase {
 
         // queryResult: Tuple3(category, averagePrice, latestAuctionEnd)
         return queryResult.apply(determineLatency(Tuple3::f2));
+    }
+
+    @Prepare(global = true)
+    public void prepareJetJob() {
+        ProcessingGuarantee guarantee = ProcessingGuarantee.valueOf(pgString.toUpperCase().replace('-', '_'));
+
+        BenchmarkProperties props = new BenchmarkProperties(
+                eventsPerSecond,
+                numDistinctKeys,
+                guarantee,
+                snapshotIntervalMillis,
+                warmupSeconds,
+                measurementSeconds,
+                latencyReportingThresholdMs
+        );
+        job = this.run(targetInstance, props);
+    }
+
+    @Run
+    public void doNothing() {
+    }
+
+    @Teardown(global = true)
+    public void tearDownJetJob() {
+        job.cancel();
     }
 }

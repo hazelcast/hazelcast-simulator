@@ -52,8 +52,8 @@ public class Person extends Event {
         public void write(ObjectDataOutput out, Person person) throws IOException {
             out.writeLong(person.id());
             out.writeLong(person.timestamp());
-            out.writeString(person.name());
-            out.writeString(person.state());
+            out.writeUTF(person.name());
+            out.writeUTF(person.state());
         }
 
         @Override
@@ -61,8 +61,8 @@ public class Person extends Event {
         public Person read(ObjectDataInput in) throws IOException {
             long id = in.readLong();
             long timestamp = in.readLong();
-            String name = in.readString();
-            String state = in.readString();
+            String name = in.readUTF();
+            String state = in.readUTF();
             return new Person(id, timestamp, name, state);
         }
     }

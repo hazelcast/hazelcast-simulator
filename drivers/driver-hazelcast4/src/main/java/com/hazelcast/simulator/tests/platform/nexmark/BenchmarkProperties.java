@@ -21,54 +21,43 @@ import com.hazelcast.jet.config.ProcessingGuarantee;
 public class BenchmarkProperties {
     public int eventsPerSecond;
     public int numDistinctKeys;
-    public int windowSize;
+    public long windowSize;
     public long slideBy;
     public ProcessingGuarantee guarantee;
-    public int snapshotIntervalMillis;
+    public long snapshotIntervalMillis;
     public int warmupSeconds;
     public int measurementSeconds;
     public int latencyReportingThresholdMs;
 
-    public BenchmarkProperties() {
-        this.eventsPerSecond = 1_000;
-        this.numDistinctKeys = 10_000;
-        this.windowSize = 1_000;
-        this.slideBy = 5_000;
-        this.guarantee = ProcessingGuarantee.NONE;
-        this.snapshotIntervalMillis = 0;
-        this.warmupSeconds = 0;
-        this.measurementSeconds = 60;
-        this.latencyReportingThresholdMs = 10;
-    }
-
     public BenchmarkProperties(
             int eventsPerSecond,
             int numDistinctKeys,
-            int windowSize,
-            long slideBy,
+            ProcessingGuarantee guarantee,
+            long snapshotIntervalMillis,
             int warmupSeconds,
-            int measurementSeconds
+            int measurementSeconds,
+            int latencyReportingThresholdMs
     ) {
         this(
                 eventsPerSecond,
                 numDistinctKeys,
-                windowSize,
-                slideBy,
-                ProcessingGuarantee.NONE,
-                0,
+                -1,
+                -1,
+                guarantee,
+                snapshotIntervalMillis,
                 warmupSeconds,
                 measurementSeconds,
-                10
+                latencyReportingThresholdMs
         );
     }
 
     public BenchmarkProperties(
             int eventsPerSecond,
             int numDistinctKeys,
-            int windowSize,
+            long windowSize,
             long slideBy,
             ProcessingGuarantee guarantee,
-            int snapshotIntervalMillis,
+            long snapshotIntervalMillis,
             int warmupSeconds,
             int measurementSeconds,
             int latencyReportingThresholdMs
@@ -82,5 +71,29 @@ public class BenchmarkProperties {
         this.warmupSeconds = warmupSeconds;
         this.measurementSeconds = measurementSeconds;
         this.latencyReportingThresholdMs = latencyReportingThresholdMs;
+    }
+
+    @Override
+    public String toString() {
+        return String.format(
+                "Events per second            %,d%n"
+                        + "Distinct keys                %,d%n"
+                        + "Window size                  %,d ms%n"
+                        + "Sliding step                 %,d ms%n"
+                        + "Processing guarantee         %s%n"
+                        + "Snapshot interval            %,d ms%n"
+                        + "Warmup period                %,d s%n"
+                        + "Measurement period           %,d s%n"
+                        + "Latency reporting threshold  %,d ms%n",
+                eventsPerSecond,
+                numDistinctKeys,
+                windowSize,
+                slideBy,
+                guarantee,
+                snapshotIntervalMillis,
+                warmupSeconds,
+                measurementSeconds,
+                latencyReportingThresholdMs
+        );
     }
 }

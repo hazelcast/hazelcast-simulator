@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.hazelcast.simulator.tests.platform.nexmark;
+package com.hazelcast.simulator.tests.platform.nexmark.accumulator;
 
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;

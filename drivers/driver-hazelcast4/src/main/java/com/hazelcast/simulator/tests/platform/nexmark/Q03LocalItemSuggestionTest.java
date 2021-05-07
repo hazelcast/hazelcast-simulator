@@ -16,11 +16,16 @@
 
 package com.hazelcast.simulator.tests.platform.nexmark;
 
+import com.hazelcast.jet.Job;
 import com.hazelcast.jet.Traverser;
+import com.hazelcast.jet.config.ProcessingGuarantee;
 import com.hazelcast.jet.datamodel.Tuple2;
 import com.hazelcast.jet.datamodel.Tuple5;
 import com.hazelcast.jet.pipeline.Pipeline;
 import com.hazelcast.jet.pipeline.StreamStage;
+import com.hazelcast.simulator.test.annotations.Prepare;
+import com.hazelcast.simulator.test.annotations.Run;
+import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.tests.platform.nexmark.model.Auction;
 import com.hazelcast.simulator.tests.platform.nexmark.model.Person;
 
@@ -32,9 +37,9 @@ import static com.hazelcast.jet.Traversers.empty;
 import static com.hazelcast.jet.Traversers.singleton;
 import static com.hazelcast.jet.Traversers.traverseIterable;
 import static com.hazelcast.jet.datamodel.Tuple5.tuple5;
-import static com.hazelcast.simulator.tests.platform.nexmark.EventSourceP.eventSource;
+import static com.hazelcast.simulator.tests.platform.nexmark.processor.EventSourceP.eventSource;
 
-public class Q03LocalItemSuggestion extends BenchmarkBase {
+public class Q03LocalItemSuggestionTest extends BenchmarkBase implements Serializable {
 
     private static final String[] STATES = {
             "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA", "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA",
@@ -42,10 +47,19 @@ public class Q03LocalItemSuggestion extends BenchmarkBase {
             "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY",
     };
 
+    // properties
+    public int eventsPerSecond = 100_000;
+    public int numDistinctKeys = 1_000;
+    public String pgString = "none"; // none, at-least-once or exactly-once:
+    public long snapshotIntervalMillis = 1_000;
+    public int warmupSeconds = 5;
+    public int measurementSeconds = 55;
+    public int latencyReportingThresholdMs = 10;
+
+    private Job job;
+
     @Override
-    StreamStage<Tuple2<Long, Long>> addComputation(
-            Pipeline pipeline, BenchmarkProperties props
-    ) throws ValidationException {
+    StreamStage<Tuple2<Long, Long>> addComputation(Pipeline pipeline) throws ValidationException {
         // This code respects numDistinctKeys indirectly, by creating a pattern of
         // seller IDs over time so that there are auctions with a given seller ID
         // for a limited time. A "cloud" of random seller IDs slowly moves up the
@@ -53,8 +67,7 @@ public class Q03LocalItemSuggestion extends BenchmarkBase {
         // of the cloud is numDistinckKeys. We calculate the TTL for the keyed
         // mapStateful stage to match the amount of time during which this cloud
         // covers any given seller ID.
-        int numDistinctKeys = props.numDistinctKeys;
-        int auctionsPerSecond = props.eventsPerSecond;
+        int auctionsPerSecond = eventsPerSecond;
         int auctionsPerSeller = 100;
         long ttl = (long) numDistinctKeys * auctionsPerSeller * 1000 / auctionsPerSecond;
 
@@ -84,7 +97,7 @@ public class Q03LocalItemSuggestion extends BenchmarkBase {
         StreamStage<Tuple5<String, String, Long, Long, Integer>> queryResult = sellers
                 .merge(auctions)
                 .groupingKey(o -> o instanceof Person ? ((Person) o).id() : ((Auction) o).sellerId())
-                .flatMapStateful(ttl, JoinAuctionToSeller::new, Q03LocalItemSuggestion.JoinAuctionToSeller::flatMap,
+                .flatMapStateful(ttl, JoinAuctionToSeller::new, Q03LocalItemSuggestionTest.JoinAuctionToSeller::flatMap,
                         (state, key, wm) -> empty());
         // NEXMark Query 3 end
 
@@ -112,6 +125,30 @@ public class Q03LocalItemSuggestion extends BenchmarkBase {
                         : empty();
             }
         }
+    }
+
+    @Prepare(global = true)
+    public void prepareJetJob() {
+        ProcessingGuarantee guarantee = ProcessingGuarantee.valueOf(pgString.toUpperCase().replace('-', '_'));
+        BenchmarkProperties props = new BenchmarkProperties(
+                eventsPerSecond,
+                numDistinctKeys,
+                guarantee,
+                snapshotIntervalMillis,
+                warmupSeconds,
+                measurementSeconds,
+                latencyReportingThresholdMs
+        );
+        job = this.run(targetInstance, props);
+    }
+
+    @Run
+    public void doNothing() {
+    }
+
+    @Teardown(global = true)
+    public void tearDownJetJob() {
+        job.cancel();
     }
 }
 

@@ -28,6 +28,7 @@ import com.hazelcast.jet.pipeline.Pipeline;
 import com.hazelcast.jet.pipeline.Sinks;
 import com.hazelcast.jet.pipeline.StreamStage;
 import com.hazelcast.simulator.hz.HazelcastTest;
+import com.hazelcast.simulator.tests.platform.nexmark.accumulator.PickAnyAccumulator;
 import com.hazelcast.simulator.tests.platform.nexmark.model.Auction;
 import com.hazelcast.simulator.tests.platform.nexmark.model.Bid;
 import com.hazelcast.simulator.tests.platform.nexmark.model.Person;
@@ -39,7 +40,7 @@ import java.io.PrintStream;
 import java.io.Serializable;
 
 import static com.hazelcast.jet.datamodel.Tuple2.tuple2;
-import static com.hazelcast.simulator.tests.platform.nexmark.EventSourceP.simpleTime;
+import static com.hazelcast.simulator.tests.platform.nexmark.processor.EventSourceP.simpleTime;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 public abstract class BenchmarkBase extends HazelcastTest {
@@ -57,6 +58,7 @@ public abstract class BenchmarkBase extends HazelcastTest {
 
     @SuppressWarnings("checkstyle:methodlength")
     public Job run(HazelcastInstance instance, BenchmarkProperties props) {
+        JetInstance jet = instance.getJetInstance();
         String benchmarkName = getClass().getSimpleName();
         JobConfig jobCfg = new JobConfig();
         jobCfg.setName(benchmarkName);
@@ -64,36 +66,15 @@ public abstract class BenchmarkBase extends HazelcastTest {
         jobCfg.registerSerializer(Bid.class, Bid.BidSerializer.class);
         jobCfg.registerSerializer(Person.class, Person.PersonSerializer.class);
         jobCfg.registerSerializer(PickAnyAccumulator.class, PickAnyAccumulator.PickAnyAccumulatorSerializer.class);
-        JetInstance jet = instance.getJetInstance();
         try {
-            logger.info(String.format(
-                    "Benchmark name               %s%n"
-                            + "Events per second            %,d%n"
-                            + "Distinct keys                %,d%n"
-                            + "Window size                  %,d ms%n"
-                            + "Sliding step                 %,d ms%n"
-                            + "Processing guarantee         %s%n"
-                            + "Snapshot interval millis     %,d ms%n"
-                            + "Warmup period                %,d s%n"
-                            + "Measurement period           %,d s%n"
-                            + "Latency reporting threshold  %,d ms%n",
-                    benchmarkName,
-                    props.eventsPerSecond,
-                    props.numDistinctKeys,
-                    props.windowSize,
-                    props.slideBy,
-                    props.guarantee,
-                    props.snapshotIntervalMillis,
-                    props.warmupSeconds,
-                    props.measurementSeconds,
-                    props.latencyReportingThresholdMs
-            ));
+            logger.info(String.format("Benchmark name               %s%n", benchmarkName));
+            logger.info(props.toString());
             this.latencyReportingThresholdMs = props.latencyReportingThresholdMs;
             long warmupTimeMillis = SECONDS.toMillis(props.warmupSeconds);
             long totalTimeMillis = SECONDS.toMillis(props.warmupSeconds + props.measurementSeconds);
 
             Pipeline pipeline = Pipeline.create();
-            StreamStage<Tuple2<Long, Long>> latencies = addComputation(pipeline, props);
+            StreamStage<Tuple2<Long, Long>> latencies = addComputation(pipeline);
             latencies.filter(t2 -> t2.f0() < totalTimeMillis)
                     .map(t2 -> String.format("%d,%d", t2.f0(), t2.f1()))
                     .writeTo(Sinks.files(new File("nexmark", "log").getPath()));
@@ -112,9 +93,7 @@ public abstract class BenchmarkBase extends HazelcastTest {
         return null;
     }
 
-    abstract StreamStage<Tuple2<Long, Long>> addComputation(
-            Pipeline pipeline, BenchmarkProperties props
-    ) throws ValidationException;
+    abstract StreamStage<Tuple2<Long, Long>> addComputation(Pipeline pipeline) throws ValidationException;
 
     static long getRandom(long seq, long range) {
         return Math.abs(HashUtil.fastLongMix(seq)) % range;

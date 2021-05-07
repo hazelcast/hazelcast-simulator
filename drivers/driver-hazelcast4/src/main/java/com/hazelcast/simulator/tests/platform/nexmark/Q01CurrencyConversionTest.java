@@ -16,20 +16,36 @@
 
 package com.hazelcast.simulator.tests.platform.nexmark;
 
+import com.hazelcast.jet.Job;
+import com.hazelcast.jet.config.ProcessingGuarantee;
 import com.hazelcast.jet.datamodel.Tuple2;
 import com.hazelcast.jet.pipeline.Pipeline;
 import com.hazelcast.jet.pipeline.StreamStage;
+import com.hazelcast.simulator.test.annotations.Prepare;
+import com.hazelcast.simulator.test.annotations.Run;
+import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.tests.platform.nexmark.model.Bid;
 
-import static com.hazelcast.simulator.tests.platform.nexmark.EventSourceP.eventSource;
+import java.io.Serializable;
+
+import static com.hazelcast.simulator.tests.platform.nexmark.processor.EventSourceP.eventSource;
 
 
-public class Q01CurrencyConversion extends BenchmarkBase {
+public class Q01CurrencyConversionTest extends BenchmarkBase implements Serializable {
+
+    // properties
+    public int eventsPerSecond = 100_000;
+    public int numDistinctKeys = 1_000;
+    public String pgString = "none"; // none, at-least-once or exactly-once:
+    public long snapshotIntervalMillis = 1_000;
+    public int warmupSeconds = 5;
+    public int measurementSeconds = 55;
+    public int latencyReportingThresholdMs = 10;
+
+    private Job job;
 
     @Override
-    StreamStage<Tuple2<Long, Long>> addComputation(Pipeline pipeline, BenchmarkProperties props) throws ValidationException {
-        int eventsPerSecond = props.eventsPerSecond;
-        int numDistinctKeys = props.numDistinctKeys;
+    StreamStage<Tuple2<Long, Long>> addComputation(Pipeline pipeline) throws ValidationException {
         int sievingFactor = eventsPerSecond / 8192;
         StreamStage<Bid> input = pipeline
                 .readFrom(eventSource("bids",
@@ -45,5 +61,29 @@ public class Q01CurrencyConversion extends BenchmarkBase {
         return queryResult
                 .filter(bid -> bid.id() % sievingFactor == 0)
                 .apply(determineLatency(Bid::timestamp));
+    }
+
+    @Prepare(global = true)
+    public void prepareJetJob() {
+        ProcessingGuarantee guarantee = ProcessingGuarantee.valueOf(pgString.toUpperCase().replace('-', '_'));
+        BenchmarkProperties props = new BenchmarkProperties(
+                eventsPerSecond,
+                numDistinctKeys,
+                guarantee,
+                snapshotIntervalMillis,
+                warmupSeconds,
+                measurementSeconds,
+                latencyReportingThresholdMs
+        );
+        job = this.run(targetInstance, props);
+    }
+
+    @Run
+    public void doNothing() {
+    }
+
+    @Teardown(global = true)
+    public void tearDownJetJob() {
+        job.cancel();
     }
 }

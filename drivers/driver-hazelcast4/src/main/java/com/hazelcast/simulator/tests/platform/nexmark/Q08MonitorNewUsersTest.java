@@ -16,30 +16,45 @@
 
 package com.hazelcast.simulator.tests.platform.nexmark;
 
+import com.hazelcast.jet.Job;
 import com.hazelcast.jet.aggregate.AggregateOperation;
 import com.hazelcast.jet.aggregate.AggregateOperation1;
+import com.hazelcast.jet.config.ProcessingGuarantee;
 import com.hazelcast.jet.datamodel.KeyedWindowResult;
 import com.hazelcast.jet.datamodel.Tuple2;
 import com.hazelcast.jet.datamodel.WindowResult;
 import com.hazelcast.jet.pipeline.Pipeline;
 import com.hazelcast.jet.pipeline.StreamStage;
+import com.hazelcast.simulator.test.annotations.Prepare;
+import com.hazelcast.simulator.test.annotations.Run;
+import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.tests.platform.nexmark.accumulator.PickAnyAccumulator;
 import com.hazelcast.simulator.tests.platform.nexmark.model.Auction;
 import com.hazelcast.simulator.tests.platform.nexmark.model.Person;
 
+import java.io.Serializable;
+
 import static com.hazelcast.jet.aggregate.AggregateOperations.counting;
 import static com.hazelcast.jet.pipeline.WindowDefinition.sliding;
-import static com.hazelcast.simulator.tests.platform.nexmark.EventSourceP.eventSource;
+import static com.hazelcast.simulator.tests.platform.nexmark.processor.EventSourceP.eventSource;
 
-public class Q08MonitorNewUsers extends BenchmarkBase {
+public class Q08MonitorNewUsersTest extends BenchmarkBase implements Serializable {
+
+    // properties
+    public int eventsPerSecond = 100_000;
+    public int numDistinctKeys = 1_000;
+    public long windowSize = 1_000L;
+    public long slideBy = 2_000L;
+    public String pgString = "none"; // none, at-least-once or exactly-once:
+    public long snapshotIntervalMillis = 1_000;
+    public int warmupSeconds = 5;
+    public int measurementSeconds = 55;
+    public int latencyReportingThresholdMs = 10;
+
+    private Job job;
 
     @Override
-    StreamStage<Tuple2<Long, Long>> addComputation(
-            Pipeline pipeline, BenchmarkProperties props
-    ) throws ValidationException {
-        int eventsPerSecond = props.eventsPerSecond;
-        int numDistinctKeys = props.numDistinctKeys;
-        int windowSize = props.windowSize;
-        long slideBy = props.slideBy;
+    StreamStage<Tuple2<Long, Long>> addComputation(Pipeline pipeline) throws ValidationException {
         int sievingFactor = numDistinctKeys / 100;
 
         StreamStage<Person> persons = pipeline
@@ -80,6 +95,30 @@ public class Q08MonitorNewUsers extends BenchmarkBase {
                 .andCombine(PickAnyAccumulator::combine)
                 .andDeduct(PickAnyAccumulator::deduct)
                 .andExportFinish(PickAnyAccumulator::get);
+    }
+
+    @Prepare(global = true)
+    public void prepareJetJob() {
+        ProcessingGuarantee guarantee = ProcessingGuarantee.valueOf(pgString.toUpperCase().replace('-', '_'));
+        BenchmarkProperties props = new BenchmarkProperties(
+                eventsPerSecond,
+                numDistinctKeys,
+                guarantee,
+                snapshotIntervalMillis,
+                warmupSeconds,
+                measurementSeconds,
+                latencyReportingThresholdMs
+        );
+        job = this.run(targetInstance, props);
+    }
+
+    @Run
+    public void doNothing() {
+    }
+
+    @Teardown(global = true)
+    public void tearDownJetJob() {
+        job.cancel();
     }
 
 }

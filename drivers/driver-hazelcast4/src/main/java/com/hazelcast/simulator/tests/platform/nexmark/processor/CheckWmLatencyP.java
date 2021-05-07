@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.hazelcast.simulator.tests.platform.nexmark;
+package com.hazelcast.simulator.tests.platform.nexmark.processor;
 
 import com.hazelcast.jet.core.AbstractProcessor;
 import com.hazelcast.jet.core.Watermark;

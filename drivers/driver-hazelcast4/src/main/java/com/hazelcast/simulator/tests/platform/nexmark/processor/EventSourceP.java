@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.hazelcast.simulator.tests.platform.nexmark;
+package com.hazelcast.simulator.tests.platform.nexmark.processor;
 
 import com.hazelcast.cluster.Address;
 import com.hazelcast.function.BiFunctionEx;
