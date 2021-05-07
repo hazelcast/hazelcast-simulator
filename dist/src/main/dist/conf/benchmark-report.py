@@ -93,6 +93,7 @@ class Gnuplot:
     is_bytes = None
     is_points = None
     script_file = None
+    skipped = False
 
     def __init__(self, directory, title, basefilename=None):
         self.title = title
@@ -149,6 +150,7 @@ class Gnuplot:
 
         if empty:
             print("Skipping plot of " + self.title + "; empty time series")
+            self.skipped = True
             return
 
         ts_first = self.ts_list[0]
@@ -1075,6 +1077,10 @@ class HTMLReport:
         print("Initialising HTML Report Generation.")
 
     def addImage(self, plot):
+
+        if plot.skipped:
+          return
+
         metric_name = plot.image_path.split('/')[-2]
 
         encoded_image = ""
