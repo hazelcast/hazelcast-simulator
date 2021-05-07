@@ -27,19 +27,16 @@ import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.tests.platform.nexmark.model.Bid;
 
-import java.io.Serializable;
-
 import static com.hazelcast.function.ComparatorEx.comparing;
 import static com.hazelcast.jet.aggregate.AggregateOperations.maxBy;
 import static com.hazelcast.jet.pipeline.WindowDefinition.tumbling;
 import static com.hazelcast.simulator.tests.platform.nexmark.processor.EventSourceP.eventSource;
 import static java.lang.Math.max;
 
-public class Q07HighestBidTest extends BenchmarkBase implements Serializable {
+public class Q07HighestBidTest extends BenchmarkBase {
 
     // properties
     public int eventsPerSecond = 100_000;
-    public int numDistinctKeys = 1_000;
     public long windowSize = 1_000L;
     public String pgString = "none"; // none, at-least-once or exactly-once:
     public long snapshotIntervalMillis = 1_000;
@@ -51,6 +48,7 @@ public class Q07HighestBidTest extends BenchmarkBase implements Serializable {
 
     @Override
     StreamStage<Tuple2<Long, Long>> addComputation(Pipeline pipeline) throws ValidationException {
+        int eventsPerSecond = this.eventsPerSecond;
         long tumblingWindowSizeMillis = windowSize;
 
         StreamStage<Bid> bids = pipeline
@@ -72,7 +70,7 @@ public class Q07HighestBidTest extends BenchmarkBase implements Serializable {
         ProcessingGuarantee guarantee = ProcessingGuarantee.valueOf(pgString.toUpperCase().replace('-', '_'));
         BenchmarkProperties props = new BenchmarkProperties(
                 eventsPerSecond,
-                numDistinctKeys,
+                -1,
                 guarantee,
                 snapshotIntervalMillis,
                 warmupSeconds,

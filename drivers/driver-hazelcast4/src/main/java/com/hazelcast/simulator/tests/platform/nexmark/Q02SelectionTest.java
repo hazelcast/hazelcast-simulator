@@ -27,12 +27,10 @@ import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.tests.platform.nexmark.model.Bid;
 
-import java.io.Serializable;
-
 import static com.hazelcast.jet.datamodel.Tuple3.tuple3;
 import static com.hazelcast.simulator.tests.platform.nexmark.processor.EventSourceP.eventSource;
 
-public class Q02SelectionTest extends BenchmarkBase implements Serializable {
+public class Q02SelectionTest extends BenchmarkBase {
 
     // properties
     public int eventsPerSecond = 100_000;
@@ -47,6 +45,8 @@ public class Q02SelectionTest extends BenchmarkBase implements Serializable {
 
     @Override
     StreamStage<Tuple2<Long, Long>> addComputation(Pipeline pipeline) throws ValidationException {
+        int eventsPerSecond = this.eventsPerSecond;
+        int numDistinctKeys = this.numDistinctKeys;
         int auctionIdModulus = 128;
         int sievingFactor = Math.max(1, eventsPerSecond / (8192 * auctionIdModulus));
 

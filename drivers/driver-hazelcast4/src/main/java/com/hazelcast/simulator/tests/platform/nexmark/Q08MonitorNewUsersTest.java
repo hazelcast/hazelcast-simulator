@@ -32,13 +32,11 @@ import com.hazelcast.simulator.tests.platform.nexmark.accumulator.PickAnyAccumul
 import com.hazelcast.simulator.tests.platform.nexmark.model.Auction;
 import com.hazelcast.simulator.tests.platform.nexmark.model.Person;
 
-import java.io.Serializable;
-
 import static com.hazelcast.jet.aggregate.AggregateOperations.counting;
 import static com.hazelcast.jet.pipeline.WindowDefinition.sliding;
 import static com.hazelcast.simulator.tests.platform.nexmark.processor.EventSourceP.eventSource;
 
-public class Q08MonitorNewUsersTest extends BenchmarkBase implements Serializable {
+public class Q08MonitorNewUsersTest extends BenchmarkBase {
 
     // properties
     public int eventsPerSecond = 100_000;
@@ -55,6 +53,10 @@ public class Q08MonitorNewUsersTest extends BenchmarkBase implements Serializabl
 
     @Override
     StreamStage<Tuple2<Long, Long>> addComputation(Pipeline pipeline) throws ValidationException {
+        int eventsPerSecond = this.eventsPerSecond;
+        int numDistinctKeys = this.numDistinctKeys;
+        long windowSize = this.windowSize;
+        long slideBy = this.slideBy;
         int sievingFactor = numDistinctKeys / 100;
 
         StreamStage<Person> persons = pipeline

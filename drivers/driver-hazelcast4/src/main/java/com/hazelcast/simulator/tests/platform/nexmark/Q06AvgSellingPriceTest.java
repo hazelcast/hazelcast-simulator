@@ -27,7 +27,6 @@ import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.tests.platform.nexmark.model.Auction;
 import com.hazelcast.simulator.tests.platform.nexmark.model.Bid;
 
-import java.io.Serializable;
 import java.util.ArrayDeque;
 import java.util.OptionalDouble;
 
@@ -36,7 +35,7 @@ import static com.hazelcast.simulator.tests.platform.nexmark.processor.EventSour
 import static com.hazelcast.simulator.tests.platform.nexmark.processor.JoinAuctionToWinningBidP.joinAuctionToWinningBid;
 import static java.lang.Math.max;
 
-public class Q06AvgSellingPriceTest extends BenchmarkBase implements Serializable {
+public class Q06AvgSellingPriceTest extends BenchmarkBase {
     // properties
     public int eventsPerSecond = 100_000;
     public int numDistinctKeys = 1_000;
@@ -50,7 +49,8 @@ public class Q06AvgSellingPriceTest extends BenchmarkBase implements Serializabl
 
     @Override
     StreamStage<Tuple2<Long, Long>> addComputation(Pipeline pipeline) throws ValidationException {
-        int bidsPerSecond = eventsPerSecond;
+        int bidsPerSecond = this.eventsPerSecond;
+        int numDistinctKeys = this.numDistinctKeys;
         int auctionsPerSecond = 1000;
         int bidsPerAuction = max(1, bidsPerSecond / auctionsPerSecond);
         long auctionMinDuration = (long) numDistinctKeys * bidsPerAuction * 1000 / bidsPerSecond;

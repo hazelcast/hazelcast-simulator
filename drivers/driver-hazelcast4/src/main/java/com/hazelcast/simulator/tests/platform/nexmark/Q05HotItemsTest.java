@@ -28,7 +28,6 @@ import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.tests.platform.nexmark.model.Bid;
 
-import java.io.Serializable;
 import java.util.List;
 
 import static com.hazelcast.function.ComparatorEx.comparing;
@@ -38,7 +37,7 @@ import static com.hazelcast.jet.pipeline.WindowDefinition.sliding;
 import static com.hazelcast.jet.pipeline.WindowDefinition.tumbling;
 import static com.hazelcast.simulator.tests.platform.nexmark.processor.EventSourceP.eventSource;
 
-public class Q05HotItemsTest extends BenchmarkBase implements Serializable {
+public class Q05HotItemsTest extends BenchmarkBase {
     // properties
     public int eventsPerSecond = 100_000;
     public int numDistinctKeys = 1_000;
@@ -54,7 +53,10 @@ public class Q05HotItemsTest extends BenchmarkBase implements Serializable {
 
     @Override
     StreamStage<Tuple2<Long, Long>> addComputation(Pipeline pipeline) throws ValidationException {
-
+        int eventsPerSecond = this.eventsPerSecond;
+        int numDistinctKeys = this.numDistinctKeys;
+        long windowSize = this.windowSize;
+        long slideBy = this.slideBy;
         StreamStage<Bid> bids = pipeline
                 .readFrom(eventSource("bids", eventsPerSecond, INITIAL_SOURCE_DELAY_MILLIS, (seq, timestamp) ->
                         new Bid(seq, timestamp, seq % numDistinctKeys, 0)))

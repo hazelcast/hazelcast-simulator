@@ -27,8 +27,6 @@ import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.tests.platform.nexmark.model.Bid;
 
-import java.io.Serializable;
-
 import static com.hazelcast.jet.aggregate.AggregateOperations.counting;
 import static com.hazelcast.jet.pipeline.WindowDefinition.sliding;
 import static com.hazelcast.simulator.tests.platform.nexmark.processor.EventSourceP.eventSource;
@@ -37,7 +35,7 @@ import static com.hazelcast.simulator.tests.platform.nexmark.processor.EventSour
  * Not a benchmark, just a tool to confirm the source generates
  * exactly as many events per second as configured.
  */
-public class SourceTest extends BenchmarkBase implements Serializable {
+public class SourceTest extends BenchmarkBase {
 
     // properties
     public int eventsPerSecond = 100_000;
@@ -54,7 +52,10 @@ public class SourceTest extends BenchmarkBase implements Serializable {
 
     @Override
     StreamStage<Tuple2<Long, Long>> addComputation(Pipeline pipeline) throws ValidationException {
-
+        int eventsPerSecond = this.eventsPerSecond;
+        int numDistinctKeys = this.numDistinctKeys;
+        long windowSize = this.windowSize;
+        long slideBy = this.slideBy;
         StreamStage<Bid> input = pipeline
                 .readFrom(eventSource("bids", eventsPerSecond, INITIAL_SOURCE_DELAY_MILLIS,
                         (seq, timestamp) -> new Bid(seq, timestamp, seq % numDistinctKeys, getRandom(seq, 100))))

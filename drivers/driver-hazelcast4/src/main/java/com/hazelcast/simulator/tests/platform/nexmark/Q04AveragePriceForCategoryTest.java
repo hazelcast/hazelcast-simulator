@@ -28,8 +28,6 @@ import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.tests.platform.nexmark.model.Auction;
 import com.hazelcast.simulator.tests.platform.nexmark.model.Bid;
 
-import java.io.Serializable;
-
 import static com.hazelcast.function.ComparatorEx.comparingLong;
 import static com.hazelcast.jet.aggregate.AggregateOperations.allOf;
 import static com.hazelcast.jet.aggregate.AggregateOperations.averagingLong;
@@ -40,7 +38,7 @@ import static com.hazelcast.simulator.tests.platform.nexmark.processor.JoinAucti
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-public class Q04AveragePriceForCategoryTest extends BenchmarkBase implements Serializable {
+public class Q04AveragePriceForCategoryTest extends BenchmarkBase {
 
     // properties
     public int eventsPerSecond = 100_000;

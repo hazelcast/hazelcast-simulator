@@ -26,12 +26,10 @@ import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.tests.platform.nexmark.model.Bid;
 
-import java.io.Serializable;
-
 import static com.hazelcast.simulator.tests.platform.nexmark.processor.EventSourceP.eventSource;
 
 
-public class Q01CurrencyConversionTest extends BenchmarkBase implements Serializable {
+public class Q01CurrencyConversionTest extends BenchmarkBase {
 
     // properties
     public int eventsPerSecond = 100_000;
@@ -46,6 +44,8 @@ public class Q01CurrencyConversionTest extends BenchmarkBase implements Serializ
 
     @Override
     StreamStage<Tuple2<Long, Long>> addComputation(Pipeline pipeline) throws ValidationException {
+        int eventsPerSecond = this.eventsPerSecond;
+        int numDistinctKeys = this.numDistinctKeys;
         int sievingFactor = eventsPerSecond / 8192;
         StreamStage<Bid> input = pipeline
                 .readFrom(eventSource("bids",
