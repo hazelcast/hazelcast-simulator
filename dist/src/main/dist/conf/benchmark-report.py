@@ -913,8 +913,6 @@ class Benchmark:
                 agents[agent] = worker
 
     def lookup_period(self):
-        #print("---------------------------------------")
-
         for worker_name in os.listdir(self.src_dir):
             if not worker_name.startswith("A"):
                 continue
@@ -940,19 +938,23 @@ class Benchmark:
                     v = float(row[0])
                     end_time = str(v - cooldown_seconds)
 
-                #print("agent:"+agent_name)
-                #print(str(start_time))
-                #print(str(end_time))
-                self.period = Period(start_time, end_time)
-
-        #print("---------------------------------------")
+                if self.period is None:
+                    # first iteration where the period is not set yet
+                    self.period = Period(start_time, end_time)
+                else:
+                    # We need to pick the earliest time from all series for the start.
+                    # and the latest for the end.
+                    # That way the series don't get trimmed because of milliseconds (minimal worker reporting
+                    # interval is 1 second, see WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS property) causing
+                    # misalignment of the series by one data point in the chart resulting in ugly vertical drop
+                    # at the end of the throughput charts
+                    self.period = Period(min(self.period.start_time, start_time), max(self.period.end_time, end_time))
 
     def init_files(self):
         cmd = simulator_home + "/conf/init_report_files.sh " + self.src_dir+ " " + report_dir + " " + str(self.id) + " "+ str(self.period.start_millis()) + " " + str(self.period.end_millis())
         print(cmd)
         out = subprocess.check_output(cmd.split())
-        #print(out)
-
+        
 # todo: better name
     def x(self, handle):
         return handle.load().items
