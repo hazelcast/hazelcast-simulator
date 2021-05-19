@@ -20,8 +20,12 @@ for worker_dir_name in "${worker_dir_names[@]}"
 do
     worker_dir=$session_dir/$worker_dir_name
     if [ -d "${worker_dir}" ] ; then
-        mkdir -p $report_dir/tmp/$hdr_target_dir_name/$worker_dir_name
-        cp $session_dir/$worker_dir_name/*.hdr $report_dir/tmp/$hdr_target_dir_name/$worker_dir_name/ || true
+        # check if there are any .hdr files in the worker? Covering the case when latency is measured on clients, not on members
+        hdr_worker_files=(`find  $session_dir/$worker_dir_name -maxdepth 1 -name "*.hdr"`)
+        if [ ${#hdr_worker_files[@]} -gt 0 ]; then
+          mkdir -p $report_dir/tmp/$hdr_target_dir_name/$worker_dir_name
+          cp $session_dir/$worker_dir_name/*.hdr $report_dir/tmp/$hdr_target_dir_name/$worker_dir_name/ || true
+        fi
     fi
 done
 
@@ -97,7 +101,8 @@ do
     java -cp "${SIMULATOR_HOME}/lib/*"  com.hazelcast.simulator.utils.ReportCsv $hgrm_file $report_dir $session_dir
 done
 
-# copy the dstats files
-cp ${session_dir}/*_dstat.csv ${report_dir}/tmp/$hdr_target_dir_name
-
-
+# copy the dstats files if they exist
+dstat_worker_files=(`find  ${session_dir} -maxdepth 1 -name "*_dstat.csv"`)
+if [ ${#dstat_worker_files[@]} -gt 0 ]; then
+  cp ${session_dir}/*_dstat.csv ${report_dir}/tmp/$hdr_target_dir_name
+fi
