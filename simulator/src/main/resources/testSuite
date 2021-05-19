@@ -3,3 +3,5 @@ threadCount = 10
 
 getProb = 0.9
 putProb = 0.1
+
+keyCount = 1000
