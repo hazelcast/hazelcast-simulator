@@ -11,8 +11,8 @@ clientHeapSZ=512M
 partitions=271
 monitorSec=30
 
-gcArgs="-verbose:gc -Xloggc:verbosegc.log"
-gcArgs="${gcArgs} -XX:+PrintGCTimeStamps -XX:+PrintGCDetails -XX:+PrintTenuringDistribution -XX:+PrintGCApplicationStoppedTime -XX:+PrintGCApplicationConcurrentTime"
+#gcArgs="-verbose:gc -Xloggc:verbosegc.log"
+#gcArgs="${gcArgs} -XX:+PrintGCTimeStamps -XX:+PrintGCDetails -XX:+PrintTenuringDistribution -XX:+PrintGCApplicationStoppedTime -XX:+PrintGCApplicationConcurrentTime"
 
 memberJvmArgs="-Dhazelcast.partition.count=${partitions}"
 memberJvmArgs="${memberJvmArgs} -Dhazelcast.health.monitoring.level=NOISY -Dhazelcast.health.monitoring.delay.seconds=${monitorSec}"
