@@ -216,9 +216,11 @@ public class WorkerProcessLauncher {
 
     private String getClasspath(File workerHome) {
         String simulatorHome = getSimulatorHome().getAbsolutePath();
-        String classpath = new File(getSessionDirectory(), "lib/*").getAbsolutePath()
-                + CLASSPATH_SEPARATOR + workerHome.getAbsolutePath() + "/upload/*"
-                + CLASSPATH_SEPARATOR + simulatorHome + "/user-lib/*"
+        String classpath = new File(getSessionDirectory(), "lib/*").getAbsolutePath();
+        if (parameters.get("VERSION_SPEC").equals("bringmyown")) {
+            classpath += CLASSPATH_SEPARATOR + workerHome.getAbsolutePath() + "/upload/*";
+        }
+        classpath += CLASSPATH_SEPARATOR + simulatorHome + "/user-lib/*"
                 + uploadDirToClassPath(workerHome)
                 + CLASSPATH_SEPARATOR + CLASSPATH;
 
