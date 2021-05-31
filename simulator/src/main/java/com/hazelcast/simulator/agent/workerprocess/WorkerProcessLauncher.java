@@ -239,6 +239,13 @@ public class WorkerProcessLauncher {
             classpath += CLASSPATH_SEPARATOR + simulatorHome + "/drivers/driver-" + driver + "/*";
         }
 
+        // This will add all upload directory to classpath in case bringmyown
+        // option isn't used but since it will be after drivers the JVM will use
+        // correct JARs
+        if (!parameters.get("VERSION_SPEC").equals("bringmyown")) {
+            classpath += CLASSPATH_SEPARATOR + workerHome.getAbsolutePath() + "/upload/*";
+        }
+
         return classpath;
     }
 
