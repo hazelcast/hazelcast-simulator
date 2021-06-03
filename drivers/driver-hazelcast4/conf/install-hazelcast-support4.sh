@@ -74,11 +74,11 @@ prepare_using_maven() {
     cp -r ${SIMULATOR_HOME}/conf/mvnw/.mvn .
     cp ${SIMULATOR_HOME}/conf/dependency-copy.xml pom.xml
 
-    sed -i'' "s|@hz-repo-release|${release_repo}|" pom.xml
-    sed -i'' "s|@hz-repo-snapshot|${snapshot_repo}|" pom.xml
-    sed -i'' "s|@hz-artifact|${artifact_id}|" pom.xml
-    sed -i'' "s|@hz-version|${version}|" pom.xml
-    sed -i'' "s|@hz-output|${destination}|" pom.xml
+    sed -i '' "s|@hz-repo-release|${release_repo}|" pom.xml
+    sed -i '' "s|@hz-repo-snapshot|${snapshot_repo}|" pom.xml
+    sed -i '' "s|@hz-artifact|${artifact_id}|" pom.xml
+    sed -i '' "s|@hz-version|${version}|" pom.xml
+    sed -i '' "s|@hz-output|${destination}|" pom.xml
 
     custom_maven_settings=""
     if [ ! -z ${CUSTOM_MAVEN_SETTINGS} ]; then
