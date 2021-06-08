@@ -24,8 +24,8 @@ import com.hazelcast.jet.datamodel.WindowResult;
 import com.hazelcast.jet.pipeline.Pipeline;
 import com.hazelcast.jet.pipeline.StreamStage;
 import com.hazelcast.simulator.test.annotations.Prepare;
-import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.tests.platform.nexmark.model.Bid;
 
 import java.util.List;
@@ -91,8 +91,9 @@ public class Q05HotItemsTest extends BenchmarkBase {
         job = this.run(targetInstance, props);
     }
 
-    @Run
-    public void doNothing() {
+    @TimeStep
+    public void doNothing() throws Exception {
+        Thread.sleep(10);
     }
 
     @Teardown(global = true)
