@@ -19,7 +19,7 @@ package com.hazelcast.simulator.tests.platform.nexmark;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.function.FunctionEx;
 import com.hazelcast.internal.util.HashUtil;
-import com.hazelcast.jet.JetInstance;
+import com.hazelcast.jet.JetService;
 import com.hazelcast.jet.Job;
 import com.hazelcast.jet.accumulator.LongLongAccumulator;
 import com.hazelcast.jet.config.JobConfig;
@@ -58,7 +58,7 @@ public abstract class BenchmarkBase extends HazelcastTest {
 
     @SuppressWarnings("checkstyle:methodlength")
     public Job run(HazelcastInstance instance, BenchmarkProperties props) {
-        JetInstance jet = instance.getJetInstance();
+        JetService jet = instance.getJet();
         String benchmarkName = getClass().getSimpleName();
         JobConfig jobCfg = new JobConfig();
         jobCfg.setName(benchmarkName);
