@@ -30,7 +30,7 @@ JVM_ARGS="$JVM_OPTIONS $JVM_ARGS -XX:+PreserveFramePointer"
 
 MAIN=com.hazelcast.simulator.worker.Worker
 
-git clone --depth=1 https://github.com/jrudolph/perf-map-agent
+git clone --depth=1 https://github.com/jvm-profiling-tools/perf-map-agent
 cd perf-map-agent
 cmake .
 make
