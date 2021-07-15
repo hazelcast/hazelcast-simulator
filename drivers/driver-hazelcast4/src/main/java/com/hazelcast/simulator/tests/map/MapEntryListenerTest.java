@@ -47,7 +47,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class MapEntryListenerTest extends HazelcastTest {
 
-    private static final int SLEEP_CATCH_EVENTS_MILLIS = 8000;
+    private static final int SLEEP_CATCH_EVENTS_SECONDS = 8;
 
     // properties
     public int valueLength = 100;
@@ -172,9 +172,8 @@ public class MapEntryListenerTest extends HazelcastTest {
     public void afterRun(ThreadState state) {
         eventCounts.add(state.eventCount);
 
-
         if (threadsRemaining.decrementAndGet() == 0) {
-            sleepSeconds(SLEEP_CATCH_EVENTS_MILLIS);
+            sleepSeconds(SLEEP_CATCH_EVENTS_SECONDS);
 
             listeners.add(listener);
         }
