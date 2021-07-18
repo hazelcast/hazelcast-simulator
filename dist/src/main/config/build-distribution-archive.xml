@@ -50,14 +50,14 @@
         </fileSet>
 
         <fileSet>
-            <directory>${project.basedir}/../drivers/driver-hazelcast4/conf</directory>
-            <outputDirectory>drivers/driver-hazelcast4/conf</outputDirectory>
+            <directory>${project.basedir}/../drivers/driver-hazelcast4plus/conf</directory>
+            <outputDirectory>drivers/driver-hazelcast4plus/conf</outputDirectory>
             <fileMode>0755</fileMode>
             <directoryMode>0755</directoryMode>
         </fileSet>
         <fileSet>
-            <directory>${project.basedir}/../drivers/driver-hazelcast4/target/</directory>
-            <outputDirectory>drivers/driver-hazelcast4/</outputDirectory>
+            <directory>${project.basedir}/../drivers/driver-hazelcast4plus/target/</directory>
+            <outputDirectory>drivers/driver-hazelcast4plus/</outputDirectory>
             <fileMode>0755</fileMode>
             <directoryMode>0755</directoryMode>
             <includes>

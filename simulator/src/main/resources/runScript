@@ -27,8 +27,8 @@ coordinator --members ${members} \
             --duration ${duration} \
             --memberArgs "${memberJvmArgs}" \
             --clientArgs "${clientJvmArgs}" \
-            --driver hazelcast4 \
-            --version maven=4.2 \
+            --driver hazelcast5 \
+            --version maven=5.0-BETA-1 \
              ${testsuite}.properties
 
 coordinator --clean

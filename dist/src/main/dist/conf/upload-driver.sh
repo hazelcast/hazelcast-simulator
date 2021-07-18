@@ -8,8 +8,8 @@ upload_driver() {
     $SIMULATOR_HOME/$driver_dir/* $SIMULATOR_USER@$agent:hazelcast-simulator-$SIMULATOR_VERSION/$driver_dir/
 }
 
-if [ "$DRIVER" = "hazelcast-enterprise4" ]; then
-  driver_dir=drivers/driver-hazelcast4
+if [ "$DRIVER" = "hazelcast-enterprise4"  ] || [ "$DRIVER" = "hazelcast4" ] || [ "$DRIVER" = "hazelcast-enterprise5" ] || [ "$DRIVER" = "hazelcast5" ]; then
+  driver_dir=drivers/driver-hazelcast4plus
 elif [ "$DRIVER" = "hazelcast-enterprise3" ]; then
   driver_dir=drivers/driver-hazelcast3
 else
