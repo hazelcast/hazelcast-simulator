@@ -76,12 +76,13 @@ final class CoordinatorCli {
             .withRequiredArg().ofType(Integer.class).defaultsTo(0);
 
     private final OptionSpec<String> driverSpec = parser.accepts("driver",
-            "The driver to run. Available options hazelcast4,hazelcast-enterprise4,hazelcast3,hazelcast-enterprise3,"
-                    + "ignite2,infinispan9,infinispan10,infinispan11,couchbase,lettuce5,lettucecluster5,jedis3")
-            .withRequiredArg().ofType(String.class).defaultsTo("hazelcast4");
+            "The driver to run. Available options hazelcast5,hazelcast5-enterprise,hazelcast4,hazelcast-enterprise4,"
+                    + "hazelcast3,hazelcast-enterprise3,ignite2,infinispan9,infinispan10,"
+                    + "infinispan11,couchbase,lettuce5,lettucecluster5,jedis3")
+            .withRequiredArg().ofType(String.class).defaultsTo("hazelcast5");
 
     private final OptionSpec<String> versionSpec = parser.accepts("version",
-            "The version of the vendor to use. Only hazelcast3/4 (and enterprise) will use this version")
+            "The version of the vendor to use. Only hazelcast3/4/5 (and enterprise) will use this version")
             .withRequiredArg().ofType(String.class);
 
     private final OptionSpec<String> durationSpec = parser.accepts("duration",

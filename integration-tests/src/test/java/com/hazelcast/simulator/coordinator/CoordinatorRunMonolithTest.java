@@ -10,7 +10,7 @@ import com.hazelcast.simulator.tests.SuccessTest;
 import com.hazelcast.simulator.utils.CommonUtils;
 import com.hazelcast.simulator.utils.FileUtils;
 import com.hazelcast.simulator.utils.SimulatorUtils;
-import com.hazelcast.simulator.hazelcast4.Hazelcast4Driver;
+import com.hazelcast.simulator.hazelcast4plus.Hazelcast4PlusDriver;
 import com.hazelcast.simulator.drivers.Driver;
 import org.junit.After;
 import org.junit.Before;
@@ -50,7 +50,7 @@ public class CoordinatorRunMonolithTest {
 
         FileUtils.copy(new File(TestEnvironmentUtils.localResourceDirectory(), "hazelcast.xml"), new File(FileUtils.getUserDir(), "hazelcast.xml"));
 
-        driver = new Hazelcast4Driver()
+        driver = new Hazelcast4PlusDriver()
                 .setAgents(registry.getAgents())
                 .setAll(simulatorProperties.asPublicMap())
                 .set("SESSION_ID", coordinatorParameters.getSessionId());

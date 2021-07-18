@@ -36,7 +36,7 @@ import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKey;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKeys;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.isLocalKey;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
-import static com.hazelcast.simulator.hazelcast4.Hazelcast4Driver.warmupPartitions;
+import static com.hazelcast.simulator.hazelcast4plus.Hazelcast4PlusDriver.warmupPartitions;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;

@@ -20,7 +20,7 @@ diagnostics="-Dhazelcast.diagnostics.enabled=true \
 agent-ssh "sudo killall -9 java || true"
 
 coordinator --duration 3m \
-            --driver "hazelcast4" \
+            --driver "hazelcast5" \
             --clients $clients \
             --clientType "javaclient" \
             --clientArgs "-Xms3g -Xmx3g $gc_log" \

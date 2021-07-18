@@ -43,8 +43,10 @@ public abstract class Driver<V> implements Closeable {
     public static Driver loadDriver(String driver) {
         LOGGER.info(format("Loading driver [%s]", driver));
 
-        if ("hazelcast-enterprise4".equals(driver)) {
-            return loadInstance("hazelcast4");
+        if ("hazelcast-enterprise4".equals(driver) || "hazelcast4".equals(driver)
+                || "hazelcast-enterprise5".equals(driver) || "hazelcast5".equals(driver)) {
+            // The 'P' is intentionally uppercase to match the driver name
+            return loadInstance("hazelcast4Plus");
         } else if ("hazelcast-enterprise3".equals(driver)) {
             return loadInstance("hazelcast3");
         } else {
@@ -53,7 +55,7 @@ public abstract class Driver<V> implements Closeable {
     }
 
     private static Driver loadInstance(String driver) {
-        String driverName = "com.hazelcast.simulator." + driver + "."
+        String driverName = "com.hazelcast.simulator." + driver.toLowerCase() + "."
                 + driver.substring(0, 1).toUpperCase() + driver.substring(1) + "Driver";
         Class driverClass;
         try {

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.hazelcast4;
+package com.hazelcast.simulator.hazelcast4plus;
 
 import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.client.config.ClientConfig;
@@ -43,10 +43,10 @@ import static com.hazelcast.simulator.utils.FileUtils.getConfigurationFile;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static java.lang.String.format;
 
-public class Hazelcast4Driver extends Driver<HazelcastInstance> {
+public class Hazelcast4PlusDriver extends Driver<HazelcastInstance> {
     private static final long PARTITION_WARMUP_TIMEOUT_NANOS = TimeUnit.MINUTES.toNanos(5);
     private static final int PARTITION_WARMUP_SLEEP_INTERVAL_MILLIS = 500;
-    private static final Logger LOGGER = Logger.getLogger(Hazelcast4Driver.class);
+    private static final Logger LOGGER = Logger.getLogger(Hazelcast4PlusDriver.class);
     private HazelcastInstance hazelcastInstance;
 
     @Override
@@ -203,7 +203,15 @@ public class Hazelcast4Driver extends Driver<HazelcastInstance> {
         }
 
         String driver = get("DRIVER");
-        String installFile = getConfigurationFile("install-" + driver + ".sh", driver).getPath();
+        String driverInstallScript = null;
+        if (driver.contains("enterprise")) {
+            driverInstallScript = "install-hazelcast-enterprise4plus.sh";
+        } else {
+            driverInstallScript = "install-hazelcast4plus.sh";
+        }
+
+
+        String installFile = getConfigurationFile(driverInstallScript, driver).getPath();
 
         LOGGER.info("Installing '" + driver + "' version '" + versionSpec + "' on Agents using " + installFile);
 

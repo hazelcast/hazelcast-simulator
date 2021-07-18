@@ -22,7 +22,7 @@
     </properties>
 
     <modules>
-        <module>driver-hazelcast4</module>
+        <module>driver-hazelcast4plus</module>
         <module>driver-hazelcast3</module>
         <module>driver-ignite2</module>
         <module>driver-infinispan9</module>

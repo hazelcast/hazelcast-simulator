@@ -25,7 +25,7 @@ import static com.hazelcast.simulator.utils.HazelcastUtils.getHazelcastAddress;
 import static com.hazelcast.simulator.utils.HazelcastUtils.isMaster;
 import static com.hazelcast.simulator.utils.HazelcastUtils.isOldestMember;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
-import static com.hazelcast.simulator.hazelcast4.Hazelcast4Driver.createAddressConfig;
+import static com.hazelcast.simulator.hazelcast4plus.Hazelcast4PlusDriver.createAddressConfig;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;

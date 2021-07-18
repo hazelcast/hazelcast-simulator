@@ -13,7 +13,7 @@
 # - instead of download artifacts to local machine and then uploading; download them on the target machine
 # - instead of uploading to each machine, upload to a single machine and then download from that machine
 
-. ${SIMULATOR_HOME}/drivers/driver-hazelcast4/conf/install-hazelcast-support4.sh
+. ${SIMULATOR_HOME}/drivers/driver-hazelcast4plus/conf/install-hazelcast-support4plus.sh
 
 session_id=$1
 version_spec=$2
