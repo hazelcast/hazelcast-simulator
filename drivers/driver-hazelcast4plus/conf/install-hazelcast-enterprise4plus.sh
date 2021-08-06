@@ -24,7 +24,7 @@ prepare()
         snapshot_repo="https://repository.hazelcast.com/snapshot"
         release_repo="https://repository.hazelcast.com/release"
 
-        prepare_using_maven "hazelcast-enterprise-all" "$version" ${release_repo} ${snapshot_repo}
+        prepare_using_maven "hazelcast-enterprise" "$version" ${release_repo} ${snapshot_repo}
     elif [[ ${version_spec} == git* ]] ; then
         git_branch=${version_spec#*=}
 
