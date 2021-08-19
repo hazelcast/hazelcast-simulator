@@ -16,8 +16,6 @@
  */
 package com.hazelcast.simulator.tests.map.helpers;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
 import java.util.Random;
 
 /**
@@ -50,7 +48,6 @@ final class ZipfianUtils {
     /**
      * Generate a random ASCII string of a given length.
      */
-    @SuppressFBWarnings("DM_DEFAULT_ENCODING")
     public static String generateASCIIString(int length) {
         int interval = '~' - ' ' + 1;
 

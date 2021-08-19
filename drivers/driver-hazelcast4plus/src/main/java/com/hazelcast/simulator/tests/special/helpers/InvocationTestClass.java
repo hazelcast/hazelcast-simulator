@@ -15,8 +15,6 @@
  */
 package com.hazelcast.simulator.tests.special.helpers;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 
 public class InvocationTestClass {
@@ -36,7 +34,6 @@ public class InvocationTestClass {
                 + "}" + NEW_LINE;
     }
 
-    @SuppressFBWarnings({"VO_VOLATILE_INCREMENT"})
     public void shouldBeCalled() {
         invokeCounter++;
     }

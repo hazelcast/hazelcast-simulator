@@ -19,7 +19,6 @@ import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.coordinator.registry.WorkerQuery;
 import com.hazelcast.simulator.utils.BindException;
 import com.hazelcast.simulator.utils.CommandLineExitException;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,7 +38,6 @@ import static com.hazelcast.simulator.utils.FileUtils.isValidFileName;
 import static java.lang.String.format;
 import static java.util.Collections.singletonMap;
 
-@SuppressWarnings(value = "checkstyle:methodcount")
 public class TestSuite implements Serializable {
 
     private static final Pattern VALID_FILE_NAME_PATTERN = Pattern.compile("^[a-zA-Z0-9-]+$");
@@ -75,7 +73,6 @@ public class TestSuite implements Serializable {
         load(content);
     }
 
-    @SuppressFBWarnings("DM_DEFAULT_ENCODING")
     private void load(String testContent) {
         Properties properties = new Properties();
         try {

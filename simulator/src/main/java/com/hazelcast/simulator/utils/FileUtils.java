@@ -16,7 +16,6 @@
 package com.hazelcast.simulator.utils;
 
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.lang3.text.StrSubstitutor;
 
 import java.io.BufferedReader;
@@ -42,7 +41,6 @@ import static java.lang.String.format;
 import static java.nio.charset.Charset.forName;
 import static java.util.Collections.emptyList;
 
-@SuppressFBWarnings("DM_DEFAULT_ENCODING")
 @SuppressWarnings("checkstyle:methodcount")
 public final class FileUtils {
 
