@@ -15,7 +15,6 @@
  */
 package com.hazelcast.simulator.utils;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.log4j.Logger;
 
 import java.io.BufferedReader;
@@ -188,7 +187,6 @@ public class BashCommand {
         private final BufferedReader reader;
         private final StringBuffer stringBuffer;
 
-        @SuppressFBWarnings("DM_DEFAULT_ENCODING")
         public BashStreamGobbler(InputStream in, StringBuffer stringBuffer) {
             this.inputStreamReader = new InputStreamReader(in);
             this.reader = new BufferedReader(inputStreamReader);

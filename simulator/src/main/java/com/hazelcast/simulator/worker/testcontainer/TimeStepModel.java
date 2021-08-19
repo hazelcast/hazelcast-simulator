@@ -21,7 +21,6 @@ import com.hazelcast.simulator.test.annotations.BeforeRun;
 import com.hazelcast.simulator.test.annotations.StartNanos;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.utils.AnnotatedMethodRetriever;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
@@ -329,7 +328,6 @@ public class TimeStepModel {
      * @return the array of probabilities for each {@link TimeStep} method or {@code null} if there is only a
      * single {@link TimeStep} method.
      */
-    @SuppressFBWarnings("EI_EXPOSE_REP")
     public byte[] getTimeStepProbabilityArray(String group) {
         return executionGroups.get(group).timeStepProbabilityArray;
     }

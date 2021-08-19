@@ -18,13 +18,11 @@ package com.hazelcast.simulator.lettucecluster5;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.InjectTestContext;
 import com.hazelcast.simulator.test.annotations.InjectDriver;
-import edu.umd.cs.findbugs.annotations.SuppressWarnings;
 import io.lettuce.core.cluster.RedisClusterClient;
 import org.apache.log4j.Logger;
 
 public abstract class LettuceTest {
 
-    @SuppressWarnings("checkstyle:visibilitymodifier")
     public String name = getClass().getSimpleName();
 
     protected final Logger logger = Logger.getLogger(getClass());

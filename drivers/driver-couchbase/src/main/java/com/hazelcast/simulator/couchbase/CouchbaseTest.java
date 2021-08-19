@@ -19,7 +19,6 @@ import com.couchbase.client.java.CouchbaseCluster;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.InjectTestContext;
 import com.hazelcast.simulator.test.annotations.InjectDriver;
-import edu.umd.cs.findbugs.annotations.SuppressWarnings;
 import org.apache.log4j.Logger;
 
 public abstract class CouchbaseTest {
@@ -29,7 +28,6 @@ public abstract class CouchbaseTest {
      * property so you can define e.g. 'offheapMap' or 'onheapMap' etc. This way you can change the
      * behavior of the test by switching to a different data-structure.
      */
-    @SuppressWarnings("checkstyle:visibilitymodifier")
     public String name = getClass().getSimpleName();
 
     protected final Logger logger = Logger.getLogger(getClass());
