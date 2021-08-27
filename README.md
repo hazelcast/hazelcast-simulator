@@ -39,6 +39,7 @@ Please refer to the [Quickstart](#quickstart) to start your Simulator journey.
       - [Reserving machines for members only](#reserving-machines-for-members-only)
         * [Order of the IP addresses](#order-of-the-ip-addresses)
     + [Running test against already running cluster](#running-test-against-already-running-cluster)
+    + [Running test against a cluster in Hazelcast Cloud](#running-test-against-a-cluster-in-hazelcast-cloud)
   * [Controlling the Hazelcast Configuration](#controlling-the-hazelcast-configuration)
     + [IP addresses and other configuration auto-filling](#ip-addresses-and-other-configuration-auto-filling)
   * [Passing JVM options to client or member processes](#passing-jvm-options-to-client-or-member-processes)
@@ -553,7 +554,7 @@ $ cat agents.txt
 
 > :warning: Running multiple members on a single machines is a Hazelcast performance anti-pattern and should be avoided. 
 > We used it only for a demonstration of the cluster layout distribution.
-> Consult [Hazelcast documentation](https://docs.hazelcast.com) for more information about recommended setup. 
+> Consult [Hazelcast documentation](https://docs.hazelcast.com) for more information about recommended setup.
 
 ### Running test against already running cluster
 
@@ -567,6 +568,26 @@ can't possibly know the IP addresses of the members. Therefore, you have to manu
 configuration. For more information about this, refer to [Controlling the Hazelcast configuration](#controlling-the-hazelcast-configuration).
 * Specify correct `<cluster-name>` in the `client-hazelcast.xml` - for the same reason as with IP addresses,
 you have to adjust the `<cluster-name>` configuration to match the one in the running cluster.
+
+### Running test against a cluster in Hazelcast Cloud
+
+If you want to test the performance of the Hazelcast Cloud managed cluster, you follow the same setup as
+described in [Running test against already running cluster](#running-test-against-already-running-cluster) section
+with minor difference:
+
+* Specify correct cluster name and enter the Cloud discovery token through like this: 
+```
+<hazelcast-client>
+  <cluster-name>YOUR_CLUSTER_NAME</cluster-name>
+  
+  <network>
+    <hazelcast-cloud enabled="true">
+        <discovery-token>YOUR_CLUSTER_DISCOVERY_TOKEN</discovery-token>
+    </hazelcast-cloud>
+  </network>
+</hazelcast-client>
+``` 
+in `client-hazelcast.xml`.
 
 ## Controlling the Hazelcast Configuration
 
