@@ -337,7 +337,7 @@ The first two properties are built-in "magic" properties of Simulator.
 | `class`       | `com.hazelcast.simulator.tests.map.IntByteMapTest` | Defines the fully qualified class name for the Simulator Test. Used to create the test class instance on the Simulator Worker. This is the only mandatory property which has to be defined.    |
 | `threadCount` | `5`                                                | Defines how many threads are running in parallel the Test methods. In other words, defines the number of worker threads for Simulator Tests which use the `@RunWithWorker` annotation.         |
 
-> :books: For details about available values for `class`, refer to [Selecting a test class]() section.
+> :books: For details about available values for `class`, refer to the provided classes in the [drivers](drivers) directory or the [Writing a Simulator test](#writing-a-simulator-test) section.
 
 ### Setting up operations frequency
 
