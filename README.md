@@ -826,33 +826,23 @@ in [Quickstart](#quickstart) or in [Run the test](#run-the-test).
 
 ## Using Amazon EC2
 
-Hazelcast Simulator provides out of the box support to create and terminate Amazon EC2 instances for conveniece which greatly simplifies the testing. 
-Of course, you can always create the EC2 instances yourself and then set them up as described in [Setting up for static setup](#setting-up-for-static-setup).
+Hazelcast Simulator provides out of the box support to create and terminate Amazon EC2 instances for convenience which
+greatly simplifies the testing. Of course, you can always create the EC2 instances yourself and then set them up as
+described in [Setting up for static setup](#setting-up-for-static-setup).
 
 This section describes how to leverage Simulator's capabilities of handling the provisioning in Amazon EC2 for you.
 
-> Simulator uses AWS access keys (access key ID and secret access key) for authentication 
-(see [Types of Security Credentials](http://docs.aws.amazon.com/general/latest/gr/aws-sec-cred-types.html)). Please 
-see [Creating, Disabling, and Deleting Access Keys for your AWS Account](http://docs.aws.amazon.com/general/latest/gr/managing-aws-access-keys.html) 
-to generate and download your access keys.
+1. [Install](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)
+   and [configure](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html) aws-cli using your
+   AWS credentials.
 
-1. For security reasons we store the cloud credentials outside of the working directory (e.g. to prevent an accidental commit into 
-your project files). The default locations for the credentials are
-
-    - `~/ec2.identity` for the access key ID
-    - `~/ec2.credential` for the secret access key
-
-    You can store the credentials in a different location, but then you need to configure the `simulator.properties` later.
-
-2. Create a working directory for your Simulator TestSuite. Use the Simulator Wizard to create an example setup for you and change 
-to that directory.
+2. Create a working directory for your Simulator TestSuite. Use the Simulator Wizard to create an example setup for you
+   and change to that directory.
 
     ```
     simulator-wizard --createWorkDir myCloudTest --cloudProvider aws-ec2
     cd myCloudTest
     ```
-
-    > If you stored your AWS credentials in a different location please update the paths of `CLOUD_IDENTITY` and `CLOUD_CREDENTIALS` in your `simulator.properties` file.
 
 3.  Execute the created `prepare` script to create the EC2 instances and install Simulator on them.
 
@@ -875,12 +865,6 @@ to that directory.
 6. Your cloud setup is ready. You can now execute the test by running the `run` script just like
 in [Quickstart](#quickstart) or in [Run the test](#run-the-test).
 
-
-![image](images/NoteSmall.jpg) ***NOTE***: *Creating the credential files in your home directory instead of directly setting the 
-access key ID and secret access key in the `simulator.properties` file is for security reasons. It is too easy to share your
- credentials with the outside world. Now you can safely add the `simulator.properties` file in your source repository or 
- share it with other people.*
-
 ### Controlling provisioned machines
 
 Simulator provides out of the box support for Amazon EC2 for convenient controlling of the provisioned machiens
@@ -894,8 +878,6 @@ and customize the behavior according to the properties.
     | Property | Description | Example |
     | ---| --- | --- |
     |`SIMULATOR_USER` | The user to be connected with. | `SIMULATOR_USER=simulator`. |
-    | `CLOUD_IDENTITY` | Path to the file with AWS access key ID. | `CLOUD_IDENTITY=~/ec2.identity` |
-    | `CLOUD_CREDENTIAL` | Path to the file with secret access key. | `CLOUD_CREDENTIAL=~/ec2.credential` |
     | `SUBNET_ID` | EC2 subnet ID to be used. | `SUBNET_ID=subnet-111111` |
     | `INSTANCE_TYPE` | EC2 instance type to be used. | `INSTANCE_TYPE=c4.xlarge` |
     | `REGION` | EC2 region to be used. | `REGION=us-east-1` |

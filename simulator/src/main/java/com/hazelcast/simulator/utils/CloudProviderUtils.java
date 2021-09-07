@@ -38,12 +38,6 @@ public final class CloudProviderUtils {
         return isLocal(properties.getCloudProvider());
     }
 
-    public static boolean isTrueCloud(String cloudProvider) {
-        return !cloudProvider.equals("embedded")
-                && !cloudProvider.equals("local")
-                && !cloudProvider.equals("static");
-    }
-
     public static boolean isStatic(SimulatorProperties properties) {
         return isStatic(properties.getCloudProvider());
     }

@@ -34,12 +34,12 @@ import com.hazelcast.simulator.coordinator.tasks.PrepareSessionTask;
 import com.hazelcast.simulator.coordinator.tasks.RunTestSuiteTask;
 import com.hazelcast.simulator.coordinator.tasks.StartWorkersTask;
 import com.hazelcast.simulator.coordinator.tasks.TerminateWorkersTask;
+import com.hazelcast.simulator.drivers.Driver;
 import com.hazelcast.simulator.protocol.CoordinatorClient;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.utils.BashCommand;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.CommonUtils;
-import com.hazelcast.simulator.drivers.Driver;
 import com.hazelcast.simulator.worker.operations.ExecuteScriptOperation;
 import org.apache.log4j.Logger;
 
@@ -60,12 +60,12 @@ import java.util.concurrent.Future;
 import static com.hazelcast.simulator.coordinator.AgentUtils.startAgents;
 import static com.hazelcast.simulator.coordinator.AgentUtils.stopAgents;
 import static com.hazelcast.simulator.coordinator.registry.AgentData.publicAddresses;
+import static com.hazelcast.simulator.drivers.Driver.loadDriver;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.getConfigurationFile;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.FormatUtils.join;
 import static com.hazelcast.simulator.utils.TagUtils.matches;
-import static com.hazelcast.simulator.drivers.Driver.loadDriver;
 import static java.lang.Runtime.getRuntime;
 import static java.lang.String.format;
 
@@ -260,7 +260,7 @@ public class Coordinator implements Closeable {
                 .execute();
 
         loadDriver(properties.get("DRIVER"))
-                .setAll(properties.asPublicMap())
+                .setAll(properties.asMap())
                 .set("VERSION_SPEC", versionSpec)
                 .setAgents(registry.getAgents())
                 .install();
@@ -331,7 +331,7 @@ public class Coordinator implements Closeable {
 
         Driver driver = loadDriver(properties.get("DRIVER"))
                 .setAgents(registry.getAgents())
-                .setAll(properties.asPublicMap())
+                .setAll(properties.asMap())
                 .set("CLIENT_ARGS", op.getVmOptions())
                 .set("MEMBER_ARGS", op.getVmOptions())
                 .set("SESSION_ID", parameters.getSessionId())

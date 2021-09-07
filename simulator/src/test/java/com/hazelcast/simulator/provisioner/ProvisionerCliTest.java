@@ -11,8 +11,6 @@ import java.util.HashMap;
 import java.util.List;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.createAgentsFileWithLocalhost;
-import static com.hazelcast.simulator.TestEnvironmentUtils.createCloudCredentialFiles;
-import static com.hazelcast.simulator.TestEnvironmentUtils.deleteCloudCredentialFiles;
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetSecurityManager;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setExitExceptionSecurityManagerWithStatusZero;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
@@ -34,14 +32,12 @@ public class ProvisionerCliTest {
         setupFakeEnvironment();
 
         createAgentsFileWithLocalhost();
-        createCloudCredentialFiles();
     }
 
     @AfterClass
     public static void afterClass() {
         resetSecurityManager();
         tearDownFakeEnvironment();
-        deleteCloudCredentialFiles();
     }
 
     @Test

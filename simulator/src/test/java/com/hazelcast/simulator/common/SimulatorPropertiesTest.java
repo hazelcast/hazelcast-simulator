@@ -9,8 +9,6 @@ import java.io.File;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
 import static com.hazelcast.simulator.TestEnvironmentUtils.tearDownFakeEnvironment;
-import static com.hazelcast.simulator.common.SimulatorProperties.CLOUD_CREDENTIAL;
-import static com.hazelcast.simulator.common.SimulatorProperties.CLOUD_IDENTITY;
 import static com.hazelcast.simulator.common.SimulatorProperties.CLOUD_PROVIDER;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static java.lang.String.format;
@@ -215,28 +213,6 @@ public class SimulatorPropertiesTest {
     @Test
     public void testGetAgentThreadPoolSize() {
         assertEquals(0, simulatorProperties.getAgentThreadPoolSize());
-    }
-
-    @Test
-    public void testGet_CLOUD_IDENTITY() {
-        File identityFile = new File(simulatorHome, "identity");
-        appendText("testCloudIdentityString", identityFile);
-
-        File customFile = new File(simulatorHome, "simulator.properties");
-        initProperty(customFile, CLOUD_IDENTITY, identityFile.getAbsolutePath());
-
-        assertEquals("testCloudIdentityString", simulatorProperties.getCloudIdentity());
-    }
-
-    @Test
-    public void testGet_CLOUD_CREDENTIAL() {
-        File credentialsFile = new File(simulatorHome, "credentials");
-        appendText("testIdentity", credentialsFile);
-
-        File customFile = new File(simulatorHome, "simulator.properties");
-        initProperty(customFile, CLOUD_CREDENTIAL, credentialsFile.getAbsolutePath());
-
-        assertEquals("testIdentity", simulatorProperties.getCloudCredential());
     }
 
     @Test(expected = CommandLineExitException.class)
