@@ -220,10 +220,6 @@ public class SimulatorProperties {
         return get(CLOUD_PROVIDER);
     }
 
-    public void setCloudProvider(String value) {
-        set(CLOUD_PROVIDER, value);
-    }
-
     public String get(String name) {
         return get(name, null);
     }
