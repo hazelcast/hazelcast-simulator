@@ -10,3 +10,4 @@ vtune/
 *.class
 simulator-git.properties
 logs/
+.attach_pid*
