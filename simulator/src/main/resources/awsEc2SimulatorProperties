@@ -3,10 +3,6 @@ CLOUD_PROVIDER=aws-ec2
 # User to be logged in under. ("ec2-user" is the usual default in AWS images)
 SIMULATOR_USER=ec2-user
 
-# By default, Simulator looks into these files for your AWS access key ID and secret access key
-CLOUD_IDENTITY=~/ec2.identity
-CLOUD_CREDENTIAL=~/ec2.credential
-
 # Subnet to be used. Mandatory to specify.
 SUBNET_ID=
 

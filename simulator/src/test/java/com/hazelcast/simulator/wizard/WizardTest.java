@@ -16,14 +16,11 @@ import static com.hazelcast.simulator.TestEnvironmentUtils.resetSecurityManager;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setExitExceptionSecurityManagerWithStatusZero;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
 import static com.hazelcast.simulator.TestEnvironmentUtils.tearDownFakeEnvironment;
-import static com.hazelcast.simulator.common.SimulatorProperties.CLOUD_CREDENTIAL;
-import static com.hazelcast.simulator.common.SimulatorProperties.CLOUD_IDENTITY;
 import static com.hazelcast.simulator.common.SimulatorProperties.CLOUD_PROVIDER;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_EC2;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_LOCAL;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_STATIC;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isLocal;
-import static com.hazelcast.simulator.utils.CloudProviderUtils.isStatic;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
@@ -206,8 +203,6 @@ public class WizardTest {
 
         appendText("invalid=unknown" + NEW_LINE, localSimulatorPropertiesFile);
         appendText(format("%s=changed%n", CLOUD_PROVIDER), localSimulatorPropertiesFile);
-        appendText(format("%s=%s%n", CLOUD_IDENTITY, defaultProperties.get(CLOUD_IDENTITY)),
-                localSimulatorPropertiesFile);
 
         wizard.compareSimulatorProperties();
     }
@@ -243,11 +238,6 @@ public class WizardTest {
 
         String simulatorPropertiesContent = fileAsText(simulatorPropertiesFile);
         assertTrue(simulatorPropertiesContent.contains(cloudProvider));
-
-        if (!isStatic(cloudProvider)) {
-            assertTrue(simulatorPropertiesContent.contains(CLOUD_IDENTITY));
-            assertTrue(simulatorPropertiesContent.contains(CLOUD_CREDENTIAL));
-        }
 
         assertTrue(agentsFile.exists());
         assertTrue(agentsFile.isFile());

@@ -25,8 +25,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
-import static com.hazelcast.simulator.utils.CloudProviderUtils.isTrueCloud;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
@@ -50,8 +50,6 @@ public class SimulatorProperties {
 
     public static final int DEFAULT_AGENT_PORT = 9000;
     public static final String CLOUD_PROVIDER = "CLOUD_PROVIDER";
-    public static final String CLOUD_IDENTITY = "CLOUD_IDENTITY";
-    public static final String CLOUD_CREDENTIAL = "CLOUD_CREDENTIAL";
 
     private static final int WORKER_TIMEOUT_FACTOR = 3;
 
@@ -69,26 +67,12 @@ public class SimulatorProperties {
     }
 
     public Map<String, String> asMap() {
-        Map<String, String> map = asPublicMap();
-
-        if (isTrueCloud(getCloudProvider())) {
-            map.put(CLOUD_IDENTITY, getCloudIdentity());
-            map.put(CLOUD_CREDENTIAL, getCloudCredential());
-        }
-
-        return map;
-    }
-
-    public Map<String, String> asPublicMap() {
-        Map<String, String> map = new HashMap<>();
-        for (Map.Entry entry : properties.entrySet()) {
-            String key = (String) entry.getKey();
-            map.put(key, get(key));
-        }
-
-        map.remove(CLOUD_IDENTITY);
-        map.remove(CLOUD_CREDENTIAL);
-        return map;
+        return properties.entrySet().stream()
+                .collect(Collectors.toMap(
+                                Map.Entry::getKey,
+                                e -> get(e.getKey())
+                        )
+                );
     }
 
     /**
@@ -234,34 +218,6 @@ public class SimulatorProperties {
 
     public void setCloudProvider(String value) {
         set(CLOUD_PROVIDER, value);
-    }
-
-    public String getCloudIdentity() {
-        return loadDirectOrFile(CLOUD_IDENTITY);
-    }
-
-    public String getCloudCredential() {
-        return loadDirectOrFile(CLOUD_CREDENTIAL);
-    }
-
-    private String loadDirectOrFile(String property) {
-        String value = get(property);
-        if (value == null) {
-            throw new IllegalArgumentException(format("Simulator property '%s' is not found", property));
-        }
-
-        File file = newFile(value);
-        if (file.exists()) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(format("Loading simulator property value for %s from file: %s", property, file.getAbsolutePath()));
-            }
-
-            return fileAsText(file).trim();
-        } else if (value.endsWith(".identity") || value.endsWith(".credential") || value.endsWith(".txt")) {
-            throw new CommandLineExitException("file [" + value + "] is not found");
-        } else {
-            return value.trim();
-        }
     }
 
     public String get(String name) {

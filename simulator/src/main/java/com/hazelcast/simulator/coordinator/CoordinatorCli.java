@@ -194,7 +194,7 @@ final class CoordinatorCli {
             this.properties.set("SESSION_ID", coordinatorParameters.getSessionId());
             this.coordinator = new Coordinator(registry, coordinatorParameters);
             this.driver = loadDriver(properties.get("DRIVER"))
-                    .setAll(properties.asPublicMap())
+                    .setAll(properties.asMap())
                     .setAgents(registry.getAgents())
                     .set("CLIENT_ARGS", options.valueOf(clientArgsSpec))
                     .set("MEMBER_ARGS", options.valueOf(memberArgsSpec));

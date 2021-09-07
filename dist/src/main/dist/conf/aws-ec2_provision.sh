@@ -14,9 +14,6 @@ fi
 
 count=$1
 
-export AWS_ACCESS_KEY_ID=$CLOUD_IDENTITY
-export AWS_SECRET_ACCESS_KEY=$CLOUD_CREDENTIAL
-
 # will contain a comma separated list of instance_id's
 instance_ids=""
 security_group_id=""

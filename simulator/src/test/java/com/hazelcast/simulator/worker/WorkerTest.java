@@ -4,11 +4,11 @@ import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.coordinator.registry.AgentData;
 import com.hazelcast.simulator.coordinator.registry.Registry;
+import com.hazelcast.simulator.drivers.Driver;
 import com.hazelcast.simulator.fake.FakeDriver;
 import com.hazelcast.simulator.protocol.Broker;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.utils.FileUtils;
-import com.hazelcast.simulator.drivers.Driver;
 import com.hazelcast.simulator.worker.operations.TerminateWorkerOperation;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -52,7 +52,7 @@ public class WorkerTest {
 
         Driver driver = new FakeDriver()
                 .setAgents(registry.getAgents())
-                .setAll(properties.asPublicMap())
+                .setAll(properties.asMap())
                 .set("CONFIG", fileAsText(localResourceDirectory() + "/hazelcast.xml"));
         workerAddress = workerAddress(AGENT_INDEX,WORKER_INDEX);
 

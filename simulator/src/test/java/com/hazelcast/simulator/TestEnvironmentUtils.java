@@ -12,7 +12,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static com.hazelcast.simulator.utils.FileUtils.USER_HOME;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
@@ -31,14 +30,8 @@ public class TestEnvironmentUtils {
 
     private static File agentsFile;
 
-    private static File cloudIdentity;
-    private static File cloudCredential;
-
     private static File publicKeyFile;
     private static File privateKeyFile;
-
-    private static boolean deleteCloudIdentity;
-    private static boolean deleteCloudCredential;
 
     private static boolean deletePublicKey;
     private static boolean deletePrivateKey;
@@ -155,30 +148,6 @@ public class TestEnvironmentUtils {
 
     public static void deleteAgentsFile() {
         deleteQuiet(agentsFile);
-    }
-
-    public static void createCloudCredentialFiles() {
-        String userHome = USER_HOME;
-        cloudIdentity = new File(userHome, "ec2.identity").getAbsoluteFile();
-        cloudCredential = new File(userHome, "ec2.credential").getAbsoluteFile();
-
-        if (!cloudIdentity.exists()) {
-            deleteCloudIdentity = true;
-            ensureExistingFile(cloudIdentity);
-        }
-        if (!cloudCredential.exists()) {
-            deleteCloudCredential = true;
-            ensureExistingFile(cloudCredential);
-        }
-    }
-
-    public static void deleteCloudCredentialFiles() {
-        if (deleteCloudIdentity) {
-            deleteQuiet(cloudIdentity);
-        }
-        if (deleteCloudCredential) {
-            deleteQuiet(cloudCredential);
-        }
     }
 
     public static void createPublicPrivateKeyFiles() {
