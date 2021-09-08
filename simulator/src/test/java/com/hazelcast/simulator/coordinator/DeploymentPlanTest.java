@@ -3,10 +3,10 @@ package com.hazelcast.simulator.coordinator;
 import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.coordinator.registry.AgentData;
 import com.hazelcast.simulator.coordinator.registry.Registry;
+import com.hazelcast.simulator.drivers.Driver;
+import com.hazelcast.simulator.fake.FakeDriver;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.utils.CommandLineExitException;
-import com.hazelcast.simulator.fake.FakeDriver;
-import com.hazelcast.simulator.drivers.Driver;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -25,7 +25,7 @@ public class DeploymentPlanTest {
     private SimulatorAddress agent1;
     private SimulatorAddress agent2;
     private SimulatorAddress agent3;
-    private Driver driver;
+    private Driver<?> driver;
 
     @Before
     public void before() {

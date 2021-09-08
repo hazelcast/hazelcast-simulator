@@ -5,12 +5,12 @@ import com.hazelcast.simulator.drivers.Driver;
 
 import java.io.IOException;
 
-public class FakeDriver extends Driver {
+public class FakeDriver extends Driver<FakeInstance> {
 
     public FakeInstance instance = new FakeInstance();
 
     @Override
-    public Object getDriverInstance() {
+    public FakeInstance getDriverInstance() {
         return instance;
     }
 
