@@ -50,7 +50,7 @@ public class WorkerTest {
                 .set("DRIVER","fake")
                 .set("MANAGEMENT_CENTER_URL", "none");
 
-        Driver driver = new FakeDriver()
+        Driver<?> driver = new FakeDriver()
                 .setAgents(registry.getAgents())
                 .setAll(properties.asMap())
                 .set("CONFIG", fileAsText(localResourceDirectory() + "/hazelcast.xml"));
