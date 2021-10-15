@@ -58,7 +58,7 @@ public final class ReportCsv {
             String[] tokens = line.split("\\s+");
             String token = tokens[1];
             if (token.startsWith(percentile)) {
-                outSb.append(',').append(tokens[1]);
+                outSb.append(',').append(tokens[0]);
                 percentile = importantPercentiles.poll();
                 if (percentile == null) {
                     break;
