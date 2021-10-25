@@ -50,7 +50,7 @@ upload_remote(){
     echo "[INFO]    Upload [A$agent_index] $agent starting..."
     # if the local upload directory exist, it needs to be uploaded
     echo "Uploading upload directory $src_dir to $agent:$target_dir"
-    scp ${SSH_OPTIONS} -r ${src_dir} ${SIMULATOR_USER}@${agent}:${target_dir}
+    scp ${SCP_OPTIONS} -r ${src_dir} ${SIMULATOR_USER}@${agent}:${target_dir}
     echo "[INFO]    Upload [A$agent_index] $agent completed"
 }
 
