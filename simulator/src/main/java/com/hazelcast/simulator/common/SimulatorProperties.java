@@ -180,6 +180,10 @@ public class SimulatorProperties {
         return get("SSH_OPTIONS", "");
     }
 
+    public String getScpOptions() {
+        return get("SCP_OPTIONS", "");
+    }
+
     public String getUser() {
         return get("SIMULATOR_USER", "simulator");
     }
