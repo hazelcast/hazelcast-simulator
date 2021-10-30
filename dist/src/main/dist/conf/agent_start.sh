@@ -26,7 +26,7 @@ start_remote(){
 
     echo "[INFO]    Agent [A$agent_index] $agent starting"
 
-    ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "killall -9 java || true"
+    #ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "killall -9 java || true"
     ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "rm -f agent.pid"
     ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "rm -f agent.out"
     ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "rm -f agent.err"
