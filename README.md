@@ -834,7 +834,8 @@ This section describes how to leverage Simulator's capabilities of handling the 
 
 1. [Install](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)
    and [configure](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html) aws-cli using your
-   AWS credentials.
+   AWS credentials. In the case of SSO enabled you need to
+   perform [additional steps](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sso.html)
 
 2. Create a working directory for your Simulator TestSuite. Use the Simulator Wizard to create an example setup for you
    and change to that directory.
