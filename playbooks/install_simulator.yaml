@@ -1,0 +1,94 @@
+---
+- hosts: all
+
+  vars:
+    - simulator_home:
+    - simulator_dir: ~{{ console_user | default(ansible_user) }}/hazelcast-simulator
+  tasks:
+
+  - name: yum update/apt-get update
+    shell: |
+      yum update || true
+      apt-get update || true
+    become: yes
+    args:
+      warn: false
+
+  - name: Install dstat
+    ansible.builtin.package:
+      name: dstat
+      state: present
+    become: yes
+
+  - name: Delete simulator directory
+    file:
+      state: absent
+      path: "{{ simulator_dir }}"
+
+  - name: Create simulator directories
+    file:
+      path: "{{ item }}"
+      state: directory
+      mode: 0775
+    loop:
+       - "{{ simulator_dir }}/drivers"
+
+  # The rscyn is can't resolve the key properly if it uses relative path, so this hack is needed.
+  # https://github.com/ansible/ansible-modules-core/issues/18
+  - name: Set correct ssh key path
+    set_fact:
+      ansible_ssh_private_key_file: "{{ ansible_ssh_private_key_file | realpath }}"
+    when: ansible_ssh_private_key_file is defined
+
+  - name: Copy bin files
+    synchronize:
+      src: "{{ simulator_home }}/bin"
+      dest: "{{ simulator_dir }}"
+
+  - name: Copy conf
+    synchronize:
+      src: "{{ simulator_home }}/conf"
+      dest: "{{ simulator_dir }}"
+
+  # upload to the first host
+  - name: Copy lib
+    synchronize:
+      src: "{{ simulator_home }}/lib/"
+      dest: "{{ simulator_dir }}/lib/"
+      #private_key: ~/.ssh/id_rsa
+      rsync_opts:
+        - '--include=activemq-broker*'
+        - '--include=activemq-client*'
+        - '--include=geronimo-jms*'
+        - '--include=geronimo-j2ee*'
+        - '--include=slf4j-api*'
+        - '--include=hawtbuf-*'
+        - '--include=affinity*'
+        - '--include=jna*'
+        - '--include=cache-api*'
+        - '--include=commons-codec*'
+        - '--include=commons-lang3*'
+        - '--include=freemarker*'
+        - '--include=gson-*'
+        - '--include=HdrHistogram-*'
+        - '--include=jopt*'
+        - '--include=junit*'
+        - '--include=log4j*'
+        - '--include=slf4j-log4j12-*'
+        - '--include=simulator-*'
+        - '--exclude=*'
+    # for details about the naming
+    # https://stackoverflow.com/questions/41571716/ansible-first-hostname-of-groups
+    #delegate_to: "{{ play_hosts | first }}"
+
+  - name: Copy user-lib
+    synchronize:
+      src: "{{ simulator_home }}/user-lib"
+      dest: "{{ simulator_dir }}"
+
+  - name: Copy simulator python files
+    synchronize:
+      src: "{{ simulator_home }}/src"
+      dest: "{{ simulator_dir }}"
+      rsync_opts:
+        - "--exclude=__pycache__"

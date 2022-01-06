@@ -1,22 +1,39 @@
-#!/bin/bash
+#!/usr/bin/python3
 
-set -e
+import os
+import shutil
 
-SIMULATOR_VERSION=$(grep -m 1 "<version>.*</version>" pom.xml | awk -F'[><]' '{print $3}')
-if [ -z "${SIMULATOR_VERSION}" ]; then
-    SIMULATOR_VERSION=$(mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | grep -v '\[' | grep -vi 'download')
-fi
-PROJECT_HOME=~
-if [ -n "$1" ]; then
-    PROJECT_HOME=$1
-elif [ -n "${SIMULATOR_HOME}" ]; then
-    PROJECT_HOME=$(dirname "${SIMULATOR_HOME}")
-fi
 
-echo SIMULATOR_VERSION = ${SIMULATOR_VERSION}
+def mvn_clean_install():
+    cwd = os.getcwd()
+    os.chdir("java")
+    os.system('mvn clean install -DskipTests')
+    os.chdir(cwd)
 
-mvn --quiet clean install -DskipTests
-SIMULATOR_HOME=${PROJECT_HOME}/hazelcast-simulator-${SIMULATOR_VERSION}
-rm -fr ${SIMULATOR_HOME}
-unzip -q -d ${PROJECT_HOME} dist/target/hazelcast-simulator-${SIMULATOR_VERSION}-dist.zip
-echo "SIMULATOR_HOME=${SIMULATOR_HOME}"
+
+def empty_dir(dir):
+    if os.path.isdir(dir):
+        shutil.rmtree(dir)
+    os.mkdir(dir)
+
+mvn_clean_install()
+empty_dir("drivers")
+
+# Copy the drivers.
+for driver_dir_name in os.listdir("java/drivers"):
+    driver_dir = f"java/drivers/{driver_dir_name}"
+    if not os.path.isdir(driver_dir):
+        continue
+    print(driver_dir)
+    os.mkdir(f"drivers/{driver_dir_name}")
+    target_dir = f"{driver_dir}/target"
+    os.system(f"cp {target_dir}/*.jar drivers/{driver_dir_name}")
+
+    if os.path.isdir(f"{driver_dir}/conf"):
+        os.system(f"cp -r {driver_dir}/conf drivers/{driver_dir_name}")
+
+empty_dir("lib")
+os.system(f"cp java/simulator/target/*.jar lib/")
+os.system(f"cp java/extra/* lib/")
+os.system(f"rm drivers/driver-hazelcast4plus/hazelcast-*.jar")
+os.system(f"rm drivers/driver-hazelcast3/hazelcast-*.jar")

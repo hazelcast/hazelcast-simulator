@@ -1,0 +1,10 @@
+---
+- hosts: all
+
+  tasks:
+  - name: Runs a shell command
+    shell: "{{ cmd }}"
+    register: out
+    changed_when: no
+  - debug:
+      msg: "{{out.stdout}}"

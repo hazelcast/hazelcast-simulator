@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hazelcast xmlns="http://www.hazelcast.com/schema/config"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://www.hazelcast.com/schema/config
+           http://www.hazelcast.com/schema/config/hazelcast-config-5.1.xsd">
+
+    <cluster-name>workers</cluster-name>
+
+    <!--LITE_MEMBER_CONFIG-->
+    
+    <!--LICENSE-KEY-->
+
+    <network>
+        <port port-count="200">5701</port>
+
+        <join>
+            <multicast enabled="false"/>
+            <tcp-ip enabled="true">
+                <!--MEMBERS-->
+            </tcp-ip>
+        </join>
+    </network>
+
+    <properties>
+        <property name="hazelcast.phone.home.enabled">false</property>
+    </properties>
+
+    <map name="map_native">
+        <in-memory-format>NATIVE</in-memory-format>        
+    </map>
+    
+    <map name="map_tiered">
+        <in-memory-format>NATIVE</in-memory-format>
+        <tiered-store enabled="true">
+            <memory-tier>
+                <capacity unit="MEGABYTES" value="4096"/>
+            </memory-tier>
+            <disk-tier enabled="true" device-name="tiered-store-local-device"/>
+        </tiered-store>    
+    </map>
+   
+    <native-memory enabled="true" allocator-type="POOLED">
+        <size value="10" unit="GIGABYTES"/>
+    </native-memory>
+    
+    
+    <local-device name="tiered-store-local-device">
+        <base-dir>/mnt/nvme1n1</base-dir>
+        <capacity unit="GIGABYTES" value="2048"/>
+        <block-size>4096</block-size>
+        <read-io-thread-count>4</read-io-thread-count>
+        <write-io-thread-count>4</write-io-thread-count>
+    </local-device>
+    
+</hazelcast>
+

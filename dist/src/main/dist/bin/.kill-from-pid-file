@@ -1,6 +1,0 @@
-#!/bin/bash
-
-if [ -f "$1" ] ; then
-    PID=$(cat $1);
-    kill ${PID} || true
-fi

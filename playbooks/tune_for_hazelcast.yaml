@@ -1,0 +1,34 @@
+---
+- hosts: all
+  tasks:
+
+  - name: Sets the performance governor if possible
+    shell: |
+      set -e
+
+      if hash yum 2>/dev/null; then
+          sudo yum -y update
+          sudo yum -y install kernel-tools
+      elif hash apt-get 2>/dev/null; then
+          sudo apt-get -y update
+          sudo apt-get -y install linux-tools-common
+      else
+          echo "Could not find apt-get/yum"
+          exit 1
+      fi
+
+      sudo cpupower frequency-set -g performance || true
+    register: result
+  - debug: msg="{{result.stdout}}"
+
+  # We don't want to swap.
+  - name: Update kernel parameters
+    sysctl:
+      name: "{{ item.key }}"
+      value: "{{ item.value }}"
+      state: present
+      sysctl_set: yes
+      reload: yes
+    with_dict:
+      - vm.swappiness: 1
+    become: true
