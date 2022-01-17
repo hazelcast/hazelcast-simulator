@@ -62,7 +62,7 @@ public class MapAllValuesIdentifiedDataSerializableBenchmark extends HazelcastTe
     @TimeStep
     public void timeStep() throws Exception {
         Set<Map.Entry<Integer, IdentifiedDataSerializablePojo>> entries = map.entrySet();
-        if (entries.size() == entryCount) {
+        if (entries.size() != entryCount) {
             throw new Exception("wrong entry count");
         }
     }

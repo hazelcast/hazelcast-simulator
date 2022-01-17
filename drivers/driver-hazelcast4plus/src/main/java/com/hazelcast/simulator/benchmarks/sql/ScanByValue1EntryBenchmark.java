@@ -28,6 +28,8 @@ import com.hazelcast.sql.SqlResult;
 import com.hazelcast.sql.SqlRow;
 import com.hazelcast.sql.SqlService;
 
+import java.util.Random;
+
 
 public class ScanByValue1EntryBenchmark extends HazelcastTest {
 
@@ -75,12 +77,13 @@ public class ScanByValue1EntryBenchmark extends HazelcastTest {
     @TimeStep
     public void timeStep() throws Exception {
         SqlService sqlService = targetInstance.getSql();
-        String query = "SELECT __key, this FROM " + name + " WHERE \"value\"='0000000033'";
+        String query = "SELECT __key, this FROM " + name + " WHERE \"value\"= ? ";
+        String valueMatch = String.format("%010d", new Random().nextInt(entryCount));
         int actual = 0;
-        try (SqlResult result = sqlService.execute(query)) {
+        try (SqlResult result = sqlService.execute(query, valueMatch)) {
             for (SqlRow row : result) {
-                Object value = row.getObject(2);
-                if (!(value instanceof String)) {
+                Object value = row.getObject(1);
+                if (!(value instanceof IdentifiedDataSerializablePojo)) {
                     throw new IllegalStateException("Returned object is not " + IdentifiedDataSerializablePojo.class.getSimpleName() + ": " + value);
                 }
                 actual++;

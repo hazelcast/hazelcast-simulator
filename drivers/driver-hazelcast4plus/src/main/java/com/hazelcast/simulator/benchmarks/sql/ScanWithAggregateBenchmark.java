@@ -77,20 +77,19 @@ public class ScanWithAggregateBenchmark extends HazelcastTest {
     @TimeStep
     public void timeStep() throws Exception {
         SqlService sqlService = targetInstance.getSql();
-        String query = "SELECT SUBSTRING(\"value\", 8), COUNT(*) FROM " + name + " WHERE \"value\"<'" + String.format("%010d", entryCount/2) + "'" +
-                " GROUP BY SUBSTRING(\"value\", 8)";
-        int actual = 0;
+        String query = "SELECT COUNT(*) FROM " + name ;
         try (SqlResult result = sqlService.execute(query)) {
+            int rowCount = 0;
             for (SqlRow row : result) {
-                long count = row.getObject(1);
-                if (count != 100_000) {
-                    throw new IllegalArgumentException("Invalid count [expected=" + 100_000 + ", actual=" + count + "]");
+                long count = row.getObject(0);
+                if (count != entryCount) {
+                    throw new IllegalArgumentException("Invalid count [expected=" + entryCount + ", actual=" + count + "]");
                 }
-                actual++;
+                rowCount++;
             }
-        }
-        if (actual != 100) {
-            throw new IllegalArgumentException("Invalid count [expected=" + 100 + ", actual=" + actual + "]");
+            if (rowCount != 1) {
+                throw new IllegalArgumentException("Invalid row count [expected=1 , actual=" + rowCount + "]");
+            }
         }
     }
 

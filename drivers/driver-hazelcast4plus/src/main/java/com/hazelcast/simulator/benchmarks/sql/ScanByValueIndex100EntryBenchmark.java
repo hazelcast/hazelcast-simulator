@@ -29,6 +29,8 @@ import com.hazelcast.sql.SqlResult;
 import com.hazelcast.sql.SqlRow;
 import com.hazelcast.sql.SqlService;
 
+import java.util.Random;
+
 
 public class ScanByValueIndex100EntryBenchmark extends HazelcastTest {
 
@@ -79,12 +81,17 @@ public class ScanByValueIndex100EntryBenchmark extends HazelcastTest {
     @TimeStep
     public void timeStep() throws Exception {
         SqlService sqlService = targetInstance.getSql();
-        String query = "SELECT * FROM " + name + " WHERE \"value\"<'0000000100'";
+        String query = "SELECT __key, this FROM " + name +
+                " WHERE \"value\">= ?  AND \"value\"< ?";
+
+        int randomInt = new Random().nextInt(entryCount-100);
+        String minValue = String.format("%010d", randomInt);
+        String maxValue = String.format("%010d", randomInt + 100);
         int actual = 0;
-        try (SqlResult result = sqlService.execute(query)) {
+        try (SqlResult result = sqlService.execute(query, minValue, maxValue)) {
             for (SqlRow row : result) {
-                Object value = row.getObject(2);
-                if (!(value instanceof String)) {
+                Object value = row.getObject(1);
+                if (!(value instanceof IdentifiedDataSerializablePojo)) {
                     throw new IllegalStateException("Returned object is not " + IdentifiedDataSerializablePojo.class.getSimpleName() + ": " + value);
                 }
                 actual++;

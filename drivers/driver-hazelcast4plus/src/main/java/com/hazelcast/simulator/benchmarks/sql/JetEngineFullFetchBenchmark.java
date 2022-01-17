@@ -28,10 +28,6 @@ import com.hazelcast.sql.SqlResult;
 import com.hazelcast.sql.SqlRow;
 import com.hazelcast.sql.SqlService;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
-
-
 public class JetEngineFullFetchBenchmark extends HazelcastTest {
 
     // properties
