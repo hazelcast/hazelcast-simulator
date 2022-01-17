@@ -1,0 +1,17 @@
+#!/bin/bash
+
+if [ -z "${SIMULATOR_HOME}" ] ; then
+    export SIMULATOR_HOME=$(cd $(dirname $(readlink -f $0 2> /dev/null || readlink $0 2> /dev/null || echo $0))/.. && pwd)
+fi
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+export SIMULATOR_HOME=$(cd $DIR/.. && pwd)
+
+ # Check if python3 is installed.
+if ! hash python3 2>/dev/null ; then
+    echo python3 is not installed! Aborting.
+    exit 1
+fi
+
+python3 ${SIMULATOR_HOME}/conf/run-multiple-tests.py "$@"
