@@ -15,13 +15,8 @@
  */
 package com.hazelcast.simulator.benchmarks.predicate;
 
-import com.hazelcast.aggregation.Aggregator;
 import com.hazelcast.aggregation.Aggregators;
-import com.hazelcast.aggregation.impl.CountAggregator;
-import com.hazelcast.config.IndexType;
 import com.hazelcast.map.IMap;
-import com.hazelcast.query.Predicate;
-import com.hazelcast.query.Predicates;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.hz.IdentifiedDataSerializablePojo;
 import com.hazelcast.simulator.test.annotations.Prepare;
@@ -30,11 +25,6 @@ import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
-import com.hazelcast.sql.SqlRow;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
 
 
 public class PredicateWithAggregateBenchmark extends HazelcastTest {

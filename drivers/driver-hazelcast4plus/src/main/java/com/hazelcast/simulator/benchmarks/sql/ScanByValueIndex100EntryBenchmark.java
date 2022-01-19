@@ -84,7 +84,7 @@ public class ScanByValueIndex100EntryBenchmark extends HazelcastTest {
         String query = "SELECT __key, this FROM " + name +
                 " WHERE \"value\">= ?  AND \"value\"< ?";
 
-        int randomInt = new Random().nextInt(entryCount-100);
+        int randomInt = new Random().nextInt(entryCount - 100);
         String minValue = String.format("%010d", randomInt);
         String maxValue = String.format("%010d", randomInt + 100);
         int actual = 0;

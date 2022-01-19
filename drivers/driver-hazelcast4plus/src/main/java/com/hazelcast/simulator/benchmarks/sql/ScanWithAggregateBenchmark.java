@@ -15,7 +15,6 @@
  */
 package com.hazelcast.simulator.benchmarks.sql;
 
-import com.hazelcast.config.IndexType;
 import com.hazelcast.map.IMap;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.hz.IdentifiedDataSerializablePojo;
@@ -77,7 +76,7 @@ public class ScanWithAggregateBenchmark extends HazelcastTest {
     @TimeStep
     public void timeStep() throws Exception {
         SqlService sqlService = targetInstance.getSql();
-        String query = "SELECT COUNT(*) FROM " + name ;
+        String query = "SELECT COUNT(*) FROM " + name;
         try (SqlResult result = sqlService.execute(query)) {
             int rowCount = 0;
             for (SqlRow row : result) {

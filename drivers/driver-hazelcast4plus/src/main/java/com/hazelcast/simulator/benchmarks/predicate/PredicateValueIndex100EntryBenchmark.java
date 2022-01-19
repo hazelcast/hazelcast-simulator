@@ -67,7 +67,7 @@ public class PredicateValueIndex100EntryBenchmark extends HazelcastTest {
 
     @TimeStep
     public void timeStep() throws Exception {
-        int randomInt = new Random().nextInt(entryCount-100);
+        int randomInt = new Random().nextInt(entryCount - 100);
         String minValue = String.format("%010d", randomInt);
         String maxValue = String.format("%010d", randomInt + 100);
         Predicate<Integer, IdentifiedDataSerializablePojo> predicate = Predicates.and(Predicates.greaterThan("value", minValue), Predicates.lessEqual("value", maxValue));

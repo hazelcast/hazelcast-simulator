@@ -24,9 +24,6 @@ import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
-import com.hazelcast.sql.SqlResult;
-import com.hazelcast.sql.SqlService;
-
 
 public class MapGetEntryIdentifiedDataSerializableBenchmark extends HazelcastTest {
 
@@ -61,7 +58,7 @@ public class MapGetEntryIdentifiedDataSerializableBenchmark extends HazelcastTes
     @TimeStep
     public void timeStep() throws Exception {
         IdentifiedDataSerializablePojo serializablePojo = map.get(33);
-        assert serializablePojo!=null;
+        assert serializablePojo != null;
     }
 
     @Teardown
