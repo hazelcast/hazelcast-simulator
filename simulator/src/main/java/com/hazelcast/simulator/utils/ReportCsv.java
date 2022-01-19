@@ -17,6 +17,7 @@ package com.hazelcast.simulator.utils;
 
 import java.io.File;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
@@ -26,6 +27,8 @@ import static java.util.Arrays.asList;
 
 @SuppressWarnings("checkstyle:magicnumber")
 public final class ReportCsv {
+    public static final List<String> PERCENTILES = asList("0.1", "0.2", "0.5", "0.75", "0.90", "0.95",
+            "0.99", "0.999", "0.9999", "1.00");
 
     private ReportCsv() {
     }
@@ -49,8 +52,8 @@ public final class ReportCsv {
 
     private static void addPercentiles(File hgrmFile, StringBuffer outSb) {
         String[] lines = fileAsText(hgrmFile).split("\n");
-        Queue<String> importantPercentiles = new LinkedList<>(asList("0.1", "0.2", "0.5", "0.75", "0.90", "0.95",
-                "0.99", "0.999", "0.9999", "1.00"));
+        Queue<String> importantPercentiles = new LinkedList<>(PERCENTILES);
+        int writtenPercentiles = 0;
 
         String percentile = importantPercentiles.poll();
         for (int k = 4; k < lines.length - 3; k++) {
@@ -58,12 +61,16 @@ public final class ReportCsv {
             String[] tokens = line.split("\\s+");
             String token = tokens[1];
             if (token.startsWith(percentile)) {
+                writtenPercentiles++;
                 outSb.append(',').append(tokens[0]);
                 percentile = importantPercentiles.poll();
                 if (percentile == null) {
                     break;
                 }
             }
+        }
+        for (int i = writtenPercentiles; i < PERCENTILES.size(); i++) {
+            outSb.append(',');
         }
     }
 
