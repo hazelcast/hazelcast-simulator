@@ -31,12 +31,11 @@ public class IdentifiedDataSerializablePojo implements IdentifiedDataSerializabl
     public Integer[] numbers;
     public String value;
 
-    public IdentifiedDataSerializablePojo(){
+    public IdentifiedDataSerializablePojo() {
 
     }
 
-    public IdentifiedDataSerializablePojo(Integer[] numbers, String value)
-    {
+    public IdentifiedDataSerializablePojo(Integer[] numbers, String value) {
         this.numbers = numbers;
         this.value = value;
     }

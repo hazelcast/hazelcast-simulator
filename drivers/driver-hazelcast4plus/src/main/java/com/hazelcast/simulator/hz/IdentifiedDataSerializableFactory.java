@@ -26,7 +26,7 @@ public class IdentifiedDataSerializableFactory implements DataSerializableFactor
 
     @Override
     public IdentifiedDataSerializable create(int typeId) {
-        if ( typeId == SAMPLE_TYPE ) {
+        if (typeId == SAMPLE_TYPE) {
             return new IdentifiedDataSerializablePojo();
         } else {
             return null;
