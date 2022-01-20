@@ -34,6 +34,9 @@ public class JetEngineFullFetchBenchmark extends HazelcastTest {
     // the number of map entries
     public int entryCount = 10_000_000;
 
+    // should the lazy deserialization on client's side be invoked
+    public boolean forceClientDeserialization = false;
+
     //16 byte + N*(20*N
     private IMap<Integer, IdentifiedDataSerializablePojo> map;
 
@@ -79,9 +82,11 @@ public class JetEngineFullFetchBenchmark extends HazelcastTest {
 
         try (SqlResult result = sqlService.execute(query)) {
             for (SqlRow row : result) {
-                Object value = row.getObject(1);
-                if (!(value instanceof IdentifiedDataSerializablePojo)) {
-                    throw new IllegalStateException("Returned object is not " + IdentifiedDataSerializablePojo.class.getSimpleName() + ": " + value);
+                if (forceClientDeserialization) {
+                    Object value = row.getObject(1);
+                    if (!(value instanceof IdentifiedDataSerializablePojo)) {
+                        throw new IllegalStateException("Returned object is not " + IdentifiedDataSerializablePojo.class.getSimpleName() + ": " + value);
+                    }
                 }
                 actual++;
             }

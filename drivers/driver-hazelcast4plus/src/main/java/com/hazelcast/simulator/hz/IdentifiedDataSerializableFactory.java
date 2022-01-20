@@ -22,14 +22,18 @@ public class IdentifiedDataSerializableFactory implements DataSerializableFactor
 
     public static final int FACTORY_ID = 1;
 
-    public static final int SAMPLE_TYPE = 1;
+    public static final int SAMPLE_STRING_TYPE = 1;
+    public static final int SAMPLE_LONG_TYPE = 2;
 
     @Override
     public IdentifiedDataSerializable create(int typeId) {
-        if ( typeId == SAMPLE_TYPE ) {
-            return new IdentifiedDataSerializablePojo();
-        } else {
-            return null;
+        switch (typeId) {
+            case SAMPLE_STRING_TYPE:
+                return new IdentifiedDataSerializablePojo();
+            case SAMPLE_LONG_TYPE:
+                return new IdentifiedDataWithLongSerializablePojo();
+            default:
+                return null;
         }
     }
 }

@@ -13,11 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.benchmarks.map;
+package com.hazelcast.simulator.benchmarks.predicate;
 
+import com.hazelcast.aggregation.Aggregators;
 import com.hazelcast.map.IMap;
 import com.hazelcast.simulator.hz.HazelcastTest;
-import com.hazelcast.simulator.hz.IdentifiedDataSerializablePojo;
+import com.hazelcast.simulator.hz.IdentifiedDataWithLongSerializablePojo;
 import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -25,23 +26,17 @@ import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 
-import java.util.Map;
-import java.util.Set;
 
-
-public class MapAllValuesIdentifiedDataSerializableBenchmark extends HazelcastTest {
+public class PredicateWithSumAggregateBenchmark extends HazelcastTest {
 
     // properties
     // the number of map entries
     public int entryCount = 10_000_000;
 
-    // should the lazy deserialization on client's side be invoked
-    public boolean forceClientDeserialization = false;
+    private long sum = 0;
 
     //16 byte + N*(20*N
-    private IMap<Integer, IdentifiedDataSerializablePojo> map;
-
-    private Object blackHole;
+    private IMap<Integer, IdentifiedDataWithLongSerializablePojo> map;
 
     @Setup
     public void setup() {
@@ -50,7 +45,7 @@ public class MapAllValuesIdentifiedDataSerializableBenchmark extends HazelcastTe
 
     @Prepare(global = true)
     public void prepare() {
-        Streamer<Integer, IdentifiedDataSerializablePojo> streamer = StreamerFactory.getInstance(map);
+        Streamer<Integer, IdentifiedDataWithLongSerializablePojo> streamer = StreamerFactory.getInstance(map);
         Integer[] sampleArray = new Integer[20];
         for (int i = 0; i < 20; i++) {
             sampleArray[i] = i;
@@ -58,7 +53,8 @@ public class MapAllValuesIdentifiedDataSerializableBenchmark extends HazelcastTe
 
         for (int i = 0; i < entryCount; i++) {
             Integer key = i;
-            IdentifiedDataSerializablePojo value = new IdentifiedDataSerializablePojo(sampleArray, String.format("%010d", key));
+            IdentifiedDataWithLongSerializablePojo value = new IdentifiedDataWithLongSerializablePojo(sampleArray, key.longValue());
+            sum += i;
             streamer.pushEntry(key, value);
         }
         streamer.await();
@@ -66,17 +62,11 @@ public class MapAllValuesIdentifiedDataSerializableBenchmark extends HazelcastTe
 
     @TimeStep
     public void timeStep() throws Exception {
-        Set<Map.Entry<Integer, IdentifiedDataSerializablePojo>> entries = map.entrySet();
-        if (entries.size() != entryCount) {
-            throw new Exception("wrong entry count");
-        }
-        if (forceClientDeserialization) {
-            map.entrySet().forEach(this::sink);
-        }
-    }
+        Long sum = map.aggregate(Aggregators.longSum("value"));
 
-    private void sink(Map.Entry<Integer, IdentifiedDataSerializablePojo> entry) {
-        this.blackHole = entry;
+        if (sum != this.sum) {
+            throw new IllegalArgumentException("Invalid sum [expected=" + this.sum + ", actual=" + sum + "]");
+        }
     }
 
     @Teardown

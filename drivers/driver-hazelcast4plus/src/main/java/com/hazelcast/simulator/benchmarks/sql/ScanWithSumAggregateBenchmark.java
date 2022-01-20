@@ -17,7 +17,7 @@ package com.hazelcast.simulator.benchmarks.sql;
 
 import com.hazelcast.map.IMap;
 import com.hazelcast.simulator.hz.HazelcastTest;
-import com.hazelcast.simulator.hz.IdentifiedDataSerializablePojo;
+import com.hazelcast.simulator.hz.IdentifiedDataWithLongSerializablePojo;
 import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -28,16 +28,19 @@ import com.hazelcast.sql.SqlResult;
 import com.hazelcast.sql.SqlRow;
 import com.hazelcast.sql.SqlService;
 
+import java.math.BigDecimal;
 
-public class ScanWithAggregateBenchmark extends HazelcastTest {
+
+public class ScanWithSumAggregateBenchmark extends HazelcastTest {
 
     // properties
     // the number of map entries
     public int entryCount = 10_000_000;
-    public boolean useKeyInsteadOfAsterisk = true;
+
+    private long sum = 0;
 
     //16 byte + N*(20*N
-    private IMap<Integer, IdentifiedDataSerializablePojo> map;
+    private IMap<Integer, IdentifiedDataWithLongSerializablePojo> map;
 
     @Setup
     public void setup() {
@@ -46,7 +49,7 @@ public class ScanWithAggregateBenchmark extends HazelcastTest {
 
     @Prepare(global = true)
     public void prepare() {
-        Streamer<Integer, IdentifiedDataSerializablePojo> streamer = StreamerFactory.getInstance(map);
+        Streamer<Integer, IdentifiedDataWithLongSerializablePojo> streamer = StreamerFactory.getInstance(map);
         Integer[] sampleArray = new Integer[20];
         for (int i = 0; i < 20; i++) {
             sampleArray[i] = i;
@@ -54,7 +57,8 @@ public class ScanWithAggregateBenchmark extends HazelcastTest {
 
         for (int i = 0; i < entryCount; i++) {
             Integer key = i;
-            IdentifiedDataSerializablePojo value = new IdentifiedDataSerializablePojo(sampleArray, String.format("%010d", key));
+            IdentifiedDataWithLongSerializablePojo value = new IdentifiedDataWithLongSerializablePojo(sampleArray, key.longValue());
+            sum += i;
             streamer.pushEntry(key, value);
         }
         streamer.await();
@@ -67,7 +71,7 @@ public class ScanWithAggregateBenchmark extends HazelcastTest {
                 "                'keyFormat' = 'java',\n" +
                 "                'keyJavaClass' = 'java.lang.Integer',\n" +
                 "                'valueFormat' = 'java',\n" +
-                "                'valueJavaClass' = 'com.hazelcast.simulator.hz.IdentifiedDataSerializablePojo'\n" +
+                "                'valueJavaClass' = 'com.hazelcast.simulator.hz.IdentifiedDataWithLongSerializablePojo'\n" +
                 "        )";
 
         sqlService.execute(query);
@@ -77,14 +81,13 @@ public class ScanWithAggregateBenchmark extends HazelcastTest {
     @TimeStep
     public void timeStep() throws Exception {
         SqlService sqlService = targetInstance.getSql();
-        String countingBy = useKeyInsteadOfAsterisk ? "__key" : "*";
-        String query = "SELECT COUNT(" + countingBy + ") FROM " + name ;
+        String query = "SELECT sum(\"value\") FROM " + name ;
         try (SqlResult result = sqlService.execute(query)) {
             int rowCount = 0;
             for (SqlRow row : result) {
-                long count = row.getObject(0);
-                if (count != entryCount) {
-                    throw new IllegalArgumentException("Invalid count [expected=" + entryCount + ", actual=" + count + "]");
+                long sum = ((BigDecimal) row.getObject(0)).longValue();
+                if (sum != this.sum) {
+                    throw new IllegalArgumentException("Invalid sum [expected=" + this.sum + ", actual=" + sum + "]");
                 }
                 rowCount++;
             }
