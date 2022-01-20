@@ -27,12 +27,12 @@ public class BaseTimeBenchmark {
     public int entryCount = 10_000_000;
 
     @TimeStep(prob = 0.5)
-    public void NoopTimeStep() throws Exception {
+    public void noopTimeStep() throws Exception {
 
     }
 
     @TimeStep(prob = 0.5)
-    public void RandomIntTimeStamp() throws Exception {
+    public void randomIntTimeStamp() throws Exception {
         int randomInt = new Random().nextInt(entryCount);
     }
 }

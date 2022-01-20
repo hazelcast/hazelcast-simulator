@@ -40,6 +40,7 @@ public class ScanByValueIndex1EntryBenchmark extends HazelcastTest {
 
     //16 byte + N*(20*N
     private IMap<Integer, IdentifiedDataSerializablePojo> map;
+    private final int arraySize = 20;
 
     @Setup
     public void setup() {
@@ -51,8 +52,8 @@ public class ScanByValueIndex1EntryBenchmark extends HazelcastTest {
         map.addIndex(IndexType.SORTED, "value");
 
         Streamer<Integer, IdentifiedDataSerializablePojo> streamer = StreamerFactory.getInstance(map);
-        Integer[] sampleArray = new Integer[20];
-        for (int i = 0; i < 20; i++) {
+        Integer[] sampleArray = new Integer[arraySize];
+        for (int i = 0; i < arraySize; i++) {
             sampleArray[i] = i;
         }
 
@@ -64,15 +65,15 @@ public class ScanByValueIndex1EntryBenchmark extends HazelcastTest {
         streamer.await();
 
         SqlService sqlService = targetInstance.getSql();
-        String query = "CREATE EXTERNAL MAPPING IF NOT EXISTS " + name + " " +
-                "EXTERNAL NAME " + name + " " +
-                "        TYPE IMap\n" +
-                "        OPTIONS (\n" +
-                "                'keyFormat' = 'java',\n" +
-                "                'keyJavaClass' = 'java.lang.Integer',\n" +
-                "                'valueFormat' = 'java',\n" +
-                "                'valueJavaClass' = 'com.hazelcast.simulator.hz.IdentifiedDataSerializablePojo'\n" +
-                "        )";
+        String query = "CREATE EXTERNAL MAPPING IF NOT EXISTS " + name + " "
+                + "EXTERNAL NAME " + name + " "
+                + "        TYPE IMap\n"
+                + "        OPTIONS (\n"
+                + "                'keyFormat' = 'java',\n"
+                + "                'keyJavaClass' = 'java.lang.Integer',\n"
+                + "                'valueFormat' = 'java',\n"
+                + "                'valueJavaClass' = 'com.hazelcast.simulator.hz.IdentifiedDataSerializablePojo'\n"
+                + "        )";
 
         sqlService.execute(query);
 
