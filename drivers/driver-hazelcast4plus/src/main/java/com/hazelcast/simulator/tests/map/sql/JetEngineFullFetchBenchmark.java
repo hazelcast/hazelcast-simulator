@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.benchmarks.sql;
+package com.hazelcast.simulator.tests.map.sql;
 
-import com.hazelcast.config.IndexType;
 import com.hazelcast.map.IMap;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.hz.IdentifiedDataSerializablePojo;
@@ -29,10 +28,7 @@ import com.hazelcast.sql.SqlResult;
 import com.hazelcast.sql.SqlRow;
 import com.hazelcast.sql.SqlService;
 
-import java.util.Random;
-
-
-public class ScanByValueIndex1EntryBenchmark extends HazelcastTest {
+public class JetEngineFullFetchBenchmark extends HazelcastTest {
 
     // properties
     // the number of map entries
@@ -49,8 +45,6 @@ public class ScanByValueIndex1EntryBenchmark extends HazelcastTest {
 
     @Prepare(global = true)
     public void prepare() {
-        map.addIndex(IndexType.SORTED, "value");
-
         Streamer<Integer, IdentifiedDataSerializablePojo> streamer = StreamerFactory.getInstance(map);
         Integer[] sampleArray = new Integer[arraySize];
         for (int i = 0; i < arraySize; i++) {
@@ -76,26 +70,27 @@ public class ScanByValueIndex1EntryBenchmark extends HazelcastTest {
                 + "        )";
 
         sqlService.execute(query);
-
     }
 
     @TimeStep
     public void timeStep() throws Exception {
         SqlService sqlService = targetInstance.getSql();
-        String query = "SELECT __key, this FROM " + name + " WHERE \"value\" = ?";
-        String valueMatch = String.format("%010d", new Random().nextInt(entryCount));
+        String query = "SELECT __key, this FROM " + name;
         int actual = 0;
-        try (SqlResult result = sqlService.execute(query, valueMatch)) {
+
+        try (SqlResult result = sqlService.execute(query)) {
             for (SqlRow row : result) {
                 Object value = row.getObject(1);
                 if (!(value instanceof IdentifiedDataSerializablePojo)) {
-                    throw new IllegalStateException("Returned object is not " + IdentifiedDataSerializablePojo.class.getSimpleName() + ": " + value);
+                    throw new IllegalStateException("Returned object is not "
+                            + IdentifiedDataSerializablePojo.class.getSimpleName() + ": " + value);
                 }
                 actual++;
             }
         }
-        if (actual != 1) {
-            throw new IllegalArgumentException("Invalid count [expected=" + 1 + ", actual=" + actual + "]");
+
+        if (actual != entryCount) {
+            throw new IllegalArgumentException("Invalid count [expected=" + entryCount + ", actual=" + actual + "]");
         }
     }
 

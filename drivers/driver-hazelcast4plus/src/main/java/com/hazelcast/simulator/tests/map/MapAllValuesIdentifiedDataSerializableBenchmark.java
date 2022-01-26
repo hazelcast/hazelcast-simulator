@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.benchmarks.predicate;
+package com.hazelcast.simulator.tests.map;
 
-import com.hazelcast.aggregation.Aggregators;
 import com.hazelcast.map.IMap;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.hz.IdentifiedDataSerializablePojo;
@@ -26,8 +25,11 @@ import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 
+import java.util.Map;
+import java.util.Set;
 
-public class PredicateWithAggregateBenchmark extends HazelcastTest {
+
+public class MapAllValuesIdentifiedDataSerializableBenchmark extends HazelcastTest {
 
     // properties
     // the number of map entries
@@ -35,6 +37,7 @@ public class PredicateWithAggregateBenchmark extends HazelcastTest {
 
     //16 byte + N*(20*N
     private IMap<Integer, IdentifiedDataSerializablePojo> map;
+    private final int arraySize = 20;
 
     @Setup
     public void setup() {
@@ -44,8 +47,8 @@ public class PredicateWithAggregateBenchmark extends HazelcastTest {
     @Prepare(global = true)
     public void prepare() {
         Streamer<Integer, IdentifiedDataSerializablePojo> streamer = StreamerFactory.getInstance(map);
-        Integer[] sampleArray = new Integer[20];
-        for (int i = 0; i < 20; i++) {
+        Integer[] sampleArray = new Integer[arraySize];
+        for (int i = 0; i < arraySize; i++) {
             sampleArray[i] = i;
         }
 
@@ -59,10 +62,9 @@ public class PredicateWithAggregateBenchmark extends HazelcastTest {
 
     @TimeStep
     public void timeStep() throws Exception {
-        Long count = map.aggregate(Aggregators.count());
-
-        if (count != entryCount) {
-            throw new IllegalArgumentException("Invalid count [expected=" + entryCount + ", actual=" + count + "]");
+        Set<Map.Entry<Integer, IdentifiedDataSerializablePojo>> entries = map.entrySet();
+        if (entries.size() != entryCount) {
+            throw new Exception("wrong entry count");
         }
     }
 

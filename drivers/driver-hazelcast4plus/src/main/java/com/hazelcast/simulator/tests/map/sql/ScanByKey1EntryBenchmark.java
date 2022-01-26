@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.benchmarks.sql;
+package com.hazelcast.simulator.tests.map.sql;
 
-import com.hazelcast.config.IndexType;
 import com.hazelcast.map.IMap;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.hz.IdentifiedDataSerializablePojo;
@@ -32,7 +31,7 @@ import com.hazelcast.sql.SqlService;
 import java.util.Random;
 
 
-public class ScanByValueIndex100EntryBenchmark extends HazelcastTest {
+public class ScanByKey1EntryBenchmark extends HazelcastTest {
 
     // properties
     // the number of map entries
@@ -49,8 +48,6 @@ public class ScanByValueIndex100EntryBenchmark extends HazelcastTest {
 
     @Prepare(global = true)
     public void prepare() {
-        map.addIndex(IndexType.SORTED, "value");
-
         Streamer<Integer, IdentifiedDataSerializablePojo> streamer = StreamerFactory.getInstance(map);
         Integer[] sampleArray = new Integer[arraySize];
         for (int i = 0; i < arraySize; i++) {
@@ -76,20 +73,16 @@ public class ScanByValueIndex100EntryBenchmark extends HazelcastTest {
                 + "        )";
 
         sqlService.execute(query);
-
     }
 
     @TimeStep
     public void timeStep() throws Exception {
         SqlService sqlService = targetInstance.getSql();
-        String query = "SELECT __key, this FROM " + name +
-                " WHERE \"value\">= ?  AND \"value\"< ?";
 
-        int randomInt = new Random().nextInt(entryCount - 100);
-        String minValue = String.format("%010d", randomInt);
-        String maxValue = String.format("%010d", randomInt + 100);
+        String query = "SELECT __key, this FROM " + name + " WHERE __key = ?";
+        int key = new Random().nextInt(entryCount);
         int actual = 0;
-        try (SqlResult result = sqlService.execute(query, minValue, maxValue)) {
+        try (SqlResult result = sqlService.execute(query, key)) {
             for (SqlRow row : result) {
                 Object value = row.getObject(1);
                 if (!(value instanceof IdentifiedDataSerializablePojo)) {
@@ -99,8 +92,9 @@ public class ScanByValueIndex100EntryBenchmark extends HazelcastTest {
                 actual++;
             }
         }
-        if (actual != 100) {
-            throw new IllegalArgumentException("Invalid count [expected=" + 100 + ", actual=" + actual + "]");
+
+        if (actual != 1) {
+            throw new IllegalArgumentException("Invalid count [expected=" + 1 + ", actual=" + actual + "]");
         }
     }
 

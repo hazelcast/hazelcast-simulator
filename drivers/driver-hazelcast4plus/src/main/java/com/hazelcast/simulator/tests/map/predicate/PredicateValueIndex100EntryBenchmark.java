@@ -13,9 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.benchmarks.sql;
+package com.hazelcast.simulator.tests.map.predicate;
 
+import com.hazelcast.config.IndexType;
 import com.hazelcast.map.IMap;
+import com.hazelcast.query.Predicate;
+import com.hazelcast.query.Predicates;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.hz.IdentifiedDataSerializablePojo;
 import com.hazelcast.simulator.test.annotations.Prepare;
@@ -24,14 +27,13 @@ import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
-import com.hazelcast.sql.SqlResult;
-import com.hazelcast.sql.SqlRow;
-import com.hazelcast.sql.SqlService;
 
+import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 
-public class ScanByKey1EntryBenchmark extends HazelcastTest {
+public class PredicateValueIndex100EntryBenchmark extends HazelcastTest {
 
     // properties
     // the number of map entries
@@ -48,6 +50,8 @@ public class ScanByKey1EntryBenchmark extends HazelcastTest {
 
     @Prepare(global = true)
     public void prepare() {
+        map.addIndex(IndexType.SORTED, "value");
+
         Streamer<Integer, IdentifiedDataSerializablePojo> streamer = StreamerFactory.getInstance(map);
         Integer[] sampleArray = new Integer[arraySize];
         for (int i = 0; i < arraySize; i++) {
@@ -60,41 +64,17 @@ public class ScanByKey1EntryBenchmark extends HazelcastTest {
             streamer.pushEntry(key, value);
         }
         streamer.await();
-
-        SqlService sqlService = targetInstance.getSql();
-        String query = "CREATE EXTERNAL MAPPING IF NOT EXISTS " + name + " "
-                + "EXTERNAL NAME " + name + " "
-                + "        TYPE IMap\n"
-                + "        OPTIONS (\n"
-                + "                'keyFormat' = 'java',\n"
-                + "                'keyJavaClass' = 'java.lang.Integer',\n"
-                + "                'valueFormat' = 'java',\n"
-                + "                'valueJavaClass' = 'com.hazelcast.simulator.hz.IdentifiedDataSerializablePojo'\n"
-                + "        )";
-
-        sqlService.execute(query);
     }
 
     @TimeStep
     public void timeStep() throws Exception {
-        SqlService sqlService = targetInstance.getSql();
-
-        String query = "SELECT __key, this FROM " + name + " WHERE __key = ?";
-        int key = new Random().nextInt(entryCount);
-        int actual = 0;
-        try (SqlResult result = sqlService.execute(query, key)) {
-            for (SqlRow row : result) {
-                Object value = row.getObject(1);
-                if (!(value instanceof IdentifiedDataSerializablePojo)) {
-                    throw new IllegalStateException("Returned object is not "
-                            + IdentifiedDataSerializablePojo.class.getSimpleName() + ": " + value);
-                }
-                actual++;
-            }
-        }
-
-        if (actual != 1) {
-            throw new IllegalArgumentException("Invalid count [expected=" + 1 + ", actual=" + actual + "]");
+        int randomInt = new Random().nextInt(entryCount - 100);
+        String minValue = String.format("%010d", randomInt);
+        String maxValue = String.format("%010d", randomInt + 100);
+        Predicate<Integer, IdentifiedDataSerializablePojo> predicate = Predicates.and(Predicates.greaterThan("value", minValue), Predicates.lessEqual("value", maxValue));
+        Set<Map.Entry<Integer, IdentifiedDataSerializablePojo>> entries = map.entrySet(predicate);
+        if (entries.size() != 100) {
+            throw new Exception("wrong entry count");
         }
     }
 

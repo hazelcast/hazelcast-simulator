@@ -13,12 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.benchmarks;
+package com.hazelcast.simulator.tests;
 
 import com.hazelcast.simulator.test.annotations.TimeStep;
 
 import java.util.Random;
 
+/**
+ * A NoOp benchmark to measure base times for base operations.
+ */
 public class BaseTimeBenchmark {
 
 

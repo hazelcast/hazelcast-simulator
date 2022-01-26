@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.benchmarks.sql;
+package com.hazelcast.simulator.tests.map.sql;
 
 import com.hazelcast.map.IMap;
 import com.hazelcast.simulator.hz.HazelcastTest;
@@ -28,8 +28,10 @@ import com.hazelcast.sql.SqlResult;
 import com.hazelcast.sql.SqlRow;
 import com.hazelcast.sql.SqlService;
 
+import java.util.Random;
 
-public class ScanWithAggregateBenchmark extends HazelcastTest {
+
+public class ScanByValue1EntryBenchmark extends HazelcastTest {
 
     // properties
     // the number of map entries
@@ -71,26 +73,27 @@ public class ScanWithAggregateBenchmark extends HazelcastTest {
                 + "        )";
 
         sqlService.execute(query);
-
     }
 
     @TimeStep
     public void timeStep() throws Exception {
         SqlService sqlService = targetInstance.getSql();
-        String query = "SELECT COUNT(*) FROM " + name;
-        try (SqlResult result = sqlService.execute(query)) {
-            int rowCount = 0;
+        String query = "SELECT __key, this FROM " + name + " WHERE \"value\"= ? ";
+        String valueMatch = String.format("%010d", new Random().nextInt(entryCount));
+        int actual = 0;
+        try (SqlResult result = sqlService.execute(query, valueMatch)) {
             for (SqlRow row : result) {
-                long count = row.getObject(0);
-                if (count != entryCount) {
-                    throw new IllegalArgumentException("Invalid count [expected="
-                            + entryCount + ", actual=" + count + "]");
+                Object value = row.getObject(1);
+                if (!(value instanceof IdentifiedDataSerializablePojo)) {
+                    throw new IllegalStateException("Returned object is not "
+                            + IdentifiedDataSerializablePojo.class.getSimpleName() + ": " + value);
                 }
-                rowCount++;
+                actual++;
             }
-            if (rowCount != 1) {
-                throw new IllegalArgumentException("Invalid row count [expected=1 , actual=" + rowCount + "]");
-            }
+        }
+
+        if (actual != 1) {
+            throw new IllegalArgumentException("Invalid count [expected=" + 1 + ", actual=" + actual + "]");
         }
     }
 

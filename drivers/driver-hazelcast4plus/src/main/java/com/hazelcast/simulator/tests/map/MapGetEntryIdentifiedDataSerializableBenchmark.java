@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.benchmarks.sql;
+package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.map.IMap;
 import com.hazelcast.simulator.hz.HazelcastTest;
@@ -24,14 +24,8 @@ import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
-import com.hazelcast.sql.SqlResult;
-import com.hazelcast.sql.SqlRow;
-import com.hazelcast.sql.SqlService;
 
-import java.util.Random;
-
-
-public class ScanByValue1EntryBenchmark extends HazelcastTest {
+public class MapGetEntryIdentifiedDataSerializableBenchmark extends HazelcastTest {
 
     // properties
     // the number of map entries
@@ -60,41 +54,12 @@ public class ScanByValue1EntryBenchmark extends HazelcastTest {
             streamer.pushEntry(key, value);
         }
         streamer.await();
-
-        SqlService sqlService = targetInstance.getSql();
-        String query = "CREATE EXTERNAL MAPPING IF NOT EXISTS " + name + " "
-                + "EXTERNAL NAME " + name + " "
-                + "        TYPE IMap\n"
-                + "        OPTIONS (\n"
-                + "                'keyFormat' = 'java',\n"
-                + "                'keyJavaClass' = 'java.lang.Integer',\n"
-                + "                'valueFormat' = 'java',\n"
-                + "                'valueJavaClass' = 'com.hazelcast.simulator.hz.IdentifiedDataSerializablePojo'\n"
-                + "        )";
-
-        sqlService.execute(query);
     }
 
     @TimeStep
     public void timeStep() throws Exception {
-        SqlService sqlService = targetInstance.getSql();
-        String query = "SELECT __key, this FROM " + name + " WHERE \"value\"= ? ";
-        String valueMatch = String.format("%010d", new Random().nextInt(entryCount));
-        int actual = 0;
-        try (SqlResult result = sqlService.execute(query, valueMatch)) {
-            for (SqlRow row : result) {
-                Object value = row.getObject(1);
-                if (!(value instanceof IdentifiedDataSerializablePojo)) {
-                    throw new IllegalStateException("Returned object is not "
-                            + IdentifiedDataSerializablePojo.class.getSimpleName() + ": " + value);
-                }
-                actual++;
-            }
-        }
-
-        if (actual != 1) {
-            throw new IllegalArgumentException("Invalid count [expected=" + 1 + ", actual=" + actual + "]");
-        }
+        IdentifiedDataSerializablePojo serializablePojo = map.get(33);
+        assert serializablePojo != null;
     }
 
     @Teardown

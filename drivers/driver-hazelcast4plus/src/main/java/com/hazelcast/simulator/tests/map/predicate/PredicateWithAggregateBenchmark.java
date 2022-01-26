@@ -13,12 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.benchmarks.predicate;
+package com.hazelcast.simulator.tests.map.predicate;
 
-import com.hazelcast.config.IndexType;
+import com.hazelcast.aggregation.Aggregators;
 import com.hazelcast.map.IMap;
-import com.hazelcast.query.Predicate;
-import com.hazelcast.query.Predicates;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.hz.IdentifiedDataSerializablePojo;
 import com.hazelcast.simulator.test.annotations.Prepare;
@@ -28,12 +26,8 @@ import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
 
-
-public class PredicateValueIndex100EntryBenchmark extends HazelcastTest {
+public class PredicateWithAggregateBenchmark extends HazelcastTest {
 
     // properties
     // the number of map entries
@@ -41,6 +35,7 @@ public class PredicateValueIndex100EntryBenchmark extends HazelcastTest {
 
     //16 byte + N*(20*N
     private IMap<Integer, IdentifiedDataSerializablePojo> map;
+    private final int arraySize = 20;
 
     @Setup
     public void setup() {
@@ -49,11 +44,9 @@ public class PredicateValueIndex100EntryBenchmark extends HazelcastTest {
 
     @Prepare(global = true)
     public void prepare() {
-        map.addIndex(IndexType.SORTED, "value");
-
         Streamer<Integer, IdentifiedDataSerializablePojo> streamer = StreamerFactory.getInstance(map);
-        Integer[] sampleArray = new Integer[20];
-        for (int i = 0; i < 20; i++) {
+        Integer[] sampleArray = new Integer[arraySize];
+        for (int i = 0; i < arraySize; i++) {
             sampleArray[i] = i;
         }
 
@@ -67,13 +60,10 @@ public class PredicateValueIndex100EntryBenchmark extends HazelcastTest {
 
     @TimeStep
     public void timeStep() throws Exception {
-        int randomInt = new Random().nextInt(entryCount - 100);
-        String minValue = String.format("%010d", randomInt);
-        String maxValue = String.format("%010d", randomInt + 100);
-        Predicate<Integer, IdentifiedDataSerializablePojo> predicate = Predicates.and(Predicates.greaterThan("value", minValue), Predicates.lessEqual("value", maxValue));
-        Set<Map.Entry<Integer, IdentifiedDataSerializablePojo>> entries = map.entrySet(predicate);
-        if (entries.size() != 100) {
-            throw new Exception("wrong entry count");
+        Long count = map.aggregate(Aggregators.count());
+
+        if (count != entryCount) {
+            throw new IllegalArgumentException("Invalid count [expected=" + entryCount + ", actual=" + count + "]");
         }
     }
 

@@ -13,9 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.benchmarks.map;
+package com.hazelcast.simulator.tests.map.predicate;
 
+import com.hazelcast.config.IndexType;
 import com.hazelcast.map.IMap;
+import com.hazelcast.query.Predicates;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.hz.IdentifiedDataSerializablePojo;
 import com.hazelcast.simulator.test.annotations.Prepare;
@@ -25,7 +27,12 @@ import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 
-public class MapGetEntryIdentifiedDataSerializableBenchmark extends HazelcastTest {
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
+
+
+public class PredicateValueIndex1EntryBenchmark extends HazelcastTest {
 
     // properties
     // the number of map entries
@@ -33,6 +40,7 @@ public class MapGetEntryIdentifiedDataSerializableBenchmark extends HazelcastTes
 
     //16 byte + N*(20*N
     private IMap<Integer, IdentifiedDataSerializablePojo> map;
+    private final int arraySize = 20;
 
     @Setup
     public void setup() {
@@ -41,9 +49,11 @@ public class MapGetEntryIdentifiedDataSerializableBenchmark extends HazelcastTes
 
     @Prepare(global = true)
     public void prepare() {
+        map.addIndex(IndexType.SORTED, "value");
+
         Streamer<Integer, IdentifiedDataSerializablePojo> streamer = StreamerFactory.getInstance(map);
-        Integer[] sampleArray = new Integer[20];
-        for (int i = 0; i < 20; i++) {
+        Integer[] sampleArray = new Integer[arraySize];
+        for (int i = 0; i < arraySize; i++) {
             sampleArray[i] = i;
         }
 
@@ -57,8 +67,11 @@ public class MapGetEntryIdentifiedDataSerializableBenchmark extends HazelcastTes
 
     @TimeStep
     public void timeStep() throws Exception {
-        IdentifiedDataSerializablePojo serializablePojo = map.get(33);
-        assert serializablePojo != null;
+        String valueMatch = String.format("%010d", new Random().nextInt(entryCount));
+        Set<Map.Entry<Integer, IdentifiedDataSerializablePojo>> entries = map.entrySet(Predicates.equal("value", valueMatch));
+        if (entries.size() != 1) {
+            throw new Exception("wrong entry count");
+        }
     }
 
     @Teardown

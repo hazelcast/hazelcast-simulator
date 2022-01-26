@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.benchmarks.predicate;
+package com.hazelcast.simulator.tests.map.predicate;
 
 import com.hazelcast.map.IMap;
 import com.hazelcast.query.Predicates;
@@ -39,6 +39,7 @@ public class PredicateValue1EntryBenchmark extends HazelcastTest {
 
     //16 byte + N*(20*N
     private IMap<Integer, IdentifiedDataSerializablePojo> map;
+    private final int arraySize = 20;
 
     @Setup
     public void setup() {
@@ -48,8 +49,8 @@ public class PredicateValue1EntryBenchmark extends HazelcastTest {
     @Prepare(global = true)
     public void prepare() {
         Streamer<Integer, IdentifiedDataSerializablePojo> streamer = StreamerFactory.getInstance(map);
-        Integer[] sampleArray = new Integer[20];
-        for (int i = 0; i < 20; i++) {
+        Integer[] sampleArray = new Integer[arraySize];
+        for (int i = 0; i < arraySize; i++) {
             sampleArray[i] = i;
         }
 
