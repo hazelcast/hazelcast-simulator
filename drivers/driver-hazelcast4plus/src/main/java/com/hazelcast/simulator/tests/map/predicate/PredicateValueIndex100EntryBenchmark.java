@@ -71,7 +71,8 @@ public class PredicateValueIndex100EntryBenchmark extends HazelcastTest {
         int randomInt = new Random().nextInt(entryCount - 100);
         String minValue = String.format("%010d", randomInt);
         String maxValue = String.format("%010d", randomInt + 100);
-        Predicate<Integer, IdentifiedDataSerializablePojo> predicate = Predicates.and(Predicates.greaterThan("value", minValue), Predicates.lessEqual("value", maxValue));
+        Predicate<Integer, IdentifiedDataSerializablePojo> predicate =
+                Predicates.and(Predicates.greaterThan("value", minValue), Predicates.lessEqual("value", maxValue));
         Set<Map.Entry<Integer, IdentifiedDataSerializablePojo>> entries = map.entrySet(predicate);
         if (entries.size() != 100) {
             throw new Exception("wrong entry count");

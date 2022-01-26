@@ -89,7 +89,8 @@ public class ScanByValueIndex1EntryBenchmark extends HazelcastTest {
             for (SqlRow row : result) {
                 Object value = row.getObject(1);
                 if (!(value instanceof IdentifiedDataSerializablePojo)) {
-                    throw new IllegalStateException("Returned object is not " + IdentifiedDataSerializablePojo.class.getSimpleName() + ": " + value);
+                    throw new IllegalStateException("Returned object is not "
+                            + IdentifiedDataSerializablePojo.class.getSimpleName() + ": " + value);
                 }
                 actual++;
             }

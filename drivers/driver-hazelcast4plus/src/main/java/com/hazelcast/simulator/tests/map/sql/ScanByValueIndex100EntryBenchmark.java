@@ -82,8 +82,8 @@ public class ScanByValueIndex100EntryBenchmark extends HazelcastTest {
     @TimeStep
     public void timeStep() throws Exception {
         SqlService sqlService = targetInstance.getSql();
-        String query = "SELECT __key, this FROM " + name +
-                " WHERE \"value\">= ?  AND \"value\"< ?";
+        String query = "SELECT __key, this FROM " + name
+                + " WHERE \"value\">= ?  AND \"value\"< ?";
 
         int randomInt = new Random().nextInt(entryCount - 100);
         String minValue = String.format("%010d", randomInt);
