@@ -36,7 +36,7 @@ public class MapGetEntryIdentifiedDataSerializableBenchmark extends HazelcastTes
     private final int arraySize = 20;
 
     @Setup
-    public void setup() {
+    public void setUp() {
         this.map = targetInstance.getMap(name);
     }
 
@@ -63,7 +63,7 @@ public class MapGetEntryIdentifiedDataSerializableBenchmark extends HazelcastTes
     }
 
     @Teardown
-    public void teardown() {
+    public void tearDown() {
         map.destroy();
     }
 }

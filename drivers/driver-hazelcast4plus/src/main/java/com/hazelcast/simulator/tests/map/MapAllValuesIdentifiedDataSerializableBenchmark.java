@@ -40,7 +40,7 @@ public class MapAllValuesIdentifiedDataSerializableBenchmark extends HazelcastTe
     private final int arraySize = 20;
 
     @Setup
-    public void setup() {
+    public void setUp() {
         this.map = targetInstance.getMap(name);
     }
 
@@ -69,7 +69,7 @@ public class MapAllValuesIdentifiedDataSerializableBenchmark extends HazelcastTe
     }
 
     @Teardown
-    public void teardown() {
+    public void tearDown() {
         map.destroy();
     }
 }

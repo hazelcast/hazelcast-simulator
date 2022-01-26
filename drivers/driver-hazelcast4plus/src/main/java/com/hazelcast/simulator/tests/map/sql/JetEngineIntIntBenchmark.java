@@ -38,7 +38,7 @@ public class JetEngineIntIntBenchmark extends HazelcastTest {
     private IMap<Integer, Integer> map;
 
     @Setup
-    public void setup() {
+    public void setUp() {
         this.map = targetInstance.getMap(name);
     }
 
@@ -85,7 +85,7 @@ public class JetEngineIntIntBenchmark extends HazelcastTest {
     }
 
     @Teardown
-    public void teardown() {
+    public void tearDown() {
         map.destroy();
     }
 }

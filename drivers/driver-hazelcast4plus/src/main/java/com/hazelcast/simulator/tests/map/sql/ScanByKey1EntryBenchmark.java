@@ -42,7 +42,7 @@ public class ScanByKey1EntryBenchmark extends HazelcastTest {
     private final int arraySize = 20;
 
     @Setup
-    public void setup() {
+    public void setUp() {
         this.map = targetInstance.getMap(name);
     }
 
@@ -99,7 +99,7 @@ public class ScanByKey1EntryBenchmark extends HazelcastTest {
     }
 
     @Teardown
-    public void teardown() {
+    public void tearDown() {
         map.destroy();
     }
 }
