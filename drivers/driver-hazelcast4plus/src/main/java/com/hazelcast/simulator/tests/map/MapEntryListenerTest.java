@@ -175,8 +175,22 @@ public class MapEntryListenerTest extends HazelcastTest {
         if (threadsRemaining.decrementAndGet() == 0) {
             sleepSeconds(SLEEP_CATCH_EVENTS_SECONDS);
 
+            // wait to receive all published events from all nodes.
+            waitWhileListenerEventsIncrease();
+
+            // serialize listener, after this point if
+            // there is still not received events, we no
+            // longer can record it in listener object.
             listeners.add(listener);
         }
+    }
+
+    private void waitWhileListenerEventsIncrease() {
+        EventCount total = new EventCount();
+        for (EventCount eventCount : eventCounts) {
+            total.add(eventCount);
+        }
+        total.waitWhileListenerEventsIncrease(listener, 10);
     }
 
     public class ThreadState extends BaseThreadState {
