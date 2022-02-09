@@ -29,7 +29,7 @@ import com.hazelcast.sql.SqlRow;
 import com.hazelcast.sql.SqlService;
 
 
-public class ScanWithSumAggregateJsonBenchmark extends HazelcastTest {
+public class ScanWithSumAggregateJsonParameterBenchmark extends HazelcastTest {
 
     // properties
     // the number of map entries
@@ -79,8 +79,8 @@ public class ScanWithSumAggregateJsonBenchmark extends HazelcastTest {
     @TimeStep
     public void timeStep() throws Exception {
         SqlService sqlService = targetInstance.getSql();
-        String query = "SELECT sum(JSON_VALUE(this, '$.value' RETURNING INTEGER)) FROM " + name ;
-        try (SqlResult result = sqlService.execute(query)) {
+        String query = "SELECT sum(JSON_VALUE(this, ? RETURNING INTEGER)) FROM " + name ;
+        try (SqlResult result = sqlService.execute(query, "$.value")) {
             int rowCount = 0;
             for (SqlRow row : result) {
                 long sum = row.getObject(0);

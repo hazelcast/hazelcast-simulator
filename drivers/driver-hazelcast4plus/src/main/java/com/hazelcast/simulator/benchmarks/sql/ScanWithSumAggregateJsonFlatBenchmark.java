@@ -29,7 +29,7 @@ import com.hazelcast.sql.SqlRow;
 import com.hazelcast.sql.SqlService;
 
 
-public class ScanWithSumAggregateJsonBenchmark extends HazelcastTest {
+public class ScanWithSumAggregateJsonFlatBenchmark extends HazelcastTest {
 
     // properties
     // the number of map entries
@@ -38,7 +38,7 @@ public class ScanWithSumAggregateJsonBenchmark extends HazelcastTest {
     private long sum = 0;
 
     //16 byte + N*(20*N
-    private IMap<HazelcastJsonValue, HazelcastJsonValue> map;
+    private IMap<Integer, HazelcastJsonValue> map;
 
     @Setup
     public void setup() {
@@ -47,7 +47,7 @@ public class ScanWithSumAggregateJsonBenchmark extends HazelcastTest {
 
     @Prepare(global = true)
     public void prepare() {
-        Streamer<HazelcastJsonValue, HazelcastJsonValue> streamer = StreamerFactory.getInstance(map);
+        Streamer<Integer, HazelcastJsonValue> streamer = StreamerFactory.getInstance(map);
         StringBuilder suffix = new StringBuilder();
         for (int j = 0; j < 31; j++) {
             suffix.append(", \"value").append(j).append("\":\"").append(j).append("\"");
@@ -55,20 +55,23 @@ public class ScanWithSumAggregateJsonBenchmark extends HazelcastTest {
         suffix.append("}");
 
         for (int i = 0; i < entryCount; i++) {
+            Integer key = i;
             StringBuilder builder = new StringBuilder();
             builder.append("{").append("\"id\":").append(i).append(",\"value\":").append(i).append(suffix);
             HazelcastJsonValue jsonValue = new HazelcastJsonValue(builder.toString());
             sum += i;
-            streamer.pushEntry(new HazelcastJsonValue("" + i), jsonValue);
+            streamer.pushEntry(key, jsonValue);
         }
+
         streamer.await();
 
         SqlService sqlService = targetInstance.getSql();
         String query = "CREATE MAPPING IF NOT EXISTS " + name + " " +
+                " (id INT EXTERNAL NAME \"__key.id\", \"value\" INTEGER EXTERNAL NAME \"this.value\")" +
                 "        TYPE IMap\n" +
                 "        OPTIONS (\n" +
-                "                'keyFormat' = 'json',\n" +
-                "                'valueFormat' = 'json'\n" +
+                "                'keyFormat' = 'json-flat',\n" +
+                "                'valueFormat' = 'json-flat'\n" +
                 "        )";
 
 
@@ -79,7 +82,7 @@ public class ScanWithSumAggregateJsonBenchmark extends HazelcastTest {
     @TimeStep
     public void timeStep() throws Exception {
         SqlService sqlService = targetInstance.getSql();
-        String query = "SELECT sum(JSON_VALUE(this, '$.value' RETURNING INTEGER)) FROM " + name ;
+        String query = "SELECT sum(\"value\") FROM " + name ;
         try (SqlResult result = sqlService.execute(query)) {
             int rowCount = 0;
             for (SqlRow row : result) {
