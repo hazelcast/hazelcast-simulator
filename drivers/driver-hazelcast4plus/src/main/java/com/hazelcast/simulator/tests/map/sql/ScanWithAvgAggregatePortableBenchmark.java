@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.benchmarks.sql;
+package com.hazelcast.simulator.tests.map.sql;
 
 import com.hazelcast.map.IMap;
 import com.hazelcast.simulator.hz.HazelcastTest;
@@ -35,13 +35,13 @@ public class ScanWithAvgAggregatePortableBenchmark extends HazelcastTest {
     // the number of map entries
     public int entryCount = 10_000_000;
 
-    private long sum = 0;
+    private long sum;
 
     //16 byte + N*(20*N
     private IMap<Integer, IdentifiedDataWithLongPortablePojo> map;
 
     @Setup
-    public void setup() {
+    public void setUp() {
         this.map = targetInstance.getMap(name);
     }
 
@@ -62,15 +62,15 @@ public class ScanWithAvgAggregatePortableBenchmark extends HazelcastTest {
         streamer.await();
 
         SqlService sqlService = targetInstance.getSql();
-        String query = "CREATE EXTERNAL MAPPING IF NOT EXISTS " + name + " " +
-                "EXTERNAL NAME " + name + " " +
-                "        TYPE IMap\n" +
-                "        OPTIONS (\n" +
-                "                'keyFormat' = 'java',\n" +
-                "                'keyJavaClass' = 'java.lang.Integer',\n" +
-                "                'valueFormat' = 'java',\n" +
-                "                'valueJavaClass' = 'com.hazelcast.simulator.hz.IdentifiedDataWithLongPortablePojo'\n" +
-                "        )";
+        String query = "CREATE EXTERNAL MAPPING IF NOT EXISTS " + name + " "
+                + "EXTERNAL NAME " + name + " "
+                + "        TYPE IMap\n"
+                + "        OPTIONS (\n"
+                + "                'keyFormat' = 'java',\n"
+                + "                'keyJavaClass' = 'java.lang.Integer',\n"
+                + "                'valueFormat' = 'java',\n"
+                + "                'valueJavaClass' = 'com.hazelcast.simulator.hz.IdentifiedDataWithLongPortablePojo'\n"
+                + "        )";
 
         sqlService.execute(query);
 
@@ -79,7 +79,7 @@ public class ScanWithAvgAggregatePortableBenchmark extends HazelcastTest {
     @TimeStep
     public void timeStep() throws Exception {
         SqlService sqlService = targetInstance.getSql();
-        String query = "SELECT avg(\"value\") FROM " + name ;
+        String query = "SELECT avg(\"value\") FROM " + name;
         try (SqlResult result = sqlService.execute(query)) {
             int rowCount = 0;
             for (SqlRow row : result) {
@@ -93,7 +93,7 @@ public class ScanWithAvgAggregatePortableBenchmark extends HazelcastTest {
     }
 
     @Teardown
-    public void teardown() {
+    public void tearDown() {
         map.destroy();
     }
 }

@@ -37,13 +37,13 @@ public class ScanWithSumAggregatePortableBenchmark extends HazelcastTest {
     // the number of map entries
     public int entryCount = 10_000_000;
 
-    private long sum = 0;
+    private long sum;
 
     //16 byte + N*(20*N
     private IMap<Integer, IdentifiedDataWithLongPortablePojo> map;
 
     @Setup
-    public void setup() {
+    public void setUp() {
         this.map = targetInstance.getMap(name);
     }
 
@@ -64,15 +64,16 @@ public class ScanWithSumAggregatePortableBenchmark extends HazelcastTest {
         streamer.await();
 
         SqlService sqlService = targetInstance.getSql();
-        String query = "CREATE EXTERNAL MAPPING IF NOT EXISTS " + name + " " +
-                "EXTERNAL NAME " + name + " " +
-                "        TYPE IMap\n" +
-                "        OPTIONS (\n" +
-                "                'keyFormat' = 'java',\n" +
-                "                'keyJavaClass' = 'java.lang.Integer',\n" +
-                "                'valueFormat' = 'java',\n" +
-                "                'valueJavaClass' = 'com.hazelcast.simulator.hz.IdentifiedDataWithLongPortablePojo'\n" +
-                "        )";
+        String query = "CREATE EXTERNAL MAPPING IF NOT EXISTS " + name + " "
+                + "EXTERNAL NAME " + name
+                + " "
+                + "        TYPE IMap\n"
+                + "        OPTIONS (\n"
+                + "                'keyFormat' = 'java',\n"
+                + "                'keyJavaClass' = 'java.lang.Integer',\n"
+                + "                'valueFormat' = 'java',\n"
+                + "                'valueJavaClass' = 'com.hazelcast.simulator.hz.IdentifiedDataWithLongPortablePojo'\n"
+                + "        )";
 
         sqlService.execute(query);
 
@@ -81,7 +82,7 @@ public class ScanWithSumAggregatePortableBenchmark extends HazelcastTest {
     @TimeStep
     public void timeStep() throws Exception {
         SqlService sqlService = targetInstance.getSql();
-        String query = "SELECT sum(\"value\") FROM " + name ;
+        String query = "SELECT sum(\"value\") FROM " + name;
         try (SqlResult result = sqlService.execute(query)) {
             int rowCount = 0;
             for (SqlRow row : result) {
@@ -98,7 +99,7 @@ public class ScanWithSumAggregatePortableBenchmark extends HazelcastTest {
     }
 
     @Teardown
-    public void teardown() {
+    public void tearDown() {
         map.destroy();
     }
 }

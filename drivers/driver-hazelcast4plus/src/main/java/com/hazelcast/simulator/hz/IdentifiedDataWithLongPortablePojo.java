@@ -26,16 +26,13 @@ import java.io.IOException;
  * With 20 integers in 'numbers' and a long in 'value'.
  */
 public class IdentifiedDataWithLongPortablePojo implements Portable {
-
     public Integer[] numbers;
     public Long value;
 
-    public IdentifiedDataWithLongPortablePojo(){
-
+    public IdentifiedDataWithLongPortablePojo() {
     }
 
-    public IdentifiedDataWithLongPortablePojo(Integer[] numbers, Long value)
-    {
+    public IdentifiedDataWithLongPortablePojo(Integer[] numbers, Long value) {
         this.numbers = numbers;
         this.value = value;
     }

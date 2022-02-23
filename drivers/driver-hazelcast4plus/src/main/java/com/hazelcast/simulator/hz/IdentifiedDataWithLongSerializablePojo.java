@@ -30,12 +30,10 @@ public class IdentifiedDataWithLongSerializablePojo implements IdentifiedDataSer
     public Integer[] numbers;
     public Long value;
 
-    public IdentifiedDataWithLongSerializablePojo(){
-
+    public IdentifiedDataWithLongSerializablePojo() {
     }
 
-    public IdentifiedDataWithLongSerializablePojo(Integer[] numbers, Long value)
-    {
+    public IdentifiedDataWithLongSerializablePojo(Integer[] numbers, Long value) {
         this.numbers = numbers;
         this.value = value;
     }

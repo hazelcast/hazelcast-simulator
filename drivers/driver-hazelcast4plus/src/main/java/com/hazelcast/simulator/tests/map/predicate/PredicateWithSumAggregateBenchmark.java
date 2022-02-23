@@ -33,13 +33,13 @@ public class PredicateWithSumAggregateBenchmark extends HazelcastTest {
     // the number of map entries
     public int entryCount = 10_000_000;
 
-    private long sum = 0;
+    private long sum;
 
     //16 byte + N*(20*N
     private IMap<Integer, IdentifiedDataWithLongSerializablePojo> map;
 
     @Setup
-    public void setup() {
+    public void setUp() {
         this.map = targetInstance.getMap(name);
     }
 
@@ -53,7 +53,8 @@ public class PredicateWithSumAggregateBenchmark extends HazelcastTest {
 
         for (int i = 0; i < entryCount; i++) {
             Integer key = i;
-            IdentifiedDataWithLongSerializablePojo value = new IdentifiedDataWithLongSerializablePojo(sampleArray, key.longValue());
+            IdentifiedDataWithLongSerializablePojo value =
+                    new IdentifiedDataWithLongSerializablePojo(sampleArray, key.longValue());
             sum += i;
             streamer.pushEntry(key, value);
         }
@@ -70,7 +71,7 @@ public class PredicateWithSumAggregateBenchmark extends HazelcastTest {
     }
 
     @Teardown
-    public void teardown() {
+    public void tearDown() {
         map.destroy();
     }
 }

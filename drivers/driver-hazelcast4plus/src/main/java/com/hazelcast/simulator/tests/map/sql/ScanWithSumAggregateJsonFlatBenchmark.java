@@ -35,13 +35,13 @@ public class ScanWithSumAggregateJsonFlatBenchmark extends HazelcastTest {
     // the number of map entries
     public int entryCount = 10_000_000;
 
-    private long sum = 0;
+    private long sum;
 
     //16 byte + N*(20*N
     private IMap<Integer, HazelcastJsonValue> map;
 
     @Setup
-    public void setup() {
+    public void setUp() {
         this.map = targetInstance.getMap(name);
     }
 
@@ -66,23 +66,21 @@ public class ScanWithSumAggregateJsonFlatBenchmark extends HazelcastTest {
         streamer.await();
 
         SqlService sqlService = targetInstance.getSql();
-        String query = "CREATE MAPPING IF NOT EXISTS " + name + " " +
-                " (id INT EXTERNAL NAME \"__key.id\", \"value\" INTEGER EXTERNAL NAME \"this.value\")" +
-                "        TYPE IMap\n" +
-                "        OPTIONS (\n" +
-                "                'keyFormat' = 'json-flat',\n" +
-                "                'valueFormat' = 'json-flat'\n" +
-                "        )";
-
+        String query = "CREATE MAPPING IF NOT EXISTS " + name + " "
+                + " (id INT EXTERNAL NAME \"__key.id\", \"value\" INTEGER EXTERNAL NAME \"this.value\")"
+                + "        TYPE IMap\n"
+                + "        OPTIONS (\n"
+                + "                'keyFormat' = 'json-flat',\n"
+                + "                'valueFormat' = 'json-flat'\n"
+                + "        )";
 
         sqlService.execute(query);
-
     }
 
     @TimeStep
     public void timeStep() throws Exception {
         SqlService sqlService = targetInstance.getSql();
-        String query = "SELECT sum(\"value\") FROM " + name ;
+        String query = "SELECT sum(\"value\") FROM " + name;
         try (SqlResult result = sqlService.execute(query)) {
             int rowCount = 0;
             for (SqlRow row : result) {
@@ -99,7 +97,7 @@ public class ScanWithSumAggregateJsonFlatBenchmark extends HazelcastTest {
     }
 
     @Teardown
-    public void teardown() {
+    public void tearDown() {
         map.destroy();
     }
 }

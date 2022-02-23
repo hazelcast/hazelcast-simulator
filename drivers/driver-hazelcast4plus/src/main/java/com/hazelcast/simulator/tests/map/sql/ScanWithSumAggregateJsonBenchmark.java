@@ -35,13 +35,13 @@ public class ScanWithSumAggregateJsonBenchmark extends HazelcastTest {
     // the number of map entries
     public int entryCount = 10_000_000;
 
-    private long sum = 0;
+    private long sum;
 
     //16 byte + N*(20*N
     private IMap<HazelcastJsonValue, HazelcastJsonValue> map;
 
     @Setup
-    public void setup() {
+    public void setUp() {
         this.map = targetInstance.getMap(name);
     }
 
@@ -64,12 +64,12 @@ public class ScanWithSumAggregateJsonBenchmark extends HazelcastTest {
         streamer.await();
 
         SqlService sqlService = targetInstance.getSql();
-        String query = "CREATE MAPPING IF NOT EXISTS " + name + " " +
-                "        TYPE IMap\n" +
-                "        OPTIONS (\n" +
-                "                'keyFormat' = 'json',\n" +
-                "                'valueFormat' = 'json'\n" +
-                "        )";
+        String query = "CREATE MAPPING IF NOT EXISTS " + name + " "
+                + "        TYPE IMap\n"
+                + "        OPTIONS (\n"
+                + "                'keyFormat' = 'json',\n"
+                + "                'valueFormat' = 'json'\n"
+                + "        )";
 
 
         sqlService.execute(query);
@@ -96,7 +96,7 @@ public class ScanWithSumAggregateJsonBenchmark extends HazelcastTest {
     }
 
     @Teardown
-    public void teardown() {
+    public void tearDown() {
         map.destroy();
     }
 }

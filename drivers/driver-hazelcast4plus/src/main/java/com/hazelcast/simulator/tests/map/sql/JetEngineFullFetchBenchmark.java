@@ -35,7 +35,7 @@ public class JetEngineFullFetchBenchmark extends HazelcastTest {
     public int entryCount = 10_000_000;
 
     // should the lazy deserialization on client's side be invoked
-    public boolean forceClientDeserialization = false;
+    public boolean forceClientDeserialization;
 
     //16 byte + N*(20*N
     private IMap<Integer, IdentifiedDataSerializablePojo> map;
