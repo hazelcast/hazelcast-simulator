@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.benchmarks.predicate;
+package com.hazelcast.simulator.tests.map.predicate;
 
 import com.hazelcast.aggregation.Aggregators;
 import com.hazelcast.map.IMap;

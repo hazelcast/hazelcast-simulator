@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.benchmarks.sql;
+package com.hazelcast.simulator.tests.map.sql;
 
 import com.hazelcast.map.IMap;
 import com.hazelcast.simulator.hz.HazelcastTest;

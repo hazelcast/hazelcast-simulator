@@ -25,6 +25,8 @@ import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 
+import java.util.Random;
+
 public class MapGetEntryIdentifiedDataSerializableBenchmark extends HazelcastTest {
 
     // properties
@@ -58,7 +60,8 @@ public class MapGetEntryIdentifiedDataSerializableBenchmark extends HazelcastTes
 
     @TimeStep
     public void timeStep() throws Exception {
-        IdentifiedDataSerializablePojo serializablePojo = map.get(33);
+        int key = new Random().nextInt(entryCount);
+        IdentifiedDataSerializablePojo serializablePojo = map.get(key);
         assert serializablePojo != null;
     }
 
