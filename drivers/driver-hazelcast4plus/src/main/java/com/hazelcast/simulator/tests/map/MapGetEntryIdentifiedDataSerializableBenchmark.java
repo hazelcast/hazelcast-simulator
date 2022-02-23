@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.benchmarks.map;
+package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.map.IMap;
 import com.hazelcast.simulator.hz.HazelcastTest;
@@ -24,9 +24,6 @@ import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
-import com.hazelcast.sql.SqlResult;
-import com.hazelcast.sql.SqlService;
-
 
 public class MapGetEntryIdentifiedDataSerializableBenchmark extends HazelcastTest {
 
@@ -36,17 +33,18 @@ public class MapGetEntryIdentifiedDataSerializableBenchmark extends HazelcastTes
 
     //16 byte + N*(20*N
     private IMap<Integer, IdentifiedDataSerializablePojo> map;
+    private final int arraySize = 20;
 
     @Setup
-    public void setup() {
+    public void setUp() {
         this.map = targetInstance.getMap(name);
     }
 
     @Prepare(global = true)
     public void prepare() {
         Streamer<Integer, IdentifiedDataSerializablePojo> streamer = StreamerFactory.getInstance(map);
-        Integer[] sampleArray = new Integer[20];
-        for (int i = 0; i < 20; i++) {
+        Integer[] sampleArray = new Integer[arraySize];
+        for (int i = 0; i < arraySize; i++) {
             sampleArray[i] = i;
         }
 
@@ -61,11 +59,11 @@ public class MapGetEntryIdentifiedDataSerializableBenchmark extends HazelcastTes
     @TimeStep
     public void timeStep() throws Exception {
         IdentifiedDataSerializablePojo serializablePojo = map.get(33);
-        assert serializablePojo!=null;
+        assert serializablePojo != null;
     }
 
     @Teardown
-    public void teardown() {
+    public void tearDown() {
         map.destroy();
     }
 }

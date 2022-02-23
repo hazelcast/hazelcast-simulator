@@ -13,9 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.benchmarks.map;
+package com.hazelcast.simulator.tests.map.predicate;
 
+import com.hazelcast.config.IndexType;
 import com.hazelcast.map.IMap;
+import com.hazelcast.query.Predicate;
+import com.hazelcast.query.Predicates;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.hz.IdentifiedDataSerializablePojo;
 import com.hazelcast.simulator.test.annotations.Prepare;
@@ -26,33 +29,32 @@ import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 
 
-public class MapAllValuesIdentifiedDataSerializableBenchmark extends HazelcastTest {
+public class PredicateValueIndex100EntryBenchmark extends HazelcastTest {
 
     // properties
     // the number of map entries
     public int entryCount = 10_000_000;
 
-    // should the lazy deserialization on client's side be invoked
-    public boolean forceClientDeserialization = false;
-
     //16 byte + N*(20*N
     private IMap<Integer, IdentifiedDataSerializablePojo> map;
-
-    private Object blackHole;
+    private final int arraySize = 20;
 
     @Setup
-    public void setup() {
+    public void setUp() {
         this.map = targetInstance.getMap(name);
     }
 
     @Prepare(global = true)
     public void prepare() {
+        map.addIndex(IndexType.SORTED, "value");
+
         Streamer<Integer, IdentifiedDataSerializablePojo> streamer = StreamerFactory.getInstance(map);
-        Integer[] sampleArray = new Integer[20];
-        for (int i = 0; i < 20; i++) {
+        Integer[] sampleArray = new Integer[arraySize];
+        for (int i = 0; i < arraySize; i++) {
             sampleArray[i] = i;
         }
 
@@ -66,21 +68,19 @@ public class MapAllValuesIdentifiedDataSerializableBenchmark extends HazelcastTe
 
     @TimeStep
     public void timeStep() throws Exception {
-        Set<Map.Entry<Integer, IdentifiedDataSerializablePojo>> entries = map.entrySet();
-        if (entries.size() != entryCount) {
+        int randomInt = new Random().nextInt(entryCount - 100);
+        String minValue = String.format("%010d", randomInt);
+        String maxValue = String.format("%010d", randomInt + 100);
+        Predicate<Integer, IdentifiedDataSerializablePojo> predicate =
+                Predicates.and(Predicates.greaterThan("value", minValue), Predicates.lessEqual("value", maxValue));
+        Set<Map.Entry<Integer, IdentifiedDataSerializablePojo>> entries = map.entrySet(predicate);
+        if (entries.size() != 100) {
             throw new Exception("wrong entry count");
         }
-        if (forceClientDeserialization) {
-            map.entrySet().forEach(this::sink);
-        }
-    }
-
-    private void sink(Map.Entry<Integer, IdentifiedDataSerializablePojo> entry) {
-        this.blackHole = entry;
     }
 
     @Teardown
-    public void teardown() {
+    public void tearDown() {
         map.destroy();
     }
 }

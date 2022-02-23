@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.benchmarks.sql;
+package com.hazelcast.simulator.tests.map.sql;
 
 import com.hazelcast.map.IMap;
 import com.hazelcast.simulator.hz.HazelcastTest;
@@ -28,27 +28,29 @@ import com.hazelcast.sql.SqlResult;
 import com.hazelcast.sql.SqlRow;
 import com.hazelcast.sql.SqlService;
 
+import java.util.Random;
 
-public class ScanWithAggregateBenchmark extends HazelcastTest {
+
+public class ScanByKey1EntryBenchmark extends HazelcastTest {
 
     // properties
     // the number of map entries
     public int entryCount = 10_000_000;
-    public boolean useKeyInsteadOfAsterisk = true;
 
     //16 byte + N*(20*N
     private IMap<Integer, IdentifiedDataSerializablePojo> map;
+    private final int arraySize = 20;
 
     @Setup
-    public void setup() {
+    public void setUp() {
         this.map = targetInstance.getMap(name);
     }
 
     @Prepare(global = true)
     public void prepare() {
         Streamer<Integer, IdentifiedDataSerializablePojo> streamer = StreamerFactory.getInstance(map);
-        Integer[] sampleArray = new Integer[20];
-        for (int i = 0; i < 20; i++) {
+        Integer[] sampleArray = new Integer[arraySize];
+        for (int i = 0; i < arraySize; i++) {
             sampleArray[i] = i;
         }
 
@@ -60,42 +62,44 @@ public class ScanWithAggregateBenchmark extends HazelcastTest {
         streamer.await();
 
         SqlService sqlService = targetInstance.getSql();
-        String query = "CREATE EXTERNAL MAPPING IF NOT EXISTS " + name + " " +
-                "EXTERNAL NAME " + name + " " +
-                "        TYPE IMap\n" +
-                "        OPTIONS (\n" +
-                "                'keyFormat' = 'java',\n" +
-                "                'keyJavaClass' = 'java.lang.Integer',\n" +
-                "                'valueFormat' = 'java',\n" +
-                "                'valueJavaClass' = 'com.hazelcast.simulator.hz.IdentifiedDataSerializablePojo'\n" +
-                "        )";
+        String query = "CREATE EXTERNAL MAPPING IF NOT EXISTS " + name + " "
+                + "EXTERNAL NAME " + name + " "
+                + "        TYPE IMap\n"
+                + "        OPTIONS (\n"
+                + "                'keyFormat' = 'java',\n"
+                + "                'keyJavaClass' = 'java.lang.Integer',\n"
+                + "                'valueFormat' = 'java',\n"
+                + "                'valueJavaClass' = 'com.hazelcast.simulator.hz.IdentifiedDataSerializablePojo'\n"
+                + "        )";
 
         sqlService.execute(query);
-
     }
 
     @TimeStep
     public void timeStep() throws Exception {
         SqlService sqlService = targetInstance.getSql();
-        String countingBy = useKeyInsteadOfAsterisk ? "__key" : "*";
-        String query = "SELECT COUNT(" + countingBy + ") FROM " + name ;
-        try (SqlResult result = sqlService.execute(query)) {
-            int rowCount = 0;
+
+        String query = "SELECT __key, this FROM " + name + " WHERE __key = ?";
+        int key = new Random().nextInt(entryCount);
+        int actual = 0;
+        try (SqlResult result = sqlService.execute(query, key)) {
             for (SqlRow row : result) {
-                long count = row.getObject(0);
-                if (count != entryCount) {
-                    throw new IllegalArgumentException("Invalid count [expected=" + entryCount + ", actual=" + count + "]");
+                Object value = row.getObject(1);
+                if (!(value instanceof IdentifiedDataSerializablePojo)) {
+                    throw new IllegalStateException("Returned object is not "
+                            + IdentifiedDataSerializablePojo.class.getSimpleName() + ": " + value);
                 }
-                rowCount++;
+                actual++;
             }
-            if (rowCount != 1) {
-                throw new IllegalArgumentException("Invalid row count [expected=1 , actual=" + rowCount + "]");
-            }
+        }
+
+        if (actual != 1) {
+            throw new IllegalArgumentException("Invalid count [expected=" + 1 + ", actual=" + actual + "]");
         }
     }
 
     @Teardown
-    public void teardown() {
+    public void tearDown() {
         map.destroy();
     }
 }

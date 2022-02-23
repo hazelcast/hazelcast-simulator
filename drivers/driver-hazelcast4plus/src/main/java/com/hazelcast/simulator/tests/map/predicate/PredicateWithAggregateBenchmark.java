@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.benchmarks.sql;
+package com.hazelcast.simulator.tests.map.predicate;
 
+import com.hazelcast.aggregation.Aggregators;
 import com.hazelcast.map.IMap;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.hz.IdentifiedDataSerializablePojo;
@@ -24,69 +25,50 @@ import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
-import com.hazelcast.sql.SqlResult;
-import com.hazelcast.sql.SqlRow;
-import com.hazelcast.sql.SqlService;
 
 
-public class JetEngineIntIntBenchmark extends HazelcastTest {
+public class PredicateWithAggregateBenchmark extends HazelcastTest {
 
     // properties
     // the number of map entries
     public int entryCount = 10_000_000;
 
     //16 byte + N*(20*N
-    private IMap<Integer, Integer> map;
+    private IMap<Integer, IdentifiedDataSerializablePojo> map;
+    private final int arraySize = 20;
 
     @Setup
-    public void setup() {
+    public void setUp() {
         this.map = targetInstance.getMap(name);
     }
 
     @Prepare(global = true)
     public void prepare() {
-        Streamer<Integer, Integer> streamer = StreamerFactory.getInstance(map);
+        Streamer<Integer, IdentifiedDataSerializablePojo> streamer = StreamerFactory.getInstance(map);
+        Integer[] sampleArray = new Integer[arraySize];
+        for (int i = 0; i < arraySize; i++) {
+            sampleArray[i] = i;
+        }
 
         for (int i = 0; i < entryCount; i++) {
             Integer key = i;
-            streamer.pushEntry(key, key);
+            IdentifiedDataSerializablePojo value = new IdentifiedDataSerializablePojo(sampleArray, String.format("%010d", key));
+            streamer.pushEntry(key, value);
         }
         streamer.await();
-
-        SqlService sqlService = targetInstance.getSql();
-        String query = "CREATE EXTERNAL MAPPING IF NOT EXISTS " + name + " " +
-                "EXTERNAL NAME " + name + " " +
-                "        TYPE IMap\n" +
-                "        OPTIONS (\n" +
-                "                'keyFormat' = 'java',\n" +
-                "                'keyJavaClass' = 'java.lang.Integer',\n" +
-                "                'valueFormat' = 'java',\n" +
-                "                'valueJavaClass' = 'java.lang.Integer'\n" +
-                "        )";
-
-        sqlService.execute(query);
     }
 
     @TimeStep
     public void timeStep() throws Exception {
-        SqlService sqlService = targetInstance.getSql();
-        String query = "SELECT * FROM " + name;
-        int actual = 0;
+        Long count = map.aggregate(Aggregators.count());
 
-        try (SqlResult result = sqlService.execute(query)) {
-            for (SqlRow row : result) {
-                Object value = row.getObject(1);
-                actual++;
-            }
-        }
-
-        if (actual != entryCount) {
-            throw new IllegalArgumentException("Invalid count [expected=" + entryCount + ", actual=" + actual + "]");
+        if (count != entryCount) {
+            throw new IllegalArgumentException("Invalid count [expected=" + entryCount + ", actual=" + count + "]");
         }
     }
 
     @Teardown
-    public void teardown() {
+    public void tearDown() {
         map.destroy();
     }
 }
