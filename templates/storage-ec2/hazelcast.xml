@@ -23,6 +23,7 @@
 
     <properties>
         <property name="hazelcast.phone.home.enabled">false</property>
+        <property name="hazelcast.logging.type">log4j</property>
     </properties>
 
     <map name="map_native">
