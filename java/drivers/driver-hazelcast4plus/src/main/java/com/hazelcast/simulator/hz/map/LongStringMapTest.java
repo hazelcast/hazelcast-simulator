@@ -68,8 +68,13 @@ public class LongStringMapTest extends HazelcastTest {
     }
 
     @TimeStep(prob = 0.1)
-    public void put(ThreadState state) {
-        map.put(state.randomKey(), state.randomValue());
+    public String put(ThreadState state) {
+        return map.put(state.randomKey(), state.randomValue());
+    }
+
+    @TimeStep(prob = 0)
+    public void set(ThreadState state) {
+        map.set(state.randomKey(), state.randomValue());
     }
 
     public class ThreadState extends BaseThreadState {

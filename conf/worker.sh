@@ -67,39 +67,6 @@ java -classpath "$CLASSPATH" ${JVM_ARGS} ${MAIN}
 #
 
 #########################################################################
-# Linux Perf
-#########################################################################
-#
-# https://perf.wiki.kernel.org/index.php/Tutorial#Sampling_with_perf_record
-#
-# The settings is the full commandline for 'perf record' excluding the actual arguments for the java program to start.
-# These will be provided by the Simulator Agent.
-#
-# Once the test run completes, all the artifacts (including the perf.data created by perf) will be downloaded by the Coordinator.
-
-# Another option is to log into the Agent machine and do a 'perf report' locally.
-#
-# TODO:
-# More work needed on documentation to get perf running correctly.
-#
-# If you get the following message:
-#           Kernel address maps (/proc/{kallsyms,modules}) were restricted.
-#           Check /proc/sys/kernel/kptr_restrict before running 'perf record'.
-# Apply the following under root:
-#           echo 0 > /proc/sys/kernel/kptr_restrict
-# To make it permanent, add it to /etc/rc.local
-#
-# If you get the following message while doing call graph analysis (-g)
-#            No permission to collect stats.
-#            Consider tweaking /proc/sys/kernel/perf_event_paranoid.
-# Apply the following under root:
-#           echo -1 > /proc/sys/kernel/perf_event_paranoid
-# To make it permanent, add it to /etc/rc.local
-#
-# perf record -o perf.data --quiet java -classpath $CLASSPATH $JVM_ARGS $MAIN
-#
-
-#########################################################################
 # VTune
 #########################################################################
 #

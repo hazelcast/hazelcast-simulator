@@ -19,7 +19,8 @@
       name: map_tiered
       threadCount: 40
       getProb: 0
-      putProb: 1
+      putProb: 0
+      setProb: 1
       keyDomain: 100_000_000
       minValueLength: 1_000
       maxValueLength: 1_000
