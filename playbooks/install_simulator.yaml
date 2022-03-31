@@ -8,7 +8,7 @@
 
   - name: yum update/apt-get update
     shell: |
-      yum update || true
+      yum -y update || true
       apt-get update || true
     become: yes
     args:
