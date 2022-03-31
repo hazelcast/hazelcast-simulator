@@ -16,7 +16,6 @@ Make sure you have added following JVM settings:
 ```
 -XX:+UnlockDiagnosticVMOptions
 -XX:+DebugNonSafepoints
--XX:+PreserveFramePointer
 ```
 
 And to run, execute the following (s
