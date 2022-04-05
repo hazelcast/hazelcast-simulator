@@ -1,0 +1,13 @@
+*/terraform.tfstate
+*/terraform.tfstate.backup
+*/.terraform
+*/.terraform.lock.hcl
+*/.terraform.tfstate.lock.info
+key.pub
+key
+*.kate-swp
+inventory.yaml
+venv/
+/.idea/
+/runs/
+/logs/

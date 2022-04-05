@@ -1,0 +1,49 @@
+After cloning this project, you need to add the bin directory to the PATH.
+
+The following products need to be installed:
+
+- JDK 8+
+- Maven
+- terraform
+- ansible
+- Python 3.8 or newer
+- python3-pip
+- gnuplot
+
+The following python libraries are needed:
+
+```
+pip3 install -U pyyaml
+pip3 install -U matplotlib
+pip3 install -U signal-processing-algorithms
+```
+The signal-processing-algorithms is only needed when you are going to do performance regression testing. The
+library is used for change point detection.
+
+To install simulator, run
+
+```
+./install
+```
+
+To create Hazelast 5 benchmark that runs in EC2 run:
+
+perftest create mybenchmark
+
+Configuring AWS credentials
+
+In your ~/.aws/credentials file you need something like this:
+
+```
+[default]
+aws_access_key_id=AKIAIOSFODNN7EXAMPLE
+aws_secret_access_key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+```
+
+Or when you make use of a token:
+```
+[default]
+aws_access_key_id=AKIAIOSFODNN7EXAMPLE
+aws_secret_access_key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+aws_session_token=AQoEXAMPLEH4aoAH0gNCAPyJxz4BlCFFxWNE1OPTgk5TthT+FvwqnKwRcOIfrRh3c/LTo6UDdyJwOOvEVPvLXCrrrUtdnniCEXAMPLE/IvU1dYUg2RVAJBanLiHb4IgRmpRV3zrkuWJOgQs8IZZaIv2BXIa2R4OlgkBN9bkUDNCJiBeb/AXlzBBko7b15fjrBs2+cTQtpZ3CYWFXG8C5zqx37wnOE49mRl/+OtkIKGO7fAE
+```

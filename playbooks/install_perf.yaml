@@ -1,0 +1,80 @@
+---
+- hosts: all
+  tasks:
+  - name: Installs perf
+    shell: |
+      set -e
+
+      if hash yum 2>/dev/null; then
+          sudo yum -y update
+          sudo yum -y install perf
+          sudo yum -y install git
+          sudo yum -y install cmake
+          sudo yum -y install make
+          sudo yum -y install gcc-c++
+      elif hash apt-get 2>/dev/null; then
+          sudo apt-get -y update
+          sudo apt-get -y install git
+          sudo apt-get -y install cmake
+          sudo apt-get -y install make
+          sudo apt-get -y install build-essential
+          sudo apt-get -y install linux-tools-common
+          sudo apt-get -y install linux-tools-generic
+          sudo apt-get -y install linux-tools-`uname -r`
+      else
+          echo "Could not find apt-get/yum"
+          exit 1
+      fi
+
+      rm -fr FlameGraph
+      git clone https://github.com/brendangregg/FlameGraph
+
+      rm -fr perf-map-agent
+      git clone --depth=1 https://github.com/jvm-profiling-tools/perf-map-agent
+      cd perf-map-agent
+      cmake .
+      make
+      cd ..
+    register: result
+  - debug: msg="{{result.stdout}}"
+
+  - name: Update kernel parameters
+    sysctl:
+      name: "{{ item.key }}"
+      value: "{{ item.value }}"
+      state: present
+      sysctl_set: yes
+      reload: yes
+    with_dict:
+      - kernel.perf_event_paranoid: 1
+    become: true
+
+  - name: Add FLAMEGRAPH_DIR to PATH
+    lineinfile:
+      dest: ~{{ console_user | default(ansible_user) }}/.bashrc
+      state: present
+      line: "export PATH=$FLAMEGRAPH_DIR/:$PATH"
+      insertbefore: BOF
+
+  - name: Update FLAMEGRAPH_DIR
+    lineinfile:
+      dest: ~{{ console_user | default(ansible_user) }}/.bashrc
+      state: present
+      regexp: '^export FLAMEGRAPH_DIR'
+      line: "export FLAMEGRAPH_DIR=~/FlameGraph"
+      insertbefore: BOF
+
+  - name: Add PERF_MAP_DIR to PATH
+    lineinfile:
+      dest: ~{{ console_user | default(ansible_user) }}/.bashrc
+      state: present
+      line: "export PATH=$PERF_MAP_DIR/bin/:$PATH"
+      insertbefore: BOF
+
+  - name: Update PERF_MAP_DIR
+    lineinfile:
+      dest: ~{{ console_user | default(ansible_user) }}/.bashrc
+      state: present
+      regexp: '^export PERF_MAP_DIR'
+      line: "export PERF_MAP_DIR=~/perf-map-agent"
+      insertbefore: BOF

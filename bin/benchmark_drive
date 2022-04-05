@@ -1,0 +1,83 @@
+#!/bin/bash
+
+set -e
+
+DIR=${1:-"."}
+FILE=${DIR}/tmp.fio
+IO_DEPTH=${2:-"64"}
+
+function install() {
+  packet=$1
+  echo $packet
+  if ! hash ${packet} 2>/dev/null; then
+    echo "$packet is not detected, installing...."
+    if hash yum 2>/dev/null; then
+      sudo yum -y update
+      sudo yum -y install ${packet}
+    elif hash apt-get 2>/dev/null; then
+      sudo apt-get -y -qq update
+      sudo apt-get -y install ${packet}
+    else
+      echo "Could not find apt-get/yum"
+      exit 1
+    fi
+  fi
+}
+
+function print_header() {
+  echo "==========================================================="
+  echo $1
+  echo "==========================================================="
+}
+
+install fio
+install ioping
+
+echo "Benchmarking $DIR"
+
+if [[ ! -d $DIR ]]; then
+  echo "Directory ${DIR} DOES NOT exists."
+  exit 1
+fi
+
+print_header "Bandwidth/IOPS read only"
+fio --randrepeat=1 \
+  --ioengine=libaio \
+  --direct=1 \
+  --gtod_reduce=1 \
+  --name=readonly \
+  --filename=${FILE} \
+  --bs=4k \
+  --iodepth=${IO_DEPTH} \
+  --size=4G \
+  --readwrite=randread
+
+print_header "Bandwidth/IOPS write only"
+fio --randrepeat=1 \
+  --ioengine=libaio \
+  --direct=1 \
+  --gtod_reduce=1 \
+  --name=writeonly \
+  --filename=${FILE} \
+  --bs=4k \
+  --iodepth=${IO_DEPTH} \
+  --size=4G \
+  --readwrite=randwrite
+
+print_header "Banwidth/IOPS mixed"
+fio --randrepeat=1 \
+  --ioengine=libaio \
+  --direct=1 \
+  --gtod_reduce=1 \
+  --name=mixed \
+  --filename=${FILE} \
+  --bs=4k \
+  --iodepth=${IO_DEPTH} \
+  --size=4G \
+  --readwrite=randrw \
+  --rwmixread=75
+
+rm -fr file
+
+print_header "Latency"
+ioping -c 100 $DIR

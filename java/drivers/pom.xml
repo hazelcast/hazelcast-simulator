@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>drivers</artifactId>
+    <name>Simulator Drivers</name>
+    <packaging>pom</packaging>
+
+    <parent>
+        <groupId>com.hazelcast.simulator</groupId>
+        <artifactId>simulator-root</artifactId>
+        <version>2.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <prerequisites>
+        <maven>${maven.version}</maven>
+    </prerequisites>
+
+    <properties>
+        <main.basedir>${project.parent.basedir}</main.basedir>
+    </properties>
+
+    <modules>
+        <module>driver-hazelcast4plus</module>
+        <module>driver-hazelcast3</module>
+        <module>driver-ignite2</module>
+        <module>driver-infinispan9</module>
+        <module>driver-infinispan10</module>
+        <module>driver-infinispan11</module>
+        <module>driver-couchbase</module>
+        <module>driver-memcached</module>
+        <module>driver-mongodb</module>
+        <module>driver-lettuce6</module>
+        <module>driver-lettucecluster6</module>
+        <module>driver-jedis3</module>
+    </modules>
+</project>
