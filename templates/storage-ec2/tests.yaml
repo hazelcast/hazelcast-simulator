@@ -5,8 +5,18 @@
   members: 1
   driver: hazelcast-enterprise5
   version: maven=5.2-SNAPSHOT
-  client_args: -Xms3g -Xmx3g
-  member_args: -Xms3g -Xmx3g -Dhazelcast.diagnostics.enabled=true -Dhazelcast.diagnostics.metric.level=info -Dhazelcast.diagnostics.invocation.sample.period.seconds=30 -Dhazelcast.diagnostics.pending.invocations.period.seconds=30 -Dhazelcast.diagnostics.slowoperations.period.seconds=30 -Dhazelcast.diagnostics.storeLatency.period.seconds=60
+  client_args: >
+    -Xms3g
+    -Xmx3g
+  member_args: >
+    -Xms3g
+    -Xmx3g
+    -Dhazelcast.diagnostics.enabled=true
+    -Dhazelcast.diagnostics.metric.level=info
+    -Dhazelcast.diagnostics.invocation.sample.period.seconds=30
+    -Dhazelcast.diagnostics.pending.invocations.period.seconds=30
+    -Dhazelcast.diagnostics.slowoperations.period.seconds=30
+    -Dhazelcast.diagnostics.storeLatency.period.seconds=60
   loadgenerator_hosts: loadgenerators
   node_hosts: nodes
   verify_enabled: False

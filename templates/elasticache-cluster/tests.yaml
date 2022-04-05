@@ -6,7 +6,9 @@
   node_hosts: nodes
   members: 0
   driver: lettucecluster6
-  client_args: -Xms3g -Xmx3g
+  client_args: >
+    -Xms3g
+    -Xmx3g
   performance_monitor_interval_seconds: 1
   verify_enabled: True
   warmup_seconds: 0

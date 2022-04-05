@@ -7,8 +7,12 @@
   node_hosts: nodes
   driver: hazelcast5
   version: maven=5.1
-  client_args: -Xms3g -Xmx3g
-  member_args: -Xms3g -Xmx3g
+  client_args: >
+      -Xms3g
+      -Xmx3g
+  member_args: >
+    -Xms3g
+    -Xmx3g
   performance_monitor_interval_seconds: 1
   verify_enabled: True
   warmup_seconds: 0
@@ -27,8 +31,12 @@
   members: 1
   driver: hazelcast5
   version: maven=5.0
-  client_args: -Xms3g -Xmx3g
-  member_args: -Xms3g -Xmx3g
+  client_args: >
+    -Xms3g
+    -Xmx3g
+  member_args: >
+    -Xms3g
+    -Xmx3g
   loadgenerator_hosts: loadgenerators
   node_hosts: nodes
   verify_enabled: False
