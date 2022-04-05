@@ -46,14 +46,6 @@ Please refer to the [Quickstart](#quickstart) to start your Simulator journey.
 - [Run the test](#run-the-test)
   * [Configure test duration](#configure-test-duration)
   * [Specify testSuite file to be used](#specify-testsuite-file-to-be-used)
-- [Set up cluster environment](#set-up-cluster-environment)
-  * [Preparations to setup remote machines](#preparations-to-setup-remote-machines)
-    + [RSA key pair](#rsa-key-pair)
-    + [Open ports](#open-ports)
-  * [Using static setup](#using-static-setup)
-  * [Using Amazon EC2](#using-amazon-ec2)
-    + [Controlling provisioned machines](#controlling-provisioned-machines)
-  * [Installing Simulator on remote machines](#installing-simulator-on-remote-machines)
 - [Report generation](#report-generation)
   * [Basics](#basics)
   * [Generate comparison reports](#generate-comparison-reports)
@@ -101,8 +93,6 @@ Please refer to the [Quickstart](#quickstart) to start your Simulator journey.
     + [Rolling Upgrade Test](#rolling-upgrade-test)
       - [Resilience Testing](#resilience-testing)
     + [Tags](#tags)
-  * [Using the Simulator Archetype](#using-the-simulator-archetype)
-  * [Run Simulator with MongoDB](#run-simulator-with-mongodb)
 - [Get Help](#get-help)
 
 # Quickstart
