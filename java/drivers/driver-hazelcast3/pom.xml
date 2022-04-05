@@ -19,7 +19,7 @@
     <properties>
         <hazelcast.version>3.12.6</hazelcast.version>
         <main.basedir>${project.parent.basedir}</main.basedir>
-        <netty.version>4.1.53.Final</netty.version>
+        <netty.version>4.1.68.Final</netty.version>
         <netty-tcnative.version>2.0.34.Final</netty-tcnative.version>
         <netty-tcnative.artifactId>netty-tcnative-boringssl-static</netty-tcnative.artifactId>
         <netty-tcnative.classifier />
