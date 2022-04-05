@@ -151,57 +151,79 @@ In the future more templates will be added.
 
 ## Provisioning the environment
 
-    Simulator makes use of Terraform for provisioning. After you have created a benchmark using the 
-    `benchmark create` command, you want to edit the inventory_plan.yaml. This is where you can configure the
-    type of instances, the number etc.
+Simulator makes use of Terraform for provisioning. After you have created a benchmark using the 
+`benchmark create` command, you want to edit the inventory_plan.yaml. This is where you can configure the
+type of instances, the number etc.
 
-    To apply the configuration on the existing environment, execute the following command:
+To apply the configuration on the existing environment, execute the following command:
     ```
     inventory apply
     ```
-    After apply command has completes, a new file 'inventory.yaml' file is created containing 
-    created machines. This is an Ansible specific file. Simulator uses Ansible to configure to 
-    remote machines.
+After apply command has completes, a new file 'inventory.yaml' file is created containing 
+created machines. This is an Ansible specific file. Simulator uses Ansible to configure to 
+remote machines.
 
-    To install Java on the remote machines call:
+To install Java on the remote machines call:
     ```
     inventory install java
     ```
 
-    You can pass a custom URL to cofigure the correct JVM. To get a listing of examples URL's call:
+You can pass a custom URL to cofigure the correct JVM. To get a listing of examples URL's call:
     ```
     inventory install java --list 
     ```
     
-    And run the following to install a specific Java version.
+And run the following to install a specific Java version.
     ```
     inventory install java --url https://corretto.aws/downloads/latest/amazon-corretto-17-x64-linux-jdk.tar.gz 
     ```
-    This command will update the JAVA_HOME/PATH on the remote machine to reflect the last installed Java version.
+This command will update the JAVA_HOME/PATH on the remote machine to reflect the last installed Java version.
 
     To destroy the environment, call the following:
     ```
     inventory destroy
     ```
 
+## SSH to nodes
 
-## Generate charts
+To SSH to your remote nodes, the following command can be used:   
+    ```
+    ssh -i key <password>@<ip>
+    ```
 
-It's time to generate performance charts out of the raw data.
+## Running a test.
 
-1. Generate report with `benchmark_report` command.
+In the generated benchmark directory, a tests.yaml file is created and it will contain something like this:
 
-   ```
-   benchmark_report 2021-05-21__22_59_24
-   ```
-   
-2. The report is generated in the newly created `report` directory
+    ```
+     - name: write_only
+       duration: 300s
+       repetitions: 1
+       clients: 1
+       members: 1
+       driver: hazelcast5
+       version: maven=5.0
+       client_args: -Xms3g -Xmx3g
+       member_args: -Xms3g -Xmx3g
+       loadgenerator_hosts: loadgenerators
+       node_hosts: nodes
+       verify_enabled: False
+       performance_monitor_interval_seconds: 1
+       warmup_seconds: 0
+       cooldown_seconds: 0
+       test:
+          class: com.hazelcast.simulator.tests.map.IntByteMapTest
+          threadCount: 40
+          getProb: 0
+          putProb: 1
+          keyCount: 1_000_000
+    ```
+  
+To run the benchmark
 
-   ```
-   HTML report generated at: file:///home/jholusa/SimulatorTests/myFirstTest/report/report.html
-   ```
-   
-3. There it is! You can look around for latency numbers, throughput, system stats and much more.
+    ```
+    perftest run
+    ```
 
 ## What's next
 
