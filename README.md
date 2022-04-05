@@ -116,51 +116,55 @@ Also contains pointers where to go next.
 > :books: Looking for all possible installation ways? Check [Installation](#installation) section.
 >
 
-1. Download Simulator ZIP file from <a href="http://www.hazelcast.org/download" target="_blank">Hazelcast web site</a>.
-2. Extract the ZIP and go to the extracted directory
+1. Checkout the Simulator git repository
 
     ```
-    unzip hazelcast-simulator-<version>-dist.zip
-    cd hazelcast-simulator-<version>
+    git clone https://github.com/hazelcast/hazelcast-simulator.git
     ```
    
-3. Congratulations! You've successfully installed Hazelcast Simulator on the Coordinator machine.
+2. Install Simulator
 
-## Run first test locally
-
-Let's run your first Simulator test. We'll use the default example settings created by the `simulator-wizard` 
-command and execute the test locally.
-
-1. Go to the path where you want to store your test configurations
-2. Create a test directory `myFirstTest` and enter it
-
-    ```
-    simulator-wizard --createWorkDir myFirstTest
-    ...
-    cd myFirstTest
-    ```
+   ```
+   cd hazelcast-simulator
+   /install
+   ```
    
-3. Start the test by executing `run` script
-    
+3. Add the Simulator to your path 
+
+   Open ~/.bash_profile and add the following line:
    ```
-   ./run
+   PATH=<path-to-simulator>/bin/:$PATH
    ```
-  
-4. The test should successfully finish. At the end, you should see lines like:
    
+5. Congratulations! You've successfully installed Hazelcast Simulator.
+
+
+## Creating a benchmark
+
+The first step is to create a benchmark, This can be done using the perftest tool.
+
    ```
-   INFO  13:07:44 =========================================================================
-   INFO  13:07:44 No failures have been detected!
-   INFO  13:07:44 ========================================================================= 
+   perftest create myproject
    ```
 
-5. Congratulations, you successfully ran Simulator for the first time! The raw output of the test is located
-in the newly created directory named with a timestamp like `2021-05-21__22_59_24`.
-   
+This will create a fully configured benchmark that will run in EC2. 
+
+There are various benchmark templates. These can be accessed using:
+
    ```
-   $ ls
-   client-hazelcast.xml  hazelcast.xml  logs  run  test.properties  2021-05-21__22_59_24
+   perftest create --list 
    ```
+
+And a benchmark using a specific benchmark can be created using
+ 
+   ```
+   perftest create --template <templatename> myproject
+   ```
+
+
+## Provisioning the environment
+
+
 
 ## Generate charts
 
@@ -240,52 +244,7 @@ machines in your data center.
 
 - **simulator.properties** - The configuration file you use to adapt the Hazelcast Simulator to your business needs (e.g. cloud 
 provider, SSH username, Hazelcast version, Java profiler settings).
-
-# Installation
-
-Hazelcast Simulator needs a Unix shell to run. Ensure that your local and remote machines are running under Unix, Linux or Mac OS. 
-Hazelcast Simulator may work with Windows using a Unix-like environment such as Cygwin, but that is not officially supported at the moment.
-
-In order to run Simulator tests, you need to install it on a machine which you'll then use
-to execute all the Simulator commands. Simulator will orchestrate the rest. 
-
-The local machine will be the one on which you will eventually execute the Coordinator to run your TestSuite. It is also the 
-source to install Simulator on your remote machines.
-
-Hazelcast Simulator is provided as a separate downloadable package, in `zip` or `tar.gz` format. You can download either one 
-[here](http://hazelcast.org/download/#simulator).
-
-After the download is completed, follow the below steps.
-
-- Unpack the `tar.gz` or `zip` file to a folder that you prefer to be the home folder for Hazelcast Simulator. The file 
-extracts with the name `hazelcast-simulator-<`*version*`>`. If your are updating Simulator you are done and can skip the 
-following steps.
-
-- Configure the environment by either one of the following steps.
-
-  - Run the configuration wizard from the extracted folder.
-
-    ```
-    ./<extracted folder path>/bin/simulator-wizard --install
-    ```  
-
-  OR
-
-  - Add the following lines to the file `~/.bashrc` (for Unix/Linux) or to the file `~/.profile` (for Mac OS).
-
-    ```
-    export SIMULATOR_HOME=<extracted folder path>/hazelcast-simulator-<version>
-    PATH=$SIMULATOR_HOME/bin:$PATH
-    ```
-
-- Open a new terminal to make your changes in `~/.bashrc` or `~/.profile` effective. Call the Simulator Wizard with the `--help` 
-option to see if your installation was successful.
-
-  ```
-  simulator-wizard --help
-  ```
-  
-  
+ 
 # Define test scenario 
 
 This section describes how you can control *what* the test should do - should it do only PUTs or also GETs and if so,
@@ -696,209 +655,8 @@ coordinator small-testsuite.properties
 
 This is very convenient when you want to test multiple test scenarios on a same cluster setup.
 
-# Set up cluster environment
 
-In the [Quickstart](#quickstart), we executed the test on the local machine. This is usually useful for
-[developing Simulator test itself](#writing-a-simulator-test), but very rarely for the real performance testing.
-In general, you want to execute the performance tests in the as real (= production) as possible environment and 
-in order to do that, you'll most likely need to execute the tests on remote machines other than your local.
 
-Simulator can help with that. Not only it can automatically installs Simulator and Hazelcast itself, it
- e.g. provision of the machines directly in the cloud, install Java on those machines etc. 
- 
-This chapter goes in detail through all the possible means that Simulator offers in that regard.
-
-## Preparations to setup remote machines
-
-For setups on remote machines, you only need:
-* **RSA key pair** - a RSA public/private key pair to be used for passphrase-less SSH access to the remote machines.  
-* **Open ports** - you may also need to configure the firewall between the Coordinator machine (typically your local)
- and the remote machines.
- 
-### RSA key pair 
-
-The preferred method for password free authentication is using an RSA public/private key pair. 
-The RSA key should not require you to enter the passphrase manually. 
-
-> A key with a pass-phrase and ssh-agent-forwarding is strongly recommended for security purposes, 
-> but a key without a pass-phrase also works (you'll usually use this option during getting started phase).
-
-If you already have an RSA key pair, you will find the files `id_rsa.pub` and `id_rsa` in your local `~/.ssh` folder. If you do 
-not have RSA keys, you can generate a public/private key pair using e.g. this [tutorial](https://docs.oracle.com/cd/E19683-01/806-4078/6jd6cjru7/index.html).
-
-### Open ports
-
-Please ensure that all remote machines are reachable via TCP ports 22, 9000 and 5701 to 57xx on their external network interface 
-(e.g. `eth0`). The first two ports are used by Hazelcast Simulator. The other ports are used by Hazelcast itself. Ports 9001 to 
-90xx are used on the loopback device on all remote machines for local communication.
-
-![](images/Network.png)
-
-- Port 22 is used for SSH connections to install Simulator on remote machines, to start the Agent and to download test result and 
-log files. If you use any other port for SSH, you can configure Simulator to use it via the `SSH_OPTIONS` property in the `simulator.properties` file (for details, see [simulator.properties](#simulator-properties) section).
-- Port 9000 is used for the communication between Coordinator and Agent. You can configure this port via the `AGENT_PORT` property 
-in the `simulator.properties` file (for details, see [simulator.properties](#simulator-properties) section).
-- Ports 9001 to 90xx are used for the communication between Agent and Worker. We use as many ports as Worker JVMs are spawned 
-on the machine.
-- Ports 5701 to 57xx are used for the Hazelcast instances to form a cluster. We use as many ports as Worker JVMs are spawned on
- the machine, since each of them will create its own Hazelcast instance.
-
-## Using static setup
-
-By static setup we mean a situation where you have a fixed list of given remote machines, e.g. your local machines or a test laboratory
- which are already up and running and you want to run the tests on them. 
- Having installed Simulator locally, this section describes how to prepare Simulator for testing a Hazelcast cluster on these machines.
-
-1. Create a working directory for your Simulator TestSuite. Use the Simulator Wizard to create an example setup for you and change
- into the directory.
-
-    ```
-    simulator-wizard --createWorkDir myStaticTest --cloudProvider static
-    cd myStaticTest
-    ```
-
-2. Create a `agents.txt` file and add the IP addresses of your remote machines to it, one address per line.
-
-    ```
-    $ cat agents.txt
-    192.0.1.1
-    192.0.1.2
-    ```
-
-    You can also configure a different public and private IP address per machine. In such case, use `<public_ip>,<private_ip>` per line. 
-    In the below example, 192.0.1.1 is the public and 172.16.16.1 the private IP address).
-
-    ```
-    $ cat agents.txt
-    192.0.1.1,172.16.16.1
-    192.0.1.2,172.16.16.2
-    ```
-
-    The public IP address will be used to connect to the remote machines via SSH. 
-    The private IP address will be used by Hazelcast to form a cluster.
-
-3. The default username for SSH access used by Hazelcast Simulator is `simulator`. You can change this via the `SIMULATOR_USER` property in the `simulator.properties` file in your working folder.
-
-    ```
-    SIMULATOR_USER=preferredUserName
-    ```
-
-    Ensure that a user account with this name exists on all configured remote machines.
-
-4. Ensure you have appended your public RSA key (`id_rsa.pub`) to the `~/.ssh/authorized_keys` file on all remote machines in order to gain password-less
-SSH access. Simulator Wizard can create a script to copy the RSA key to all machines in your `agents.txt` file and you simply execute it:
-
-    ```
-    simulator-wizard --createSshCopyIdScript
-    ./ssh-copy-id-script
-    ```
-
-5. You can check if the SSH connection for all remote machines work as expected using the following command.
-
-    ```
-    simulator-wizard --sshConnectionCheck
-    ```
-
-6. Install Simulator itself on the remote machines using following command:
-
-    ```
-    provisioner --install
-    ```
-   
-7. Your static setup is ready. You can now execute the test by running the `run` script just like
-in [Quickstart](#quickstart) or in [Run the test](#run-the-test).
-
-> For more information about how to customize the parameters of the connection, refer to the [simulator.properties](#simulator-properties)
-> section.
-
-## Using Amazon EC2
-
-Hazelcast Simulator provides out of the box support to create and terminate Amazon EC2 instances for convenience which
-greatly simplifies the testing. Of course, you can always create the EC2 instances yourself and then set them up as
-described in [Setting up for static setup](#setting-up-for-static-setup).
-
-This section describes how to leverage Simulator's capabilities of handling the provisioning in Amazon EC2 for you.
-
-1. [Install](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)
-   and [configure](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html) aws-cli using your
-   AWS credentials. In the case of SSO enabled you need to
-   perform [additional steps](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sso.html)
-
-2. Create a working directory for your Simulator TestSuite. Use the Simulator Wizard to create an example setup for you
-   and change to that directory.
-
-    ```
-    simulator-wizard --createWorkDir myCloudTest --cloudProvider aws-ec2
-    cd myCloudTest
-    ```
-
-3.  Execute the created `prepare` script to create the EC2 instances and install Simulator on them.
-
-    ```
-    ./prepare
-    ```
-
-4. Execute the created `run` script to run the TestSuite.
-
-    ```
-    ./run
-    ```
-
-5. Execute the following command to destroy the created EC2 instances.
-
-   ```
-   provisioner --terminate
-   ```
-
-6. Your cloud setup is ready. You can now execute the test by running the `run` script just like
-in [Quickstart](#quickstart) or in [Run the test](#run-the-test).
-
-### Controlling provisioned machines
-
-Simulator provides out of the box support for Amazon EC2 for convenient controlling of the provisioned machiens
-using the `provisioner` command. The provisioning is highly configurable through `simulator.properties` file.
-This section describes some of the goodies it can help you out with.
-
-* **Control the flavour of created instances** - all the following properties are added to the `simulator.properties` file
-in a `property=value` format. All the subseqent calls of `provisioner` (or any other Simulator command such as `coordinator`) load the properties file
-and customize the behavior according to the properties.
-
-    | Property | Description | Example |
-    | ---| --- | --- |
-    |`SIMULATOR_USER` | The user to be connected with. | `SIMULATOR_USER=simulator`. |
-    | `SUBNET_ID` | EC2 subnet ID to be used. | `SUBNET_ID=subnet-111111` |
-    | `INSTANCE_TYPE` | EC2 instance type to be used. | `INSTANCE_TYPE=c4.xlarge` |
-    | `REGION` | EC2 region to be used. | `REGION=us-east-1` |
-    | `IMAGE_ID` | ID of an EC2 image to be used. | `IMAGE_ID=ami-0fc61db8544a617ed` |
-    | `PLACEMENT_GROUP` | EC2 placement group for the machines. | `PLACEMENT_GROUP=simulator` | 
-    
-    > For full `simulator.properties` reference, refer to [Simulator Properties reference](#simulator-properties-reference).
-
-* **Scaling up/down** - adding more machines or removing (terminating) some of them. When adding more machines, the IP 
-addresses are appended to the end of the `agents.txt` file. 
-
-    ```
-    # creating 3 machines
-    provisioner --scale 3
-  
-    # supposed that there are 3 machines existing (e.g. due to above command), 
-    # following command removes one
-    provisioner --scale 2
-    ```
-
-* **Terminate all machines** - immediately terminates all the machines that are listed in the `agents.txt`.
-
-    ```
-    provisioner --terminate
-    # or (= equivalent to)
-    provisioner --scale 0
-    ``` 
-  
-* **Stopping all remote processes** - if your test run hangs for any reason you can kill all Java processes on the remote machines with the following command:
-      
-    ```
-    provisioner --kill
-    ```
 
 ## Installing Simulator on remote machines
 
@@ -1465,30 +1223,6 @@ coordinator --members 1 \
 Using the above example, both client and server have diagnostics enabled. Both will write a diagnostics file. Once the Simulator 
 run is completed and the artifacts are downloaded, the diagnostics files can be analyzed.
 
-## Enabling Different Profilers or Other Startup Customizations
-
-If you want to use a different profiler than JFR and you require more than simple JVM args, or you want to play with features 
-like numactl, OpenOnload, etc., you need to override the worker startup script. This is done by copying the startup script to
- the working directory. For example to modify a member worker:
-
-```
-cp $SIMULATOR_HOME/conf/worker-hazelcast-member.sh .
-```
-
-This bash script controls the startup of the member. This particular file also contains full examples for the following features:
-
-- Yourkit
-- Intel VTune
-- Linux Perf
-- HProf
-- numactl
-- dstat
-- OpenOnload
-
-It also allows to experiment with different profilers like [`honest-profiler`](https://github.com/RichardWarburton/honest-profiler).
-
-To upload the required artifacts, create the directory `upload` in the working directory. This upload directory will automatically
- be copied to all worker machines. It can be found in the parent directory of the worker, e.g., `../upload/someartifact`.
 
 ## Logging
 
@@ -1621,57 +1355,6 @@ coordinator --targetType member --targetCount 2
 
 This will limit the load generation to two member Workers, regardless of the client Workers' availability. Please have a look 
 at command line help via `coordinator --help` to see all allowed values for these arguments.
-
-## Using the Simulator Archetype
-
-The Simulator archetype can be used to generate a project for external tests to be executed with the Simulator.
-
-```
-mvn archetype:generate \
-   -DarchetypeGroupId=com.hazelcast.simulator \
-   -DarchetypeArtifactId=archetype \
-   -DarchetypeVersion=0.11-SNAPSHOT
-```
-
-Please update archetypeVersion to the Simulator version you are using.
-
-Once the project is created and you have updated the generated test to do something more sensible, execute:
-```
-mvn clean install
-```
-
-And go to the `workdir` where you will find a `run.sh` The `run.sh` script will copy the jars from your project from the 
-`../target/` directory into the `upload` directory and then calls the coordinator to run the test. The coordinator will then 
-automatically copy the content of the `upload` directory to the remote agent(s) before a test is executed. The upload directory
-can also be used to upload other artifacts like e.g. keystores/truststores etc.
-
-After the `run.sh` script is executed, a directory with timestamp like `2017-07-13__09_18_26` is created. This directory
-contains all the logging and performance related information from the test(s) executed. 
-
-To generate the performance diagrams, execute:
-```
-benchmark_report 2017-07-13__09_18_26
-```
-And a `report` directory is created, containing many diagrams.
-
-## Run Simulator with MongoDB
-
-Before running Simulator tests with MongoDB you need to download and start MongoDB. See [MongoDB webpage](https://www.mongodb.com/) for more details.
-
-Following steps guide you to run any Simulator test from `driver-mongodb` tests module:
-
-1. Create Simulator project by `simulator-wizard` as usual.
-2. In created directory create text file with name `node.txt` and content like `<IP_ADDRESS>:<PORT>` (e.g. `127.0.0.1:27017`) which says where to find running MongoDB.
-3. In `simulator.properties` define `DRIVER=mongodb`.
-4. Change content of `test.properties` to run any MongoDB test:
-```
-class = com.hazelcast.simulator.mongodb.ReadWriteTest
-databaseName = mydb
-collectionName = mycol
-itemCount = 1000
-```
-5. In `run` script hardcode number of members to 0 by using `--members 0` in `coordinator` (because we do not start Hazelcast members but just connect to running mongoDB).
-6. Run test by `./run`.
 
 # Get Help
 
