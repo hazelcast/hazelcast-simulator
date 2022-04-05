@@ -21,7 +21,7 @@ Please refer to the [Quickstart](#quickstart) to start your Simulator journey.
 ## Table of Content
 - [Quickstart](#quickstart)
   * [Install](#install)
-  * [Run first test locally](#run-first-test-locally)
+  * [Creating a benchmark](#run-first-test-locally)
   * [Generate charts](#generate-charts)
   * [What's next](#what-s-next)
 - [Key Concepts and Terminology](#key-concepts-and-terminology)
@@ -102,10 +102,6 @@ Also contains pointers where to go next.
 
 ## Install
 
->
-> :books: Looking for all possible installation ways? Check [Installation](#installation) section.
->
-
 1. Checkout the Simulator git repository
 
     ```
@@ -151,9 +147,42 @@ And a benchmark using a specific benchmark can be created using
    perftest create --template <templatename> myproject
    ```
 
+In the future more templates will be added.
 
 ## Provisioning the environment
 
+    Simulator makes use of Terraform for provisioning. After you have created a benchmark using the 
+    `benchmark create` command, you want to edit the inventory_plan.yaml. This is where you can configure the
+    type of instances, the number etc.
+
+    To apply the configuration on the existing environment, execute the following command:
+    ```
+    inventory apply
+    ```
+    After apply command has completes, a new file 'inventory.yaml' file is created containing 
+    created machines. This is an Ansible specific file. Simulator uses Ansible to configure to 
+    remote machines.
+
+    To install Java on the remote machines call:
+    ```
+    inventory install java
+    ```
+
+    You can pass a custom URL to cofigure the correct JVM. To get a listing of examples URL's call:
+    ```
+    inventory install java --list 
+    ```
+    
+    And run the following to install a specific Java version.
+    ```
+    inventory install java --url https://corretto.aws/downloads/latest/amazon-corretto-17-x64-linux-jdk.tar.gz 
+    ```
+    This command will update the JAVA_HOME/PATH on the remote machine to reflect the last installed Java version.
+
+    To destroy the environment, call the following:
+    ```
+    inventory destroy
+    ```
 
 
 ## Generate charts
