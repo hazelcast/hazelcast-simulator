@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# exit on failure
+set -e
+
+AGENT_INDEX=$1
+PUBLIC_IP=$2
+AGENT_PORT=$3
+
+if ! hash java 2>/dev/null; then
+  echo "java not found"
+  exit 1
+fi
+
+if hash killall 2>/dev/null; then
+  killall -9 -q java || true
+else
+  pkill -9 java || true
+fi
+
+rm -f agent.pid
+rm -f agent.out
+rm -f agent.err
+
+echo "Agent [${AGENT_INDEX}] ${PUBLIC_IP} starting"
+
+args="--addressIndex ${AGENT_INDEX} --publicAddress ${PUBLIC_IP} --port $AGENT_PORT"
+nohup hazelcast-simulator/bin/hidden/agent $args > agent.out 2> agent.err < /dev/null &
+hazelcast-simulator/bin/hidden/await_file_exists agent.pid
+
+echo "Agent [A$AGENT_INDEX] ${PUBLIC_IP} started successfully"

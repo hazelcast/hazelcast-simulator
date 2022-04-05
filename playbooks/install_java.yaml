@@ -1,0 +1,41 @@
+---
+- hosts: all
+
+  vars:
+    - jdk_url:
+    - tar_gz_filename: "{{ jdk_url | basename }}"
+
+  tasks:
+
+  - name: Downloads the tar.gz
+    get_url:
+      url: "{{ jdk_url }}"
+      dest: ~{{ console_user | default(ansible_user) }}
+
+  - name: Extract the tar.gz
+    unarchive:
+      src: "{{ tar_gz_filename }}"
+      dest: ~{{ console_user | default(ansible_user) }}
+      remote_src: yes
+      list_files: yes
+    register: archive_contents
+
+  - name: Delete tar.gz file
+    file:
+      state: absent
+      path: "{{ tar_gz_filename }}"
+
+  - name: Add JAVA_HOME to PATH
+    lineinfile:
+      dest: ~{{ console_user | default(ansible_user) }}/.bashrc
+      state: present
+      line: "export PATH=$JAVA_HOME/bin:$PATH"
+      insertbefore: BOF
+
+  - name: Update JAVA_HOME
+    lineinfile:
+      dest: ~{{ console_user | default(ansible_user) }}/.bashrc
+      state: present
+      regexp: '^export JAVA_HOME'
+      line: "export JAVA_HOME=~{{ console_user | default(ansible_user) }}/{{ archive_contents.files[0].split('/')[0] }}"
+      insertbefore: BOF

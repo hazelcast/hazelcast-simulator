@@ -1,0 +1,54 @@
+---
+- hosts: all
+  vars:
+  - version: 2.7
+  - url: "https://github.com/jvm-profiling-tools/async-profiler/releases/download/v{{ version }}/async-profiler-{{ version }}-linux-x64.tar.gz"
+  - tar_gz_filename: "{{ url | basename }}"
+
+  tasks:
+  - name: Downloads the Async Profiler tar.gz
+    get_url:
+      url: "{{ url }}"
+      dest: ~{{ console_user | default(ansible_user) }}
+
+  - name: Extract the Async Profiler tar.gz
+    unarchive:
+      src: "{{ tar_gz_filename }}"
+      dest: ~{{ console_user | default(ansible_user) }}
+      remote_src: yes
+      list_files: yes
+    register: archive_contents
+
+  - name: Delete the Async Profiler tar.gz
+    file:
+      state: absent
+      path: "{{ tar_gz_filename }}"
+
+  - name: Update kernel parameters
+    sysctl:
+      name: "{{ item.key }}"
+      value: "{{ item.value }}"
+      state: present
+      sysctl_set: yes
+      reload: yes
+    with_dict:
+      - kernel.perf_event_paranoid: 1
+      - kernel.kptr_restrict: 0
+    become: true
+
+  - name: Add ASYNC_PROFILER_HOME to PATH
+    lineinfile:
+      dest: ~{{ console_user | default(ansible_user) }}/.bashrc
+      state: present
+      line: "export PATH=$ASYNC_PROFILER_HOME/:$PATH"
+      insertbefore: BOF
+
+  - name: Update ASYNC_PROFILER_HOME
+    lineinfile:
+      dest: ~{{ console_user | default(ansible_user) }}/.bashrc
+      state: present
+      regexp: '^export ASYNC_PROFILER_HOME'
+      line: "export ASYNC_PROFILER_HOME=~{{ console_user | default(ansible_user) }}/{{ archive_contents.files[0].split('/')[0] }}"
+      insertbefore: BOF
+
+
