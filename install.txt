@@ -4,11 +4,11 @@ The following products need to be installed:
 
 - JDK 8+
 - Maven
-- terraform
-- ansible
+- Terraform
+- Ansible
 - Python 3.8 or newer
-- python3-pip
-- gnuplot
+- Python3-pip
+- Gnuplot
 
 The following python libraries are needed:
 
@@ -20,20 +20,18 @@ pip3 install -U signal-processing-algorithms
 The signal-processing-algorithms is only needed when you are going to do performance regression testing. The
 library is used for change point detection.
 
-To install simulator, run
-
+To build simulator, run:
 ```
-./install
+./build
 ```
 
-To create Hazelast 5 benchmark that runs in EC2 run:
+To create a Hazelast 5 benchmark that runs in EC2 run:
 
 perftest create mybenchmark
 
 Configuring AWS credentials
 
 In your ~/.aws/credentials file you need something like this:
-
 ```
 [default]
 aws_access_key_id=AKIAIOSFODNN7EXAMPLE

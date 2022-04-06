@@ -20,10 +20,6 @@ Please refer to the [Quickstart](#quickstart) to start your Simulator journey.
 
 ## Table of Content
 - [Quickstart](#quickstart)
-  * [Install](#install)
-  * [Creating a benchmark](#run-first-test-locally)
-  * [Generate charts](#generate-charts)
-  * [What's next](#what-s-next)
 - [Key Concepts and Terminology](#key-concepts-and-terminology)
 - [Installation](#installation)
 - [Define test scenario](#define-test-scenario)

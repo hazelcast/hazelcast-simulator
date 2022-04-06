@@ -7,7 +7,10 @@ import shutil
 def mvn_clean_install():
     cwd = os.getcwd()
     os.chdir("java")
-    os.system('mvn clean install -DskipTests')
+    exitcode = os.system('mvn clean install -DskipTests')
+    if exitcode != 0:
+        print("Failed to build Simulator due to a Maven build failure.")
+        exit(exitcode)
     os.chdir(cwd)
 
 
@@ -15,6 +18,7 @@ def empty_dir(dir):
     if os.path.isdir(dir):
         shutil.rmtree(dir)
     os.mkdir(dir)
+
 
 mvn_clean_install()
 empty_dir("drivers")
