@@ -1,0 +1,26 @@
+- name: mixed
+  repetitions: 1
+  duration: 300s
+  driver: hazelcast5
+  version: maven=5.1
+  clients: 2
+  members: 1
+  node_hosts: nodes
+  loadgenerator_hosts: loadgenerators
+  client_args: >
+    -Xms3g
+    -Xmx3g
+  member_args: >
+    -Xms6g
+    -Xmx6g
+  performance_monitor_interval_seconds: 1
+  verify_enabled: True
+  warmup_seconds: 0
+  cooldown_seconds: 0
+  license_key: <add key here>
+  test:
+      class: com.hazelcast.simulator.tests.map.IntByteMapTest
+      threadCount: 40
+      getProb: 80
+      putProb: 20
+      keyCount: 100_000_000

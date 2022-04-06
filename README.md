@@ -104,13 +104,15 @@ Also contains pointers where to go next.
     git clone https://github.com/hazelcast/hazelcast-simulator.git
     ```
    
-2. Install Simulator
+2. Build Simulator:
 
    ```
    cd hazelcast-simulator
-   /install
+   /build
    ```
-   
+    This will automatically build the Java code, download the artifacts and prepare the simulator for usage.   
+
+
 3. Add the Simulator to your path 
 
    Open ~/.bash_profile and add the following line:

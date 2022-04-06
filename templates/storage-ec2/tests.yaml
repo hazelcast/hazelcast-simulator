@@ -1,5 +1,5 @@
-- name: 100M/map_tiered
-  duration: 3000s
+- name: map_tiered
+  duration: 600s
   repetitions: 1
   clients: 2
   members: 1

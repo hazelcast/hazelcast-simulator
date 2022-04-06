@@ -155,21 +155,6 @@ resource "aws_instance" "loadgenerators" {
         "passthrough:ansible_ssh_private_key_file" = local.settings.keypair.private_key
         "passthrough:ansible_user" = local.settings.loadgenerators.user
     }
-
-    connection {
-        type        = "ssh"
-        user        = local.settings.loadgenerators.user
-        private_key = local.private_key
-        host        = self.public_ip
-    }
-
-    provisioner "remote-exec" {
-        inline = [
-           "echo \"${local.private_key}\" > ~/.ssh/id_booboo",
-           "echo \"${local.public_key}\" > ~/.ssh/id_rsa.pub",
-           "chmod 600 ~/.ssh/id_rsa*"
-        ]
-    }
 } 
 
 output "loadgenerators" {

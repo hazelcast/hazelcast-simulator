@@ -1,0 +1,50 @@
+provisioner: terraform
+terraform_plan: aws
+# Used for naming resources; give it some unique name specific to a set of benchmarks
+basename: <id>
+# Enter something here that identifies you.
+owner: <id>
+placement_group_name: None
+region: eu-central-1
+availability_zone: eu-central-1a
+vpc_id: vpc-002b5a4e5f8b8ece2
+internet_gateway_id: igw-02b8fe3ab75871205
+# Change the '20' to a different octet to prevent running into conflicts.
+cidr_block: 10.0.20.0/24
+
+keypair:
+    public_key: key.pub
+    private_key: key
+
+nodes:
+    count: 2
+    instance_type: c5.4xlarge
+    # default AWS AMI
+    # ami: ami-05cafdf7c9f772ad2
+    # ubuntu
+    ami: ami-0d527b8c289b4af7f
+    user: ubuntu
+    placement_group: None
+    tenancy: null
+    
+loadgenerators:
+    count: 4
+    instance_type: c5.4xlarge
+    # default AWS AMI
+    # ami: ami-05cafdf7c9f772ad2
+    # ubuntu
+    ami: ami-0d527b8c289b4af7f
+    user: ubuntu
+    placement_group: None
+    tenancy: null
+
+mc:
+    instance_type: c5.4xlarge
+    count: 1
+    # default AWS AMI
+    # ami: ami-05cafdf7c9f772ad2
+    # ubuntu
+    ami: ami-0d527b8c289b4af7f
+    user: ubuntu
+    placement_group: None
+    tenancy: null
