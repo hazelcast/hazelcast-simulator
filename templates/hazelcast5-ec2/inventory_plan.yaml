@@ -1,7 +1,7 @@
 provisioner: terraform
 terraform_plan: aws
 # Used for naming resources; give it some unique name specific to a set of benchmarks
-basename: <id>
+basename: <id>-<rnd:5>
 # Enter something here that identifies you.
 owner: <id>
 placement_group_name: None

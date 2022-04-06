@@ -2,6 +2,8 @@ import argparse
 import datetime
 import getpass
 import shutil
+import random
+import string
 
 import tempfile
 import uuid
@@ -338,6 +340,8 @@ class PerftestCreateCli:
                 filepath = subdir + os.sep + filename
                 if os.access(filepath, os.W_OK):
                     new_text = read(filepath).replace("<id>", id)
+                    rnd = ''.join(random.choices(string.ascii_lowercase, k=5))
+                    new_text = new_text.replace("<rnd:5>", rnd)
                     write(filepath, new_text)
 
 
