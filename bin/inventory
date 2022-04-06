@@ -4,5 +4,22 @@ if [ -z "${SIMULATOR_HOME}" ] ; then
     export SIMULATOR_HOME=$(cd $(dirname $(readlink -f $0 2> /dev/null || readlink $0 2> /dev/null || echo $0))/.. && pwd)
 fi
 
+# Check if Ansible is installed.
+if ! hash ansible 2>/dev/null ; then
+    echo Ansible is not installed! Aborting.
+    exit 1
+fi
+
+# Check if Terraform is installed.
+if ! hash terraform 2>/dev/null ; then
+    echo Terraform is not installed! Aborting.
+    exit 1
+fi
+
+if ! hash python3 2>/dev/null ; then
+    echo Python3 is not installed! Aborting.
+    exit 1
+fi
+
 BINPATH=`dirname $0`
 python3 -u "$BINPATH/../src/inventory_cli.py" $@
