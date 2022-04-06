@@ -9,5 +9,15 @@ if ! hash python3 2>/dev/null ; then
     exit 1
 fi
 
+if ! hash git 2>/dev/null ; then
+    echo Git is not detected! Aborting.
+    exit 1
+fi
+
+if ! hash mvn 2>/dev/null ; then
+    echo mvn is not detected! Aborting.
+    exit 1
+fi
+
 BINPATH=`dirname $0`
 python3 -u "$BINPATH/../src/perfregtest_cli.py" $@

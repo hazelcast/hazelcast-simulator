@@ -5,7 +5,17 @@ if [ -z "${SIMULATOR_HOME}" ] ; then
 fi
 
 if ! hash python3 2>/dev/null ; then
-    echo Python3 is not installed! Aborting.
+    echo Python3 is not detected! Aborting.
+    exit 1
+fi
+
+if ! hash gnuplot 2>/dev/null ; then
+    echo Gnuplot is not detected! Aborting.
+    exit 1
+fi
+
+if ! hash java 2>/dev/null ; then
+    echo Java is not detected! Aborting.
     exit 1
 fi
 

@@ -6,18 +6,18 @@ fi
 
 # Check if Ansible is installed.
 if ! hash ansible 2>/dev/null ; then
-    echo Ansible is not installed! Aborting.
+    echo Ansible is not detected! Aborting.
     exit 1
 fi
 
 # Check if Terraform is installed.
 if ! hash terraform 2>/dev/null ; then
-    echo Terraform is not installed! Aborting.
+    echo Terraform is not detected! Aborting.
     exit 1
 fi
 
 if ! hash python3 2>/dev/null ; then
-    echo Python3 is not installed! Aborting.
+    echo Python3 is not detected! Aborting.
     exit 1
 fi
 
