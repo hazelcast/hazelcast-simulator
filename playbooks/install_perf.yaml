@@ -12,6 +12,7 @@
           sudo yum -y install cmake
           sudo yum -y install make
           sudo yum -y install gcc-c++
+          sudo yum -y install perl-open
       elif hash apt-get 2>/dev/null; then
           sudo apt-get -y update
           sudo apt-get -y install git
