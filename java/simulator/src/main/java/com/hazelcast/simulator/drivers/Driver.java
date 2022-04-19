@@ -163,10 +163,25 @@ public abstract class Driver<V> implements Closeable {
     }
 
     protected String loadWorkerScript(String workerType) {
+
         List<File> files = new LinkedList<>();
         File confDir = new File(getSimulatorHome(), "conf");
 
         String driver = properties.get("DRIVER");
+
+        if (workerType.equals("member")) {
+            String workerScript = properties.get("MEMBER_WORKER_SCRIPT");
+            if (workerScript != null) {
+                files.add(new File(workerScript).getAbsoluteFile());
+            }
+        }
+
+        if (!workerType.equals("member")) {
+            String workerScript = properties.get("CLIENT_WORKER_SCRIPT");
+            if (workerScript != null) {
+                files.add(new File(workerScript).getAbsoluteFile());
+            }
+        }
 
         files.add(new File("worker-" + driver + "-" + workerType + ".sh").getAbsoluteFile());
         files.add(new File("worker-" + workerType + ".sh").getAbsoluteFile());
