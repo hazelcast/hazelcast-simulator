@@ -36,12 +36,12 @@ import java.lang.annotation.Target;
  * and 90% read. This can be done configuring probability:
  * <pre>
  * {@code
- *     &#064;TimeStep(prob=0.9)
+ *     @TimeStep(prob=0.9)
  *     public void read(){
  *         ...
  *     }
  *
- *     &#064;TimeStep(prob=0.10)
+ *     @TimeStep(prob=0.10)
  *     public void write(){
  *
  *     }
@@ -53,12 +53,12 @@ import java.lang.annotation.Target;
  * It means that whatever remains, will be given to that method. For example the above 90/10 could also be configured using:
  * <pre>
  * {@code
- *     &#064;TimeStep(prob=0.9)
+ *     @TimeStep(prob=0.9)
  *     public void read(){
  *         ...
  *     }
  *
- *     &#064;TimeStep(prob=-1)
+ *     @TimeStep(prob=-1)
  *     public void write(){
  *
  *     }
@@ -71,7 +71,7 @@ import java.lang.annotation.Target;
  *
  * <pre>
  * {@code
- *     &#064;TimeStep
+ *     @TimeStep
  *     public void timestep(ThreadState context){
  *        ...
  *     }
@@ -100,12 +100,12 @@ import java.lang.annotation.Target;
  * test. In such cases one can make use of execution groups:
  * <pre>
  * {@code
- *     &#064;TimeStep(executionGroup="producer")
+ *     @TimeStep(executionGroup="producer")
  *     public void produce(){
  *         ...
  *     }
  *
- *     &#064;TimeStep(executionGroup="consumer")
+ *     @TimeStep(executionGroup="consumer")
  *     public void consume(){
  *          ...
  *     }
@@ -166,12 +166,12 @@ import java.lang.annotation.Target;
  * By default every timestep method will get its own probe. E.g.
  * <pre>
  * {@code
- *     &#064;TimeStep(prob=0.9)
+ *     @TimeStep(prob=0.9)
  *     public void read(){
  *         ...
  *     }
  *
- *     &#064;TimeStep(prob=0.10)
+ *     @TimeStep(prob=0.10)
  *     public void write(){
  *          ...
  *     }
@@ -183,7 +183,7 @@ import java.lang.annotation.Target;
  * get access to the Probe and startTime like this:
  * <pre>
  * {@code
- *     &#064;TimeStep(prob=0.9)
+ *     @TimeStep(prob=0.9)
  *     public void asyncCall(Probe probe, @StartNanos long startNanos){
  *         ...
  *     }
