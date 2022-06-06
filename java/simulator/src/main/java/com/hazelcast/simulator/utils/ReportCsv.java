@@ -77,7 +77,7 @@ public final class ReportCsv {
         File file = new File(hgrmFile.getParent(), stripExtension(hgrmFile.getName()));
         String[] lines = fileAsText(file).split("\n");
 
-        long startMillis = Math.round(Double.parseDouble(lines[4].split(",")[1]) * 1000);
+        long startMillis = Math.round(Double.parseDouble(lines[3].split(",")[1]) * 1000);
 
         String lastLine = lines[lines.length - 1];
 
