@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 import argparse
 import os
+import random
 import subprocess
 import sys
-import random
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -57,7 +57,7 @@ def build(commit, build_path):
         git fetch --all --tags
         git reset --hard
         git checkout {commit}
-        mvn clean install -DskipTests -Dquick
+        mvn clean install -Dmaven.test.skip=true -Dquick
     """, log_file=logfile_name)
     if exitcode == 0:
         info(f"Build time: {now_seconds() - start}s")
