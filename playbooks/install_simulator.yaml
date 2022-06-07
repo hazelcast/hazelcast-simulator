@@ -33,7 +33,7 @@
     loop:
        - "{{ simulator_dir }}/drivers"
 
-  # The rscyn is can't resolve the key properly if it uses relative path, so this hack is needed.
+  # The rsync is can't resolve the key properly if it uses relative path, so this hack is needed.
   # https://github.com/ansible/ansible-modules-core/issues/18
   - name: Set correct ssh key path
     set_fact:
