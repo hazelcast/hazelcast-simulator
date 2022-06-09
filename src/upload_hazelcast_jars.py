@@ -23,7 +23,7 @@ def __upload(agent, artifact_ids, version):
 
 
 def local_repo():
-    cmd = "mvn help:evaluate -Dexpression=settings.localRepository -q -DforceStdout"
+    cmd = "mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=settings.localRepository -q -DforceStdout"
     return subprocess.check_output(cmd, shell=True, text=True)
 
 
