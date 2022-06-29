@@ -115,7 +115,7 @@ class PerfTest:
             args = f"{args} --dedicatedMemberMachines {dedicated_member_machines}"
 
         if parallel:
-            args = f"{args} --parallel {parallel}"
+            args = f"{args} --parallel"
 
         if license_key:
             args = f"{args} --licenseKey {license_key}"
@@ -170,8 +170,16 @@ class PerfTest:
             args = f"{args} --verifyEnabled {verify_enabled}"
 
         with tempfile.NamedTemporaryFile(mode="w", delete=False, prefix="perftest_", suffix=".txt") as tmp:
-            for key, value in test.items():
-                tmp.write(f"{key}={value}\n")
+            if isinstance(test, list):
+                for t in test:
+                    clazzName = t['class'].split('.')[-1]
+                    for key, value in t.items():
+                        tmp.write(clazzName+'@')
+                        tmp.write(f"{key}={value}\n")
+            else:
+                for key, value in test.items():
+                    tmp.write(f"{key}={value}\n")
+
             tmp.flush()
 
             self.exitcode = self.__shell(f"{simulator_home}/bin/hidden/coordinator {args} {tmp.name}")
@@ -206,6 +214,7 @@ class PerfTest:
             run_path=run_path,
             duration=test.get('duration'),
             performance_monitor_interval_seconds=test.get('performance_monitor_interval_seconds'),
+            parallel=test.get('parallel'),    
             node_hosts=test.get('node_hosts'),
             loadgenerator_hosts=test.get('loadgenerator_hosts'),
             license_key=test.get('license_key'),
