@@ -15,7 +15,8 @@
  */
 package com.hazelcast.simulator.common;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.Serializable;
 import java.util.Collections;
@@ -28,7 +29,7 @@ import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 
 public class TestCase implements Serializable {
-    private static final Logger LOGGER = Logger.getLogger(TestCase.class);
+    private static final Logger LOGGER = LogManager.getLogger(TestCase.class);
 
     private String id;
     private final Map<String, String> properties = new HashMap<>();

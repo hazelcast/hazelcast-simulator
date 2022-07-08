@@ -1,42 +1,42 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd" >
-<log4j:configuration>
-    <!--
-        We configure Log4j with RollingFileAppender to prevent "out of disk" errors on the test machines.
-        If you need full reports to debug a special test situation you can switch to the FileAppender config.
+<Configuration status="INFO">
+    <Appenders>
+        <Console name="console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+        </Console>
 
-        Just place this file into your working directory and adjust the configuration as you need it.
-        It will automatically be used if it exists.
-    -->
+        <RollingFile name="rollingFile"
+                     fileName="worker.log"
+                     filePattern="worker.%i.log"
+                     ignoreExceptions="false">
+            <PatternLayout>
+                <Pattern>%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n</Pattern>
+            </PatternLayout>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="1000MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="5"/>
+        </RollingFile>
 
-    <appender name="file" class="org.apache.log4j.RollingFileAppender">
-        <param name="File" value="worker.log"/>
-        <param name="MaxFileSize" value="1gb"/>
-        <param name="MaxBackupIndex" value="5"/>
-        <param name="Threshold" value="debug"/>
-        <layout class="org.apache.log4j.PatternLayout">
-            <param name="ConversionPattern" value="%-5p %d [%t] %c: %m%n"/>
-        </layout>
-    </appender>
+        <Async name="file" bufferSize="1000">
+            <AppenderRef ref="rollingFile"/>
+        </Async>
+    </Appenders>
+    <Loggers>
+        <Logger name="org.jgroup" level="debug" additivity="true">
+            <AppenderRef ref="file"/>
+        </Logger>
 
-    <logger name="org.jgroups">
-        <level value="debug"/>
-        <appender-ref ref="file"/>
-    </logger>
+        <Logger name="org.infinispan.remoting.transport.jgroups" level="debug" additivity="true">
+            <AppenderRef ref="file"/>
+        </Logger>
 
-    <logger name="org.infinispan.remoting.transport.jgroups">
-        <level value="debug"/>
-        <appender-ref ref="file"/>
-    </logger>
+        <Logger name="org.infinispan" level="info" additivity="true">
+            <AppenderRef ref="file"/>
+        </Logger>
 
-    <logger name="org.infinispan">
-        <level value="info"/>
-        <appender-ref ref="file"/>
-    </logger>
-
-    <root>
-        <priority value="info"/>
-        <appender-ref ref="file"/>
-    </root>
-
-</log4j:configuration>
+        <Root level="info">
+            <AppenderRef ref="file"/>
+        </Root>
+    </Loggers>
+</Configuration>

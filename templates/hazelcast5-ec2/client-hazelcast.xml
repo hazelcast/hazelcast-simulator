@@ -14,7 +14,7 @@
     </network>
 
     <properties>
-        <property name="hazelcast.logging.type">log4j</property>
+        <property name="hazelcast.logging.type">log4j2</property>
     </properties>
 
 </hazelcast-client>

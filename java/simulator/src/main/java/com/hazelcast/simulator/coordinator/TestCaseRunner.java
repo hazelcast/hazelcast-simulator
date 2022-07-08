@@ -26,7 +26,8 @@ import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.worker.operations.CreateTestOperation;
 import com.hazelcast.simulator.worker.operations.StartPhaseOperation;
 import com.hazelcast.simulator.worker.operations.StopRunOperation;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -70,7 +71,7 @@ public final class TestCaseRunner {
     private static final int RUN_PHASE_LOG_INTERVAL_SECONDS = 30;
     private static final int WAIT_FOR_PHASE_COMPLETION_LOG_INTERVAL_SECONDS = 30;
     private static final int WAIT_FOR_PHASE_COMPLETION_LOG_VERBOSE_DELAY_SECONDS = 300;
-    private static final Logger LOGGER = Logger.getLogger(TestCaseRunner.class);
+    private static final Logger LOGGER = LogManager.getLogger(TestCaseRunner.class);
 
     private final TestData test;
     private final TestCase testCase;

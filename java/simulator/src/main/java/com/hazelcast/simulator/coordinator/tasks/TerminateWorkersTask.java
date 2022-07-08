@@ -21,7 +21,8 @@ import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.coordinator.registry.WorkerData;
 import com.hazelcast.simulator.protocol.CoordinatorClient;
 import com.hazelcast.simulator.worker.operations.TerminateWorkerOperation;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.HashSet;
 import java.util.List;
@@ -44,7 +45,7 @@ public class TerminateWorkersTask {
 
     private static final int FINISHED_WORKERS_SLEEP_MILLIS = 500;
 
-    private static final Logger LOGGER = Logger.getLogger(TerminateWorkersTask.class);
+    private static final Logger LOGGER = LogManager.getLogger(TerminateWorkersTask.class);
     private final Registry registry;
     private final SimulatorProperties simulatorProperties;
     private final CoordinatorClient client;

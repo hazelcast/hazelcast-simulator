@@ -29,7 +29,8 @@ import com.hazelcast.simulator.coordinator.registry.WorkerData;
 import com.hazelcast.simulator.coordinator.registry.WorkerQuery;
 import com.hazelcast.simulator.protocol.CoordinatorClient;
 import com.hazelcast.simulator.utils.ThreadSpawner;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,7 +48,7 @@ import static java.lang.String.format;
 
 public class RunTestSuiteTask {
 
-    private static final Logger LOGGER = Logger.getLogger(RunTestSuiteTask.class);
+    private static final Logger LOGGER = LogManager.getLogger(RunTestSuiteTask.class);
 
     private final TestSuite testSuite;
     private final CoordinatorParameters coordinatorParameters;

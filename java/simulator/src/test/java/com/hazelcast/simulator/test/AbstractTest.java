@@ -18,14 +18,15 @@ package com.hazelcast.simulator.test;
 import com.hazelcast.simulator.test.annotations.InjectTestContext;
 import com.hazelcast.simulator.test.annotations.InjectDriver;
 import com.hazelcast.simulator.fake.FakeInstance;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 
 public abstract class AbstractTest {
 
     @SuppressWarnings("checkstyle:visibilitymodifier")
     public String name = getClass().getSimpleName();
-
-    protected final Logger logger = Logger.getLogger(getClass());
+    protected final Logger logger = LogManager.getLogger(getClass());
 
     @InjectDriver
     protected FakeInstance targetInstance;

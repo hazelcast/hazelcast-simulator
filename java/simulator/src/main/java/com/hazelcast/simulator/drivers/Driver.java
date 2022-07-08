@@ -18,7 +18,8 @@ package com.hazelcast.simulator.drivers;
 import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.coordinator.registry.AgentData;
 import com.hazelcast.simulator.utils.CommandLineExitException;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.Closeable;
 import java.io.File;
@@ -34,7 +35,7 @@ import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static java.lang.String.format;
 
 public abstract class Driver<V> implements Closeable {
-    private static final Logger LOGGER = Logger.getLogger(Driver.class);
+    private static final Logger LOGGER = LogManager.getLogger(Driver.class);
 
     protected List<AgentData> agents;
     protected Map<String, String> properties = new HashMap<>();

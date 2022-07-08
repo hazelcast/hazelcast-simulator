@@ -19,7 +19,8 @@ import com.hazelcast.simulator.protocol.Server;
 import com.hazelcast.simulator.worker.operations.PerformanceStatsOperation;
 import com.hazelcast.simulator.worker.testcontainer.TestContainer;
 import com.hazelcast.simulator.worker.testcontainer.TestManager;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.Closeable;
 import java.io.File;
@@ -47,7 +48,7 @@ public class PerformanceMonitor implements Closeable {
 
     private static final int SHUTDOWN_TIMEOUT_SECONDS = 10;
     private static final long WAIT_FOR_TEST_CONTAINERS_DELAY_NANOS = MILLISECONDS.toNanos(100);
-    private static final Logger LOGGER = Logger.getLogger(PerformanceMonitor.class);
+    private static final Logger LOGGER = LogManager.getLogger(PerformanceMonitor.class);
 
     private final PerformanceMonitorThread thread;
     private final AtomicBoolean shutdown = new AtomicBoolean();

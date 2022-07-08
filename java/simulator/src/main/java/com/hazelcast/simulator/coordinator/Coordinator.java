@@ -30,7 +30,8 @@ import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.utils.BashCommand;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.CommonUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.Closeable;
 import java.io.File;
@@ -50,7 +51,7 @@ import static java.lang.String.format;
 @SuppressWarnings({"checkstyle:classdataabstractioncoupling", "checkstyle:classfanoutcomplexity"})
 public class Coordinator implements Closeable {
 
-    private static final Logger LOGGER = Logger.getLogger(Coordinator.class);
+    private static final Logger LOGGER = LogManager.getLogger(Coordinator.class);
 
     private final PerformanceStatsCollector performanceStatsCollector = new PerformanceStatsCollector();
 

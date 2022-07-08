@@ -29,7 +29,8 @@ import com.hazelcast.simulator.coordinator.ConfigFileTemplate;
 import com.hazelcast.simulator.coordinator.registry.AgentData;
 import com.hazelcast.simulator.utils.BashCommand;
 import com.hazelcast.simulator.drivers.Driver;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
@@ -38,8 +39,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillisThrowException;
-import static com.hazelcast.simulator.utils.FileUtils.getConfigurationFile;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.FileUtils.locatePythonFile;
 import static java.lang.String.format;
@@ -47,7 +48,7 @@ import static java.lang.String.format;
 public class Hazelcast3Driver extends Driver<HazelcastInstance> {
     private static final long PARTITION_WARMUP_TIMEOUT_NANOS = TimeUnit.MINUTES.toNanos(5);
     private static final int PARTITION_WARMUP_SLEEP_INTERVAL_MILLIS = 500;
-    private static final Logger LOGGER = Logger.getLogger(Hazelcast3Driver.class);
+    private static final Logger LOGGER = LogManager.getLogger(Hazelcast3Driver.class);
     private HazelcastInstance hazelcastInstance;
 
     @Override

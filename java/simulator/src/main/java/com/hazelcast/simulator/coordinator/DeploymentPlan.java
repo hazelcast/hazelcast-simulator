@@ -22,7 +22,8 @@ import com.hazelcast.simulator.coordinator.registry.WorkerData;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.drivers.Driver;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -40,7 +41,7 @@ import static java.lang.String.format;
 public final class DeploymentPlan {
     private static final int WORKER_MODE_LENGTH = 6;
 
-    private static final Logger LOGGER = Logger.getLogger(DeploymentPlan.class);
+    private static final Logger LOGGER = LogManager.getLogger(DeploymentPlan.class);
 
     private final Map<SimulatorAddress, List<WorkerParameters>> workerDeployment
             = new HashMap<>();

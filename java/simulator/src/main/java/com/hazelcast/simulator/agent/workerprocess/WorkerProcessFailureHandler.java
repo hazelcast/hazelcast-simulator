@@ -19,13 +19,14 @@ import com.hazelcast.simulator.common.FailureType;
 import com.hazelcast.simulator.coordinator.operations.FailureOperation;
 import com.hazelcast.simulator.protocol.Server;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import static java.lang.String.format;
 
 public class WorkerProcessFailureHandler {
 
-    private static final Logger LOGGER = Logger.getLogger(WorkerProcessFailureHandler.class);
+    private static final Logger LOGGER = LogManager.getLogger(WorkerProcessFailureHandler.class);
 
     private final String agentAddress;
     private final Server server;

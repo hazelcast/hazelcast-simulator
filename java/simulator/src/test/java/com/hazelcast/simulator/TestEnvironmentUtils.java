@@ -4,7 +4,8 @@ import com.hazelcast.simulator.utils.FileUtils;
 import com.hazelcast.simulator.utils.TestUtils;
 import com.hazelcast.simulator.utils.UncheckedIOException;
 import com.hazelcast.simulator.utils.helper.ExitExceptionSecurityManager;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,7 +15,7 @@ import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 
 public class TestEnvironmentUtils {
 
-    private static final Logger LOGGER = Logger.getLogger(TestEnvironmentUtils.class);
+    private static final Logger LOGGER = LogManager.getLogger(TestEnvironmentUtils.class);
 
     private static SecurityManager originalSecurityManager;
 

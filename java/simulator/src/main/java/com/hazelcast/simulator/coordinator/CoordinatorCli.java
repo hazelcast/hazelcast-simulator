@@ -27,7 +27,8 @@ import com.hazelcast.simulator.utils.CommandLineExitException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -54,7 +55,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 final class CoordinatorCli {
     static final int DEFAULT_DURATION_SECONDS = 0;
 
-    private static final Logger LOGGER = Logger.getLogger(CoordinatorCli.class);
+    private static final Logger LOGGER = LogManager.getLogger(CoordinatorCli.class);
 
     CoordinatorRunMonolith runMonolith;
     Coordinator coordinator;

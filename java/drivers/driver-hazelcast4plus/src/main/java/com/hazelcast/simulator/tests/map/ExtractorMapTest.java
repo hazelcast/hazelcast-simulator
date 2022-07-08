@@ -40,7 +40,8 @@ import com.hazelcast.simulator.utils.ThrottlingLogger;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.log4j.Level;
+import org.apache.logging.log4j.Level;
+
 
 import java.io.IOException;
 import java.util.ArrayList;

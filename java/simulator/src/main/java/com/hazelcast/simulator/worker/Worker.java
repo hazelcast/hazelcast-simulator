@@ -25,7 +25,8 @@ import com.hazelcast.simulator.drivers.Driver;
 import com.hazelcast.simulator.worker.operations.TerminateWorkerOperation;
 import com.hazelcast.simulator.worker.performance.PerformanceMonitor;
 import com.hazelcast.simulator.worker.testcontainer.TestManager;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -50,7 +51,7 @@ import static java.lang.String.format;
 public class Worker {
 
     private static final String DASHES = "---------------------------";
-    private static final Logger LOGGER = Logger.getLogger(Worker.class);
+    private static final Logger LOGGER = LogManager.getLogger(Worker.class);
 
     private final AtomicBoolean shutdownStarted = new AtomicBoolean();
     private final String publicAddress;

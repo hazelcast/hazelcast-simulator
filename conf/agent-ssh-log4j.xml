@@ -1,16 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd" >
-<log4j:configuration>
-    <appender name="file" class="org.apache.log4j.RollingFileAppender">
-        <param name="File" value="logs/agent-ssh.log"/>
-        <param name="Threshold" value="DEBUG"/>
-        <param name="MaxBackupIndex" value="10"/>
-        <layout class="org.apache.log4j.PatternLayout">
-            <param name="ConversionPattern" value="%-5p %d [%t] %c: %m%n"/>
-        </layout>
-    </appender>
-    <root>
-        <priority value="debug"/>
-        <appender-ref ref="file"/>
-    </root>
-</log4j:configuration>
+<Configuration status="INFO">
+    <Appenders>
+        <Console name="console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %c{1} - %msg%n"/>
+        </Console>
+
+        <RollingFile name="file"
+                     fileName="logs/agent-ssh.log"
+                     filePattern="logs/agent-ssh.%i.log"
+                     ignoreExceptions="false">
+            <PatternLayout>
+                <Pattern>%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n</Pattern>
+            </PatternLayout>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="10MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="5"/>
+        </RollingFile>
+    </Appenders>
+
+    <Loggers>
+        <Root level="debug">
+            <AppenderRef ref="file"/>
+        </Root>
+    </Loggers>
+</Configuration>

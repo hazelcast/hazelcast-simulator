@@ -15,5 +15,5 @@ echo JAVA_OPTS = ${JAVA_OPTS}
 
 java -cp "${SIMULATOR_HOME}/lib/*" ${JAVA_OPTS} \
     -DSIMULATOR_HOME=${SIMULATOR_HOME}  \
-    -Dlog4j.configuration=file:${SIMULATOR_HOME}/conf/agent-log4j.xml \
+    -Dlog4j2.configurationFile=${SIMULATOR_HOME}/conf/agent-log4j.xml \
     com.hazelcast.simulator.agent.AgentCli "$@"

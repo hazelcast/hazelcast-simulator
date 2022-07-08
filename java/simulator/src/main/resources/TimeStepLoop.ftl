@@ -6,7 +6,7 @@ import com.hazelcast.simulator.worker.metronome.*;
 import com.hazelcast.simulator.probes.*;
 import com.hazelcast.simulator.utils.*;
 
-import org.apache.log4j.*;
+import org.apache.logging.log4j.*;
 
 import java.util.*;
 import java.util.concurrent.*;

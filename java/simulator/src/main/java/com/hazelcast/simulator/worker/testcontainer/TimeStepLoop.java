@@ -20,7 +20,8 @@ import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.StopException;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.worker.metronome.Metronome;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -45,7 +46,7 @@ public abstract class TimeStepLoop implements Runnable {
     protected TestContext testContext;
     protected Metronome metronome;
 
-    protected final Logger logger = Logger.getLogger(getClass());
+    private final Logger logger = LogManager.getLogger(getClass());
     protected final String executionGroup;
     protected final Object threadState;
     protected final Object testInstance;

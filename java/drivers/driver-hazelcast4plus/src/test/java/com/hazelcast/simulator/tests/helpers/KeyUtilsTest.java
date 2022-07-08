@@ -21,13 +21,15 @@ import com.hazelcast.config.Config;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.partition.Partition;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.Map;
+
 
 import static com.hazelcast.core.Hazelcast.newHazelcastInstance;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntKeys;
@@ -47,7 +49,7 @@ public class KeyUtilsTest {
 
     private static final int PARTITION_COUNT = 10;
 
-    private static final Logger LOGGER = Logger.getLogger(KeyUtilsTest.class);
+    private static final Logger LOGGER = LogManager.getLogger(KeyUtilsTest.class);
 
     private static HazelcastInstance hz;
     private static HazelcastInstance client;

@@ -15,7 +15,8 @@
  */
 package com.hazelcast.simulator.utils;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,7 +37,7 @@ public final class ExceptionReporter {
 
     static final AtomicLong FAILURE_ID = new AtomicLong(0);
 
-    private static final Logger LOGGER = Logger.getLogger(ExceptionReporter.class);
+    private static final Logger LOGGER = LogManager.getLogger(ExceptionReporter.class);
 
     private ExceptionReporter() {
     }

@@ -15,7 +15,7 @@
  */
 package com.hazelcast.simulator.utils;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import javax.jms.Connection;
 import java.io.Closeable;
@@ -25,7 +25,6 @@ import java.io.StringWriter;
 import java.util.Collection;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.LockSupport;
 import java.util.jar.JarFile;

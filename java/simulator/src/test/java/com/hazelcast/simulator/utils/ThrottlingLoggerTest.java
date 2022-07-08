@@ -1,6 +1,6 @@
 package com.hazelcast.simulator.utils;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.junit.Test;
 
 import java.util.concurrent.CountDownLatch;
@@ -8,11 +8,11 @@ import java.util.concurrent.TimeUnit;
 
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.apache.log4j.Level.DEBUG;
-import static org.apache.log4j.Level.FATAL;
-import static org.apache.log4j.Level.INFO;
-import static org.apache.log4j.Level.TRACE;
-import static org.apache.log4j.Level.WARN;
+import static org.apache.logging.log4j.Level.FATAL;
+import static org.apache.logging.log4j.Level.INFO;
+import static org.apache.logging.log4j.Level.TRACE;
+import static org.apache.logging.log4j.Level.DEBUG;
+import static org.apache.logging.log4j.Level.WARN;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.atMost;
@@ -50,7 +50,7 @@ public class ThrottlingLoggerTest {
         long rateMs = 100;
         int threadCount = 2;
 
-        when(loggerMock.isEnabledFor(FATAL)).thenReturn(true);
+        when(loggerMock.isEnabled(FATAL)).thenReturn(true);
         throttlingLogger = ThrottlingLogger.newLogger(loggerMock, rateMs);
 
         startLoggingThreadsAndAwait(threadCount, testDurationNanos);
@@ -59,8 +59,8 @@ public class ThrottlingLoggerTest {
 
     @Test
     public void testIgnoredLevelsAreNotCounted() {
-        when(loggerMock.isEnabledFor(WARN)).thenReturn(true);
-        when(loggerMock.isEnabledFor(INFO)).thenReturn(false);
+        when(loggerMock.isEnabled(WARN)).thenReturn(true);
+        when(loggerMock.isEnabled(INFO)).thenReturn(false);
         throttlingLogger = ThrottlingLogger.newLogger(loggerMock, 1000);
 
         for (int i = 0; i < 1000; i++) {
@@ -74,7 +74,7 @@ public class ThrottlingLoggerTest {
 
     @Test
     public void testFine() {
-        when(loggerMock.isEnabledFor(DEBUG)).thenReturn(true);
+        when(loggerMock.isEnabled(DEBUG)).thenReturn(true);
         throttlingLogger = ThrottlingLogger.newLogger(loggerMock, 1000);
 
         throttlingLogger.fine(MESSAGE);
@@ -83,7 +83,7 @@ public class ThrottlingLoggerTest {
 
     @Test
     public void testTrace() {
-        when(loggerMock.isEnabledFor(TRACE)).thenReturn(true);
+        when(loggerMock.isEnabled(TRACE)).thenReturn(true);
         throttlingLogger = ThrottlingLogger.newLogger(loggerMock, 1000);
 
         throttlingLogger.finer(MESSAGE);

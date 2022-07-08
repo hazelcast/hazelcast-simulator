@@ -20,7 +20,8 @@ import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.coordinator.registry.TestData;
 import com.hazelcast.simulator.coordinator.registry.WorkerData;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.util.concurrent.ConcurrentHashMap;
@@ -40,7 +41,7 @@ public class FailureCollector {
 
     private static final int MAX_CONSOLE_FAILURE_COUNT = 25;
 
-    private static final Logger LOGGER = Logger.getLogger(FailureCollector.class);
+    private static final Logger LOGGER = LogManager.getLogger(FailureCollector.class);
 
     private final AtomicInteger failureNumberGenerator = new AtomicInteger();
     private final ConcurrentMap<FailureListener, Boolean> listenerMap = new ConcurrentHashMap<>();

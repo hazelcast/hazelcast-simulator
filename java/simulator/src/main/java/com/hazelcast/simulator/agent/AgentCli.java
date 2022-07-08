@@ -20,7 +20,8 @@ import com.hazelcast.simulator.utils.CommandLineExitException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
 import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
@@ -30,7 +31,7 @@ import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static java.lang.String.format;
 
 public final class AgentCli {
-    private static final Logger LOGGER = Logger.getLogger(AgentCli.class);
+    private static final Logger LOGGER = LogManager.getLogger(AgentCli.class);
 
     private static final int DEFAULT_WORKER_LAST_SEEN_TIMEOUT_SECONDS = 180;
 

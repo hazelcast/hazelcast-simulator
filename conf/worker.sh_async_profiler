@@ -16,7 +16,7 @@ exec > worker.out
 exec 2> worker.err
 
 JVM_ARGS="-XX:OnOutOfMemoryError=\"touch;-9;worker.oome\" \
-          -Dlog4j.configuration=file:log4j.xml"
+          -Dlog4j2.configurationFile=file:log4j.xml"
 
 # Include the member/client-worker jvm options
 JVM_ARGS="$JVM_OPTIONS $JVM_ARGS"
