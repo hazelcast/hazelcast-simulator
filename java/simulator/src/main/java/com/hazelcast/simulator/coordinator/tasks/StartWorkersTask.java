@@ -25,7 +25,8 @@ import com.hazelcast.simulator.protocol.CoordinatorClient;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.ThreadSpawner;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -50,7 +51,7 @@ import static java.util.concurrent.TimeUnit.MINUTES;
  */
 public class StartWorkersTask {
 
-    private static final Logger LOGGER = Logger.getLogger(StartWorkersTask.class);
+    private static final Logger LOGGER = LogManager.getLogger(StartWorkersTask.class);
 
     private final CoordinatorClient client;
     private final Registry registry;

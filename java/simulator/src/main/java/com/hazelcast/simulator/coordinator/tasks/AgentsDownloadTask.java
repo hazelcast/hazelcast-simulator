@@ -18,7 +18,8 @@ package com.hazelcast.simulator.coordinator.tasks;
 import com.hazelcast.simulator.coordinator.registry.AgentData;
 import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.utils.BashCommand;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.util.Map;
@@ -31,7 +32,7 @@ import static com.hazelcast.simulator.utils.FileUtils.locatePythonFile;
  * The real work is done by the 'download.sh' script.
  */
 public class AgentsDownloadTask {
-    private static final Logger LOGGER = Logger.getLogger(AgentsDownloadTask.class);
+    private static final Logger LOGGER = LogManager.getLogger(AgentsDownloadTask.class);
 
     private final Registry registry;
     private final Map<String, String> simulatorProperties;

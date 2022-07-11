@@ -23,7 +23,8 @@ import com.hazelcast.simulator.protocol.operation.OperationCodec;
 import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.utils.SimulatorUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.jms.Connection;
 import javax.jms.ExceptionListener;
@@ -62,7 +63,7 @@ import static javax.jms.DeliveryMode.NON_PERSISTENT;
  */
 public class CoordinatorClient implements Closeable {
 
-    private static final Logger LOGGER = Logger.getLogger(CoordinatorClient.class);
+    private static final Logger LOGGER = LogManager.getLogger(CoordinatorClient.class);
 
     private final BlockingQueue<SendTask> taskQueue = new LinkedBlockingQueue<>();
     // the key is the agent-index

@@ -15,7 +15,8 @@
  */
 package com.hazelcast.simulator.utils;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -36,7 +37,7 @@ import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 import static java.lang.String.format;
 
 public class BashCommand {
-    private static final Logger LOGGER = Logger.getLogger(BashCommand.class);
+    private static final Logger LOGGER = LogManager.getLogger(BashCommand.class);
     private static final String INFO = "[INFO]";
     private static final String WARN = "[WARN]";
     private static final String ERROR = "[ERROR]";

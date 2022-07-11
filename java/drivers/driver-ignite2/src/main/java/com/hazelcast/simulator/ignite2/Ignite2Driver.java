@@ -21,16 +21,18 @@ import com.hazelcast.simulator.coordinator.registry.AgentData;
 import com.hazelcast.simulator.drivers.Driver;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.Ignition;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.File;
+
 
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static java.lang.String.format;
 
 public class Ignite2Driver extends Driver<Ignite> {
 
-    private static final Logger LOGGER = Logger.getLogger(Ignite2Driver.class);
+    private static final Logger LOGGER = LogManager.getLogger(Ignite2Driver.class);
     private Ignite ignite;
 
     @Override

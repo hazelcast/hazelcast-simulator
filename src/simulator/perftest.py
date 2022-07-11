@@ -102,7 +102,9 @@ class PerfTest:
              version=None,
              fail_fast=None,
              verify_enabled=None,
-             client_type=None):
+             client_type=None,
+             member_worker_script=None,
+             client_worker_script=None):
 
         self.clean()
 
@@ -169,6 +171,12 @@ class PerfTest:
         if verify_enabled:
             args = f"{args} --verifyEnabled {verify_enabled}"
 
+        if member_worker_script:
+            args = f"{args} --memberWorkerScript {member_worker_script}"
+
+        if client_worker_script:
+            args = f"{args} --clientWorkerScript {client_worker_script}"
+
         with tempfile.NamedTemporaryFile(mode="w", delete=False, prefix="perftest_", suffix=".txt") as tmp:
             if isinstance(test, list):
                 for t in test:
@@ -226,7 +234,10 @@ class PerfTest:
             version=test.get('version'),
             fail_fast=test.get('fail_fast'),
             verify_enabled=test.get('verify_enabled'),
-            client_type=test.get('client_type'))
+            client_type=test.get('client_type'),
+            client_worker_script=test.get('client_worker_script'),
+            member_worker_script=test.get('member_worker_script')
+        )
 
         return exitcode, run_path
 
@@ -560,6 +571,14 @@ class PerftestExecCli:
                             nargs=1,
                             help="The name of the group that makes up the loadGenerator.")
 
+        parser.add_argument('--memberWorkerScript',
+                            nargs=1,
+                            help="The worker script to use for the members.")
+
+        parser.add_argument('--clientWorkerScript',
+                            nargs=1,
+                            help="The worker script to use for the clients.")
+
         parser.add_argument('-t', '--tag', metavar="KEY=VALUE", nargs=1, action='append')
         args = parser.parse_args(argv)
         test = load_yaml_file(args.file)
@@ -586,7 +605,10 @@ class PerftestExecCli:
             fail_fast=args.failFast,
             verify_enabled=args.verifyEnabled,
             client_type=args.clientType,
-            skip_download=args.skipDownload)
+            skip_download=args.skipDownload,
+            member_worker_script = args.memberWorkerScript,
+            client_worker_script = args.clientWorkerScript
+        )
 
         perftest.collect(run_path,
                          tags,

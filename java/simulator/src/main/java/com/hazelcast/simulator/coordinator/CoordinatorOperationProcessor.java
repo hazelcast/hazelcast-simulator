@@ -23,10 +23,11 @@ import com.hazelcast.simulator.protocol.exception.ProcessException;
 import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.worker.operations.PerformanceStatsOperation;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class CoordinatorOperationProcessor implements OperationProcessor {
-    private static final Logger LOGGER = Logger.getLogger(CoordinatorOperationProcessor.class);
+    private static final Logger LOGGER = LogManager.getLogger(CoordinatorOperationProcessor.class);
 
     private final FailureCollector failureCollector;
     private final PerformanceStatsCollector performanceStatsCollector;

@@ -18,16 +18,15 @@ package com.hazelcast.simulator.coordinator.tasks;
 import com.hazelcast.simulator.coordinator.registry.AgentData;
 import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.utils.BashCommand;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import static com.hazelcast.simulator.utils.CommonUtils.getElapsedSeconds;
-import static com.hazelcast.simulator.utils.FileUtils.newFile;
-import static com.hazelcast.simulator.utils.NativeUtils.execute;
 import static com.hazelcast.simulator.utils.FileUtils.locatePythonFile;
 import static java.lang.String.format;
 
 public class AgentsClearTask {
-    private static final Logger LOGGER = Logger.getLogger(AgentsClearTask.class);
+    private static final Logger LOGGER = LogManager.getLogger(AgentsClearTask.class);
 
     private final Registry registry;
 

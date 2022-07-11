@@ -15,7 +15,8 @@
  */
 package com.hazelcast.simulator.common;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.InputStream;
 import java.util.Properties;
@@ -34,7 +35,7 @@ public final class GitInfo {
     static final String GIT_BUILD_TIME = "git.build.time";
     static final String GIT_REMOTE_ORIGIN_URL = "git.remote.origin.url";
 
-    private static final Logger LOGGER = Logger.getLogger(GitInfo.class);
+    private static final Logger LOGGER = LogManager.getLogger(GitInfo.class);
 
     private static final GitInfo INSTANCE = new GitInfo();
 

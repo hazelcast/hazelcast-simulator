@@ -16,7 +16,10 @@
  */
 package com.hazelcast.simulator.tests.map.helpers;
 
-import org.apache.log4j.Logger;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 
 import static com.hazelcast.simulator.tests.map.helpers.ZipfianUtils.random;
 import static java.lang.String.format;
@@ -45,7 +48,7 @@ public class ZipfianGenerator extends IntegerGenerator {
 
     static final double ZIPFIAN_CONSTANT = 0.99;
 
-    private static final Logger LOGGER = Logger.getLogger(ZipfianGenerator.class);
+    private static final Logger LOGGER = LogManager.getLogger(ZipfianGenerator.class);
 
     /**
      * Number of items.

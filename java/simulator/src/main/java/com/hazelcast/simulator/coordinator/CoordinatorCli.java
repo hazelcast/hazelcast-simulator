@@ -27,7 +27,8 @@ import com.hazelcast.simulator.utils.CommandLineExitException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -54,7 +55,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 final class CoordinatorCli {
     static final int DEFAULT_DURATION_SECONDS = 0;
 
-    private static final Logger LOGGER = Logger.getLogger(CoordinatorCli.class);
+    private static final Logger LOGGER = LogManager.getLogger(CoordinatorCli.class);
 
     CoordinatorRunMonolith runMonolith;
     Coordinator coordinator;
@@ -174,6 +175,13 @@ final class CoordinatorCli {
                     "The name of the group that makes up the loadGenerator.")
             .withRequiredArg().ofType(String.class).defaultsTo("all|!mc");
 
+    private final OptionSpec<String> memberWorkerScriptSpec = parser.accepts("memberWorkerScript",
+                    "The worker script for members.")
+            .withRequiredArg().ofType(String.class);
+
+    private final OptionSpec<String> clientWorkerScriptSpec = parser.accepts("clientWorkerScript",
+                    "The worker script for clients.")
+            .withRequiredArg().ofType(String.class);
 
     private final OptionSet options;
 
@@ -201,7 +209,9 @@ final class CoordinatorCli {
                     .setAll(properties.asMap())
                     .setAgents(registry.getAgents())
                     .set("CLIENT_ARGS", options.valueOf(clientArgsSpec))
-                    .set("MEMBER_ARGS", options.valueOf(memberArgsSpec));
+                    .set("MEMBER_ARGS", options.valueOf(memberArgsSpec))
+                    .set("CLIENT_WORKER_SCRIPT", options.valueOf(clientWorkerScriptSpec))
+                    .set("MEMBER_WORKER_SCRIPT", options.valueOf(memberWorkerScriptSpec));
 
             this.testSuite = loadTestSuite();
 
@@ -233,14 +243,12 @@ final class CoordinatorCli {
     }
 
     private CoordinatorParameters loadCoordinatorParameters() {
-        CoordinatorParameters coordinatorParameters = new CoordinatorParameters()
+        return new CoordinatorParameters()
                 .setSimulatorProperties(properties)
                 .setLastTestPhaseToSync(options.valueOf(syncToTestPhaseSpec))
                 .setSkipDownload(options.has(skipDownloadSpec))
-                .setWorkerVmStartupDelayMs(options.valueOf(workerVmStartupDelayMsSpec));
-
-        coordinatorParameters.setRunPath(options.valueOf(runPathSpec));
-        return coordinatorParameters;
+                .setWorkerVmStartupDelayMs(options.valueOf(workerVmStartupDelayMsSpec))
+                .setRunPath(options.valueOf(runPathSpec));
     }
 
     private TestSuite loadTestSuite() {

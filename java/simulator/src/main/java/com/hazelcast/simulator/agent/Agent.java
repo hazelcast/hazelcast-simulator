@@ -24,7 +24,8 @@ import com.hazelcast.simulator.protocol.Broker;
 import com.hazelcast.simulator.protocol.Server;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.worker.ExitingExceptionListener;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.Closeable;
 import java.io.File;
@@ -38,7 +39,7 @@ import static com.hazelcast.simulator.utils.NativeUtils.writePid;
 
 public class Agent implements Closeable {
 
-    private static final Logger LOGGER = Logger.getLogger(Agent.class);
+    private static final Logger LOGGER = LogManager.getLogger(Agent.class);
 
     private final AtomicBoolean shutdownStarted = new AtomicBoolean();
     private final WorkerProcessManager processManager;
@@ -56,7 +57,6 @@ public class Agent implements Closeable {
                  int workerLastSeenTimeoutSeconds,
                  String parentPid) {
         SimulatorAddress agentAddress = agentAddress(addressIndex);
-
         this.publicAddress = publicAddress;
         this.parentPid = parentPid;
         this.broker = new Broker()

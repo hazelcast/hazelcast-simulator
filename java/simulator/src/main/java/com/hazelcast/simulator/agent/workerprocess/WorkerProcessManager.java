@@ -22,7 +22,9 @@ import com.hazelcast.simulator.protocol.Server;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.utils.ThreadSpawner;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -36,11 +38,10 @@ import static com.hazelcast.simulator.protocol.core.SimulatorAddress.workerAddre
 import static com.hazelcast.simulator.utils.NativeUtils.getPID;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static org.apache.log4j.Level.DEBUG;
 
 public class WorkerProcessManager {
 
-    private static final Logger LOGGER = Logger.getLogger(WorkerProcessManager.class);
+    private static final Logger LOGGER = LogManager.getLogger(WorkerProcessManager.class);
 
     // we need a high number of threads so we can do things in parallel like starting up members.
     private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(200);
@@ -173,7 +174,7 @@ public class WorkerProcessManager {
             SimulatorAddress workerAddress = workerAddress(agentAddress.getAgentIndex(), workerIndex);
 
             LogOperation logOperation = new LogOperation(
-                    format("Created %s Worker %s", workerType, workerAddress), DEBUG);
+                    format("Created %s Worker %s", workerType, workerAddress), Level.DEBUG);
 
             server.sendCoordinator(logOperation);
         }

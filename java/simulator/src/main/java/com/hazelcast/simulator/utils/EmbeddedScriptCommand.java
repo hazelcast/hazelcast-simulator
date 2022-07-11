@@ -15,7 +15,8 @@
  */
 package com.hazelcast.simulator.utils;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
@@ -25,7 +26,7 @@ import java.util.Map;
 import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 
 public class EmbeddedScriptCommand {
-    private static final Logger LOGGER = Logger.getLogger(EmbeddedScriptCommand.class);
+    private static final Logger LOGGER = LogManager.getLogger(EmbeddedScriptCommand.class);
 
     private final String command;
     private Map<String, Object> environment = new HashMap<>();

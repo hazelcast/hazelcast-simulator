@@ -16,7 +16,8 @@
 package com.hazelcast.simulator.common;
 
 import com.hazelcast.simulator.utils.BashCommand;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import static com.hazelcast.simulator.utils.EmptyStatement.ignore;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -28,7 +29,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  * java processes since this would also kill the IDE.
  */
 public final class ProcessSuicideThread extends Thread {
-    private static final Logger LOGGER = Logger.getLogger(ProcessSuicideThread.class);
+    private static final Logger LOGGER = LogManager.getLogger(ProcessSuicideThread.class);
 
     private final String parentPid;
     private final int intervalSeconds;

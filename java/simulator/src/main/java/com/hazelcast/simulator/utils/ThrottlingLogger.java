@@ -15,8 +15,8 @@
  */
 package com.hazelcast.simulator.utils;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.Logger;
 
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -74,7 +74,7 @@ public final class ThrottlingLogger {
     }
 
     public void log(Level level, String message) {
-        if (!delegate.isEnabledFor(level)) {
+        if (!delegate.isEnabled(level)) {
             return;
         }
 
@@ -98,7 +98,7 @@ public final class ThrottlingLogger {
     }
 
     public void logInSlot(Level level, String message) {
-        if (!delegate.isEnabledFor(level)) {
+        if (!delegate.isEnabled(level)) {
             return;
         }
 

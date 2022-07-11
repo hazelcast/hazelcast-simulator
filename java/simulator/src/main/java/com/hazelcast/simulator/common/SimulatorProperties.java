@@ -17,7 +17,8 @@ package com.hazelcast.simulator.common;
 
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.CommonUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -29,7 +30,6 @@ import java.util.stream.Collectors;
 
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
-import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.FileUtils.newFile;
@@ -53,7 +53,7 @@ public class SimulatorProperties {
 
     private static final int WORKER_TIMEOUT_FACTOR = 3;
 
-    private static final Logger LOGGER = Logger.getLogger(SimulatorProperties.class);
+    private static final Logger LOGGER = LogManager.getLogger(SimulatorProperties.class);
 
     private final Map<String, Value> properties = new HashMap<>();
 

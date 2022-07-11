@@ -16,7 +16,8 @@
 package com.hazelcast.simulator.agent.workerprocess;
 
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
@@ -46,7 +47,7 @@ public class WorkerProcessLauncher {
     private static final int WAIT_FOR_WORKER_STARTUP_INTERVAL_MILLIS = 500;
     private static final String CLASSPATH = System.getProperty("java.class.path");
     private static final String CLASSPATH_SEPARATOR = System.getProperty("path.separator");
-    private static final Logger LOGGER = Logger.getLogger(WorkerProcessLauncher.class);
+    private static final Logger LOGGER = LogManager.getLogger(WorkerProcessLauncher.class);
     private static final String FILE_PREFIX = "file:";
 
     private final AtomicBoolean javaHomePrinted = new AtomicBoolean();

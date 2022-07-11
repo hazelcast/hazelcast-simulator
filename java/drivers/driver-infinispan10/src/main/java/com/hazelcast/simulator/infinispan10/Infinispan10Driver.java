@@ -18,7 +18,8 @@ package com.hazelcast.simulator.infinispan10;
 import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.coordinator.registry.AgentData;
 import com.hazelcast.simulator.drivers.Driver;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.configuration.Configuration;
 import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
@@ -34,7 +35,7 @@ import static java.lang.String.format;
 
 public class Infinispan10Driver extends Driver<BasicCacheContainer> {
 
-    private static final Logger LOGGER = Logger.getLogger(Infinispan10Driver.class);
+    private static final Logger LOGGER = LogManager.getLogger(Infinispan10Driver.class);
 
     private BasicCacheContainer cacheContainer;
     private HotRodServer hotRodServer;

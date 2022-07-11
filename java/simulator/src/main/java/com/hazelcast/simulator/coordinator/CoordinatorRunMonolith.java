@@ -20,7 +20,8 @@ import com.hazelcast.simulator.common.FailureType;
 import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.coordinator.operations.FailureOperation;
 import com.hazelcast.simulator.utils.CommandLineExitException;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.HashMap;
 
@@ -35,7 +36,7 @@ class CoordinatorRunMonolith {
 
     private static final int WAIT_FOR_WORKER_FAILURE_RETRY_COUNT = 10;
 
-    private static final Logger LOGGER = Logger.getLogger(CoordinatorRunMonolith.class);
+    private static final Logger LOGGER = LogManager.getLogger(CoordinatorRunMonolith.class);
 
     private final Coordinator coordinator;
     private final FailureCollector failureCollector;

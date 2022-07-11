@@ -2,7 +2,8 @@ package com.hazelcast.simulator.utils;
 
 import com.hazelcast.simulator.utils.helper.ExitExceptionSecurityManager;
 import com.hazelcast.simulator.utils.helper.ExitStatusOneException;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -13,7 +14,7 @@ public class CommonUtils_SystemExitTest {
 
     private static SecurityManager oldSecurityManager;
 
-    private final Logger logger = Logger.getLogger(CommonUtils_SystemExitTest.class.getSimpleName());
+    private  final Logger logger = LogManager.getLogger(CommonUtils_SystemExitTest.class.getSimpleName());
 
     @BeforeClass
     public static void beforeClass() {

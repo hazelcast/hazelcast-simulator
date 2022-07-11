@@ -15,7 +15,8 @@
  */
 package com.hazelcast.simulator.utils;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.lang.management.ManagementFactory;
@@ -27,7 +28,7 @@ import static com.hazelcast.simulator.utils.FileUtils.writeText;
 
 public final class NativeUtils {
 
-    private static final Logger LOGGER = Logger.getLogger(NativeUtils.class);
+    private static final Logger LOGGER = LogManager.getLogger(NativeUtils.class);
 
     private NativeUtils() {
     }

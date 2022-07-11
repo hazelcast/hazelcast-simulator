@@ -34,7 +34,7 @@ import java.util.Random;
 import java.util.Set;
 
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
-import static org.apache.log4j.Level.INFO;
+import static org.apache.logging.log4j.Level.INFO;
 
 @SuppressWarnings({"checkstyle:linelength", "checkstyle:trailingcomment"})
 public class MapComplexPredicateTest extends HazelcastTest {

@@ -19,7 +19,8 @@ import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.OperationCodec;
 import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.jms.Connection;
 import javax.jms.Destination;
@@ -51,7 +52,7 @@ import static javax.jms.DeliveryMode.NON_PERSISTENT;
  * how to integrate your client.
  */
 public class Server implements Closeable {
-    private static final Logger LOGGER = Logger.getLogger(Server.class);
+    private static final Logger LOGGER = LogManager.getLogger(Server.class);
 
     private final String topic;
     private final ConnectionFactory connectionFactory = new ConnectionFactory();

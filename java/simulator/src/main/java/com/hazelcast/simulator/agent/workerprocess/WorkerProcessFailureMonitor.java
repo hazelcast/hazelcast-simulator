@@ -18,7 +18,8 @@ package com.hazelcast.simulator.agent.workerprocess;
 import com.hazelcast.simulator.common.FailureType;
 import com.hazelcast.simulator.utils.FileUtils;
 import com.hazelcast.simulator.utils.UncheckedIOException;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -39,7 +40,7 @@ public class WorkerProcessFailureMonitor {
 
     private static final int DEFAULT_CHECK_INTERVAL_MILLIS = (int) SECONDS.toMillis(1);
 
-    private static final Logger LOGGER = Logger.getLogger(WorkerProcessFailureMonitor.class);
+    private static final Logger LOGGER = LogManager.getLogger(WorkerProcessFailureMonitor.class);
 
     private final MonitorThread monitorThread;
 

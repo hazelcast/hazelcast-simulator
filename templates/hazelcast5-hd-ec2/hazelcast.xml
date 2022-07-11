@@ -21,7 +21,7 @@
 
     <properties>
         <property name="hazelcast.phone.home.enabled">false</property>
-        <property name="hazelcast.logging.type">log4j</property>
+        <property name="hazelcast.logging.type">log4j2</property>
     </properties>
 
     <!--LICENSE-KEY-->

@@ -19,7 +19,7 @@ import com.hazelcast.cache.HazelcastCacheManager;
 import com.hazelcast.cache.ICache;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.instance.HazelcastInstanceProxy;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import javax.cache.Cache;
 import javax.cache.Caching;

@@ -1,59 +1,68 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd" >
-<log4j:configuration>
-    <appender name="console" class="org.apache.log4j.ConsoleAppender">
-        <param name="Threshold" value="INFO"/>
-        <layout class="org.apache.log4j.PatternLayout">
-            <param name="ConversionPattern" value="%-5p %d{HH:mm:ss} %m%n"/>
-        </layout>
-    </appender>
+<Configuration status="INFO">
+    <Appenders>
+        <Console name="console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%-5level %d{HH:mm:ss} %msg%n"/>
+        </Console>
 
-    <appender name="file" class="org.apache.log4j.RollingFileAppender">
-        <param name="File" value="logs/coordinator.log"/>
-        <param name="Threshold" value="DEBUG"/>
-        <param name="MaxBackupIndex" value="10"/>
-        <layout class="org.apache.log4j.PatternLayout">
-            <param name="ConversionPattern" value="%-5p %d [%t] %c: %m%n"/>
-        </layout>
-    </appender>
+        <RollingFile name="file"
+                     fileName="logs/coordinator.log"
+                     filePattern="logs/coordinator.%i.log"
+                     ignoreExceptions="false">
+            <PatternLayout>
+                <Pattern>%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n</Pattern>
+            </PatternLayout>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="10MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="5"/>
+        </RollingFile>
 
-    <appender name="ssh" class="org.apache.log4j.RollingFileAppender">
-        <param name="File" value="logs/ssh.log"/>
-        <param name="Threshold" value="DEBUG"/>
-        <param name="MaxBackupIndex" value="10"/>
-        <layout class="org.apache.log4j.PatternLayout">
-            <param name="ConversionPattern" value="%-5p %d [%t] %c: %m%n"/>
-        </layout>
-    </appender>
+        <RollingFile name="ssh"
+                     fileName="logs/ssh.log"
+                     filePattern="logs/ssh.%i.log"
+                     ignoreExceptions="false">
+            <PatternLayout>
+                <Pattern>%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n</Pattern>
+            </PatternLayout>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="10MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="5"/>
+        </RollingFile>
 
-    <appender name="bash" class="org.apache.log4j.RollingFileAppender">
-        <param name="File" value="logs/bash.log"/>
-        <param name="Threshold" value="DEBUG"/>
-        <param name="MaxBackupIndex" value="10"/>
-        <layout class="org.apache.log4j.PatternLayout">
-            <param name="ConversionPattern" value="%-5p %d %m%n"/>
-        </layout>
-    </appender>
+        <RollingFile name="bash"
+                     fileName="logs/bash.log"
+                     filePattern="logs/bash.%i.log"
+                     ignoreExceptions="false">
+            <PatternLayout>
+                <Pattern>%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n</Pattern>
+            </PatternLayout>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="10MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="5"/>
+        </RollingFile>
+    </Appenders>
 
-    <logger name="com.hazelcast.simulator.utils.BashCommand">
-        <level value="debug"/>
-        <appender-ref ref="bash"/>
-    </logger>
+    <Loggers>
 
-    <!-- if there are SSH problems, put this on info or debug -->
-    <logger name="net.schmizz">
-        <level value="warn"/>
-        <appender-ref ref="ssh"/>
-    </logger>
+        <Logger name="com.hazelcast.simulator.utils.BashCommand" level="debug" additivity="false">
+            <AppenderRef ref="bash"/>
+        </Logger>
 
-    <logger name="org.apache.activemq">
-        <level value="error"/>
-        <appender-ref ref="console" />
-    </logger>
+        <!-- if there are SSH problems, put this on info or debug -->
+        <Logger name="net.schmizz" level="warn" additivity="false">
+            <AppenderRef ref="ssh"/>
+        </Logger>
 
-    <root>
-        <priority value="debug"/>
-        <appender-ref ref="console"/>
-        <appender-ref ref="file"/>
-    </root>
-</log4j:configuration>
+        <Logger name="org.apache.activemq" level="error" additivity="true">
+            <AppenderRef ref="console"/>
+        </Logger>
+
+        <Root level="info">
+            <AppenderRef ref="file"/>
+            <AppenderRef ref="console"/>
+        </Root>
+    </Loggers>
+</Configuration>

@@ -27,7 +27,7 @@ exec 2> worker.err
 #JAVA_HOME=~/java/jdk1.8.0_121
 #PATH=$JAVA_HOME/bin:$PATH
 
-JVM_ARGS="-Dlog4j.configuration=file:log4j.xml"
+JVM_ARGS="-Dlog4j2.configurationFile=log4j.xml"
 
 # Include the member/client-worker jvm options
 JVM_ARGS="$JVM_OPTIONS $JVM_ARGS"

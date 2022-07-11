@@ -21,7 +21,8 @@ import com.hazelcast.simulator.utils.EmbeddedScriptCommand;
 import com.hazelcast.simulator.utils.NativeUtils;
 import com.hazelcast.simulator.drivers.Driver;
 import com.hazelcast.simulator.worker.operations.ExecuteScriptOperation;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -31,7 +32,7 @@ import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static java.lang.String.format;
 
 public class ScriptExecutor {
-    private static final Logger LOGGER = Logger.getLogger(ScriptExecutor.class);
+    private static final Logger LOGGER = LogManager.getLogger(ScriptExecutor.class);
 
     private final Driver driver;
 

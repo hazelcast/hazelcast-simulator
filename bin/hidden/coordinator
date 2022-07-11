@@ -16,7 +16,7 @@ done
 
 java -cp $classpath ${JAVA_OPTS} \
     -DSIMULATOR_HOME=${SIMULATOR_HOME} \
-    -Dhazelcast.logging.type=log4j \
+    -Dhazelcast.logging.type=log4j2 \
     -Dfile.encoding=UTF8 \
-    -Dlog4j.configuration=file:${SIMULATOR_HOME}/conf/coordinator-log4j.xml \
+    -Dlog4j2.configurationFile=${SIMULATOR_HOME}/conf/coordinator-log4j.xml \
     com.hazelcast.simulator.coordinator.CoordinatorCli "$@"

@@ -24,7 +24,8 @@ import com.hazelcast.simulator.drivers.Driver;
 import com.hazelcast.simulator.worker.operations.CreateTestOperation;
 import com.hazelcast.simulator.worker.operations.StartPhaseOperation;
 import com.hazelcast.simulator.worker.operations.StopRunOperation;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -41,7 +42,7 @@ import static java.lang.String.format;
  */
 public class TestManager {
 
-    private static final Logger LOGGER = Logger.getLogger(TestManager.class);
+    private static final Logger LOGGER = LogManager.getLogger(TestManager.class);
     private static final String DASHES = "---------------------------";
 
     private final ConcurrentMap<String, TestContainer> tests = new ConcurrentHashMap<>();

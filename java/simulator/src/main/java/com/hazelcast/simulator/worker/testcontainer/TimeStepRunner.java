@@ -18,7 +18,8 @@ package com.hazelcast.simulator.worker.testcontainer;
 
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.utils.ThreadSpawner;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.lang.reflect.Constructor;
 import java.util.HashMap;
@@ -40,7 +41,7 @@ class TimeStepRunner extends TestRunner {
     private static final int DEFAULT_LOG_FREQUENCY = 0;
     private static final int DEFAULT_LOG_RATE_MS = 0;
 
-    private static final Logger LOGGER = Logger.getLogger(TimeStepRunner.class);
+    private static final Logger LOGGER = LogManager.getLogger(TimeStepRunner.class);
 
     private final TestContext testContext;
     private final Object testInstance;

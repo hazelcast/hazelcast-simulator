@@ -20,7 +20,8 @@ import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.security.AuthenticationUser;
 import org.apache.activemq.security.SimpleAuthenticationPlugin;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.Closeable;
 
@@ -65,7 +66,7 @@ import static java.util.Collections.singletonList;
  */
 public class Broker implements Closeable {
 
-    private static final Logger LOGGER = Logger.getLogger(Broker.class);
+    private static final Logger LOGGER = LogManager.getLogger(Broker.class);
     private static final int USAGE_LIMIT = 1024;
 
     private BrokerService broker;

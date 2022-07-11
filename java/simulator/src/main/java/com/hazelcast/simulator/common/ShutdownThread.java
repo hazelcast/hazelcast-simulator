@@ -15,8 +15,8 @@
  */
 package com.hazelcast.simulator.common;
 
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -28,7 +28,7 @@ public abstract class ShutdownThread extends Thread {
 
     private static final long DEFAULT_WAIT_FOR_SHUTDOWN_TIMEOUT_MILLIS = TimeUnit.SECONDS.toMillis(5);
 
-    private static final Logger LOGGER = Logger.getLogger(ShutdownThread.class);
+    private static final Logger LOGGER = LogManager.getLogger(ShutdownThread.class);
 
     private final AtomicBoolean shutdownStarted;
     private final boolean realShutdown;

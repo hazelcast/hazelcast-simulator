@@ -24,10 +24,12 @@ import com.hazelcast.instance.impl.Node;
 import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.spi.impl.NodeEngineImpl;
 import com.hazelcast.spi.impl.operationservice.OperationService;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
@@ -38,7 +40,7 @@ import static org.junit.Assert.fail;
 
 public final class HazelcastTestUtils {
 
-    private static final Logger LOGGER = Logger.getLogger(HazelcastTestUtils.class);
+    private static final Logger LOGGER = LogManager.getLogger(HazelcastTestUtils.class);
 
     private HazelcastTestUtils() {
     }
@@ -51,7 +53,7 @@ public final class HazelcastTestUtils {
         }
     }
 
-    public static void waitClusterSize(org.apache.log4j.Logger logger, HazelcastInstance hz, int clusterSize) {
+    public static void waitClusterSize(Logger logger, HazelcastInstance hz, int clusterSize) {
         for (; ; ) {
             if (hz.getCluster().getMembers().size() >= clusterSize) {
                 return;

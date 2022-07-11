@@ -15,7 +15,8 @@
  */
 package com.hazelcast.simulator.utils;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
@@ -40,7 +41,7 @@ public final class TestUtils {
     private static final float ASSERT_TRUE_EVENTUALLY_SLEEP_FACTOR = 1.5f;
     private static final int ASSERT_TRUE_EVENTUALLY_TIMEOUT;
 
-    private static final Logger LOGGER = Logger.getLogger(TestUtils.class);
+    private static final Logger LOGGER = LogManager.getLogger(TestUtils.class);
 
     static {
         ASSERT_TRUE_EVENTUALLY_TIMEOUT = Integer.parseInt(System.getProperty(
