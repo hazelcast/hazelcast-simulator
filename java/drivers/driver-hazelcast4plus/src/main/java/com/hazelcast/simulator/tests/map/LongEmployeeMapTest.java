@@ -15,39 +15,25 @@
  */
 package com.hazelcast.simulator.tests.map;
 
-import com.hazelcast.core.Pipelining;
 import com.hazelcast.map.IMap;
 import com.hazelcast.simulator.hz.HazelcastTest;
-import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
-import com.hazelcast.simulator.test.annotations.StartNanos;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.tests.map.domain.Employee;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 
-import java.util.HashSet;
-import java.util.Map;
 import java.util.Random;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-
-import static com.hazelcast.simulator.utils.GeneratorUtils.generateAsciiStrings;
 
 public class LongEmployeeMapTest extends HazelcastTest {
 
     // properties
     public int keyDomain = 10000;
     public int valueCount = 10000;
-    public int minValueLength = 10;
-    public int maxValueLength = 10;
-    public int pipelineDepth = 10;
-    public int pipelineIterations = 100;
-    public int getAllSize = 5;
     public boolean skipPrefill = false;
 
     private IMap<Long, Employee> map;
