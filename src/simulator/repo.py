@@ -24,14 +24,17 @@ import matplotlib.pyplot as plt, mpld3
 # - hgrm: latency distribution
 # - generate html report
 # - trimming
+# - perf: multiplot labels
+# - dstat: multiplot labels
+# - hgrm: multiplot labels
+
+# done
 # - performance: plot multiple data series
 # - hgrm: plot multiple data series
 # - dstat: multiple data series plot add labels
 # - dstat: epoch column fix in load
 # - hgrm: epoch column fix in load
 # - performance: epoch column fix in load
-
-# done
 # - dstat: plot multiple data series
 # - absolute vs relative time
 # - move relative time to loading
@@ -116,6 +119,7 @@ def load_performance(benchmark_dir, absolute_time=True):
         df = pd.read_csv(csv_path, skiprows=0)
         if not absolute_time:
             to_relative_time(df, "epoch")
+        df['epoch'] = pd.to_datetime(df['epoch'], unit='s')
 
         result[worker_id] = df
 
@@ -123,20 +127,28 @@ def load_performance(benchmark_dir, absolute_time=True):
     return result
 
 
-def plot_performance(report_dir, df_workers):
+def plot_performance(report_dir, *df_workers_list):
     log("Plotting performance data")
 
-    for worker_name, df in df_workers.items():
+    first_df_workers = df_workers_list[0]
+    for worker_name, first_df in first_df_workers.items():
         result_dir = f"{report_dir}/performance/{worker_name}"
         os.makedirs(result_dir)
 
-        for c in range(2, len(df.columns)):
-            column_name = df.columns[c]
+        for c in range(2, len(first_df.columns)):
+            column_name = first_df.columns[c]
             fig = plt.figure(figsize=(image_width_px / image_dpi, image_height_px / image_dpi), dpi=image_dpi)
 
-            df['epoch'] = pd.to_datetime(df['epoch'], unit='s')
+            plt.plot(first_df['epoch'], first_df[column_name])
+            for i in range(1, len(df_workers_list)):
+                other_df_worker = df_workers_list[i]
+                if not worker_name in other_df_worker:
+                    continue
 
-            plt.plot(df['epoch'], df[column_name])
+                other_df = other_df_worker[worker_name]
+                if not column_name in other_df:
+                    continue
+                plt.plot(other_df['epoch'], other_df[column_name])
             filename = column_name.replace("/", "_")
 
             plt.ylabel("Throughput (operations/second)")
@@ -171,27 +183,38 @@ def load_hgrm(benchmark_dir, absolute_time=True):
             df = pd.read_csv(csv_path, skiprows=2)
             if not absolute_time:
                 to_relative_time(df, "StartTime")
+            df['StartTime'] = pd.to_datetime(df['StartTime'], unit='s')
             result[worker_name] = df
     log("Loading hgrm data: done")
     return result
 
 
-def plot_hgrm(report_dir, df_workers):
+def plot_hgrm(report_dir, *df_workers_list):
     log("Plotting hgrm data")
 
-    for worker_name, df in df_workers.items():
+    first_df_workers = df_workers_list[0]
+    for worker_name, first_df in first_df_workers.items():
         result_dir = f"{report_dir}/latency/{worker_name}"
         os.makedirs(result_dir)
 
-        for column_index in range(2, len(df.columns)):
-            column_name = df.columns[column_index]
+        for column_index in range(2, len(first_df.columns)):
+            column_name = first_df.columns[column_index]
             if column_name.startswith("Unnamed"):
                 continue
 
             plt.figure(figsize=(image_width_px / image_dpi, image_height_px / image_dpi), dpi=image_dpi)
 
-            df['StartTime'] = pd.to_datetime(df['StartTime'], unit='s')
-            plt.plot(df['StartTime'], df[column_name])
+            plt.plot(first_df['StartTime'], first_df[column_name])
+            for i in range(1, len(df_workers_list)):
+                other_df_worker = df_workers_list[i]
+                if not worker_name in other_df_worker:
+                    continue
+
+                other_df = other_df_worker[worker_name]
+                if not column_name in other_df:
+                    continue
+                plt.plot(other_df['StartTime'], other_df[column_name])
+
             filename = column_name.replace("/", "_")
             plt.grid()
             if column_name == "Total_Count":
@@ -225,6 +248,7 @@ def load_dstat(benchmark_dir, absolute_time=True):
         multiple_by_thousand(df, 'used', 'free', 'buf', 'cach')
         if not absolute_time:
             to_relative_time(df, "epoch")
+        df['epoch'] = pd.to_datetime(df['epoch'], unit='s')
         result[agent_name] = df
 
     log("Loading dstat data: done")
@@ -243,17 +267,15 @@ dstat_titles = {"1m": "1 Minute load average",
 def plot_dstat(report_dir, *df_agents_list):
     log("Plotting dstat data")
 
-    df_agents = df_agents_list[0]
-    for agent_name, df in df_agents.items():
+    first_df_agents = df_agents_list[0]
+    for agent_name, first_df in first_df_agents.items():
         result_dir = f"{report_dir}/dstat/{agent_name}"
 
         os.makedirs(result_dir)
 
-        for c in range(2, len(df.columns)):
-            column_name = df.columns[c]
+        for c in range(2, len(first_df.columns)):
+            column_name = first_df.columns[c]
             plt.figure(figsize=(image_width_px / image_dpi, image_height_px / image_dpi), dpi=image_dpi)
-
-
 
             title = dstat_titles.get(column_name)
             if title:
@@ -261,8 +283,8 @@ def plot_dstat(report_dir, *df_agents_list):
             else:
                 plt.title(f"{agent_name} - {column_name}")
 
-            df['epoch'] = pd.to_datetime(df['epoch'], unit='s')
-            plt.plot(df['epoch'], df[column_name])
+            plt.plot(first_df['epoch'], first_df[column_name])
+
             for i in range(1, len(df_agents_list)):
                 other_df_agents = df_agents_list[i]
                 if not agent_name in other_df_agents:
@@ -271,7 +293,6 @@ def plot_dstat(report_dir, *df_agents_list):
                 other_df = other_df_agents[agent_name]
                 if not column_name in other_df:
                     continue
-                other_df['epoch'] = pd.to_datetime(other_df['epoch'], unit='s')
                 plt.plot(other_df['epoch'], other_df[column_name])
 
             filename = column_name.replace("/", "_")
@@ -288,12 +309,20 @@ benchmark_dir = '/home/eng/Hazelcast/simulator-tng/storage/runs/insert/10M/map_t
 report_dir = tempfile.mkdtemp()
 print(f"directory {report_dir}")
 
-hgrm_dir = "/home/eng/Hazelcast/simulator-tng/storage/runs/insert/10M/map_tiered/03-08-2022_09-48-16/report/tmp/1"
-hgrm_dfs = load_hgrm(hgrm_dir, absolute_time=False)
-plot_hgrm(report_dir, hgrm_dfs)
+hgrm_dfs_1 = load_hgrm(
+    "/home/eng/Hazelcast/simulator-tng/storage/runs/insert/10M/map_tiered/05-08-2022_11-34-57/report/tmp/1",
+    absolute_time=False)
+hgrm_dfs_2 = load_hgrm(
+    "/home/eng/Hazelcast/simulator-tng/storage/runs/insert/10M/map_tiered/05-08-2022_11-44-30/report/tmp/1",
+    absolute_time=False)
+plot_hgrm(report_dir, hgrm_dfs_1, hgrm_dfs_2)
 
-performance_dfs = load_performance(benchmark_dir, absolute_time=False)
-plot_performance(report_dir, performance_dfs)
+performance_dfs_1 = load_performance("/home/eng/Hazelcast/simulator-tng/storage/runs/insert/10M/map_tiered/05-08-2022_11-34-57",
+                         absolute_time=False)
+performance_dfs_2 = load_performance("/home/eng/Hazelcast/simulator-tng/storage/runs/insert/10M/map_tiered/05-08-2022_11-44-30",
+                         absolute_time=False)
+
+plot_performance(report_dir, performance_dfs_1, performance_dfs_2)
 
 dstat_dfs = load_dstat(benchmark_dir, absolute_time=False)
 dstat_dfs_1 = load_dstat("/home/eng/Hazelcast/simulator-tng/storage/runs/insert/10M/map_tiered/05-08-2022_11-34-57",
