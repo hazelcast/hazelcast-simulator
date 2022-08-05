@@ -26,9 +26,13 @@ import matplotlib.pyplot as plt, mpld3
 # - trimming
 # - performance: plot multiple data series
 # - hgrm: plot multiple data series
-# - dstat: plot multiple data series
+# - dstat: multiple data series plot add labels
+# - dstat: epoch column fix in load
+# - hgrm: epoch column fix in load
+# - performance: epoch column fix in load
 
 # done
+# - dstat: plot multiple data series
 # - absolute vs relative time
 # - move relative time to loading
 # - hgrm: relative time option
@@ -126,7 +130,6 @@ def plot_performance(report_dir, df_workers):
         result_dir = f"{report_dir}/performance/{worker_name}"
         os.makedirs(result_dir)
 
-
         for c in range(2, len(df.columns)):
             column_name = df.columns[c]
             fig = plt.figure(figsize=(image_width_px / image_dpi, image_height_px / image_dpi), dpi=image_dpi)
@@ -216,13 +219,13 @@ def load_dstat(benchmark_dir, absolute_time=True):
     for csv_filename in os.listdir(benchmark_dir):
         if not csv_filename.endswith("_dstat.csv"):
             continue
-        worker_name = csv_filename[:csv_filename.index("_")]
+        agent_name = csv_filename[:csv_filename.index("_")]
         csv_path = f"{benchmark_dir}/{csv_filename}"
         df = pd.read_csv(csv_path, skiprows=5)
         multiple_by_thousand(df, 'used', 'free', 'buf', 'cach')
         if not absolute_time:
             to_relative_time(df, "epoch")
-        result[worker_name] = df
+        result[agent_name] = df
 
     log("Loading dstat data: done")
     return result
@@ -235,7 +238,6 @@ dstat_titles = {"1m": "1 Minute load average",
                 "buf": "Memory Usage: Buffered",
                 "free": "Memory Usage: Free",
                 "used": "Memory Usage: Used"}
-
 
 
 def plot_dstat(report_dir, *df_agents_list):
@@ -251,7 +253,7 @@ def plot_dstat(report_dir, *df_agents_list):
             column_name = df.columns[c]
             plt.figure(figsize=(image_width_px / image_dpi, image_height_px / image_dpi), dpi=image_dpi)
 
-            df['epoch'] = pd.to_datetime(df['epoch'], unit='s')
+
 
             title = dstat_titles.get(column_name)
             if title:
@@ -259,6 +261,7 @@ def plot_dstat(report_dir, *df_agents_list):
             else:
                 plt.title(f"{agent_name} - {column_name}")
 
+            df['epoch'] = pd.to_datetime(df['epoch'], unit='s')
             plt.plot(df['epoch'], df[column_name])
             for i in range(1, len(df_agents_list)):
                 other_df_agents = df_agents_list[i]
@@ -266,8 +269,10 @@ def plot_dstat(report_dir, *df_agents_list):
                     continue
 
                 other_df = other_df_agents[agent_name]
-                if column_name in other_df:
-                    plt.plot(other_df['epoch'], other_df[column_name])
+                if not column_name in other_df:
+                    continue
+                other_df['epoch'] = pd.to_datetime(other_df['epoch'], unit='s')
+                plt.plot(other_df['epoch'], other_df[column_name])
 
             filename = column_name.replace("/", "_")
             plt.xlabel("Time")
@@ -291,5 +296,8 @@ performance_dfs = load_performance(benchmark_dir, absolute_time=False)
 plot_performance(report_dir, performance_dfs)
 
 dstat_dfs = load_dstat(benchmark_dir, absolute_time=False)
-dstat_dfs_1 = load_dstat("/home/eng/Hazelcast/simulator-tng/storage/runs/insert/10M/map_tiered/03-08-2022_08-51-26", absolute_time=False)
-plot_dstat(report_dir, dstat_dfs,dstat_dfs_1)
+dstat_dfs_1 = load_dstat("/home/eng/Hazelcast/simulator-tng/storage/runs/insert/10M/map_tiered/05-08-2022_11-34-57",
+                         absolute_time=False)
+dstat_dfs_2 = load_dstat("/home/eng/Hazelcast/simulator-tng/storage/runs/insert/10M/map_tiered/05-08-2022_11-44-30",
+                         absolute_time=False)
+plot_dstat(report_dir, dstat_dfs_1, dstat_dfs_2)
