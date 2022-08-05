@@ -23,10 +23,13 @@ import matplotlib.pyplot as plt, mpld3
 # - hgrm: rename to latency
 # - hgrm: latency distribution
 # - generate html report
-# - absolute vs relative time
 # - trimming
+# - performance: plot multiple data series
+# - hgrm: plot multiple data series
+# - dstat: plot multiple data series
 
 # done
+# - absolute vs relative time
 # - move relative time to loading
 # - hgrm: relative time option
 # - throughput: relative time option
