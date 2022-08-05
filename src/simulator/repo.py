@@ -238,9 +238,10 @@ dstat_titles = {"1m": "1 Minute load average",
 
 
 
-def plot_dstat(report_dir, df_agents):
+def plot_dstat(report_dir, *df_agents_list):
     log("Plotting dstat data")
 
+    df_agents = df_agents_list[0]
     for agent_name, df in df_agents.items():
         result_dir = f"{report_dir}/dstat/{agent_name}"
 
@@ -259,6 +260,15 @@ def plot_dstat(report_dir, df_agents):
                 plt.title(f"{agent_name} - {column_name}")
 
             plt.plot(df['epoch'], df[column_name])
+            for i in range(1, len(df_agents_list)):
+                other_df_agents = df_agents_list[i]
+                if not agent_name in other_df_agents:
+                    continue
+
+                other_df = other_df_agents[agent_name]
+                if column_name in other_df:
+                    plt.plot(other_df['epoch'], other_df[column_name])
+
             filename = column_name.replace("/", "_")
             plt.xlabel("Time")
             plt.grid()
@@ -281,4 +291,5 @@ performance_dfs = load_performance(benchmark_dir, absolute_time=False)
 plot_performance(report_dir, performance_dfs)
 
 dstat_dfs = load_dstat(benchmark_dir, absolute_time=False)
-plot_dstat(report_dir, dstat_dfs)
+dstat_dfs_1 = load_dstat("/home/eng/Hazelcast/simulator-tng/storage/runs/insert/10M/map_tiered/03-08-2022_08-51-26", absolute_time=False)
+plot_dstat(report_dir, dstat_dfs,dstat_dfs_1)
