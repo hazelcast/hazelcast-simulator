@@ -6,11 +6,13 @@ pd.options.mode.chained_assignment = None
 from matplotlib import pyplot as plt
 import tempfile
 from simulator.log import log
-#from util import write
+
+# from util import write
 image_dpi = 96
 image_width_px = 1600
 image_height_px = 1200
 import matplotlib.pyplot as plt, mpld3
+
 
 # todo:
 # - improved dstat title
@@ -25,6 +27,10 @@ import matplotlib.pyplot as plt, mpld3
 # - trimming
 
 # done
+# - move relative time to loading
+# - hgrm: relative time option
+# - throughput: relative time option
+# - dstat: relative time option
 # - hgrm: latency time on x label
 # - hgrm: total standard deviation is not a valid number
 # - hgrm: total throughput column is missing
@@ -48,12 +54,23 @@ import matplotlib.pyplot as plt, mpld3
 # - grid
 # - improved logging
 
+
 def multiple_by_thousand(df, *column_names):
     for column_name in column_names:
         column = df[column_name]
         values = len(column.values)
         for i in range(values):
             column.iloc[i] = 1000 * column.iloc[i]
+
+
+def to_relative_time(df, time_column_name):
+    column = df[time_column_name]
+    values = len(column.values)
+    base = None
+    for i in range(values):
+        if not base:
+            base = column.iloc[i]
+        column.iloc[i] = column.iloc[i] - base
 
 
 def sizeof_fmt(x, pos):
@@ -77,7 +94,7 @@ def find_worker_id(path):
     return workername[:index]
 
 
-def load_performance(benchmark_dir):
+def load_performance(benchmark_dir, absolute_time=True):
     log("Loading performance data")
 
     result = {}
@@ -90,10 +107,12 @@ def load_performance(benchmark_dir):
         if not os.path.exists(csv_path):
             continue
         df = pd.read_csv(csv_path, skiprows=0)
+        if not absolute_time:
+            to_relative_time(df, "epoch")
+
         result[worker_id] = df
 
     log("Loading performance data: done")
-
     return result
 
 
@@ -103,6 +122,7 @@ def plot_performance(report_dir, df_workers):
     for worker_name, df in df_workers.items():
         result_dir = f"{report_dir}/performance/{worker_name}"
         os.makedirs(result_dir)
+
 
         for c in range(2, len(df.columns)):
             column_name = df.columns[c]
@@ -119,16 +139,16 @@ def plot_performance(report_dir, df_workers):
             plt.grid()
             plt.savefig(f'{result_dir}/{filename}.png')
 
-            #html = mpld3.fig_to_html(fig)
-            #with open(f'{result_dir}/{filename}.html', 'w') as f:
+            # html = mpld3.fig_to_html(fig)
+            # with open(f'{result_dir}/{filename}.html', 'w') as f:
             #    return f.write(html)
-            #print(html)
-            #write(, html)
+            # print(html)
+            # write(, html)
             plt.close()
     log("Plotting performance data: done")
 
 
-def load_hgrm(benchmark_dir):
+def load_hgrm(benchmark_dir, absolute_time=True):
     log("Loading hgrm data")
     result = {}
     for dir_name in os.listdir(benchmark_dir):
@@ -143,6 +163,8 @@ def load_hgrm(benchmark_dir):
             filename = os.path.splitext(sub_dir_name)[0]
             csv_path = f"{benchmark_dir}/{dir_name}/{filename}"
             df = pd.read_csv(csv_path, skiprows=2)
+            if not absolute_time:
+                to_relative_time(df, "StartTime")
             result[worker_name] = df
     log("Loading hgrm data: done")
     return result
@@ -155,8 +177,8 @@ def plot_hgrm(report_dir, df_workers):
         result_dir = f"{report_dir}/latency/{worker_name}"
         os.makedirs(result_dir)
 
-        for c in range(2, len(df.columns)):
-            column_name = df.columns[c]
+        for column_index in range(2, len(df.columns)):
+            column_name = df.columns[column_index]
             if column_name.startswith("Unnamed"):
                 continue
 
@@ -184,7 +206,7 @@ def plot_hgrm(report_dir, df_workers):
     log("Plotting hgrm data: done")
 
 
-def load_dstat(benchmark_dir):
+def load_dstat(benchmark_dir, absolute_time=True):
     log("Loading dstat data")
 
     result = {}
@@ -195,10 +217,11 @@ def load_dstat(benchmark_dir):
         csv_path = f"{benchmark_dir}/{csv_filename}"
         df = pd.read_csv(csv_path, skiprows=5)
         multiple_by_thousand(df, 'used', 'free', 'buf', 'cach')
+        if not absolute_time:
+            to_relative_time(df, "epoch")
         result[worker_name] = df
 
     log("Loading dstat data: done")
-
     return result
 
 
@@ -209,6 +232,7 @@ dstat_titles = {"1m": "1 Minute load average",
                 "buf": "Memory Usage: Buffered",
                 "free": "Memory Usage: Free",
                 "used": "Memory Usage: Used"}
+
 
 
 def plot_dstat(report_dir, df_agents):
@@ -247,11 +271,11 @@ report_dir = tempfile.mkdtemp()
 print(f"directory {report_dir}")
 
 hgrm_dir = "/home/eng/Hazelcast/simulator-tng/storage/runs/insert/10M/map_tiered/03-08-2022_09-48-16/report/tmp/1"
-hgrm_dfs = load_hgrm(hgrm_dir)
+hgrm_dfs = load_hgrm(hgrm_dir, absolute_time=False)
 plot_hgrm(report_dir, hgrm_dfs)
 
-performance_dfs = load_performance(benchmark_dir)
+performance_dfs = load_performance(benchmark_dir, absolute_time=False)
 plot_performance(report_dir, performance_dfs)
 
-dstat_dfs = load_dstat(benchmark_dir)
+dstat_dfs = load_dstat(benchmark_dir, absolute_time=False)
 plot_dstat(report_dir, dstat_dfs)
