@@ -13,10 +13,7 @@ image_height_px = 1200
 import matplotlib.pyplot as plt, mpld3
 
 # todo:
-# - proper y labels
-# - trimming
 # - improved dstat title
-# - latency time
 # - hgrm proper unit for y-label
 # - hgrm location for files
 # - comparison
@@ -26,10 +23,11 @@ import matplotlib.pyplot as plt, mpld3
 # - generate html report
 # - absolute vs relative time
 # - trimming
-# - hgrm: total standard deviation is not a valid number
-# - hgrm: total throughput column is missing
 
 # done
+# - hgrm: latency time on x label
+# - hgrm: total standard deviation is not a valid number
+# - hgrm: total throughput column is missing
 # - hgrm: title 'Latency (microseconds)'
 # - performance: title should include worker name
 # - hgrm: title should include worker name
@@ -115,7 +113,7 @@ def plot_performance(report_dir, df_workers):
             plt.plot(df['epoch'], df[column_name])
             filename = column_name.replace("/", "_")
 
-            plt.ylabel("Operations/second")
+            plt.ylabel("Throughput (operations/second)")
             plt.xlabel("Time")
             plt.title(f"{worker_name} - {column_name.capitalize()}")
             plt.grid()
@@ -164,16 +162,16 @@ def plot_hgrm(report_dir, df_workers):
 
             plt.figure(figsize=(image_width_px / image_dpi, image_height_px / image_dpi), dpi=image_dpi)
 
-            # df['Timestamp'] = pd.to_datetime(df['Timestamp'], unit='s')
+            df['StartTime'] = pd.to_datetime(df['StartTime'], unit='s')
             plt.plot(df['StartTime'], df[column_name])
             filename = column_name.replace("/", "_")
             plt.grid()
             if column_name == "Total_Count":
                 plt.ylabel("Count")
-            elif column_name == "Total_Throughput" or column_name == "Inc_Throughput":
-                plt.ylabel("Throughput")
+            elif "Throughput" in column_name:
+                plt.ylabel("Throughput (operations/second)")
             else:
-                plt.ylabel("Latency (Microseconds)")
+                plt.ylabel("Latency (microseconds)")
             plt.xlabel("Time")
 
             pretty_column_name = column_name.replace("_", " ")
