@@ -187,7 +187,7 @@ public class SimulatorHistogramLogProcessor extends HistogramLogProcessor {
                     + "%.3f," //total-min
                     + "%.3f," //total-max
                     + "%.3f," //total-mean
-                    + "%.3f" //total std deviation
+                    + "%.3f," //total std deviation
                     + "%.3f" //total throughput
                     + "\n"
             ;
