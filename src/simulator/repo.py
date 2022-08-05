@@ -6,20 +6,38 @@ pd.options.mode.chained_assignment = None
 from matplotlib import pyplot as plt
 import tempfile
 from simulator.log import log
-
+#from util import write
 image_dpi = 96
 image_width_px = 1600
 image_height_px = 1200
-
+import matplotlib.pyplot as plt, mpld3
 
 # todo:
 # - proper y labels
 # - trimming
 # - improved dstat title
+# - latency time
 # - hgrm proper unit for y-label
-#
+# - hgrm location for files
+# - comparison
+# - performance: the y values should be fully written
+# - hgrm: rename to latency
+# - hgrm: latency distribution
+# - generate html report
+# - absolute vs relative time
+# - trimming
+# - hgrm: total standard deviation is not a valid number
+# - hgrm: total throughput column is missing
 
 # done
+# - hgrm: title 'Latency (microseconds)'
+# - performance: title should include worker name
+# - hgrm: title should include worker name
+# - performance: capitalize title
+# - dstat y-label: time
+# - hgrm y-label: time
+# - performance: fix y label
+# - performance: fix x label
 # - dstat include agent name
 # - hgrm removed Unnamed
 # - hgrm title name remove _
@@ -90,15 +108,24 @@ def plot_performance(report_dir, df_workers):
 
         for c in range(2, len(df.columns)):
             column_name = df.columns[c]
-            plt.figure(figsize=(image_width_px / image_dpi, image_height_px / image_dpi), dpi=image_dpi)
+            fig = plt.figure(figsize=(image_width_px / image_dpi, image_height_px / image_dpi), dpi=image_dpi)
 
             df['epoch'] = pd.to_datetime(df['epoch'], unit='s')
 
             plt.plot(df['epoch'], df[column_name])
             filename = column_name.replace("/", "_")
-            plt.title(column_name)
+
+            plt.ylabel("Operations/second")
+            plt.xlabel("Time")
+            plt.title(f"{worker_name} - {column_name.capitalize()}")
             plt.grid()
             plt.savefig(f'{result_dir}/{filename}.png')
+
+            #html = mpld3.fig_to_html(fig)
+            #with open(f'{result_dir}/{filename}.html', 'w') as f:
+            #    return f.write(html)
+            #print(html)
+            #write(, html)
             plt.close()
     log("Plotting performance data: done")
 
@@ -134,13 +161,26 @@ def plot_hgrm(report_dir, df_workers):
             column_name = df.columns[c]
             if column_name.startswith("Unnamed"):
                 continue
+
             plt.figure(figsize=(image_width_px / image_dpi, image_height_px / image_dpi), dpi=image_dpi)
 
             # df['Timestamp'] = pd.to_datetime(df['Timestamp'], unit='s')
             plt.plot(df['StartTime'], df[column_name])
             filename = column_name.replace("/", "_")
             plt.grid()
-            plt.title(column_name.replace("_", " "))
+            if column_name == "Total_Count":
+                plt.ylabel("Count")
+            elif column_name == "Total_Throughput" or column_name == "Inc_Throughput":
+                plt.ylabel("Throughput")
+            else:
+                plt.ylabel("Latency (Microseconds)")
+            plt.xlabel("Time")
+
+            pretty_column_name = column_name.replace("_", " ")
+            if pretty_column_name.startswith("Int "):
+                pretty_column_name = pretty_column_name.replace("Int ", "Interval ")
+
+            plt.title(f"{worker_name} - {pretty_column_name}")
             plt.savefig(f'{result_dir}/{filename}.png')
             plt.close()
     log("Plotting hgrm data: done")
@@ -187,14 +227,15 @@ def plot_dstat(report_dir, df_agents):
 
             df['epoch'] = pd.to_datetime(df['epoch'], unit='s')
 
-            t = dstat_titles.get(column_name)
-            if t:
-                plt.title(f"{agent_name} - {t} ({column_name})")
+            title = dstat_titles.get(column_name)
+            if title:
+                plt.title(f"{agent_name} - {title} ({column_name})")
             else:
                 plt.title(f"{agent_name} - {column_name}")
 
             plt.plot(df['epoch'], df[column_name])
             filename = column_name.replace("/", "_")
+            plt.xlabel("Time")
             plt.grid()
             plt.savefig(f'{result_dir}/{filename}.png')
             plt.close()
@@ -208,11 +249,11 @@ report_dir = tempfile.mkdtemp()
 print(f"directory {report_dir}")
 
 hgrm_dir = "/home/eng/Hazelcast/simulator-tng/storage/runs/insert/10M/map_tiered/03-08-2022_09-48-16/report/tmp/1"
-# hgrm_dfs = load_hgrm(hgrm_dir)
-# plot_hgrm(report_dir, hgrm_dfs)
+hgrm_dfs = load_hgrm(hgrm_dir)
+plot_hgrm(report_dir, hgrm_dfs)
 
-# performance_dfs = load_performance(benchmark_dir)
-# plot_performance(report_dir, performance_dfs)
+performance_dfs = load_performance(benchmark_dir)
+plot_performance(report_dir, performance_dfs)
 
 dstat_dfs = load_dstat(benchmark_dir)
 plot_dstat(report_dir, dstat_dfs)
