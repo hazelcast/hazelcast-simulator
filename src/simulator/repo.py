@@ -22,17 +22,19 @@ import matplotlib.pyplot as plt, mpld3
 # - improved dstat title
 # - hgrm proper unit for y-label
 # - hgrm location for files
-# - comparison
 # - hgrm: rename to latency
-# - hgrm: latency distribution
 # - generate html report
 # - trimming
 # - perf: multiplot labels
 # - dstat: multiplot labels
 # - hgrm: multiplot labels
 # - performance: y values comma seperated
+# - latency global vs local latency files
+# - test specific files
 
 # done
+# - comparison
+# - hgrm: latency distribution
 # performance: the y values should be fully written
 # - performance: plot multiple data series
 # - hgrm: plot multiple data series
