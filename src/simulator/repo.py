@@ -31,6 +31,7 @@ import matplotlib.pyplot as plt, mpld3
 # - performance: y values comma seperated
 # - latency global vs local latency files
 # - test specific files
+# - performance: aggregated performance is missing
 
 # done
 # - comparison
@@ -82,9 +83,8 @@ def multiple_by(df, amount, *column_names):
 
 def to_relative_time(df, time_column_name):
     column = df[time_column_name]
-    values = len(column.values)
     base = None
-    for i in range(values):
+    for i in range(len(column.values)):
         if not base:
             base = column.iloc[i]
         column.iloc[i] = column.iloc[i] - base
@@ -114,7 +114,7 @@ def find_worker_id(path):
 def load_performance(benchmark_dir, absolute_time=True):
     log("Loading performance data")
 
-    result = {}
+    perf_data = {}
     for dir_name in os.listdir(benchmark_dir):
         worker_dir = f"{benchmark_dir}/{dir_name}"
         worker_id = find_worker_id(worker_dir)
@@ -123,15 +123,63 @@ def load_performance(benchmark_dir, absolute_time=True):
         csv_path = f"{worker_dir}/performance.csv"
         if not os.path.exists(csv_path):
             continue
-        df = pd.read_csv(csv_path, skiprows=0)
+        df = pd.read_csv(csv_path)
+
+        # not using this column
+        df.drop(['timestamp'], inplace=True, axis=1)
+
+        # we need to round the epoch time to the nearest second
+        df['epoch'].round()
+
         if not absolute_time:
             to_relative_time(df, "epoch")
         df['epoch'] = pd.to_datetime(df['epoch'], unit='s')
-
-        result[worker_id] = df
+        perf_data[worker_id] = df
 
     log("Loading performance data: done")
-    return result
+    return perf_data
+
+
+def aggregate_performance_data(perf_data):
+    log("Aggregating performance data")
+
+    delta_map = {}
+    epochs_data = []
+    for df in perf_data.values():
+        epoch_column = df['epoch']
+        delta_column = df['operations-delta']
+        for i in range(len(epoch_column.values)):
+            epoch = epoch_column.iloc[i]
+
+            if epoch in delta_map:
+                delta_map[epoch] = delta_column.iloc[i] + delta_map[epoch]
+            else:
+                epochs_data.append(epoch)
+                delta_map[epoch] = delta_column.iloc[i]
+
+    operations_delta_data = []
+    operations_data = []
+    last_operations = None
+    last_epoch = None
+    epochs_data.sort()
+    for epoch in epochs_data:
+        if not last_epoch:
+            last_epoch = epoch
+            last_operations = 0
+
+        delta = delta_map[epoch]
+        operations_delta_data.append(delta)
+        last_operations += delta
+        operations_data.append(last_operations)
+
+    df = pd.DataFrame({'epoch': epochs_data,
+                       'operations': operations_data,
+                       'operations-delta': operations_delta_data,
+                       'operations/second': operations_delta_data})
+    print(df)
+    perf_data[''] = df
+    log("Aggregating performance data: done")
+
 
 
 def plot_performance(report_dir, *df_workers_list):
@@ -140,7 +188,8 @@ def plot_performance(report_dir, *df_workers_list):
     first_df_workers = df_workers_list[0]
     for worker_name, first_df in first_df_workers.items():
         result_dir = f"{report_dir}/performance/{worker_name}"
-        os.makedirs(result_dir)
+        if worker_name != '':
+            os.makedirs(result_dir)
 
         for c in range(2, len(first_df.columns)):
             column_name = first_df.columns[c]
@@ -160,7 +209,10 @@ def plot_performance(report_dir, *df_workers_list):
             plt.ticklabel_format(style='plain', axis='y')
             plt.ylabel("Throughput (operations/second)")
             plt.xlabel("Time")
-            plt.title(f"{worker_name} - {column_name.capitalize()}")
+            if worker_name == '':
+                plt.title(f"{column_name.capitalize()}")
+            else:
+                plt.title(f"{worker_name} - {column_name.capitalize()}")
             plt.grid()
             filename = column_name.replace("/", "_")
             plt.savefig(f'{result_dir}/{filename}.png')
@@ -247,7 +299,7 @@ def load_dstat(benchmark_dir, absolute_time=True):
         agent_name = csv_filename[:csv_filename.index("_")]
         csv_path = f"{benchmark_dir}/{csv_filename}"
         df = pd.read_csv(csv_path, skiprows=5)
-        multiple_by(df,1000, 'used', 'free', 'buf', 'cach')
+        multiple_by(df, 1000, 'used', 'free', 'buf', 'cach')
         if not absolute_time:
             to_relative_time(df, "epoch")
         df['epoch'] = pd.to_datetime(df['epoch'], unit='s')
@@ -331,8 +383,8 @@ def load_latency_distribution(benchmark_dir):
                 if len(count) == 0:
                     count.append(total_count_column.iloc[i])
                 else:
-                    count.append(total_count_column.iloc[i]-total_count_column.iloc[i-1])
-            df['Count']=count
+                    count.append(total_count_column.iloc[i] - total_count_column.iloc[i - 1])
+            df['Count'] = count
             print(df.to_string())
             result[worker_id] = df
 
@@ -349,7 +401,7 @@ def plot_cumulative_latency_distribution(report_dir, *df_workers_list):
         os.makedirs(result_dir, exist_ok=True)
 
         fig = plt.figure(figsize=(image_width_px / image_dpi, image_height_px / image_dpi), dpi=image_dpi)
-        #plt.yscale('log')
+        # plt.yscale('log')
         plt.xscale('log')
         axes = plt.gca()
 
@@ -357,12 +409,12 @@ def plot_cumulative_latency_distribution(report_dir, *df_workers_list):
         axes.set_xticklabels(["0%", "90%", "99%", "99.9%", "99.99%", "99.999%", "99.9999%", "99.99999%"])
         plt.plot(first_df['1/(1-Percentile)'], first_df['Value'])
         for i in range(1, len(df_workers_list)):
-             other_df_worker = df_workers_list[i]
-             if not worker_name in other_df_worker:
-                 continue
+            other_df_worker = df_workers_list[i]
+            if not worker_name in other_df_worker:
+                continue
 
-             other_df = other_df_worker[worker_name]
-             plt.plot(other_df['1/(1-Percentile)'], other_df['Value'])
+            other_df = other_df_worker[worker_name]
+            plt.plot(other_df['1/(1-Percentile)'], other_df['Value'])
 
         plt.grid()
         plt.savefig(f'{result_dir}/cumulative_latency_distribution.png')
@@ -379,15 +431,15 @@ def plot_latency_histogram(report_dir, *df_workers_list):
         result_dir = f"{report_dir}/latency/{worker_name}"
 
         os.makedirs(result_dir, exist_ok=True)
-        fig = plt.figure(figsize=(2*image_width_px / image_dpi, image_height_px / image_dpi), dpi=image_dpi)
-        first_df.plot(kind='bar', x='Value',y="Count", ax=plt.gca())
+        fig = plt.figure(figsize=(2 * image_width_px / image_dpi, image_height_px / image_dpi), dpi=image_dpi)
+        first_df.plot(kind='bar', x='Value', y="Count", ax=plt.gca())
         for i in range(1, len(df_workers_list)):
-             other_df_worker = df_workers_list[i]
-             if not worker_name in other_df_worker:
-                 continue
+            other_df_worker = df_workers_list[i]
+            if not worker_name in other_df_worker:
+                continue
 
-             other_df = other_df_worker[worker_name]
-             other_df.plot(kind='bar', x='Value', y="Count", ax=plt.gca())
+            other_df = other_df_worker[worker_name]
+            other_df.plot(kind='bar', x='Value', y="Count", ax=plt.gca())
         plt.xlabel("Latency (microseconds)")
         plt.ylabel("Count")
         plt.yscale('log')
@@ -397,6 +449,8 @@ def plot_latency_histogram(report_dir, *df_workers_list):
         plt.close()
 
     log("Plotting latency histogram data: done")
+
+
 # benchmark_dir = '/home/eng/Hazelcast/simulator-tng/storage/runs/insert/10M/map_tiered/03-08-2022_10-52-46'
 #
 report_dir = tempfile.mkdtemp()
@@ -410,12 +464,17 @@ print(f"directory {report_dir}")
 #     absolute_time=False)
 # plot_hgrm(report_dir, hgrm_dfs_1, hgrm_dfs_2)
 #
-# performance_dfs_1 = load_performance("/home/eng/Hazelcast/simulator-tng/storage/runs/insert/10M/map_tiered/05-08-2022_11-34-57",
-#                          absolute_time=False)
-# performance_dfs_2 = load_performance("/home/eng/Hazelcast/simulator-tng/storage/runs/insert/10M/map_tiered/05-08-2022_11-44-30",
-#                          absolute_time=False)
-#
-# plot_performance(report_dir, performance_dfs_1, performance_dfs_2)
+performance_dfs_1 = load_performance(
+    "/home/eng/Hazelcast/simulator-tng/storage/runs/insert/10M/map_tiered/05-08-2022_11-34-57",
+    absolute_time=False)
+performance_dfs_2 = load_performance(
+    "/home/eng/Hazelcast/simulator-tng/storage/runs/insert/10M/map_tiered/05-08-2022_11-44-30",
+    absolute_time=False)
+
+aggregate_performance_data(performance_dfs_1)
+aggregate_performance_data(performance_dfs_2)
+
+plot_performance(report_dir, performance_dfs_1, performance_dfs_2)
 #
 # dstat_dfs = load_dstat(benchmark_dir, absolute_time=False)
 # dstat_dfs_1 = load_dstat("/home/eng/Hazelcast/simulator-tng/storage/runs/insert/10M/map_tiered/05-08-2022_11-34-57",
@@ -424,10 +483,10 @@ print(f"directory {report_dir}")
 #                          absolute_time=False)
 # plot_dstat(report_dir, dstat_dfs_1, dstat_dfs_2)
 
-r1 = load_latency_distribution(
-    "/home/eng/Hazelcast/simulator-tng/storage/runs/insert/1000M/map_tiered/02-08-2022_15-33-08/report/tmp/1")
-r2 = load_latency_distribution(
-    "/home/eng/Hazelcast/simulator-tng/storage/runs/insert/1000M/map_tiered/01-08-2022_08-57-42/report/tmp/1")
-
-plot_cumulative_latency_distribution(report_dir, r1, r2)
-plot_latency_histogram(report_dir, r1)
+# r1 = load_latency_distribution(
+#     "/home/eng/Hazelcast/simulator-tng/storage/runs/insert/1000M/map_tiered/02-08-2022_15-33-08/report/tmp/1")
+# r2 = load_latency_distribution(
+#     "/home/eng/Hazelcast/simulator-tng/storage/runs/insert/1000M/map_tiered/01-08-2022_08-57-42/report/tmp/1")
+#
+# plot_cumulative_latency_distribution(report_dir, r1, r2)
+# plot_latency_histogram(report_dir, r1)
