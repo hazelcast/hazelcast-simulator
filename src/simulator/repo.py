@@ -1,4 +1,5 @@
 import os
+from dataclasses import dataclass
 
 import matplotlib
 from matplotlib import mlab
@@ -22,7 +23,6 @@ import matplotlib.pyplot as plt, mpld3
 # - improved dstat title
 # - hgrm proper unit for y-label
 # - hgrm location for files
-# - hgrm: rename to latency
 # - generate html report
 # - trimming
 # - perf: multiplot labels
@@ -32,8 +32,14 @@ import matplotlib.pyplot as plt, mpld3
 # - latency global vs local latency files
 # - test specific files
 # - performance: aggregated performance is missing
+# - latency distribution make use of run_list
 
 # done
+# - logging cleanup
+# - performance data making use of run_list
+# - dstat making use of run_list
+# - latency making use of run_list
+# - variable for the absolute time.
 # - comparison
 # - hgrm: latency distribution
 # performance: the y values should be fully written
@@ -72,6 +78,10 @@ import matplotlib.pyplot as plt, mpld3
 # - grid
 # - improved logging
 
+@dataclass
+class Run:
+    name: str
+    path: str
 
 def multiple_by(df, amount, *column_names):
     for column_name in column_names:
@@ -112,8 +122,6 @@ def find_worker_id(path):
 
 
 def load_performance(benchmark_dir, absolute_time=True):
-    log("Loading performance data")
-
     perf_data = {}
     for dir_name in os.listdir(benchmark_dir):
         worker_dir = f"{benchmark_dir}/{dir_name}"
@@ -135,8 +143,6 @@ def load_performance(benchmark_dir, absolute_time=True):
             to_relative_time(df, "epoch")
         df['epoch'] = pd.to_datetime(df['epoch'], unit='s')
         perf_data[worker_id] = df
-
-    log("Loading performance data: done")
     return perf_data
 
 
@@ -181,9 +187,8 @@ def aggregate_performance_data(perf_data):
     log("Aggregating performance data: done")
 
 
-
-def plot_performance(report_dir, *df_workers_list):
-    log("Plotting performance data")
+def plot_performance(report_dir, performance_data_runs):
+    df_workers_list = list(performance_data_runs.values())
 
     first_df_workers = df_workers_list[0]
     for worker_name, first_df in first_df_workers.items():
@@ -217,11 +222,9 @@ def plot_performance(report_dir, *df_workers_list):
             filename = column_name.replace("/", "_")
             plt.savefig(f'{result_dir}/{filename}.png')
             plt.close()
-    log("Plotting performance data: done")
 
 
 def load_hgrm(benchmark_dir, absolute_time=True):
-    log("Loading hgrm data")
     result = {}
     for dir_name in os.listdir(benchmark_dir):
         dir_path = f"{benchmark_dir}/{dir_name}"
@@ -239,12 +242,11 @@ def load_hgrm(benchmark_dir, absolute_time=True):
                 to_relative_time(df, "StartTime")
             df['StartTime'] = pd.to_datetime(df['StartTime'], unit='s')
             result[worker_name] = df
-    log("Loading hgrm data: done")
     return result
 
 
-def plot_hgrm(report_dir, *df_workers_list):
-    log("Plotting hgrm data")
+def plot_hgrm(report_dir, hgrm_data_runs):
+    df_workers_list = list(hgrm_data_runs.values())
 
     first_df_workers = df_workers_list[0]
     for worker_name, first_df in first_df_workers.items():
@@ -286,12 +288,9 @@ def plot_hgrm(report_dir, *df_workers_list):
             plt.title(f"{worker_name} - {pretty_column_name}")
             plt.savefig(f'{result_dir}/{filename}.png')
             plt.close()
-    log("Plotting hgrm data: done")
 
 
 def load_dstat(benchmark_dir, absolute_time=True):
-    log("Loading dstat data")
-
     result = {}
     for csv_filename in os.listdir(benchmark_dir):
         if not csv_filename.endswith("_dstat.csv"):
@@ -304,8 +303,6 @@ def load_dstat(benchmark_dir, absolute_time=True):
             to_relative_time(df, "epoch")
         df['epoch'] = pd.to_datetime(df['epoch'], unit='s')
         result[agent_name] = df
-
-    log("Loading dstat data: done")
     return result
 
 
@@ -318,8 +315,8 @@ dstat_titles = {"1m": "1 Minute load average",
                 "used": "Memory Usage: Used"}
 
 
-def plot_dstat(report_dir, *df_agents_list):
-    log("Plotting dstat data")
+def plot_dstat(report_dir, data_runs):
+    df_agents_list = list(data_runs.values())
 
     first_df_agents = df_agents_list[0]
     for agent_name, first_df in first_df_agents.items():
@@ -355,12 +352,7 @@ def plot_dstat(report_dir, *df_agents_list):
             plt.savefig(f'{result_dir}/{filename}.png')
             plt.close()
 
-    log("Plotting dstat data: done")
-
-
 def load_latency_distribution(benchmark_dir):
-    log("Loading latency-distribution data")
-
     result = {}
     for dir_name in os.listdir(benchmark_dir):
         worker_dir = f"{benchmark_dir}/{dir_name}"
@@ -387,8 +379,6 @@ def load_latency_distribution(benchmark_dir):
             df['Count'] = count
             print(df.to_string())
             result[worker_id] = df
-
-    log("Loading dstat data: done")
     return result
 
 
@@ -424,8 +414,6 @@ def plot_cumulative_latency_distribution(report_dir, *df_workers_list):
 
 
 def plot_latency_histogram(report_dir, *df_workers_list):
-    log("Plotting latency histogram data")
-
     first_df_workers = df_workers_list[0]
     for worker_name, first_df in first_df_workers.items():
         result_dir = f"{report_dir}/latency/{worker_name}"
@@ -448,45 +436,63 @@ def plot_latency_histogram(report_dir, *df_workers_list):
         plt.savefig(f'{result_dir}/latency_histogram.png')
         plt.close()
 
-    log("Plotting latency histogram data: done")
 
 
-# benchmark_dir = '/home/eng/Hazelcast/simulator-tng/storage/runs/insert/10M/map_tiered/03-08-2022_10-52-46'
-#
+absolute_time = False
+
+
+run_list = []
+run_list.append(Run("map_tiered#1",
+                    "/home/eng/Hazelcast/simulator-tng/storage/runs/insert/10M/map_tiered/05-08-2022_11-34-57"))
+run_list.append(Run("map_tiered#2",
+                    "/home/eng/Hazelcast/simulator-tng/storage/runs/insert/10M/map_tiered/05-08-2022_11-44-30"))
+
 report_dir = tempfile.mkdtemp()
 print(f"directory {report_dir}")
-#
-# hgrm_dfs_1 = load_hgrm(
-#     "/home/eng/Hazelcast/simulator-tng/storage/runs/insert/10M/map_tiered/05-08-2022_11-34-57/report/tmp/1",
-#     absolute_time=False)
-# hgrm_dfs_2 = load_hgrm(
-#     "/home/eng/Hazelcast/simulator-tng/storage/runs/insert/10M/map_tiered/05-08-2022_11-44-30/report/tmp/1",
-#     absolute_time=False)
-# plot_hgrm(report_dir, hgrm_dfs_1, hgrm_dfs_2)
-#
-performance_dfs_1 = load_performance(
-    "/home/eng/Hazelcast/simulator-tng/storage/runs/insert/10M/map_tiered/05-08-2022_11-34-57",
-    absolute_time=False)
-performance_dfs_2 = load_performance(
-    "/home/eng/Hazelcast/simulator-tng/storage/runs/insert/10M/map_tiered/05-08-2022_11-44-30",
-    absolute_time=False)
 
-aggregate_performance_data(performance_dfs_1)
-aggregate_performance_data(performance_dfs_2)
+hgrm_data_runs = {}
 
-plot_performance(report_dir, performance_dfs_1, performance_dfs_2)
-#
-# dstat_dfs = load_dstat(benchmark_dir, absolute_time=False)
-# dstat_dfs_1 = load_dstat("/home/eng/Hazelcast/simulator-tng/storage/runs/insert/10M/map_tiered/05-08-2022_11-34-57",
-#                          absolute_time=False)
-# dstat_dfs_2 = load_dstat("/home/eng/Hazelcast/simulator-tng/storage/runs/insert/10M/map_tiered/05-08-2022_11-44-30",
-#                          absolute_time=False)
-# plot_dstat(report_dir, dstat_dfs_1, dstat_dfs_2)
 
+log("Loading hgrm data")
+for run in run_list:
+    hgrm_data_runs[run.name] = load_hgrm(run.path, absolute_time=absolute_time)
+log("Loading hgrm data: Done")
+log("Plotting hgrm data")
+plot_hgrm(report_dir, hgrm_data_runs)
+log("Plotting hgrm data: Done")
+
+log("Loading performance data")
+performance_data_runs = {}
+for run in run_list:
+    performance_data_runs[run.name] = load_performance(run.path, absolute_time=absolute_time)
+log("Loading performance data: Done")
+
+#aggregate_performance_data(performance_dfs_1)
+#aggregate_performance_data(performance_dfs_2)
+log("Plotting performance data")
+plot_performance(report_dir, performance_data_runs)
+log("Plotting performance data: Done")
+
+log("Loading dstat data")
+dstat_data_runs = {}
+for run in run_list:
+    dstat_data_runs[run.name] = load_dstat(run.path, absolute_time=absolute_time)
+log("Loading dstat data: Done")
+log("Plotting dstat data")
+plot_dstat(report_dir, dstat_data_runs)
+log("Plotting dstat data: Done")
+
+log("Loading latency-distribution data")
 # r1 = load_latency_distribution(
 #     "/home/eng/Hazelcast/simulator-tng/storage/runs/insert/1000M/map_tiered/02-08-2022_15-33-08/report/tmp/1")
 # r2 = load_latency_distribution(
 #     "/home/eng/Hazelcast/simulator-tng/storage/runs/insert/1000M/map_tiered/01-08-2022_08-57-42/report/tmp/1")
 #
+
+log("Loading latency-distribution data: Done")
+log("Plotting latency histogram data")
 # plot_cumulative_latency_distribution(report_dir, r1, r2)
 # plot_latency_histogram(report_dir, r1)
+log("Plotting latency histogram data: Done")
+
+
