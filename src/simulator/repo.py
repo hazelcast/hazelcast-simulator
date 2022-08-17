@@ -466,7 +466,6 @@ performance_data_runs = {}
 for run in run_list:
     performance_data_runs[run.name] = load_performance(run.path, absolute_time=absolute_time)
 log("Loading performance data: Done")
-
 #aggregate_performance_data(performance_dfs_1)
 #aggregate_performance_data(performance_dfs_2)
 log("Plotting performance data")
