@@ -11,6 +11,7 @@ pd.options.mode.chained_assignment = None
 from matplotlib import pyplot as plt
 import tempfile
 from simulator.log import log
+from typing import Dict
 
 # from util import write
 image_dpi = 96
@@ -33,8 +34,15 @@ import matplotlib.pyplot as plt, mpld3
 # - test specific files
 # - performance: aggregated performance is missing
 # - latency distribution make use of run_list
+# - instead of modifying the epoch column, we add a new column
+# - performance epoch column is not formatted anymore as string
+
 
 # done
+# - hgrm start time to epoch
+# - performance epoch column is now an int
+# - performance epoch column not rounded. Still dealing with ms.
+# - extract the test times per worker.
 # - logging cleanup
 # - performance data making use of run_list
 # - dstat making use of run_list
@@ -79,9 +87,17 @@ import matplotlib.pyplot as plt, mpld3
 # - improved logging
 
 @dataclass
-class Run:
+class Period:
+    start: int
+    end: int
+
+
+@dataclass
+class Test:
     name: str
     path: str
+    worker_periods: Dict[str, Period]
+
 
 def multiple_by(df, amount, *column_names):
     for column_name in column_names:
@@ -121,8 +137,8 @@ def find_worker_id(path):
     return workername[:index]
 
 
-def load_performance(benchmark_dir, absolute_time=True):
-    perf_data = {}
+def load_performance_data(benchmark_dir, absolute_time):
+    data_per_worker = {}
     for dir_name in os.listdir(benchmark_dir):
         worker_dir = f"{benchmark_dir}/{dir_name}"
         worker_id = find_worker_id(worker_dir)
@@ -137,13 +153,12 @@ def load_performance(benchmark_dir, absolute_time=True):
         df.drop(['timestamp'], inplace=True, axis=1)
 
         # we need to round the epoch time to the nearest second
-        df['epoch'].round()
-
-        if not absolute_time:
-            to_relative_time(df, "epoch")
-        df['epoch'] = pd.to_datetime(df['epoch'], unit='s')
-        perf_data[worker_id] = df
-    return perf_data
+        df['epoch'] = df['epoch'].round(0).astype(int)
+         #if not absolute_time:
+        #    to_relative_time(df, "epoch")
+        #df['epoch'] = pd.to_datetime(df['epoch'], unit='s')
+        data_per_worker[worker_id] = df
+    return data_per_worker
 
 
 def aggregate_performance_data(perf_data):
@@ -224,7 +239,7 @@ def plot_performance(report_dir, performance_data_runs):
             plt.close()
 
 
-def load_hgrm(benchmark_dir, absolute_time=True):
+def load_hgrm(benchmark_dir):
     result = {}
     for dir_name in os.listdir(benchmark_dir):
         dir_path = f"{benchmark_dir}/{dir_name}"
@@ -238,9 +253,12 @@ def load_hgrm(benchmark_dir, absolute_time=True):
             filename = os.path.splitext(sub_dir_name)[0]
             csv_path = f"{benchmark_dir}/{dir_name}/{filename}"
             df = pd.read_csv(csv_path, skiprows=2)
-            if not absolute_time:
-                to_relative_time(df, "StartTime")
-            df['StartTime'] = pd.to_datetime(df['StartTime'], unit='s')
+            df.rename(columns={'StartTime': 'epoch'}, inplace=True)
+            print(f"{df['epoch'].dtype}")
+
+            # if not absolute_time:
+            #     to_relative_time(df, "StartTime")
+            # df['StartTime'] = pd.to_datetime(df['StartTime'], unit='s')
             result[worker_name] = df
     return result
 
@@ -260,7 +278,7 @@ def plot_hgrm(report_dir, hgrm_data_runs):
 
             fig = plt.figure(figsize=(image_width_px / image_dpi, image_height_px / image_dpi), dpi=image_dpi)
 
-            plt.plot(first_df['StartTime'], first_df[column_name])
+            plt.plot(first_df['epoch'], first_df[column_name])
             for i in range(1, len(df_workers_list)):
                 other_df_worker = df_workers_list[i]
                 if not worker_name in other_df_worker:
@@ -269,7 +287,7 @@ def plot_hgrm(report_dir, hgrm_data_runs):
                 other_df = other_df_worker[worker_name]
                 if not column_name in other_df:
                     continue
-                plt.plot(other_df['StartTime'], other_df[column_name])
+                plt.plot(other_df['epoch'], other_df[column_name])
 
             filename = column_name.replace("/", "_")
             plt.grid()
@@ -290,7 +308,7 @@ def plot_hgrm(report_dir, hgrm_data_runs):
             plt.close()
 
 
-def load_dstat(benchmark_dir, absolute_time=True):
+def load_dstat(benchmark_dir):
     result = {}
     for csv_filename in os.listdir(benchmark_dir):
         if not csv_filename.endswith("_dstat.csv"):
@@ -299,9 +317,9 @@ def load_dstat(benchmark_dir, absolute_time=True):
         csv_path = f"{benchmark_dir}/{csv_filename}"
         df = pd.read_csv(csv_path, skiprows=5)
         multiple_by(df, 1000, 'used', 'free', 'buf', 'cach')
-        if not absolute_time:
-            to_relative_time(df, "epoch")
-        df['epoch'] = pd.to_datetime(df['epoch'], unit='s')
+        # if not absolute_time:
+        #     to_relative_time(df, "epoch")
+        # df['epoch'] = pd.to_datetime(df['epoch'], unit='s')
         result[agent_name] = df
     return result
 
@@ -352,7 +370,8 @@ def plot_dstat(report_dir, data_runs):
             plt.savefig(f'{result_dir}/{filename}.png')
             plt.close()
 
-def load_latency_distribution(benchmark_dir):
+
+def load_latency_distribution(benchmark_dir, warmup_second=0, cooldown_seconds=0):
     result = {}
     for dir_name in os.listdir(benchmark_dir):
         worker_dir = f"{benchmark_dir}/{dir_name}"
@@ -437,45 +456,49 @@ def plot_latency_histogram(report_dir, *df_workers_list):
         plt.close()
 
 
-
 absolute_time = False
+warmup_seconds = 5
+cooldown_seconds = 5
 
-
-run_list = []
-run_list.append(Run("map_tiered#1",
-                    "/home/eng/Hazelcast/simulator-tng/storage/runs/insert/10M/map_tiered/05-08-2022_11-34-57"))
-run_list.append(Run("map_tiered#2",
-                    "/home/eng/Hazelcast/simulator-tng/storage/runs/insert/10M/map_tiered/05-08-2022_11-44-30"))
+test_list = []
+test_list.append(Test("map_tiered#1",
+                      "/home/eng/Hazelcast/simulator-tng/storage/runs/insert/10M/map_tiered/05-08-2022_11-34-57",
+                      {}))
+test_list.append(Test("map_tiered#2",
+                      "/home/eng/Hazelcast/simulator-tng/storage/runs/insert/10M/map_tiered/05-08-2022_11-44-30",
+                      {}))
 
 report_dir = tempfile.mkdtemp()
 print(f"directory {report_dir}")
 
-hgrm_data_runs = {}
-
+log("Loading performance data")
+performance_data_runs = {}
+for test in test_list:
+    data = load_performance_data(test.path, absolute_time)
+    for worker_id, df in data.items():
+        epoch_column = df['epoch']
+        test.worker_periods[worker_id] = Period(epoch_column.iloc[0], epoch_column.iloc[-1])
+    performance_data_runs[test.name] = data
+log("Loading performance data: Done")
+# aggregate_performance_data(performance_dfs_1)
+# aggregate_performance_data(performance_dfs_2)
+log("Plotting performance data")
+plot_performance(report_dir, performance_data_runs)
+log("Plotting performance data: Done")
 
 log("Loading hgrm data")
-for run in run_list:
-    hgrm_data_runs[run.name] = load_hgrm(run.path, absolute_time=absolute_time)
+hgrm_data_runs = {}
+for test in test_list:
+    hgrm_data_runs[test.name] = load_hgrm(test.path)
 log("Loading hgrm data: Done")
 log("Plotting hgrm data")
 plot_hgrm(report_dir, hgrm_data_runs)
 log("Plotting hgrm data: Done")
 
-log("Loading performance data")
-performance_data_runs = {}
-for run in run_list:
-    performance_data_runs[run.name] = load_performance(run.path, absolute_time=absolute_time)
-log("Loading performance data: Done")
-#aggregate_performance_data(performance_dfs_1)
-#aggregate_performance_data(performance_dfs_2)
-log("Plotting performance data")
-plot_performance(report_dir, performance_data_runs)
-log("Plotting performance data: Done")
-
 log("Loading dstat data")
 dstat_data_runs = {}
-for run in run_list:
-    dstat_data_runs[run.name] = load_dstat(run.path, absolute_time=absolute_time)
+for test in test_list:
+    dstat_data_runs[test.name] = load_dstat(test.path)
 log("Loading dstat data: Done")
 log("Plotting dstat data")
 plot_dstat(report_dir, dstat_data_runs)
@@ -493,5 +516,3 @@ log("Plotting latency histogram data")
 # plot_cumulative_latency_distribution(report_dir, r1, r2)
 # plot_latency_histogram(report_dir, r1)
 log("Plotting latency histogram data: Done")
-
-
