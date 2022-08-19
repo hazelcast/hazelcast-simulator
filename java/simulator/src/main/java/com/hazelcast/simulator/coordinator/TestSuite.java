@@ -40,7 +40,7 @@ import static java.util.Collections.singletonMap;
 
 public class TestSuite implements Serializable {
 
-    private static final Pattern VALID_FILE_NAME_PATTERN = Pattern.compile("^[a-zA-Z0-9-]+$");
+    private static final Pattern VALID_FILE_NAME_PATTERN = Pattern.compile("^[a-zA-Z0-9-_]+$");
 
     private final List<TestCase> testCaseList = new LinkedList<>();
     private long durationSeconds;
@@ -218,6 +218,8 @@ public class TestSuite implements Serializable {
             if (indexOfAt > -1) {
                 testId = property.substring(0, indexOfAt);
                 field = property.substring(indexOfAt + 1);
+            } else if("id".equals(property)){
+                testId = value;
             }
 
             if (!testId.isEmpty() && !isValidTestId(testId)) {

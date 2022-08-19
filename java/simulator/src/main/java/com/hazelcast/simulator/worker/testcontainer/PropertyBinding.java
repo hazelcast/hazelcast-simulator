@@ -77,6 +77,7 @@ public class PropertyBinding {
         this.unusedProperties.addAll(testCase.getProperties().keySet());
         unusedProperties.remove("class");
         unusedProperties.remove("rampupSeconds");
+        unusedProperties.remove("id");
 
         bind(this);
 

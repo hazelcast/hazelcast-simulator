@@ -66,7 +66,7 @@ public final class TestPerformanceTracker {
     public TestPerformanceTracker(TestContainer container) {
         this.testContainer = container;
         this.performanceLogWriter = new PerformanceLogWriter(
-                new File(getUserDir(), "performance-" + container.getTestCase().getId() + ".csv"));
+                new File(getUserDir(), container.getTestCase().getId() + ".performance.csv"));
     }
 
     /**
@@ -231,6 +231,6 @@ public final class TestPerformanceTracker {
     }
 
     private static File getLatencyFile(String testId, String probeName) {
-        return new File(getUserDir(), testId + '-' + probeName + ".hdr");
+        return new File(getUserDir(), testId + '.' + probeName + ".hdr");
     }
 }
