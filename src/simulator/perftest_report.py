@@ -111,8 +111,8 @@ class Gnuplot:
             self.image_path = os.path.join(self.directory, self.basefilename + "." + ext)
             script_path = os.path.join(self.directory, self.basefilename + ".plt")
         else:
-            self.image_path = os.path.join(self.directory, ts_first.name + "." + ext)
-            script_path = os.path.join(self.directory, ts_first.name + ".plt")
+            self.image_path = os.path.join(self.directory, ts_first.id + "." + ext)
+            script_path = os.path.join(self.directory, ts_first.id + ".plt")
 
         self.is_bytes = ts_first.is_bytes
         self.is_points = ts_first.is_points
@@ -168,7 +168,7 @@ class TimeseriesGnuplot(Gnuplot):
             if len(self.ts_list) > 1:
                 title = self.titles[ts]
                 if not title:
-                    title = ts.name
+                    title = ts.id
                 title_str = "title \"" + title + "\" noenhanced"
             else:
                 title_str = "title \"\""
@@ -180,12 +180,12 @@ class TimeseriesGnuplot(Gnuplot):
                 if color:
                     lc = "lc rgb \"" + color + "\""
                 self._write(
-                    "   \'" + ts_file.name + "\' using (t0(timecolumn(1))):2 " + title_str + " with points " + lc + ", \\")
+                    "   \'" + ts_file.id + "\' using (t0(timecolumn(1))):2 " + title_str + " with points " + lc + ", \\")
             else:
                 lt = ""
                 if color:
                     lt = "lt rgb \"" + color + "\""
-                self._write("   \'" + ts_file.name + "\' using (t0(timecolumn(1))):2 " + title_str + " " + lt + ", \\")
+                self._write("   \'" + ts_file.id + "\' using (t0(timecolumn(1))):2 " + title_str + " " + lt + ", \\")
         self._complete()
 
 
@@ -220,7 +220,7 @@ class LatencyDistributionGnuplot(Gnuplot):
             if len(self.ts_list) > 1:
                 title = self.titles[ts]
                 if not title:
-                    title = ts.name
+                    title = ts.id
                 title_str = "title \"" + title + "\" noenhanced"
             else:
                 title_str = "title \"\""
@@ -230,7 +230,7 @@ class LatencyDistributionGnuplot(Gnuplot):
             if color:
                 lt = "lt rgb \"" + color + "\""
 
-            self._write("   \"" + ts_file.name + "\" using 1:2 " + title_str + " " + lt + " with lines, \\")
+            self._write("   \"" + ts_file.id + "\" using 1:2 " + title_str + " " + lt + " with lines, \\")
 
         self._complete()
 
@@ -934,14 +934,14 @@ class Comparison:
                 exit(1)
 
             for handle in benchmark.handles:
-                plot = plots.get(handle.name)
+                plot = plots.get(handle.id)
                 if not plot:
                     if handle.src == "latency-distribution":
                         plot = LatencyDistributionGnuplot(self.output_dir("latency"), handle.title)
                     else:
                         plot = TimeseriesGnuplot(self.output_dir(handle.src), handle.title)
 
-                    plots[handle.name] = plot
+                    plots[handle.id] = plot
 
                 plot.add(handle.load(), title=benchmark.name)
 

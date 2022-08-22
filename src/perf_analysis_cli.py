@@ -50,7 +50,7 @@ class TimeSeries:
 
 
 def plot(ts, filename, cps=None, aps=None, ymin=0, width=1600, height=900, title="Changepoint and anomalies"):
-    plt.title(f"{title}: {ts.name}")
+    plt.title(f"{title}: {ts.id}")
 
     my_dpi = 96
     plt.figure(figsize=(width / my_dpi, height / my_dpi), dpi=my_dpi)
