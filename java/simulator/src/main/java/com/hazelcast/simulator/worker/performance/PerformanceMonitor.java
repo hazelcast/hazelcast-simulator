@@ -104,28 +104,32 @@ public class PerformanceMonitor implements Closeable {
 
         @Override
         public void run() {
-            while (!shutdown.get()) {
-                long startNanos = nanoTime();
-                long currentTimeMillis = currentTimeMillis();
+            try {
+                while (!shutdown.get()) {
+                    long startNanos = nanoTime();
+                    long currentTimeMillis = currentTimeMillis();
 
-                updateTrackers(currentTimeMillis);
+                    updateTrackers(currentTimeMillis);
 
-                if (!dirtyContainers.isEmpty()) {
-                    coordinatorUpdate();
-                    persist(currentTimeMillis);
-                }
-
-                long elapsedNanos = nanoTime() - startNanos;
-
-                if (scanIntervalNanos > elapsedNanos) {
-                    if (dirtyContainers.isEmpty()) {
-                        sleepNanos(WAIT_FOR_TEST_CONTAINERS_DELAY_NANOS - elapsedNanos);
-                    } else {
-                        sleepNanos(scanIntervalNanos - elapsedNanos);
+                    if (!dirtyContainers.isEmpty()) {
+                        coordinatorUpdate();
+                        persist(currentTimeMillis);
                     }
-                } else {
-                    LOGGER.warn(getName() + ".run() took " + NANOSECONDS.toMillis(elapsedNanos) + " ms");
+
+                    long elapsedNanos = nanoTime() - startNanos;
+
+                    if (scanIntervalNanos > elapsedNanos) {
+                        if (dirtyContainers.isEmpty()) {
+                            sleepNanos(WAIT_FOR_TEST_CONTAINERS_DELAY_NANOS - elapsedNanos);
+                        } else {
+                            sleepNanos(scanIntervalNanos - elapsedNanos);
+                        }
+                    } else {
+                        LOGGER.warn(getName() + ".run() took " + NANOSECONDS.toMillis(elapsedNanos) + " ms");
+                    }
                 }
+            } catch (Exception e){
+                LOGGER.warn(e);
             }
         }
 

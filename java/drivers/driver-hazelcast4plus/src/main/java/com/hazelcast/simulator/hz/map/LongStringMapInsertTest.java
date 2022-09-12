@@ -16,74 +16,61 @@ package com.hazelcast.simulator.hz.map;
  * limitations under the License.
  */
 
+import com.hazelcast.cp.IAtomicLong;
 import com.hazelcast.map.IMap;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
-import com.hazelcast.simulator.test.annotations.Prepare;
+import com.hazelcast.simulator.test.StopException;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
-import com.hazelcast.simulator.worker.loadsupport.Streamer;
-import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
-
-import java.util.Random;
 
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateAsciiStrings;
 
-public class LongStringMapTest extends HazelcastTest {
+
+public class LongStringMapInsertTest extends HazelcastTest {
 
     // properties
-    public int keyDomain = 10000;
-    public int valueCount = 10000;
+    public int keyCountPerLoadGenerator = 10000;
+    public int uniqueValues = 10000;
     public int minValueLength = 10;
     public int maxValueLength = 10;
-    public boolean fillOnPrepare = true;
+    public int threadCount;
     public boolean destroyOnExit = true;
+
     private IMap<Long, String> map;
     private String[] values;
-
+    private IAtomicLong keyGenerator;
 
     @Setup
     public void setUp() {
         map = targetInstance.getMap(name);
-        values = generateAsciiStrings(valueCount, minValueLength, maxValueLength);
+        values = generateAsciiStrings(uniqueValues, minValueLength, maxValueLength);
+        keyGenerator = getAtomicLong("key-generator");
     }
 
-    @Prepare(global = true)
-    public void prepare() {
-        if (!fillOnPrepare) {
-            return;
-        }
-
-        Random random = new Random();
-        Streamer<Long, String> streamer = StreamerFactory.getInstance(map);
-        for (long key = 0; key < keyDomain; key++) {
-            String value = values[random.nextInt(valueCount)];
-            streamer.pushEntry(key, value);
-        }
-        streamer.await();
-    }
-
-    @TimeStep(prob = -1)
-    public String get(ThreadState state) {
-        return map.get(state.randomKey());
-    }
-
-    @TimeStep(prob = 0.1)
-    public String put(ThreadState state) {
-        return map.put(state.randomKey(), state.randomValue());
-    }
-
-    @TimeStep(prob = 0)
+    @TimeStep(prob = 1)
     public void set(ThreadState state) {
-        map.set(state.randomKey(), state.randomValue());
+        if (!state.initialized) {
+            state.remaining = keyCountPerLoadGenerator / threadCount;
+            state.nextKey = keyGenerator.getAndAdd(state.remaining);
+            state.initialized = true;
+        }
+
+        if (state.remaining > 0) {
+            map.set(state.nextKey, state.randomValue());
+            state.remaining--;
+            state.nextKey++;
+        } else {
+            throw new StopException();
+        }
     }
 
     public class ThreadState extends BaseThreadState {
 
-        private long randomKey() {
-            return randomLong(keyDomain);
-        }
+        private boolean initialized;
+        private long nextKey;
+        private long remaining;
 
         private String randomValue() {
             return values[randomInt(values.length)];
@@ -92,8 +79,14 @@ public class LongStringMapTest extends HazelcastTest {
 
     @Teardown
     public void tearDown() {
-        if(destroyOnExit) {
+        long start = System.currentTimeMillis();
+        int size = map.size();
+        long duration = System.currentTimeMillis() - start;
+        System.out.println("Map.size:" + size + " duration:" + duration + " ms");
+
+        if (destroyOnExit) {
             map.destroy();
         }
     }
 }
+

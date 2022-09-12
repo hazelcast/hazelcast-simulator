@@ -817,7 +817,7 @@ class Benchmark:
 
         self.handles.append(
             SeriesHandle("throughput", "throughput", "Throughput", "Operations/sec", self.aggregated_throughput))
-        #self.handles.extend(DstatAnalyzer(report_dir+"/tmp/"+str(self.id), self.period).analyze())
+        self.handles.extend(DstatAnalyzer(report_dir+"/tmp/"+str(self.id), self.period).analyze())
         self.handles.extend(HdrAnalyzer(report_dir+"/tmp/"+str(self.id)).analyze())
 
         agents = {}

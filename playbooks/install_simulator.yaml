@@ -14,9 +14,10 @@
     args:
       warn: false
 
-  - name: Install dstat
+  # needed for pcp dstat.
+  - name: Install pcp
     ansible.builtin.package:
-      name: dstat
+      name: pcp
       state: present
     become: yes
 
