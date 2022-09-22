@@ -149,6 +149,7 @@ def shell_logged(cmd, log_file, exit_on_error=False):
 
 
 def shell(cmd, shell=True, use_print=False):
+    print(cmd)
     process = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=shell)
     selector = DefaultSelector()
     selector.register(process.stdout, EVENT_READ)

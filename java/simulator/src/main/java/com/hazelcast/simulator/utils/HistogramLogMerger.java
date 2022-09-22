@@ -29,7 +29,7 @@ import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
 /**
  * The HistogramLogMerger merges the Histograms of multiple HDR files. This will be done based under the assumption that
  * every histogram spans the same duration.
- *
+ * <p>
  * It works like this; from each HistogramLogReader a Histogram is read and merged into a final Histogram and this Histogram
  * is written into the merged HDR. Once round is complete, the next Histogram is retrieved. The different HDR files don't need
  * to have the same length; as soon as a HDR is finished, it is ignored and this continues till all HDR files are fully processed.
@@ -45,6 +45,13 @@ public final class HistogramLogMerger {
         ensureExistingFile(outputFile);
 
         HistogramLogReader[] readers = new HistogramLogReader[args.length - 1];
+        for (int k = 1; k < args.length; k++) {
+            File file = new File(args[k]);
+            if (!file.exists()) {
+                throw new IllegalArgumentException("File [" + file + "] doesn't exist");
+            }
+        }
+
         for (int k = 1; k < args.length; k++) {
             String inputFile = args[k];
             readers[k - 1] = new HistogramLogReader(inputFile);

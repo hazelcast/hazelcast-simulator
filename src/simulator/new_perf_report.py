@@ -1,5 +1,6 @@
 import os
 from dataclasses import dataclass
+from pathlib import Path
 
 import matplotlib
 from matplotlib import mlab
@@ -10,6 +11,7 @@ from matplotlib.ticker import StrMethodFormatter
 pd.options.mode.chained_assignment = None
 from matplotlib import pyplot as plt
 import tempfile
+import util
 from simulator.log import log
 from typing import Dict, Tuple
 
@@ -22,6 +24,8 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import time
 import matplotlib.dates as mdates
+import os
+from glob import glob
 
 
 # todo:
@@ -42,14 +46,16 @@ import matplotlib.dates as mdates
 # - performance epoch column is not formatted anymore as string
 # - dstat format epoch column
 # - dstat in relative time has a prefix '01' in front.
+# - fix absolute time
+# - trimming of latency history
+# - latency history time scale
+
 
 # done
-# - dstat relative time option
-# - performance plot: better name x/y
-# - dstat shows only  single run
-# - dstat legend shows only single agent
-# - stat plot: better name x/y
-
+# - latency history merging
+# - fixed the mess with hgrm
+# - latency: fix hgrm location
+# - latency: fix hgrm csv location
 
 @dataclass
 class Period:
@@ -102,10 +108,10 @@ def find_worker_id(path):
     return workername[:index]
 
 
-def load_performance_data(benchmark_dir):
+def load_performance_data(run_dir):
     result = {}
-    for dir_name in os.listdir(benchmark_dir):
-        worker_dir = f"{benchmark_dir}/{dir_name}"
+    for dir_name in os.listdir(run_dir):
+        worker_dir = f"{run_dir}/{dir_name}"
         worker_id = find_worker_id(worker_dir)
         if not worker_id:
             continue
@@ -205,34 +211,84 @@ def plot_performance(report_dir, performance_data_runs):
             plt.ticklabel_format(style='plain', axis='y')
             plt.ylabel("Throughput (operations/second)")
             plt.xlabel("Time")
-            plt.gca.xaxis.set_major_formatter(mdates.DateFormatter('%m-%S'))
+            # plt.gca.xaxis.set_major_formatter(mdates.DateFormatter('%m-%S'))
             plt.legend()
             if worker_id == '':
                 plt.title(f"{test_id} {column_name.capitalize()}")
             else:
                 plt.title(f"{test_id} {worker_id} - {column_name.capitalize()}")
             plt.grid()
-            filename = column_name.replace("/", "_") + "." + test_id + ".png"
+
+            filename = column_name.replace("/", "_") + ".png"
+            if test_id != '':
+                filename = test_id + '.' + filename
+
             plt.savefig(f'{result_dir}/{filename}')
             plt.close()
 
 
-def load_hgrm(benchmark_dir):
-    result = {}
-    for dir_name in os.listdir(benchmark_dir):
-        dir_path = f"{benchmark_dir}/{dir_name}"
+def processing_hdr(dir):
+    merge_worker_hdr(dir)
+
+    for hdr_file in list(Path(dir).rglob("*.hdr")):
+        print(hdr_file)
+        hdr_file_name_no_ext = Path(hdr_file).stem
+        hfr_file_dir = Path(hdr_file).parent
+        util.shell(f"""java -cp "{util.simulator_home}/lib/*" \
+                    com.hazelcast.simulator.utils.SimulatorHistogramLogProcessor \
+                    -i {hdr_file} \
+                    -o {hfr_file_dir}/{hdr_file_name_no_ext} \
+                    -outputValueUnitRatio 1000""")
+        os.rename(f"{hfr_file_dir}/{hdr_file_name_no_ext}.hgrm", f"{hfr_file_dir}/{hdr_file_name_no_ext}.hgrm.bak")
+        util.shell(f"""java -cp "{util.simulator_home}/lib/*" \
+                       com.hazelcast.simulator.utils.SimulatorHistogramLogProcessor \
+                       -csv \
+                       -i {hdr_file} \
+                       -o {hfr_file_dir}/{hdr_file_name_no_ext} \
+                       -outputValueUnitRatio 1000""")
+        os.rename(f"{hfr_file_dir}/{hdr_file_name_no_ext}.hgrm.bak", f"{hfr_file_dir}/{hdr_file_name_no_ext}.hgrm")
+        os.rename(f"{hfr_file_dir}/{hdr_file_name_no_ext}", f"{hfr_file_dir}/{hdr_file_name_no_ext}.latency-history.csv")
+    pass
+
+
+def merge_worker_hdr(dir):
+    dic = {}
+    for worker_dir_name in os.listdir(dir):
+        dir_path = f"{dir}/{worker_dir_name}"
         worker_name = find_worker_id(dir_path)
         if not worker_name:
             continue
 
-        for sub_dir_name in os.listdir(dir_path):
-            if not sub_dir_name.endswith(".hgrm"):
+        for file_name in os.listdir(dir_path):
+            if not file_name.endswith(".hdr"):
                 continue
-            filename = os.path.splitext(sub_dir_name)[0]
-            csv_path = f"{benchmark_dir}/{dir_name}/{filename}"
-            df = pd.read_csv(csv_path, skiprows=2)
+
+            hdr_file = f"{dir}/{worker_dir_name}/{file_name}"
+            files = dic.get(file_name)
+            if not files:
+                files = []
+                dic[file_name] = files
+            files.append(hdr_file)
+
+    for file_name, hdr_files in dic.items():
+        util.shell(f"""java -cp "{util.simulator_home}/lib/*" \
+                         com.hazelcast.simulator.utils.HistogramLogMerger \
+                         {dir}/{file_name} {" ".join(hdr_files)} 2>/dev/null""")
+
+
+def load_latency_history(run_dir):
+    result = {}
+    for dir_name in os.listdir(run_dir):
+        dir_path = f"{run_dir}/{dir_name}"
+        worker_name = find_worker_id(dir_path)
+        if not worker_name:
+            continue
+
+        for file_name in os.listdir(dir_path):
+            if not file_name.endswith(".latency-history.csv"):
+                continue
+            df = pd.read_csv(f"{run_dir}/{dir_name}/{file_name}", skiprows=2)
             df.rename(columns={'StartTime': 'epoch'}, inplace=True)
-            print(f"{df['epoch'].dtype}")
 
             # if not absolute_time:
             #     to_relative_time(df, "StartTime")
@@ -241,8 +297,8 @@ def load_hgrm(benchmark_dir):
     return result
 
 
-def plot_hgrm(report_dir, hgrm_data_runs):
-    df_workers_list = list(hgrm_data_runs.values())
+def plot_latency_history(report_dir, latency_history_data_runs):
+    df_workers_list = list(latency_history_data_runs.values())
 
     first_df_workers = df_workers_list[0]
     for worker_name, first_df in first_df_workers.items():
@@ -356,10 +412,10 @@ def plot_dstat(report_dir, data_runs):
             plt.close()
 
 
-def load_latency_distribution(benchmark_dir):
+def load_latency_distribution(run_dir):
     result = {}
-    for dir_name in os.listdir(benchmark_dir):
-        worker_dir = f"{benchmark_dir}/{dir_name}"
+    for dir_name in os.listdir(run_dir):
+        worker_dir = f"{run_dir}/{dir_name}"
         worker_id = find_worker_id(worker_dir)
         if not worker_id:
             continue
@@ -456,45 +512,51 @@ run_list.append(Run("map_tiered#1",
 report_dir = tempfile.mkdtemp()
 print(f"directory {report_dir}")
 
-log("Loading performance data")
-performance_data_runs = {}
-for run in run_list:
-    data = load_performance_data(run.path)
-    for (test_id, agent_id), df in data.items():
-        performance_data_runs[(test_id, agent_id, run.id)] = df
-
-        # for worker_id, df in worker_map.items():
-        #     epoch_column = df['epoch']
-        #     run.worker_periods[(worker_id, test_id)] = Period(epoch_column.iloc[0], epoch_column.iloc[-1])
-
-log("Loading performance data: Done")
-# aggregate_performance_data(performance_dfs_1)
-# aggregate_performance_data(performance_dfs_2)
-log("Plotting performance data")
-plot_performance(report_dir, performance_data_runs)
-log("Plotting performance data: Done")
-
-# log("Loading hgrm data")
-# hgrm_data_runs = {}
-# for test in test_list:
-#     hgrm_data_runs[test.name] = load_hgrm(test.path)
-# log("Loading hgrm data: Done")
-# log("Plotting hgrm data")
-# plot_hgrm(report_dir, hgrm_data_runs)
-# log("Plotting hgrm data: Done")
+# log("Loading performance data: Starting")
+# performance_data_runs = {}
+# for run in run_list:
+#     data = load_performance_data(run.path)
+#     for (test_id, agent_id), df in data.items():
+#         performance_data_runs[(test_id, agent_id, run.id)] = df
 #
-log("Loading dstat data")
-dstat_data_runs = {}
+#         # for worker_id, df in worker_map.items():
+#         #     epoch_column = df['epoch']
+#         #     run.worker_periods[(worker_id, test_id)] = Period(epoch_column.iloc[0], epoch_column.iloc[-1])
+#
+# log("Loading performance data: Done")
+# # aggregate_performance_data(performance_dfs_1)
+# # aggregate_performance_data(performance_dfs_2)
+# log("Plotting performance data: Starting")
+# plot_performance(report_dir, performance_data_runs)
+# log("Plotting performance data: Done")
+
+
+log("Processing HDR: Starting")
+latency_history_data_runs = {}
 for run in run_list:
-    data = load_dstat(run.path)
-    for agent_id, df in data.items():
-        if not absolute_time:
-            to_relative_time(df, "epoch")
-        dstat_data_runs[(agent_id, run.id)] = df
-log("Loading dstat data: Done")
-log("Plotting dstat data")
-plot_dstat(report_dir, dstat_data_runs)
-log("Plotting dstat data: Done")
+    processing_hdr(run.path)
+log("Processing HDR: Done")
+log("Loading latency history: Starting")
+latency_history_data_runs = {}
+for run in run_list:
+    latency_history_data_runs[run.id] = load_latency_history(run.path)
+log("Loading latency history: Done")
+log("Plotting latency history: Starting")
+plot_latency_history(report_dir, latency_history_data_runs)
+log("Plotting latency history: Done")
+#
+# log("Loading dstat data: Starting")
+# dstat_data_runs = {}
+# for run in run_list:
+#     data = load_dstat(run.path)
+#     for agent_id, df in data.items():
+#         if not absolute_time:
+#             to_relative_time(df, "epoch")
+#         dstat_data_runs[(agent_id, run.id)] = df
+# log("Loading dstat data: Done")
+# log("Plotting dstat data: Starting")
+# plot_dstat(report_dir, dstat_data_runs)
+# log("Plotting dstat data: Done")
 #
 # log("Loading latency-distribution data")
 # # r1 = load_latency_distribution(
@@ -504,7 +566,7 @@ log("Plotting dstat data: Done")
 # #
 #
 # log("Loading latency-distribution data: Done")
-# log("Plotting latency histogram data")
+# log("Plotting latency histogram data: Starting")
 # # plot_cumulative_latency_distribution(report_dir, r1, r2)
 # # plot_latency_histogram(report_dir, r1)
 # log("Plotting latency histogram data: Done")
