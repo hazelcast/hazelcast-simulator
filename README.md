@@ -186,7 +186,7 @@ This command will update the JAVA_HOME/PATH on the remote machine to reflect the
 
 To SSH to your remote nodes, the following command can be used:   
     ```
-    ssh -i key <password>@<ip>
+    ssh -i key <username>@<ip>
     ```
 
 ## Running a test.
