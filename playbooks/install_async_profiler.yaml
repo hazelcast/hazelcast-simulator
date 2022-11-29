@@ -1,7 +1,7 @@
 ---
 - hosts: all
   vars:
-  - version: 2.7
+  - version: 2.9
   - url: "https://github.com/jvm-profiling-tools/async-profiler/releases/download/v{{ version }}/async-profiler-{{ version }}-linux-x64.tar.gz"
   - tar_gz_filename: "{{ url | basename }}"
 

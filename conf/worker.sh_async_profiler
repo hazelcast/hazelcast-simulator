@@ -33,6 +33,6 @@ sleep 2m
 # we sample for 120 seconds.
 duration_seconds=120
 worker_pid=$(cat worker.pid)
-~/async-profiler/profiler.sh -d ${duration_seconds} -f profile.svg ${worker_pid}
+~/async-profiler-2.9-linux-x64/profiler.sh -d ${duration_seconds} -f profile.html ${worker_pid}
 
 wait
