@@ -165,7 +165,7 @@ class InventoryInstallCli:
     def async_profiler(self, argv):
         parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter,
                                          description='Install Async Profiler')
-        parser.add_argument("--version", help="Async profiler version", default="2.7")
+        parser.add_argument("--version", help="Async profiler version", default="2.9")
         parser.add_argument("--hosts", help="The target hosts.", default="all:!mc")
 
         args = parser.parse_args(argv)
