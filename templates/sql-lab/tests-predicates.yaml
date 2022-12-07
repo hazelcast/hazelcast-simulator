@@ -2,7 +2,7 @@
   repetitions: -1
   real_repetitions: &repetitions 1
   parallel: &parallel False
-  duration: &duration 3m
+  duration: &duration 8m
   clients: &clients 1
   members: &members 4
   loadgenerator_hosts: &loadgenerator_hosts loadgenerators
@@ -29,8 +29,8 @@
     -Dhazelcast.health.monitoring.delay.seconds=30
   performance_monitor_interval_seconds: &performance_monitor_interval_seconds 1
   verify_enabled: &verify_enabled True
-  warmup_seconds: &warmup_seconds 30
-  cooldown_seconds: &cooldown_seconds 30
+  warmup_seconds: &warmup_seconds 60
+  cooldown_seconds: &cooldown_seconds 60
 
 - name: Predicate_AggregatePortableSum_L
   repetitions: *repetitions
