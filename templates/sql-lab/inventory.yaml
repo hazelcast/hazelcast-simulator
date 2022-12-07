@@ -2,24 +2,24 @@ nodes:
   hosts:   
     10.212.1.101:  
       ansible_ssh_private_key_file:  ~/.ssh/id_rsa
-      ansible_user: simulator
+      ansible_user: simulator.2.0
       private_ip:  10.212.40.101
     10.212.1.102:  
       ansible_ssh_private_key_file:  ~/.ssh/id_rsa
-      ansible_user: simulator
+      ansible_user: simulator.2.0
       private_ip:  10.212.40.102
     10.212.1.103:  
       ansible_ssh_private_key_file:  ~/.ssh/id_rsa
-      ansible_user: simulator
+      ansible_user: simulator.2.0
       private_ip:  10.212.40.103 
     10.212.1.104:  
       ansible_ssh_private_key_file:  ~/.ssh/id_rsa
-      ansible_user: simulator
+      ansible_user: simulator.2.0
       private_ip:  10.212.40.104 
 
 loadgenerators:  
   hosts:   
     10.212.1.105:  
       ansible_ssh_private_key_file:  ~/.ssh/id_rsa
-      ansible_user: simulator
+      ansible_user: simulator.2.0
       private_ip:  10.212.40.105
