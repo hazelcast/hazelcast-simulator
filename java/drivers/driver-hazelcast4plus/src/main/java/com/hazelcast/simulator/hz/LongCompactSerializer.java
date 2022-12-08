@@ -38,7 +38,7 @@ public class LongCompactSerializer implements CompactSerializer<LongCompactPojo>
     @NotNull
     @Override
     public String getTypeName() {
-        return "identifiedDataWithLongCompactPojo";
+        return "longCompactPojo";
     }
 
     @NotNull

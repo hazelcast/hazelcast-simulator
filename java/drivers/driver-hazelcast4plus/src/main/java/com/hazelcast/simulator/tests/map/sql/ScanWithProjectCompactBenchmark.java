@@ -111,7 +111,7 @@ public class ScanWithProjectCompactBenchmark extends HazelcastTest {
                 + "                'keyFormat' = 'java',\n"
                 + "                'keyJavaClass' = 'java.lang.Integer',\n"
                 + "                'valueFormat' = 'compact',\n"
-                + "                'valueCompactTypeName' = 'identifiedDataWithLongCompactPojo'\n"
+                + "                'valueCompactTypeName' = 'longCompactPojo'\n"
                 + "        )";
 
         sqlService.execute(query);

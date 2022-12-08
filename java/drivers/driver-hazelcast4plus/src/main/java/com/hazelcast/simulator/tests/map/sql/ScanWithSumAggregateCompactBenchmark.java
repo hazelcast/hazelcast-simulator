@@ -113,7 +113,7 @@ public class ScanWithSumAggregateCompactBenchmark extends HazelcastTest {
                 + "                'keyFormat' = 'java',\n"
                 + "                'keyJavaClass' = 'java.lang.Integer',\n"
                 + "                'valueFormat' = 'compact',\n"
-                + "                'valueCompactTypeName' = 'identifiedDataWithLongCompactPojo'\n"
+                + "                'valueCompactTypeName' = 'longCompactPojo'\n"
                 + "        )";
 
         sqlService.execute(query);
