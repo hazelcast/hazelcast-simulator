@@ -31,7 +31,7 @@ import com.hazelcast.sql.SqlService;
 import java.util.Random;
 
 
-public class ScanByKey1CompactEntryBenchmark extends HazelcastTest {
+public class ScanByKey1CompactReflEntryBenchmark extends HazelcastTest {
 
     // properties
     // the number of map entries
@@ -111,7 +111,7 @@ public class ScanByKey1CompactEntryBenchmark extends HazelcastTest {
                 + "                'keyFormat' = 'java',\n"
                 + "                'keyJavaClass' = 'java.lang.Integer',\n"
                 + "                'valueFormat' = 'compact',\n"
-                + "                'valueCompactTypeName' = 'longCompactPojo'\n"
+                + "                'valueCompactTypeName' = 'longCompactPojoUnknown'\n"
                 + "        )";
 
         sqlService.execute(query);
