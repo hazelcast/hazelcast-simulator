@@ -20,6 +20,9 @@
                 <serializer>
                     com.hazelcast.simulator.hz.LongCompactSerializer
                 </serializer>
+                <serializer>
+                    com.hazelcast.simulator.hz.MultiFieldCompactSerializer
+                </serializer>
             </serializers>
         </compact-serialization>
     </serialization>

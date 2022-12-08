@@ -30,7 +30,7 @@ import com.hazelcast.sql.SqlService;
 
 import java.math.BigDecimal;
 
-public class ScanWithSumAggregateCompactBenchmark extends HazelcastTest {
+public class ScanWithSumAggregateCompactCodeSerBenchmark extends HazelcastTest {
 
     // properties
     // the number of map entries
