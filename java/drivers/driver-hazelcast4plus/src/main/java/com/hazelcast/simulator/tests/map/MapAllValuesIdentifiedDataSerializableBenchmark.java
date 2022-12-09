@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.tests.map.sql;
+package com.hazelcast.simulator.tests.map;
 
-import com.hazelcast.config.IndexType;
 import com.hazelcast.map.IMap;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.hz.IdentifiedDataSerializablePojo;
@@ -25,22 +24,25 @@ import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
-import com.hazelcast.sql.SqlResult;
-import com.hazelcast.sql.SqlRow;
-import com.hazelcast.sql.SqlService;
 
-import java.util.Random;
+import java.util.Map;
+import java.util.Set;
 
 
-public class ScanByValueIndex100EntryBenchmark extends HazelcastTest {
+public class MapAllValuesIdentifiedDataSerializableBenchmark extends HazelcastTest {
 
     // properties
     // the number of map entries
     public int entryCount = 10_000_000;
 
+    // should the lazy deserialization on client's side be invoked
+    public boolean forceClientDeserialization;
+
     //16 byte + N*(20*N
     private IMap<Integer, IdentifiedDataSerializablePojo> map;
     private final int arraySize = 20;
+
+    private Object blackHole;
 
     @Setup
     public void setUp() {
@@ -49,8 +51,6 @@ public class ScanByValueIndex100EntryBenchmark extends HazelcastTest {
 
     @Prepare(global = true)
     public void prepare() {
-        map.addIndex(IndexType.SORTED, "value");
-
         Streamer<Integer, IdentifiedDataSerializablePojo> streamer = StreamerFactory.getInstance(map);
         Integer[] sampleArray = new Integer[arraySize];
         for (int i = 0; i < arraySize; i++) {
@@ -63,45 +63,21 @@ public class ScanByValueIndex100EntryBenchmark extends HazelcastTest {
             streamer.pushEntry(key, value);
         }
         streamer.await();
-
-        SqlService sqlService = targetInstance.getSql();
-        String query = "CREATE EXTERNAL MAPPING IF NOT EXISTS " + name + " "
-                + "EXTERNAL NAME " + name + " "
-                + "        TYPE IMap\n"
-                + "        OPTIONS (\n"
-                + "                'keyFormat' = 'java',\n"
-                + "                'keyJavaClass' = 'java.lang.Integer',\n"
-                + "                'valueFormat' = 'java',\n"
-                + "                'valueJavaClass' = 'com.hazelcast.simulator.hz.IdentifiedDataSerializablePojo'\n"
-                + "        )";
-
-        sqlService.execute(query);
-
     }
 
     @TimeStep
     public void timeStep() throws Exception {
-        SqlService sqlService = targetInstance.getSql();
-        String query = "SELECT __key, this FROM " + name
-                + " WHERE \"value\">= ?  AND \"value\"< ?";
+        Set<Map.Entry<Integer, IdentifiedDataSerializablePojo>> entries = map.entrySet();
+        if (entries.size() != entryCount) {
+            throw new Exception("wrong entry count");
+        }
+        if (forceClientDeserialization) {
+            map.entrySet().forEach(this::sink);
+        }
+    }
 
-        int randomInt = new Random().nextInt(entryCount - 100);
-        String minValue = String.format("%010d", randomInt);
-        String maxValue = String.format("%010d", randomInt + 100);
-        int actual = 0;
-        try (SqlResult result = sqlService.execute(query, minValue, maxValue)) {
-            for (SqlRow row : result) {
-                Object value = row.getObject(1);
-                if (!(value instanceof IdentifiedDataSerializablePojo)) {
-                    throw new IllegalStateException("Returned object is not "
-                            + IdentifiedDataSerializablePojo.class.getSimpleName() + ": " + value);
-                }
-                actual++;
-            }
-        }
-        if (actual != 100) {
-            throw new IllegalArgumentException("Invalid count [expected=" + 100 + ", actual=" + actual + "]");
-        }
+    private void sink(Map.Entry<Integer, IdentifiedDataSerializablePojo> entry) {
+        this.blackHole = entry;
     }
 
     @Teardown
