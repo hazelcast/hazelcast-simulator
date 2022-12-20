@@ -84,6 +84,8 @@ public class ScanWithSumAggregateJsonBenchmark extends HazelcastTest {
             int rowCount = 0;
             for (SqlRow row : result) {
                 long sum = row.getObject(0);
+
+                // That can fail with more than one client, feel free to remove it if needed.
                 if (sum != this.sum) {
                     throw new IllegalArgumentException("Invalid sum [expected=" + this.sum + ", actual=" + sum + "]");
                 }

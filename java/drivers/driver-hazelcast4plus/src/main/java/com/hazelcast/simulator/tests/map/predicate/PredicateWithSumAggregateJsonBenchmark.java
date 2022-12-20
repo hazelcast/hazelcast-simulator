@@ -68,6 +68,7 @@ public class PredicateWithSumAggregateJsonBenchmark extends HazelcastTest {
     public void timeStep() throws Exception {
         Long sum = map.aggregate(Aggregators.longSum("value"));
 
+        // That can fail with more than one client, feel free to remove it if needed.
         if (sum != this.sum) {
             throw new IllegalArgumentException("Invalid sum [expected=" + this.sum + ", actual=" + sum + "]");
         }
