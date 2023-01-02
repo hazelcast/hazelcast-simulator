@@ -11,8 +11,6 @@
       yum -y update || true
       apt-get update || true
     become: yes
-    args:
-      warn: false
 
   # needed for pcp dstat.
   - name: Install pcp
