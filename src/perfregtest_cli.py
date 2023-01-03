@@ -160,7 +160,7 @@ def run_all(commit_tuples, runs, build_paths, tests, debug):
                     info(f"Build failed {build_stats.failed}/{build_stats.count}, skipping runs.")
                     break
 
-            # run(test, commit, remaining, project_paths[-1], debug)
+            run(test, commit, remaining, build_paths[-1], debug)
             info(f"Testing {test_name} took {now_seconds() - start_test}s")
     duration = now_seconds() - start
     info(f"Duration: {duration}s")
