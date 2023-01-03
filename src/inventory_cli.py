@@ -27,7 +27,7 @@ The available commands are:
 # https://chase-seibert.github.io/blog/2014/03/21/python-multilevel-argparse.html
 
 
-default_url = "https://download.java.net/java/ga/jdk11/openjdk-11_linux-x64_bin.tar.gz"
+default_url = "https://download.java.net/java/GA/jdk17.0.2/dfd4a8d0985749f896bed50d7138ee7f/8/GPL/openjdk-17.0.2_linux-x64_bin.tar.gz"
 
 examples = """
 Oracle JDK:
