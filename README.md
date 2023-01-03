@@ -166,9 +166,9 @@ To install Java on the remote machines call:
     inventory install java
     ```
 
-You can pass a custom URL to cofigure the correct JVM. To get a listing of examples URL's call:
+You can pass a custom URL to configure the correct JVM. To get a listing of examples URL's call:
     ```
-    inventory install java --list 
+    inventory install java --examples 
     ```
     
 And run the following to install a specific Java version.
