@@ -26,7 +26,10 @@ import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntKeys;
@@ -47,7 +50,7 @@ public class IntByteMapTest extends HazelcastTest {
     // getting them tenured. If writeKeyCount is -1, it will automatically be set to keyCount
     public int writeKeyCount = -1;
     public KeyLocality keyLocality = KeyLocality.SHARED;
-
+    public int concurrency = 1;
     private IMap<Integer, Object> map;
     private int[] keys;
     private byte[][] values;
@@ -108,7 +111,22 @@ public class IntByteMapTest extends HazelcastTest {
         map.get(state.randomKey());
     }
 
+    @TimeStep(prob = -1)
+    public void getConcurrent(ThreadState state) {
+        for (int k = 0; k < concurrency; k++) {
+            state.futures.add(map.getAsync(state.randomKey()).toCompletableFuture());
+        }
+
+        for (CompletableFuture f : state.futures) {
+            f.join();
+        }
+
+        state.futures.clear();
+    }
+
     public class ThreadState extends BaseThreadState {
+
+        public List<CompletableFuture> futures = new ArrayList<>();
 
         private int randomKey() {
             return keys[randomInt(keys.length)];
