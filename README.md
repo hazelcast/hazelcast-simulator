@@ -715,7 +715,7 @@ This is just necessary if the JAR files have been changed. Configuration changes
 
 # Report generation
 
-Once a benchmark has been executed, an HTML report can be generated using the `benchmark_report` tool. This tool requires
+Once a benchmark has been executed, an HTML report can be generated using the `perftest report` tool. This tool requires
 Gnuplot 4+ and Python 3.x to be installed for generating the diagrams.
 
 ## Basics
@@ -724,7 +724,7 @@ Assume that a benchmark has been executed and the directory `2021-05-31__23_19_1
 benchmark, you can use the following command:
 
 ```
-benchmark_report -o my-benchmark-report 2021-05-31__23_19_13
+perftest report -o my-benchmark-report 2021-05-31__23_19_13
 ```
 
 The name `my-benchmark-report` is output directory's name. The generated report contains detailed throughput and latency information. 
@@ -732,14 +732,14 @@ If `dstats` information is available, it shows detailed information about resour
 
 ## Generate comparison reports
 
-The `benchmark_report` tool is also able to make comparisons between two or more benchmarks. 
+The `perftest report` tool is also able to make comparisons between two or more benchmarks. 
 Suppose that you executed a test with some configuration, the resulting directory is `2021-05-31__23_19_13`. Then you changed
 the configuration, e.g. changed the Hazelcast version and executed again with resulting directory `2021-05-31__23_35_40`.  
 
 You can create a single report plotting those two benchmarks in the same chart allowing easy comparison with:
 
 ```
-benchmark_report -o my-comparison-report 2021-05-31__23_19_13 2021-05-31__23_35_40
+perftest report -o my-comparison-report 2021-05-31__23_19_13 2021-05-31__23_35_40
 ```
 
 ## Extensive reports
@@ -747,7 +747,7 @@ benchmark_report -o my-comparison-report 2021-05-31__23_19_13 2021-05-31__23_35_
 You can create a very detailed report with more charts with `-f` switch:
 
 ```
-benchmark_report -f -o my-full-report 2021-05-31__23_19_13 
+perftest report -f -o my-full-report 2021-05-31__23_19_13 
 ```
 
 ## Warmup / cooldown
@@ -756,10 +756,10 @@ It's often desired to strip the beginning or the end of the test out of the resu
 of JIT compiler warmup etc. 
 
 The way how it works in Simulator is that the data is collect nevertheless. You just trim it out in the final
-report generation with the `benchmark_report` command. Example having 1 minute (60 seconds) warmup and 30 second cooldown:
+report generation with the `perftest report` command. Example having 1 minute (60 seconds) warmup and 30 second cooldown:
 
 ```
-benchmark_report -w 60 -c 30 -o my-trimmed-benchmark-report 2021-05-31__23_19_13
+perftest report -w 60 -c 30 -o my-trimmed-benchmark-report 2021-05-31__23_19_13
 ``` 
 
 # Simulator Properties reference
