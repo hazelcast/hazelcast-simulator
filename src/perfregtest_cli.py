@@ -58,7 +58,7 @@ def build(commit, build_path):
         git reset --hard
         git checkout {commit}
         mvn clean install -Dmaven.test.skip=true -Dquick
-    """, log_file=logfile_name)
+    """, log_file_path=logfile_name)
     if exitcode == 0:
         info(f"Build time: {now_seconds() - start}s")
         return True
