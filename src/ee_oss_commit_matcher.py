@@ -130,5 +130,3 @@ def find_corresponding_commit(oss_git_dir_path: str, ee_git_dir_path: str, commi
         if corresponding_commit == None:
             raise Exception("Couldn't find the corresponding commit")
         return corresponding_commit.hexsha
-        
-        
