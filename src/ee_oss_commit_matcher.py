@@ -80,7 +80,6 @@ def find_corresponding_commit(oss_git_dir_path: str, ee_git_dir_path: str, commi
     git = base_repo.git
     git.checkout("-f", commit_hash)
     # reset the index and working tree to match the pointed-to commit
-    base_repo.head.reset(index=True, working_tree=True) 
     project_version = get_project_version(base_repo_path)
 
     target_ref = None
