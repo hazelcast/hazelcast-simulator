@@ -16,8 +16,9 @@ The following python libraries are needed:
 pip3 install -U pyyaml
 pip3 install -U matplotlib
 pip3 install -U signal-processing-algorithms
+pip3 install -U GitPython
 ```
-The signal-processing-algorithms is only needed when you are going to do performance regression testing. The
+The signal-processing-algorithms and GitPython are only needed when you are going to do performance regression testing. The
 library is used for change point detection.
 
 To build simulator, run:

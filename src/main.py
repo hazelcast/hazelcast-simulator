@@ -7,4 +7,5 @@ result = find_ee_commit("/Users/serkan/forked/hazelcast", "/Users/serkan/forked/
 assert result == ee_commit
 
 result = find_os_commit("/Users/serkan/forked/hazelcast", "/Users/serkan/forked/hazelcast-enterprise", ee_commit)
-assert result == os_commit
+# This is not equal to os_commit because more than one oss commits can match to a single ee commit
+assert result == "f55912b0819c576cb6cd5ed2e5f57e402ac207a4"
