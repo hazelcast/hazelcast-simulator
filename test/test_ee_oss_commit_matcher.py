@@ -1,6 +1,12 @@
+"""
+This test can be run like:
+
+OSS_REPO_PATH=/path/to/hazelcast/repo EE_REPO_PATH=/path/to/hazelcast/enterprise/repo python3 -m unittest 
+"""
+
 import unittest
 import os
-from ee_oss_commit_matcher import find_ee_commit, find_os_commit
+from src.ee_oss_commit_matcher import find_ee_commit, find_os_commit
 
 class TestFindEECommit(unittest.TestCase):
     def setUp(self):
@@ -101,10 +107,5 @@ class TestFindOSCommit(unittest.TestCase):
         self.assertEqual(find_os_commit(self.oss_repo_path, self.ee_repo_path, ee_commit), oss_commit)
 
 
-"""
-Running this test file can be done like this:
-
-SIMULATOR_HOME=/path/to/hazelcast-simulator OSS_REPO_PATH=/path/to/hazelcast/repo EE_REPO_PATH=/path/to/hazelcast/enterprise/repo python3 ee_oss_commit_matcher_test.py
-"""
 if __name__ == '__main__':
     unittest.main()

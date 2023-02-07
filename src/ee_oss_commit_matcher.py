@@ -17,9 +17,17 @@ Note that, typically only the latest patch version snapshots will be available i
 for a minor version.
 """
 
-from perfregtest_cli import get_project_version
 import git as gitpy
+import subprocess
 import os
+
+def get_project_version(project_path):
+    cmd = f"""
+         set -e
+         cd {project_path}
+         mvn -q -Dexec.executable=echo -Dexec.args='${{project.version}}' --non-recursive exec:exec
+         """
+    return subprocess.check_output(cmd, shell=True, text=True).strip()
 
 def validate_dir(path):
     path = os.path.expanduser(path)
@@ -41,7 +49,6 @@ def validate_git_dir(path):
 
     if not os.path.exists(f"{path}/refs"):
         raise(f"Directory [{path}] is not valid git directory")
-        exit(1)
 
     return path
 
