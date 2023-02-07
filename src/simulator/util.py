@@ -16,6 +16,8 @@ from simulator.log import Level, error, log
 
 module_dir = os.path.dirname(pkg_resources.resource_filename(__name__, '__init__.py'))
 simulator_home = os.environ.get('SIMULATOR_HOME')
+if simulator_home is None:
+    raise Exception("SIMULATOR_HOME environment variable is not set")
 bin_dir = os.path.join(simulator_home, "bin")
 
 

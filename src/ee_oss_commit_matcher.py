@@ -28,8 +28,8 @@ The matching will be based on date and only commit based, tags and
 releases won't be taken into account.
 The commits will be retrieved from the master branch.
 """
-def find_ee_commit(oss_git_dir_path: str, ee_git_dir_path: str, oss_commit_hash: str) -> str:
-    return find_corresponding_commit(oss_git_dir_path, ee_git_dir_path, oss_commit_hash, True)
+def find_ee_commit(oss_repo_path: str, ee_repo_path: str, oss_commit_hash: str) -> str:
+    return find_corresponding_commit(oss_repo_path, ee_repo_path, oss_commit_hash, True)
 
 """
 Returns the corresponding OSS commit given a EE commit.
@@ -38,8 +38,8 @@ The matching will be based on date and only commit based, tags and
 releases won't be taken into account.
 The commits will be retrieved from the master branch.
 """
-def find_os_commit(oss_git_dir_path: str, ee_git_dir_path: str, ee_commit_hash: str) -> str:
-    return find_corresponding_commit(oss_git_dir_path, ee_git_dir_path, ee_commit_hash, False)
+def find_os_commit(oss_repo_path: str, ee_repo_path: str, ee_commit_hash: str) -> str:
+    return find_corresponding_commit(oss_repo_path, ee_repo_path, ee_commit_hash, False)
 
 """
 Returns the corresponding EE commit given a OSS commit, or vice versa.
@@ -48,18 +48,18 @@ The matching will be based on date and only commit based, tags and
 releases won't be taken into account.
 The commits will be retrieved from the master branch.
 """
-def find_corresponding_commit(oss_git_dir_path: str, ee_git_dir_path: str, commit_hash: str, find_ee_commit: bool) -> str:
-    validate_git_dir(oss_git_dir_path)
-    validate_git_dir(ee_git_dir_path)
+def find_corresponding_commit(oss_repo_path: str, ee_repo_path: str, commit_hash: str, find_ee_commit: bool) -> str:
+    validate_git_dir(oss_repo_path)
+    validate_git_dir(ee_repo_path)
 
     target_remote = None
-    oss_repo = gitpy.Repo(oss_git_dir_path)
+    oss_repo = gitpy.Repo(oss_repo_path)
     for remote in oss_repo.remotes:
         if "hazelcast/hazelcast" in remote.url and find_ee_commit:
             target_remote = remote
             remote.fetch()
     
-    ee_repo = gitpy.Repo(ee_git_dir_path)
+    ee_repo = gitpy.Repo(ee_repo_path)
     for remote in ee_repo.remotes:
         if "hazelcast/hazelcast-enterprise" in remote.url and not find_ee_commit:
             target_remote = remote
@@ -69,11 +69,11 @@ def find_corresponding_commit(oss_git_dir_path: str, ee_git_dir_path: str, commi
     if find_ee_commit: 
         base_repo = oss_repo
         target_repo = ee_repo
-        base_repo_path = oss_git_dir_path
+        base_repo_path = oss_repo_path
     else:
         base_repo = ee_repo
         target_repo = oss_repo
-        base_repo_path = ee_git_dir_path
+        base_repo_path = ee_repo_path
 
     base_commit = base_repo.commit(commit_hash)
     # Checkout to the base commit commit
