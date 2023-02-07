@@ -24,9 +24,7 @@ import git as gitpy
 """
 Returns the corresponding EE commit given a OSS commit.
 
-The matching will be based on date and only commit based, tags and 
-releases won't be taken into account.
-The commits will be retrieved from the master branch.
+Beware that this method will delete any staged changes in the OSS or EE repo.
 """
 def find_ee_commit(oss_repo_path: str, ee_repo_path: str, oss_commit_hash: str) -> str:
     return find_corresponding_commit(oss_repo_path, ee_repo_path, oss_commit_hash, True)
@@ -34,9 +32,7 @@ def find_ee_commit(oss_repo_path: str, ee_repo_path: str, oss_commit_hash: str) 
 """
 Returns the corresponding OSS commit given a EE commit.
 
-The matching will be based on date and only commit based, tags and 
-releases won't be taken into account.
-The commits will be retrieved from the master branch.
+Beware that this method will delete any staged changes in the OSS or EE repo.
 """
 def find_os_commit(oss_repo_path: str, ee_repo_path: str, ee_commit_hash: str) -> str:
     return find_corresponding_commit(oss_repo_path, ee_repo_path, ee_commit_hash, False)
@@ -44,9 +40,7 @@ def find_os_commit(oss_repo_path: str, ee_repo_path: str, ee_commit_hash: str) -
 """
 Returns the corresponding EE commit given a OSS commit, or vice versa.
 
-The matching will be based on date and only commit based, tags and 
-releases won't be taken into account.
-The commits will be retrieved from the master branch.
+Beware that this method will delete any staged changes in the OSS or EE repo.
 """
 def find_corresponding_commit(oss_repo_path: str, ee_repo_path: str, commit_hash: str, find_ee_commit: bool) -> str:
     validate_git_dir(oss_repo_path)
