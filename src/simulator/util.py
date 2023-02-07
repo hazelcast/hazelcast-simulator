@@ -1,6 +1,5 @@
 import os.path
 import shutil
-import subprocess
 import time
 from concurrent.futures import ThreadPoolExecutor
 from os import path

@@ -10,6 +10,26 @@ class TestFindEECommit(unittest.TestCase):
         if self.oss_repo_path is None or self.ee_repo_path is None:
             raise Exception("OSS_REPO_PATH and EE_REPO_PATH environment variables need to be set for this test")
 
+    def test_raises_with_invalid_oss_repo(self):
+        # The commit is not important in this test.
+        oss_commit = "1ab727191c858afcfc46cc1641fdf63c5ad761c5"
+        with self.assertRaises(Exception):
+            find_ee_commit("/doesnt/exist", self.ee_repo_path, oss_commit)
+
+        # The validity of OSS repo is checked by finding a remote with url that has hazelcast/hazelcast in it.
+        with self.assertRaises(Exception):
+            find_ee_commit(self.ee_repo_path, self.ee_repo_path, oss_commit)
+
+    def test_raises_with_invalid_ee_repo(self):
+        # The commit is not important in this test.
+        oss_commit = "1ab727191c858afcfc46cc1641fdf63c5ad761c5"
+        with self.assertRaises(Exception):
+            find_ee_commit(self.oss_repo_path, "/doesnt/exist", oss_commit)
+        
+        # The validity of EE repo is checked by finding a remote with url that has hazelcast/hazelcast-enterprise in it.
+        with self.assertRaises(Exception):
+            find_ee_commit(self.oss_repo_path, self.oss_repo_path, oss_commit)
+
     def test_master_commit(self):
         # This OSS commit is a master commit
         oss_commit = "f90a1ff43df11b8e08f8f2ac03c009b255692ce6"
@@ -38,6 +58,26 @@ class TestFindOSCommit(unittest.TestCase):
 
         if self.oss_repo_path is None or self.ee_repo_path is None:
             raise Exception("OSS_REPO_PATH and EE_REPO_PATH environment variables need to be set for this test")
+
+    def test_raises_with_invalid_oss_repo(self):
+        # The commit is not important in this test.
+        ee_commit = "b1ffcbdec8cd0c7699a2d2aaa8b4137107f41f3d"
+        with self.assertRaises(Exception):
+            find_os_commit("/doesnt/exist", self.ee_repo_path, ee_commit)
+
+        # The validity of OSS repo is checked by finding a remote with url that has hazelcast/hazelcast in it.
+        with self.assertRaises(Exception):
+            find_os_commit(self.ee_repo_path, self.ee_repo_path, ee_commit)
+
+    def test_raises_with_invalid_ee_repo(self):
+        # The commit is not important in this test.
+        ee_commit = "b1ffcbdec8cd0c7699a2d2aaa8b4137107f41f3d"
+        with self.assertRaises(Exception):
+            find_os_commit(self.oss_repo_path, "/doesnt/exist", ee_commit)
+        
+        # The validity of EE repo is checked by finding a remote with url that has hazelcast/hazelcast-enterprise in it.
+        with self.assertRaises(Exception):
+            find_os_commit(self.oss_repo_path, self.oss_repo_path, ee_commit)
 
     def test_master_commit(self):
         # This EE commit is a master commit
