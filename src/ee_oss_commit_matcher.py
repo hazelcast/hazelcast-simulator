@@ -74,7 +74,8 @@ def find_corresponding_commit(oss_repo_path: str, ee_repo_path: str, commit_hash
     oss_repo = gitpy.Repo(oss_repo_path)
     for remote in oss_repo.remotes:
         # There may be more than one remote in the repo, take the repo in to account that is not a fork.
-        if "hazelcast/hazelcast" in remote.url:
+        # An extra check is added in case the repo is a EE repo.
+        if "hazelcast/hazelcast-enterprise" not in remote.url and "hazelcast/hazelcast" in remote.url:
             oss_repo_valid = True
             # Fetch remote so that all commits and tags are received
             remote.fetch(tags=True)
