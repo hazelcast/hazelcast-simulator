@@ -40,7 +40,7 @@ public class ScanByValueIndex1EntryBenchmark extends HazelcastTest {
 
     //16 byte + N*(20*N
     private IMap<Integer, IdentifiedDataSerializablePojo> map;
-    private final int arraySize = 20;
+    public int arraySize = 20;
 
     @Setup
     public void setUp() {
@@ -49,7 +49,7 @@ public class ScanByValueIndex1EntryBenchmark extends HazelcastTest {
 
     @Prepare(global = true)
     public void prepare() {
-        map.addIndex(IndexType.SORTED, "value");
+        map.addIndex(IndexType.SORTED, "valueField");
 
         Streamer<Integer, IdentifiedDataSerializablePojo> streamer = StreamerFactory.getInstance(map);
         Integer[] sampleArray = new Integer[arraySize];
@@ -82,7 +82,7 @@ public class ScanByValueIndex1EntryBenchmark extends HazelcastTest {
     @TimeStep
     public void timeStep() throws Exception {
         SqlService sqlService = targetInstance.getSql();
-        String query = "SELECT __key, this FROM " + name + " WHERE \"value\" = ?";
+        String query = "SELECT __key, this FROM " + name + " WHERE \"valueField\" = ?";
         String valueMatch = String.format("%010d", new Random().nextInt(entryCount));
         int actual = 0;
         try (SqlResult result = sqlService.execute(query, valueMatch)) {

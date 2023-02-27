@@ -39,7 +39,7 @@ public class JetEngineFullFetchBenchmark extends HazelcastTest {
 
     //16 byte + N*(20*N
     private IMap<Integer, IdentifiedDataSerializablePojo> map;
-    private final int arraySize = 20;
+    public int arraySize = 20;
 
     @Setup
     public void setUp() {

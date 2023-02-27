@@ -1,18 +1,3 @@
-/*
- * Copyright (c) 2008-2016, Hazelcast, Inc. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.hazelcast.simulator.tests.map.sql;
 
 import com.hazelcast.map.IMap;
@@ -22,16 +7,19 @@ import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
+import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 import com.hazelcast.sql.SqlResult;
 import com.hazelcast.sql.SqlRow;
 import com.hazelcast.sql.SqlService;
+import com.hazelcast.sql.impl.client.SqlClientService;
 
 import java.util.Random;
 
+import static org.junit.Assert.assertTrue;
 
-public class ScanByValue1EntryBenchmark extends HazelcastTest {
+public class SQLReadWriteBenchmark extends HazelcastTest {
 
     // properties
     // the number of map entries
@@ -40,6 +28,7 @@ public class ScanByValue1EntryBenchmark extends HazelcastTest {
     //16 byte + N*(20*N
     private IMap<Integer, IdentifiedDataSerializablePojo> map;
     public int arraySize = 20;
+    private Integer[] sampleArray;
 
     @Setup
     public void setUp() {
@@ -49,7 +38,7 @@ public class ScanByValue1EntryBenchmark extends HazelcastTest {
     @Prepare(global = true)
     public void prepare() {
         Streamer<Integer, IdentifiedDataSerializablePojo> streamer = StreamerFactory.getInstance(map);
-        Integer[] sampleArray = new Integer[arraySize];
+        sampleArray = new Integer[arraySize];
         for (int i = 0; i < arraySize; i++) {
             sampleArray[i] = i;
         }
@@ -76,14 +65,15 @@ public class ScanByValue1EntryBenchmark extends HazelcastTest {
     }
 
     @TimeStep
-    public void timeStep() throws Exception {
+    public void select() throws Exception {
         SqlService sqlService = targetInstance.getSql();
-        String query = "SELECT __key, this FROM " + name + " WHERE \"valueField\"= ? ";
-        String valueMatch = String.format("%010d", new Random().nextInt(entryCount));
+
+        String query = "SELECT this FROM " + name + " WHERE __key = ?";
+        int key = new Random().nextInt(entryCount);
         int actual = 0;
-        try (SqlResult result = sqlService.execute(query, valueMatch)) {
+        try (SqlResult result = sqlService.execute(query, key)) {
             for (SqlRow row : result) {
-                Object value = row.getObject(1);
+                Object value = row.getObject(0);
                 if (!(value instanceof IdentifiedDataSerializablePojo)) {
                     throw new IllegalStateException("Returned object is not "
                             + IdentifiedDataSerializablePojo.class.getSimpleName() + ": " + value);
@@ -97,9 +87,39 @@ public class ScanByValue1EntryBenchmark extends HazelcastTest {
         }
     }
 
+    @TimeStep
+    public void update() throws Exception {
+        SqlClientService sqlService = (SqlClientService) targetInstance.getSql();
+
+        String query = "UPDATE " + name + " SET numbers = ?, valueField = ? WHERE __key = ?";
+        Random random = new Random();
+        int key = random.nextInt(entryCount);
+        String value = String.format("updated%03d", random.nextInt(entryCount));
+        try (SqlResult result = sqlService.execute(query, sampleArray, value, key)) {
+//            if (result.updateCount() != 1) {   // result.updateCount() not implemented see https://github.com/hazelcast/hazelcast/issues/22486
+//                throw new IllegalArgumentException("Invalid count [expected=" + 1 + ", actual=" + result.updateCount() + "]");
+//            }
+        }
+    }
+
+    /**
+     * Checks that values were updated. Since we're using random keys, there's no
+     * guarantee that each key will receive and update. There should be at least
+     * one updated entry, but in reality there will be many. Ideally this will be
+     * removed once `SqlResult.updateCount()` is implemented, and that can be used
+     * for verification per-TimeStep instead.
+     */
+    @Verify
+    public void verify() {
+        SqlService sqlService = targetInstance.getSql();
+        String query = "SELECT * FROM " + name + " WHERE valueField LIKE 'updated%' LIMIT 1";
+        try (SqlResult result = sqlService.execute(query)) {
+            assertTrue(result.iterator().hasNext());
+        }
+    }
+
     @Teardown
     public void tearDown() {
         map.destroy();
     }
 }
-

@@ -29,15 +29,15 @@ import java.io.IOException;
 public class IdentifiedDataSerializablePojo implements IdentifiedDataSerializable {
 
     public Integer[] numbers;
-    public String value;
+    public String valueField;
 
     public IdentifiedDataSerializablePojo() {
 
     }
 
-    public IdentifiedDataSerializablePojo(Integer[] numbers, String value) {
+    public IdentifiedDataSerializablePojo(Integer[] numbers, String valueField) {
         this.numbers = numbers;
-        this.value = value;
+        this.valueField = valueField;
     }
 
     @Override
@@ -53,12 +53,12 @@ public class IdentifiedDataSerializablePojo implements IdentifiedDataSerializabl
     @Override
     public void writeData(ObjectDataOutput objectDataOutput) throws IOException {
         objectDataOutput.writeObject(numbers);
-        objectDataOutput.writeString(value);
+        objectDataOutput.writeString(valueField);
     }
 
     @Override
     public void readData(ObjectDataInput objectDataInput) throws IOException {
         numbers = objectDataInput.readObject();
-        value = objectDataInput.readString();
+        valueField = objectDataInput.readString();
     }
 }

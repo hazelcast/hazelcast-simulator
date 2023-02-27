@@ -35,6 +35,7 @@ public class ScanWithSumAggregateCompactBenchmark extends HazelcastTest {
     // properties
     // the number of map entries
     public int entryCount = 10_000_000;
+    public int arraySize = 20;
 
     private long sum;
 
@@ -49,8 +50,8 @@ public class ScanWithSumAggregateCompactBenchmark extends HazelcastTest {
     @Prepare(global = true)
     public void prepare() {
         Streamer<Integer, LongCompactPojo> streamer = StreamerFactory.getInstance(map);
-        Integer[] sampleArray = new Integer[20];
-        for (int i = 0; i < 20; i++) {
+        Integer[] sampleArray = new Integer[arraySize];
+        for (int i = 0; i < arraySize; i++) {
             sampleArray[i] = i;
         }
 

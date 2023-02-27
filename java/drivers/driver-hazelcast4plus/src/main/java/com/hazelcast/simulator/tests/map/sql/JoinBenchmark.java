@@ -30,19 +30,20 @@ import com.hazelcast.sql.SqlRow;
 import com.hazelcast.sql.SqlService;
 
 import java.util.Arrays;
+import java.util.Random;
 
 
 public class JoinBenchmark extends HazelcastTest {
 
     // properties
     // the number of map entries
-    public int entryCount = 1000;
+    public int leftEntryCount = 1000;
+    public int rightEntryCount = 10_000_000;
+    public int arraySize = 20;
 
     public boolean leftKey = true;
     public boolean rightKey = true;
     public boolean useIndices = true;
-
-    private long sum;
 
     //16 byte + N*(20*N
     private IMap<Integer, IdentifiedDataWithLongSerializablePojo> map;
@@ -55,8 +56,8 @@ public class JoinBenchmark extends HazelcastTest {
         this.map = targetInstance.getMap(name);
         this.map2 = targetInstance.getMap(name2);
         if (useIndices) {
-            map.addIndex(IndexType.SORTED, "value");
-            map2.addIndex(IndexType.SORTED, "value");
+            map.addIndex(IndexType.HASH, "value");
+            map2.addIndex(IndexType.HASH, "value");
         }
     }
 
@@ -64,17 +65,24 @@ public class JoinBenchmark extends HazelcastTest {
     public void prepare() {
         Streamer<Integer, IdentifiedDataWithLongSerializablePojo> streamer = StreamerFactory.getInstance(map);
         Streamer<Integer, IdentifiedDataWithLongSerializablePojo> streamer2 = StreamerFactory.getInstance(map2);
-        Integer[] sampleArray = new Integer[20];
-        for (int i = 0; i < 20; i++) {
+        Integer[] sampleArray = new Integer[arraySize];
+        for (int i = 0; i < arraySize; i++) {
             sampleArray[i] = i;
         }
 
-        for (int i = 0; i < entryCount; i++) {
+        (new Random()).ints(0, rightEntryCount)
+                .distinct()
+                .limit(leftEntryCount)
+                .forEach(i -> {
+                    Integer key = i;
+                    IdentifiedDataWithLongSerializablePojo value =
+                            new IdentifiedDataWithLongSerializablePojo(sampleArray, key.longValue());
+                    streamer.pushEntry(key, value);
+                });
+        for (int i = 0; i < rightEntryCount; i++) {
             Integer key = i;
             IdentifiedDataWithLongSerializablePojo value =
                     new IdentifiedDataWithLongSerializablePojo(sampleArray, key.longValue());
-            sum += i;
-            streamer.pushEntry(key, value);
             streamer2.pushEntry(key, value);
         }
         streamer.await();
@@ -101,12 +109,13 @@ public class JoinBenchmark extends HazelcastTest {
         SqlService sqlService = targetInstance.getSql();
         String query = "SELECT * FROM " + name + " AS T1 JOIN " + name2 + " AS T2 ON " +
                 (leftKey ? "T1.__key" : "T1.\"value\"") + " = " + (rightKey ? "T2.__key" : "T2.\"value\"");
+
         try (SqlResult result = sqlService.execute(query)) {
             int rowCount = 0;
             for (SqlRow row : result) {
                 rowCount++;
             }
-            if (rowCount != entryCount) {
+            if (rowCount != leftEntryCount) {
                 throw new IllegalArgumentException("Invalid row count [expected=1 , actual=" + rowCount + "]");
             }
         }

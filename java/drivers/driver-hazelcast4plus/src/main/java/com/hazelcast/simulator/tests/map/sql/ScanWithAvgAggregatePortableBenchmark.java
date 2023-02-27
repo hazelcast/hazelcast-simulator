@@ -79,7 +79,7 @@ public class ScanWithAvgAggregatePortableBenchmark extends HazelcastTest {
     @TimeStep
     public void timeStep() throws Exception {
         SqlService sqlService = targetInstance.getSql();
-        String query = "SELECT avg(\"value\") FROM " + name;
+        String query = "SELECT avg(\"valueField\") FROM " + name;
         try (SqlResult result = sqlService.execute(query)) {
             int rowCount = 0;
             for (SqlRow row : result) {
