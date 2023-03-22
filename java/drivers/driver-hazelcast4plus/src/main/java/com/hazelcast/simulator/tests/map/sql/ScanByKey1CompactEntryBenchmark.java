@@ -22,6 +22,7 @@ import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
+import com.hazelcast.simulator.tests.helpers.HazelcastTestUtils;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 import com.hazelcast.sql.SqlResult;
@@ -43,6 +44,7 @@ public class ScanByKey1CompactEntryBenchmark extends HazelcastTest {
 
     @Setup
     public void setUp() {
+        HazelcastTestUtils.failOnVersionMismatch("5.2", name + ": This tests needs Hazelcast %s or newer");
         this.map = targetInstance.getMap(name);
     }
 
