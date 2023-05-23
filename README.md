@@ -313,7 +313,7 @@ These properties conform to the format `<methodName>Prob = <probability>`, where
 * `<methodName>` corresponds to the name of a timestep method (a method annotated with `@TimeStep` annotation) in the test class 
 configured with `class` property. For example, the `com.hazelcast.simulator.tests.map.IntByteMapTest` test contains the following methods:
 
-  ```
+  ```java
   @TimeStep
   public void put(ThreadState state) {
     map.put(state.randomKey(), state.randomValue());
@@ -357,7 +357,7 @@ for a public field, its default value will be used.
 Let's continue using `com.hazelcast.simulator.tests.map.IntByteMapTest` as an example. 
 It contains the following public fields:
 
-```
+```java
 public class IntByteMapTest extends HazelcastTest {
     public int keyCount = 1000;    
     public int minSize = 16;
@@ -1080,7 +1080,7 @@ public class MyTest extends AbstractTest {
 
 By default the `tearDown` method is executed on all participating workers, but can be influenced using the global property as shown below:
 
-```
+```java
 public class MyTest extends AbstractTest {
   private IAtomicLong counter;
 
