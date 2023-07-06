@@ -1101,7 +1101,7 @@ class PerfTestReportCli:
         parser.add_argument('-c', '--cooldown', nargs=1, default=[0], type=int,
                     help='The cooldown period in seconds. The cooldown removes datapoints from the end.')
         parser.add_argument('-f', '--full', help='Enable individual worker level diagrams.', action="store_true")
-        parser.add_argument('-cl', '--compare-last', help='Compare last results from each benchmark', action='store_true')
+        parser.add_argument('-l', '--last', help='Compare last results from each benchmark', action='store_true')
         parser.add_argument('--svg', help='SVG instead of PNG graphics.', action="store_true")
 
         global args
@@ -1126,7 +1126,7 @@ class PerfTestReportCli:
         cooldown_seconds = int(args.cooldown[0])
 
         global compare_last
-        compare_last = args['compare-last']
+        compare_last = args.last
 
         info("Report directory '" + report_dir + "'")
 
