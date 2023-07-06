@@ -742,6 +742,14 @@ You can create a single report plotting those two benchmarks in the same chart a
 perftest report -o my-comparison-report 2021-05-31__23_19_13 2021-05-31__23_35_40
 ```
 
+By default the `perftest run` creates a directory for each run inside
+`runs/BenchmarkName` with timestamp as the directory name. To automate comparisons of last runs of some benchmarks,
+you can simply run the `perftest report` with `-l` flag (or `--last`):
+
+```shell
+perftest report -o my-comparison-report runs/MyTestA runs/MyTestB
+```
+
 ## Extensive reports
 
 You can create a very detailed report with more charts with `-f` switch:
