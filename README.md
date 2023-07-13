@@ -15,13 +15,12 @@ You can use Hazelcast Simulator for the following use cases:
 - As part of your test suite in your deployment process.
 - When you upgrade your Hazelcast version.
 
-Hazelcast Simulator is available as a downloadable package on the Hazelcast <a href="http://www.hazelcast.org/download" target="_blank">web site</a>. 
+Hazelcast Simulator is available as a downloadable package on the Hazelcast <a href="https://hazelcast.com/open-source-projects/downloads/" target="_blank">website</a>. 
 Please refer to the [Quickstart](#quickstart) to start your Simulator journey.
 
 ## Table of Content
 - [Quickstart](#quickstart)
 - [Key Concepts and Terminology](#key-concepts-and-terminology)
-- [Installation](#installation)
 - [Define test scenario](#define-test-scenario)
   * [TestSuite configuration](#testsuite-configuration)
     + [Specify test class and number of threads per worker](#specify-test-class-and-number-of-threads-per-worker)
@@ -34,8 +33,8 @@ Please refer to the [Quickstart](#quickstart) to start your Simulator journey.
       - [Default distribution algorithm](#default-distribution-algorithm)
       - [Reserving machines for members only](#reserving-machines-for-members-only)
         * [Order of the IP addresses](#order-of-the-ip-addresses)
-    + [Running test against already running cluster](#running-test-against-already-running-cluster)
-    + [Running test against a cluster in Hazelcast Cloud](#running-test-against-a-cluster-in-hazelcast-cloud)
+    + [Running tests against an already running cluster](#running-tests-against-an-already-running-cluster)
+    + [Running tests against a cluster in Hazelcast Cloud](#running-tests-against-a-cluster-in-hazelcast-cloud)
   * [Controlling the Hazelcast Configuration](#controlling-the-hazelcast-configuration)
     + [IP addresses and other configuration auto-filling](#ip-addresses-and-other-configuration-auto-filling)
   * [Passing JVM options to client or member processes](#passing-jvm-options-to-client-or-member-processes)
@@ -46,7 +45,7 @@ Please refer to the [Quickstart](#quickstart) to start your Simulator journey.
   * [Basics](#basics)
   * [Generate comparison reports](#generate-comparison-reports)
   * [Extensive reports](#extensive-reports)
-  * [Warmup / cooldown](#warmup---cooldown)
+  * [Warmup and cooldown](#warmup-and-cooldown)
 - [Simulator Properties reference](#simulator-properties-reference)
 - [Advanced topics](#advanced-topics)
   * [Writing a Simulator test](#writing-a-simulator-test)
@@ -55,40 +54,18 @@ Please refer to the [Quickstart](#quickstart) to start your Simulator journey.
     + [AfterRun and BeforeRun](#afterrun-and-beforerun)
     + [Verification](#verification)
     + [TearDown](#teardown)
-    + [Total Lifecycle of Calls on the Test](#total-lifecycle-of-calls-on-the-test)
+    + [Complete Lifecycle of Calls on the Test](#complete-lifecycle-of-calls-on-the-test)
     + [Stopping a Test](#stopping-a-test)
     + [Code Generation](#code-generation)
   * [Profiling your Simulator Test](#profiling-your-simulator-test)
   * [GC analysis](#gc-analysis)
   * [Reducing Fluctuations](#reducing-fluctuations)
   * [Enabling Diagnostics](#enabling-diagnostics)
-  * [Enabling Different Profilers or Other Startup Customizations](#enabling-different-profilers-or-other-startup-customizations)
   * [Logging](#logging)
   * [Running multiple tests in parallel](#running-multiple-tests-in-parallel)
   * [Coordinated Omission](#coordinated-omission)
   * [Measuring Jitter](#measuring-jitter)
   * [Controlling the load generation](#controlling-the-load-generation)
-  * [Fine-grained control with Coordinator Remote](#fine-grained-control-with-coordinator-remote)
-    + [Using the CLI Manual](#using-the-cli-manual)
-    + [Configuring the Remote](#configuring-the-remote)
-    + [Basic Usage](#basic-usage)
-    + [Starting Workers](#starting-workers)
-    + [Clients](#clients)
-    + [Querying](#querying)
-    + [Starting Tests](#starting-tests)
-      - [Target Count](#target-count)
-      - [Worker Type](#worker-type)
-      - [Warmup and Duration](#warmup-and-duration)
-    + [Stopping Test](#stopping-test)
-    + [Status of a Test](#status-of-a-test)
-    + [Killing Workers](#killing-workers)
-    + [Executing Scripts on Workers](#executing-scripts-on-workers)
-      - [Fire and Forget](#fire-and-forget)
-    + [Using Custom Hazelcast Version](#using-custom-hazelcast-version)
-    + [Combining Hazelcast Versions](#combining-hazelcast-versions)
-    + [Rolling Upgrade Test](#rolling-upgrade-test)
-      - [Resilience Testing](#resilience-testing)
-    + [Tags](#tags)
 - [Get Help](#get-help)
 
 # Quickstart
@@ -120,12 +97,14 @@ Also contains pointers where to go next.
    PATH=<path-to-simulator>/bin/:$PATH
    ```
    
+4. Ensure you have all prerequisite software installed (refer to [install.txt](install.txt))
+   
 5. Congratulations! You've successfully installed Hazelcast Simulator.
 
 
 ## Creating a benchmark
 
-The first step is to create a benchmark, This can be done using the perftest tool.
+The first step is to create a benchmark, which can be done using the perftest tool.
 
    ```
    perftest create myproject
@@ -157,8 +136,8 @@ To apply the configuration on the existing environment, execute the following co
     ```
     inventory apply
     ```
-After apply command has completes, a new file 'inventory.yaml' file is created containing 
-created machines. This is an Ansible specific file. Simulator uses Ansible to configure to 
+After the apply command has completed, a new file 'inventory.yaml' file is created containing 
+created machines. This is an Ansible specific file. Simulator uses Ansible to configure the 
 remote machines.
 
 To install Java on the remote machines call:
@@ -177,14 +156,14 @@ And run the following to install a specific Java version.
     ```
 This command will update the JAVA_HOME/PATH on the remote machine to reflect the last installed Java version.
 
-    To destroy the environment, call the following:
+To destroy the environment, call the following:
     ```
     inventory destroy
     ```
 
 ## SSH to nodes
 
-To SSH to your remote nodes, the following command can be used:   
+To SSH into your remote nodes, the following command can be used:   
     ```
     ssh -i key <username>@<ip>
     ```
@@ -228,7 +207,7 @@ To run the benchmark
 The quickstart was to just get you up and running. In order to do some real performance testing, you'll probably need to:
 
 * [Define test scenario](#define-test-scenario) - specify how many puts/gets to use, how many entries to preload, how big the values should be, latency vs. throughput test etc.
-* [Configure cluster](#controlling-the-cluster-layout) - Hazelcast version, configuration of the Hazelcast itself, number of members and clients, number of threads per client, GC options etc.
+* [Configure cluster](#controlling-the-cluster-layout) - Hazelcast version, configuration of Hazelcast itself, number of members and clients, number of threads per client, GC options etc.
 * [Run the test](#run-the-test) - set test duration, select which test scenario to be run etc.
 * [Setup the testing environment](#set-up-cluster-environment) - run it on on-premise machines, in AWS, configuring for running clusters in OpenShift, Kubernetes etc.
 * [Create better charts](#report-generation) - create charts with multiple runs being compared, adjust warmup and cooldown periods, adjust legents etc.
@@ -276,7 +255,7 @@ with Simulator commands. Typically your local computer but can be installed anyw
  talks to the coordinator using TCP/IP.
 
 - **Provisioner** - Spawns and terminates cloud instances, and installs Hazelcast Simulator on the remote machines. It can be used 
-in combination with EC2 (or any other cloud), but it can also be used in a static setup, such as a local machine or a cluster of 
+in combination with EC2 (or any other cloud provider), but it can also be used in a static setup, such as a local machine or a cluster of 
 machines in your data center.
 
 - **Failure** - An indication that something has gone wrong. Failures are picked up by the `Agent` and sent back to the `Coordinator`.
@@ -296,7 +275,7 @@ The TestSuite configuration is a simple properties file which contains `key = va
 name of the file is `test.properties` which is also the default (e.g. generated by `simulator-wizard` as seen in [Quickstart](#quickstart)).
 
 > We will use `test.properties` file name through the rest of the documentation for the TestSuite configuration. However,
-> the file can be named arbitrarily. See [Specify TestSuite file to be used](#specify-testsuite-file-to-be-used) section on details how to specify
+> the file can be named arbitrarily. See the [Specify TestSuite file to be used](#specify-testsuite-file-to-be-used) section on details how to specify
 > different properties file.
 
 When you open up the default (generated by `simulator-wizard`) `test.properties` file, you'll see:
@@ -320,24 +299,21 @@ The first two properties are built-in "magic" properties of Simulator.
 | Property      | Example value                                      | Description |
 | ---------     | -------------------------------------------------- | ------------|
 | `class`       | `com.hazelcast.simulator.tests.map.IntByteMapTest` | Defines the fully qualified class name for the Simulator Test. Used to create the test class instance on the Simulator Worker. This is the only mandatory property which has to be defined.    |
-| `threadCount` | `5`                                                | Defines how many threads are running in parallel the Test methods. In other words, defines the number of worker threads for Simulator Tests which use the `@RunWithWorker` annotation.         |
+| `threadCount` | `5`                                                | Defines how many threads are running the Test methods in parallel. In other words, defines the number of worker threads for Simulator Tests which use the `@RunWithWorker` annotation.         |
 
 > :books: For details about available values for `class`, refer to the provided classes in the [drivers](drivers) directory or the [Writing a Simulator test](#writing-a-simulator-test) section.
 
 ### Setting up operations frequency
 
-Secondly, there's a group of properties with special meaning which name of ends
-with `Prob` (short for "probability"), such as `getProb` and `putProb`. 
+Next up, there's a group of properties with special functionality, which all have their 
+names ending with `Prob` (short for "probability"), such as `getProb` and `putProb`.
 
-The property conforms to a format `<methodName>Prob = <probability>`, where:
-
-* `<probability>` is a float number from `0` to `1` that sets a probability of execution of the method (see below). 
-For example, probability of `0.1` means 10 % probability.
+These properties conform to the format `<methodName>Prob = <probability>`, where:
 
 * `<methodName>` corresponds to the name of a timestep method (a method annotated with `@TimeStep` annotation) in the test class 
-configured with `class` property. For example, the `com.hazelcast.simulator.tests.map.IntByteMapTest` test contains following methods:
+configured with `class` property. For example, the `com.hazelcast.simulator.tests.map.IntByteMapTest` test contains the following methods:
 
-  ```
+  ```java
   @TimeStep
   public void put(ThreadState state) {
     map.put(state.randomKey(), state.randomValue());
@@ -349,11 +325,15 @@ configured with `class` property. For example, the `com.hazelcast.simulator.test
   }
   ```
 
+* `<probability>` is a float number from `0` to `1` that sets a probability of execution for the method. 
+For example, a probability of `0.1` means a 10 % probability for execution.
+
+
 As a complete example, the `putProb = 0.1` property sets the probability of execution of the `put` method to 10 %. 
-In other words, out of all the things being done by the test, 10 % will be PUTs. This is the basic way how to control the ratio of operations. 
+In other words, out of all the things being done by the test, 10 % will be PUTs. This is the basic method for controlling the ratio of operations. 
 For example, if you want to execute 80 % GETs and 20 % PUTs with `IntByteMapTest` you would set `getProb = 0.8` and `putProb = 0.2`.
 
-A special case of probability value is `-1` which means "calculate the remaining probability to 1". Example:
+A special case of probability value is `-1` which means "calculate the remaining probability to 1". An example:
 
 ```
 putProb = 0.1
@@ -361,23 +341,23 @@ setProb = 0.2
 getProb = -1
 ```
 
-Above properties result in 10 % PUT operations, 20 % SET operation and (`1-0.1-0.2=0.7`) 70 % of GET operations.
+The above properties result in 10 % PUT operations, 20 % SET operations, and (`1-0.1-0.2=0.7`) 70 % GET operations.
 
 ### Configuring parameters
 
 All the other properties are values passed directly to the test class and are usually used for adjusting 
 parameters of the test such as number of entries being preloaded in the Map, size of the value etc. Each test class
-has its own of such options, so you have to look at the source code of the test class for the available parameters 
-and their meeting.
+has its own set of options, so you have to look at the source code of the test class for the available parameters 
+and their meaning.
 
 The property must match a public field in the test class. If a defined property cannot be found in the Simulator Test 
 class or the value cannot be converted to the according field type, a BindException is thrown. If there is no property defined 
 for a public field, its default value will be used.  
 
 Let's continue using `com.hazelcast.simulator.tests.map.IntByteMapTest` as an example. 
-It contains following public fields:
+It contains the following public fields:
 
-```
+```java
 public class IntByteMapTest extends HazelcastTest {
     public int keyCount = 1000;    
     public int minSize = 16;
@@ -387,7 +367,7 @@ public class IntByteMapTest extends HazelcastTest {
 ``` 
 
 Hopefully the names of the properties are self-explanatory. Therefore, if we wanted to change the test scenario
-and preload 1 million entries with value size exactly 10 KB, we would edit `test.properties` file in a following way:
+and preload 1 million entries with a value size of exactly 10 KB, we would edit the `test.properties` file as follows:
 
 ```
 class = com.hazelcast.simulator.tests.map.IntByteMapTest
@@ -407,19 +387,19 @@ maxSize = 10000
 
 By default the timestep-threads operate in throughput testing mode - they will loop over the timestep methods as fast as they can. 
 As a bonus you get an impression of the latency for that throughput. 
-However, for a proper latency test, you want to control the rate and measure the latency for that rate. Luckily using the Simulator this is very easy.
+However, for a proper latency test, you want to control the rate and measure the latency for that rate. Luckily this is very easy with the Simulator.
 
 You can configure the fixed number of operations per second using following properties in `test.properties`:
 
-* `ratePerSecond=<X>` - where `<X>` is a desired number of operations per second **load generating client/member** (not worker thread!). 
-Example: if in your test, you configure 5 clients and you want to stress the cluster
-by 500 000 operations per second, you set `ratePerSecond=100000`, because 5 clients times 100 000 ops = desired 500 K ops.  
+* `ratePerSecond=<X>` - where `<X>` is a desired number of operations per second per **load generating client/member** (not worker thread!). 
+Example: if in your test, you configure 5 clients and you want to stress the cluster with 500 000 operations per second, 
+you set `ratePerSecond=100000`, because 5 clients times 100 000 ops = desired 500 K ops.  
 
-* `interval=<Y>` - where `<Y>` is the time interval between subsequent calls **load generating client/member** (not worker thread!).
-Example: if in your test, you configure 5 clients and you want to stress the cluster
-by 500 000 operations per second, you set `interval=100us`, because 5 clients times 100 000 ops = desired 500 K ops.
+* `interval=<Y>` - where `<Y>` is the time interval between subsequent calls per **load generating client/member** (not worker thread!).
+Example: if in your test, you configure 5 clients and you want to stress the cluster with 500 000 operations per second, 
+you set `interval=100us`, because 5 clients times 100 000 ops = desired 500 K ops.
 
-> Possible time units in `interval` property:
+> Accepted time units for the `interval` property:
 > * `ns` - nanoseconds
 > * `us` - microseconds
 > * `ms` - milliseconds
@@ -433,7 +413,7 @@ by 500 000 operations per second, you set `interval=100us`, because 5 clients ti
 > * `number of clients` * `ratePerSecond` = `total number of operations per second`
 > * `number of clients` * `(1000 / interval_in_ms)` = `total number of operations`
 >
-> Both ways do exactly the same and it's just a matter of preference which one you use.  
+> Both ways work exactly the same and it's just a matter of preference which one you use.  
 
 ## Controlling the Cluster Layout
 
@@ -468,15 +448,14 @@ there are 3 IP addresses specified in the `agents.txt` like this:
 10.0.0.3
 ```
 
-> :books: To find out what is the `agents.txt` file and how to get remote machines setup, refer to [Set up cluster environment](#set-up-cluster-environment) section.
+> :books: To find out what the `agents.txt` file is and how to get remote machines setup, refer to the [Set up cluster environment](#set-up-cluster-environment) section.
 
 #### Default distribution algorithm
 
 The Workers will be distributed among the available remote machines with a round robin selection. First the members are distributed in the round robin
 fassion (going through the IP addresses from the top to the bottom). Once there are no more members to be distributed, Simulator
-continues (= **not** starting from the first IP address but continuing with the next one) with distribution of the
- clients. 
- By default, the machines will be mixed with member and client Workers. Let's see couple of examples.
+continues (= **not** starting from the first IP address but continuing with the next one) with distribution of the clients. By default, the machines will 
+be mixed with member and client Workers. Let's see a couple of examples.
 
 | Coordinator arguments | Cluster layout |
 | --- | --- |
@@ -494,8 +473,8 @@ You can reserve machines for members only (which is a Hazelcast recommended setu
 coordinator --dedicatedMemberMachines 2
 ```
 
-The algorithm that takes the first 2 IP addresses and distributes the members only across them in a round robin fassion.
-Then takes the rest of the IP addresses and distributes the clients across them, again in the round robin fassion. 
+The algorithm that takes the first 2 IP addresses and distributes the members only across them in a round robin fashion.
+Then takes the rest of the IP addresses and distributes the clients across them, again in the round robin fashion. 
 Continuing our [example](#control-distribution-of-workers-over-machines):
 
 | Coordinator arguments | Cluster layout |
@@ -507,12 +486,12 @@ You cannot specify more dedicated member machines than you have available. If yo
 a single remote machine left (e.g. with three remote machines you can specify a maximum of two dedicated member machines). 
 
 > If you need more control over the cluster layout, you can make use of the `coordinator-remote` which allows full control on 
-layout, versions of clients, servers, etc., refer to the [Fine-grained control with Coordinator Remote](#fine-grained-control-with-coordinator-remote) section.
+layout, versions of clients, servers, etc. Refer to the [Fine-grained control with Coordinator Remote](#fine-grained-control-with-coordinator-remote) section.
 
 ##### Order of the IP addresses
 
 The order of the IP addresses matters. Simulator goes from the top to the bottom and applies the algorithm described above
-deterministically and always the same.
+deterministically and always the same way.
 
 That allows you to fine tune the configuration of the environment. Imagine a typical usecase where you want to run
 the members on more powerful machines (e.g. more CPUs, more memory) and use lighter and cheaper (e.g. in the cloud) machines
@@ -539,9 +518,9 @@ $ cat agents.txt
 
 > :warning: Running multiple members on a single machines is a Hazelcast performance anti-pattern and should be avoided. 
 > We used it only for a demonstration of the cluster layout distribution.
-> Consult [Hazelcast documentation](https://docs.hazelcast.com) for more information about recommended setup.
+> Consult [Hazelcast documentation](https://docs.hazelcast.com) for more information about the recommended setup.
 
-### Running test against already running cluster
+### Running tests against an already running cluster
 
 There are cases where you already have a running cluster and you want to execute performance test against it.
 In other words, you don't want the Simulator to manage your members but only orchestrate the clients. 
@@ -551,16 +530,16 @@ In order to do this, you have to:
 * Put member IP addresses in the `client-hazelcast.xml` - since Simulator doesn't control the member lifecycle, it 
 can't possibly know the IP addresses of the members. Therefore, you have to manually provide it through editing the client
 configuration. For more information about this, refer to [Controlling the Hazelcast configuration](#controlling-the-hazelcast-configuration).
-* Specify correct `<cluster-name>` in the `client-hazelcast.xml` - for the same reason as with IP addresses,
+* Specify the correct `<cluster-name>` in the `client-hazelcast.xml` - for the same reason as with IP addresses,
 you have to adjust the `<cluster-name>` configuration to match the one in the running cluster.
 
-### Running test against a cluster in Hazelcast Cloud
+### Running tests against a cluster in Hazelcast Cloud
 
 If you want to test the performance of the Hazelcast Cloud managed cluster, you follow the same setup as
-described in [Running test against already running cluster](#running-test-against-already-running-cluster) section
-with minor difference:
+described in [Running tests against an already running cluster](#running-tests-against-an-already-running-cluster) section
+with a minor difference:
 
-* Specify correct cluster name and enter the Cloud discovery token through like this: 
+* Specify the correct cluster name and enter the Cloud discovery token like this: 
 ```
 <hazelcast-client>
   <cluster-name>YOUR_CLUSTER_NAME</cluster-name>
@@ -583,8 +562,8 @@ workers are started with them transparently.
 If there's no `hazelcast.xml` or `client-hazelcast.xml` in the working directory, Coordinator uses the default files `${SIMULATOR_HOME}/conf/hazelcast.xml` and `${SIMULATOR_HOME}/conf/client-hazelcast.xml`.
 
 > The recommended approach is to either copy the default XML configurations (listed above) into your working directory and
-then modify them, or use the generated ones by `simulator-wizard` as shown in [Quickstart](#quickstart). 
-> The reason are the auto-filling markers described below. 
+then modify them, or use the ones generated by `simulator-wizard` as shown in [Quickstart](#quickstart). 
+> The reason for this is due to the auto-filling markers described below. 
 
 ### IP addresses and other configuration auto-filling
 
@@ -605,20 +584,20 @@ you'll probably notice the following comment:
 </hazelcast>
 ```
 
-This comment is actually a marker of Simulator where it then automatically places the IP addresses
+This comment is actually a marker for Simulator where it then automatically places the IP addresses
 of the members. Therefore, you don't have to care about it which greatly simplifies the testing.
 
 In general, do not remove this comment or put member IP address manually if you let Simulator handle
 the member lifecycle as well (= most of the time, everytime the `--members` is greater than zero). 
 
-See [Running test against already running cluster](#running-test-against-already-running-cluster) for an
+See [Running tests against an already running cluster](#running-tests-against-an-already-running-cluster) for an
 example when editing this section is actually desired.
 
 ## Passing JVM options to client or member processes
 
 Often you need to pass additional JVM arguments to the client or member processes such as enabling GC
 logging, enabling JFR or passing other useful arguments like `-Dhazelcast.partition.count` for Hazelcast partition count.
-You can achieve this simply via `coordinator --memberArgs` and `coordinator --clientArgs`. Complete example:
+You can achieve this simply via `coordinator --memberArgs` and `coordinator --clientArgs`. Here's a complete example:
 
 ```
 gcArgs="-verbose:gc -Xloggc:verbosegc.log"
@@ -645,7 +624,7 @@ coordinator --members ${members} \
 
 # Run the test
 
-The actual Simulator Test run is done by the `coordinator` command. The created `run` script (via `simulator-wizard` in [Quickstart](#quickstart)) 
+The actual Simulator Test run is done with the `coordinator` command. The created `run` script (via `simulator-wizard` in [Quickstart](#quickstart)) 
 is a good start to customize your test setup. 
 
 It takes four optional parameters to define the number of member and client Workers, the run duration and the name of the TestSuite file. 
@@ -657,7 +636,7 @@ So the following command will spawn 4 member Workers, twenty 20 Workers and will
 
 ## Configure test duration
 
-You can control the duration of the test execution by using the `--duration` argument of `coordinator` command. 
+You can control the duration of the test execution by using the `--duration` argument of the `coordinator` command. 
 You can specify the time unit for this argument by using
 
 - `s` for seconds
@@ -682,19 +661,17 @@ The duration is used as the run phase of a Simulator Test (that's the actual tes
 > :books: There is another option for the use case where you want to run a Simulator Test until some event occurs (which is not time bound), 
 > e.g. stop after five million operations have been done. In this case, the test code must stop the `TestContext` itself. See [Stopping a test](#stopping-a-test) section.
 
-> If you want to run multiple tests in parallel, please refer to [Running multiple tests in parallel](#running-multiple-tests-in-parallel) section.
+> If you want to run multiple tests in parallel, please refer to the [Running multiple tests in parallel](#running-multiple-tests-in-parallel) section.
 
-## Specify testSuite file to be used
+## Specify TestSuite file to be used
 
-You can specify the used TestSuite file by passing it directly to the `coordinator` command. 
+You can specify the TestSuite file used by passing it directly to the `coordinator` command. 
 
 ```
 coordinator small-testsuite.properties
 ```
 
-This is very convenient when you want to test multiple test scenarios on a same cluster setup.
-
-
+This is very convenient when you want to test multiple test scenarios on the same cluster setup.
 
 
 ## Installing Simulator on remote machines
@@ -710,12 +687,12 @@ provisioner --install
 This is also useful whenever you update or change your local Simulator installation (e.g. when developing a test TestSuite)
 and want to re-install Hazelcast Simulator on the remote machines. 
 
-This is just necessary if the JAR files have been changed. Configuration changes in your `test.properties` or
+This is only necessary if the JAR files have been changed. Configuration changes in your `test.properties` or
  `simulator.properties` **don't require** a new Simulator installation.
 
 # Report generation
 
-Once a benchmark has been executed, an HTML report can be generated using the `perftest report` tool. This tool requires
+Once a benchmark has been executed, a HTML report can be generated using the `perftest report` tool. This tool requires
 Gnuplot 4+ and Python 3.x to be installed for generating the diagrams.
 
 ## Basics
@@ -752,19 +729,19 @@ perftest report -o my-comparison-report runs/MyTestA runs/MyTestB
 
 ## Extensive reports
 
-You can create a very detailed report with more charts with `-f` switch:
+You can create a very detailed report with more charts using the `-f` switch:
 
 ```
 perftest report -f -o my-full-report 2021-05-31__23_19_13 
 ```
 
-## Warmup / cooldown
+## Warmup and cooldown
 
 It's often desired to strip the beginning or the end of the test out of the resulting charts e.g. because
 of JIT compiler warmup etc. 
 
-The way how it works in Simulator is that the data is collect nevertheless. You just trim it out in the final
-report generation with the `perftest report` command. Example having 1 minute (60 seconds) warmup and 30 second cooldown:
+The way it works in Simulator is that the data is collected nevertheless. You just trim it out in the final
+report generation with the `perftest report` command. Example having a 1 minute (60 seconds) warmup and 30 second cooldown:
 
 ```
 perftest report -w 60 -c 30 -o my-trimmed-benchmark-report 2021-05-31__23_19_13
@@ -773,10 +750,10 @@ perftest report -w 60 -c 30 -o my-trimmed-benchmark-report 2021-05-31__23_19_13
 # Simulator Properties reference
 
 You can configure Simulator itself using the file `simulator.properties` in your working directory. The default properties are
- always loaded from the `${SIMULATOR_HOME}/conf/simulator.properties` file. Your local properties are overriding the
+ always loaded from the `${SIMULATOR_HOME}/conf/simulator.properties` file. Your local properties will override the
   defaults. 
 
-For the full reference of available settings and their explanation, please refer to [default simulator.properties](dist/src/main/dist/conf/simulator.properties).
+For the full reference of available settings and their descriptions, please refer to [default simulator.properties](dist/src/main/dist/conf/simulator.properties).
 
 # Advanced topics
 
@@ -793,14 +770,14 @@ package example;
 
 ...
 
-public class MyTest extends AbstractTest{
+public class MyTest extends AbstractTest {
   private IAtomicLong counter;
 
-  @Setup public void setup(){
+  @Setup public void setup() {
     counter = targetInstance.getAtomicLong("c");
   }
 
-  @TimeStep public void inc(){
+  @TimeStep public void inc() {
     counter.incrementAndGet();
   }
 }
@@ -822,13 +799,13 @@ The main property that needs to be in the property file is the `class` property 
 Just like the other annotated methods, `Timestep` methods need to be public due to the code generator and they are allowed to 
 throw `Throwable` like checked exceptions:
 
-```
-  @TimeStep public void inc() throws Exception{
+```java
+  @TimeStep public void inc() throws Exception {
     counter.incrementAndGet();
   }
 ```
 
-Any `Throwable`, apart from the `StopException`, that is being thrown will lead to a Failure to be reported.
+Any `Throwable`, apart from `StopException`, that is thrown will lead to a Failure being reported.
 
 ### Adding properties
 
@@ -837,19 +814,19 @@ primitives, wrappers around primitives like `java.lang.Long`, enums, strings and
 
 In the below example the `countersLength` property has been added and it defaults to 20.
 
-```
-public class MyTest extends AbstractTest{
+```java
+public class MyTest extends AbstractTest {
   public int countersLength = 20;
 
   private IAtomicLong[] counters;
 
-  @Setup public void setup(){
+  @Setup public void setup() {
     this.counters = new IAtomicLong[countersLength];
     for(int k=0;k<countersLength;k++)
       counters[k] = targetInstance.getAtomicLong(""+k);
   }
 
-  @TimeStep public void inc(BaseThreadState state){
+  @TimeStep public void inc(BaseThreadState state) {
       int counterIndex = state.randomInt(countersLength);
       counters[counterIndex].incrementAndGet();
   }
@@ -858,7 +835,7 @@ public class MyTest extends AbstractTest{
 
 In most cases it is best to provide defaults for properties to make customization of a test less verbose.
 
-The `countersLength` can be configured as shown below:
+The `countersLength` value can be configured as shown below:
 
 ```
 class=example.MyTest
@@ -870,16 +847,16 @@ The order of the properties in the file is irrelevant.
 Properties do not need to be simple fields. The property binding supports complex object graphs to be created and configured.
 Properties can be nested and no-arg constructor must be used to build up the graph of objects. Please see the following example:
 
-```
-public class SomeTest{
+```java
+public class SomeTest {
 	
 	pubic Config config;
 
-	public static class Config{
+	public static class Config {
 		NestedConfig nestedConfig;
 	}
 
-	public static class NestedConfig{
+	public static class NestedConfig {
 		public int value;	
 	}
 }
@@ -893,13 +870,13 @@ config.nestedConfig.value=10
 ```
 
 If a property is not used in a test, the test fails during its startup. The reason is that if you would make a typing error and, 
-in reality, something different is tested different from what you think is being tested, it is best to know this as soon as possible.
+ in reality, something different is tested different from what you think is being tested, it is best to know this as soon as possible.
 
 ### ThreadState
 
 A Simulator test instance is shared between all timestep-threads for that test and only on the test instance level where there
- was a state. But in some cases you want to track the state for each timestep-thread. Of course a thread-local can be used for 
- this, but the Simulator has a more practical and faster mechanism, `ThreadState`.
+ was a state. But in some cases you want to track the state for each timestep-thread. Of course a thread-local variable can be used 
+ for this, but the Simulator has a more practical and faster mechanism, `ThreadState`.
 
 In the following code example, a `ThreadState` is defined that tracks the number of increments per thread:
 
@@ -907,21 +884,21 @@ In the following code example, a `ThreadState` is defined that tracks the number
 import com.hazelcast.Simulator.test.BaseThreadState
 ...
 
-public class MyTest extends AbstractTest{
+public class MyTest extends AbstractTest {
   public int countersLength; 
 
   private AtomicLong counter;
 
-  @Setup public void setup(){
+  @Setup public void setup() {
     this.counter = targetInstance.getAtomicLong("counter");
   }
 
-  @TimeStep public void inc(ThreadState state){
+  @TimeStep public void inc(ThreadState state) {
     counter.incrementAndGet();
     state.increments++;
   }
 
-  public class ThreadState extends BaseThreadState{
+  public class ThreadState extends BaseThreadState {
     long increments;
   }
 }
@@ -947,19 +924,19 @@ Another restriction is that all `timestep`, `beforeRun` and `afterRun` methods (
 same type for the `ThreadState` argument. So the following is not valid:
 
 ```java
-public class MyTest extends AbstractTest{
+public class MyTest extends AbstractTest {
 
-  @TimeStep public void inc(IncThreadState state){
+  @TimeStep public void inc(IncThreadState state) {
     counter.incrementAndGet();
     state.increments++;
   }
 
-  @TimeStep public void get(GetThreadState list){
+  @TimeStep public void get(GetThreadState list) {
     counter.get();
   }
   
-  public class IncThreadState{long increments;}
-  public class GetThreadState{}
+  public class IncThreadState { long increments; }
+  public class GetThreadState {}
 }
 ```
 
@@ -967,26 +944,26 @@ It is optional for any `timestep`, `beforeRun`, and `afterRun` methods to declar
 is valid:
 
 ```java
-public class MyTest extends AbstractTest{
+public class MyTest extends AbstractTest {
 
-  @TimeStep public void inc(ThreadState state){
+  @TimeStep public void inc(ThreadState state) {
     counter.incrementAndGet();
     state.increments++;
   }
 
-  @TimeStep public void get(){
+  @TimeStep public void get() {
     counter.get();
   }
 
-  public class ThreadState extends BaseThreadState{
+  public class ThreadState extends BaseThreadState {
     long increments;
   }
 }
 ```
 
-The reason of having a single test instance shared between all threads, instead of having a test instance per thread (and 
+The reason for having a single test instance shared between all threads, instead of having a test instance per thread (and 
 dropping the need for the `ThreadState`) is that it will be a lot more cache friendly. It is not the test instance which 
-needs to be put into the cache, everything referred from the test instance.
+needs to be put into the cache, but everything referred from the test instance.
 
 Another advantage is that if there is a shared state, it is easier to share it; for example, keys to select from for a `map.get`
  test between threads, instead of each test instance generating its own keys (and therefore increasing memory usage). In the
@@ -1003,34 +980,34 @@ object is needed when the loop starts, or updating some shared state when the lo
 
 The `beforeRun` and `afterRun` methods accept the `ThreadState` as an argument, but this argument is allowed to be omitted. 
 
-In the following example, `beforeRun` and `afterRun` methods are defined that log when the timestep thread starts, and log when 
+In the following example, `beforeRun` and `afterRun` methods are defined which log when the timestep thread starts, and log when 
 it completes. It also writes the number of increments the timestep thread executed:
 
 ```java
-public class MyTest extends AbstractTest{
+public class MyTest extends AbstractTest {
   public int countersLength; 
 
   private AtomicLong counter;
 
-  @Setup public void setup(){
+  @Setup public void setup() {
     this.counter = targetInstance.getAtomicLong("counter");
   }
 
-  @BeforeRun public void beforeRun(ThreadState state){
+  @BeforeRun public void beforeRun(ThreadState state) {
     System.out.println(Thread.currentThread().getName()+" starting");
   }
 
-  @TimeStep public void inc(ThreadState state){
+  @TimeStep public void inc(ThreadState state) {
     counter.incrementAndGet();
     state.increments++;
   }
 
-  @AfterRun public void afterRun(ThreadState state){
+  @AfterRun public void afterRun(ThreadState state) {
     System.out.println(Thread.currentThread().getName()+
       " completed with "+state.increments+" increments");
   }
 
-  public class ThreadState extends BaseThreadState{
+  public class ThreadState extends BaseThreadState {
     long increments;
   }
 }
@@ -1038,30 +1015,30 @@ public class MyTest extends AbstractTest{
 
 ### Verification
 
-Once a Simulator test is completed, you can do the verifications using the `@Verify` annotation. In the case of `IAtomicLong.inc` 
+Once a Simulator test is completed, you can run verifications using the `@Verify` annotation. In the case of `IAtomicLong.inc` 
 test, you could count the number of increments per thread. After the test completes, you can verify the total count of expected 
 increments and the actual number of increments.
 
 ```java
-public class MyTest extends AbstractTest{
+public class MyTest extends AbstractTest {
   private IAtomicLong counter;
   private IAtomicLong expected;
 
-  @Setup public void setup(){
+  @Setup public void setup() {
     this.counter = targetInstance.get("counter");
     this.expected = targetInstance.get("expected");  
   }
 
-  @TimeStep public void inc(ThreadState state){
+  @TimeStep public void inc(ThreadState state) {
       state.increments++;
       counter.incrementAndGet();
   }
  
-  @AfterRun public void afterRun(ThreadState state){
+  @AfterRun public void afterRun(ThreadState state) {
      expected.addAndGet(state.increments);
   }
   
-  @Verify public void verify(){
+  @Verify public void verify() {
     assertEquals(expected.get(), counter.get())
   }
   
@@ -1080,58 +1057,58 @@ verify behaviors. It is even fine to throw an exception.
 
 It is allowed to define zero, one or more verify methods.
 
-By default the verify will run on all workers, but it can be configured to run on a single worker using the global property on 
+By default the verification will run on all workers, but it can be configured to run on a single worker using the global property on 
 the `@Verify` annotation.
 
 ### TearDown
 
-To automatically remove created resources, a `tearDown` can be added. It depends on the situation if this is needed at all for
+To automatically remove created resources, a `tearDown` method can be added. It depends on the situation if this is needed at all for
  your test because in most cases the workers will be terminated anyway after the Simulator test completes. But just in case you
   need to tear down the resources, it is possible.
 
-In the following example the `tearDown` is demonstrated:
+In the following example the `@TearDown` annotation is demonstrated:
 
-```
-public class MyTest extends AbstractTest{
+```java
+public class MyTest extends AbstractTest {
   private IAtomicLong counter;
 
-  @Setup public void setup(){
+  @Setup public void setup() {
     counter = targetInstance.getAtomicLong("c");
   }
 
-  @TimeStep public void inc(){
+  @TimeStep public void inc() {
     counter.inc();
   }
 
-  @TearDown public void tearDown(){
+  @TearDown public void tearDown() {
     counter.destroy();
   }
 }
 ```
 
-By default the `tearDown` is executed on all participating workers, but can be influenced using the global property as shown below:
+By default the `tearDown` method is executed on all participating workers, but can be influenced using the global property as shown below:
 
-```
-public class MyTest extends AbstractTest{
+```java
+public class MyTest extends AbstractTest {
   private IAtomicLong counter;
 
-  @Setup public void setup(){
+  @Setup public void setup() {
     counter = targetInstance.getAtomicLong("c");
   }
 
-  @TimeStep public void inc(){
+  @TimeStep public void inc() {
     counter.inc();
   }
 
-  @TearDown(global=true) public void tearDown(){
+  @TearDown(global=true) public void tearDown() {
     counter.destroy();
   }
 }
 ```
 
-When `global` is set to `true`, only one worker is going to trigger the `destroy`. It is allowed to define multiple `tearDown` methods.
+When `global` is set to `true`, only one worker is going to trigger the `count.destroy()`. It is allowed to define multiple `tearDown` methods.
 
-### Total Lifecycle of Calls on the Test
+### Complete Lifecycle of Calls on the Test
 
 - setup
 - prepare local
@@ -1152,8 +1129,8 @@ By default a Simulator test will run for a given amount of time using the durati
 coordinator --duration 5m test.properties
 ```
 
-In this example, the test will run for five minutes. In some cases you need more control on when to stop. Currently there are 
-following options available:
+In this example, the test will run for five minutes. In some cases you need more control over when to stop. Currently there are 
+the following options available:
 
 - **Configuring the number of iterations**:
   The number of iterations can be specified using the test properties:
@@ -1171,7 +1148,7 @@ exception does not lead to a failure of the test. It also has no influence on an
 - **`TestContext.stop` to stop all timestep threads**: All timestep threads for a given period on a single worker can be 
 stopped using the `TestContext.stop` method. 
 
-In all cases, Coordinator will wait for all timestep threads of all workers to complete. If a duration has been specified, the
+In all cases, the Coordinator will wait for all timestep threads of all workers to complete. If a duration has been specified, the
 test will not run longer than this duration.
 
 > :books: Use the `coordinator --waitForTestCaseCompletion` command to let Coordinator wait indefinitely.
@@ -1188,7 +1165,7 @@ This way many features can be added to the timestep test without impacting the p
 The generator timestep worker code can be found in the worker directory. Feel free to have a look at it and send any suggestions 
 how it can be improved.
 
-Currently there is no support for dead code eliminatio
+Currently there is no support for dead code elimination.
 
 ## Profiling your Simulator Test
 
@@ -1228,7 +1205,7 @@ By adding the following options to member/client args, the benchmark generator w
 
 ## Reducing Fluctuations
 
-Fore more stable performance numbers, set the minimum and maximum heap size to the same value. Please see the following example:
+For more stable performance numbers, set the minimum and maximum heap size to the same value. Please see the following example:
 
 ```
 coordinator --members 1 \
@@ -1244,7 +1221,7 @@ Also set the minimum cluster size to the expected number of members using the fo
 -Dhazelcast.initial.min.cluster.size=4
 ```
 
-This prevents Hazelcast cluster from starting before the minimum number of members has been reached. Otherwise, the benchmark 
+This prevents the Hazelcast cluster from starting before the minimum number of members has been reached. Otherwise, the benchmark 
 numbers of the tests can be distorted due to partition migrations during the test. Especially with a large number of partitions 
 and short tests, this can lead to a very big impact on the benchmark numbers.
 
@@ -1273,7 +1250,7 @@ run is completed and the artifacts are downloaded, the diagnostics files can be 
 
 ## Logging
 
-In some cases, especially when debugging, logging is required. One easy way to add logging is to add the logging into the timestep 
+In some cases, especially when debugging, logging is required. One easy way to add logging is to add logging into the timestep 
 method. But this can be inefficient and it is frequently noisy. Using some magic properties logging can be enabled on any timestep
  based Simulator test. There are two types of logging:
 
@@ -1301,14 +1278,14 @@ In this example, at most every 100ms, a log entry is made per timestep thread.
 ## Running multiple tests in parallel
 
 It's possible to run multiple tests simultaneously. In order to do that: 
-* You use the extended notation in `test.properties` file which is:
+* You use the extended notation in the `test.properties` file which is:
 
   ```
   TestId@key = value
   ```
   
-  `TestId` is a arbitrary name that serves as identifier, so that Coordinator knows which 
-  properties belong to which tests. An example which runs two tests to probably be self explanatory
+  `TestId` is an arbitrary name that serves as an identifier, so that the Coordinator knows which 
+  properties belong to which tests. Here's an example which runs two tests:
   
   ```
   FirstTest@class=com.hazelcast.simulator.tests.map.MapEntryListenerTest
@@ -1331,9 +1308,9 @@ It's possible to run multiple tests simultaneously. In order to do that:
 
 ## Coordinated Omission
 
-By default the Simulator prevents the coordinated omission problems by using the expected start time of a request instead of the 
+By default the Simulator prevents coordinated omission problems by using the expected start time of a request instead of the 
 actual time. So instead of trying to do some kind of a repair after it happened, the Simulator actually prevents the problem
- happening in the first place. Similar technique is used in [JLBH](http://www.rationaljava.com/2016/04/jlbh-introducing-java-latency.html).
+ happening in the first place. A similar technique is used in [JLBH](http://www.rationaljava.com/2016/04/jlbh-introducing-java-latency.html).
 
 If you are interested in the impact of coordinated omission, the protection against it can be disabled using the `accountForCoordinatedOmission` property:
 ```
@@ -1343,13 +1320,13 @@ ratePerSecond=100
 accountForCoordinatedOmission=false
 ```
 
-Be extremely careful when setting this property to false and publishing the results. Because the number will be a lot more positive
+Be extremely careful when setting this property to false and publishing the results. Because the numbers will be a lot more positive
  than they actually are.
 
-The rate of doing requests is controlled using the `Metronome` abstraction and a few flavors are available. One very interesting 
+The rate of handling requests is controlled using the `Metronome` abstraction and a few flavors are available. One very interesting 
 metronome is the `ConstantCombinedRateMetronome`. By default each timestep-thread will wait for a given amount of time for the
  next request and if there is some kind of an obstruction, e.g., a `map.get` is obstructed by a fat entry processor, a bubble 
- of requests is built up that is processed as soon as the entry processor has completed.
+ of requests is built up which is processed as soon as the entry processor has completed.
 
 Instead of building up this bubble, the `ConstantCombinedRateMetronome` can be used. If one thread is obstructing while it wants 
 to do a `get`, other timestep-threads from the same execution group will continue with the requests this timestep thread was 
@@ -1365,17 +1342,17 @@ metronomeClass=com.hazelcast.simulator.worker.metronome.ConstantCombinedRateMetr
 ```
 
 ## Measuring Jitter
-To measure jitter caused by the OS/JVM it is possible to active a Jitter thread using:
+To measure jitter caused by the OS/JVM it is possible to activate a Jitter thread using:
 ```
 class=example.MyTest
 threadCount=10
 ratePerSecond=100
 recordJitter=true
 ```
-This thread will do nothing else than measuring time and recording it in a probe. The content of this probe results in hdr files
+This thread will do nothing else besides measuring time and recording it in a probe. The content of this probe results in hdr files
 and can be visualized using the [benchmark report generator](#report-generator).
 
-By default jitter greater or equal 1000ns is recorded, but can be configured using the `recordJitterThresholdNs` property:
+By default jitter greater or equal to 1000ns is recorded, but can be configured using the `recordJitterThresholdNs` property:
 ```
 class=example.MyTest
 threadCount=10
@@ -1386,13 +1363,13 @@ recordJitterThresholdNs=2_000
 To disable the threshold, set `recordJitterThresholdNs` to 0. Warning: if the `recordJitterThresholdNs` is set to a value higher
 than zero, the latency distribution looks distorted because only the outliers are recorded and not the samples below the threshold.
 
-Measuring jitter is only recommended when doing a latency test because you will loose 1 core. Each test instance will create its 
+Measuring jitter is only recommended when doing a latency test because you will lose 1 core. Each test instance will create its 
 own jitter thread (if the test is configured to use a jitter thread). So it is extremely unlikely that you want to run tests in 
 parallel with this feature enabled.
 
 ## Controlling the load generation
 
-Beside the cluster layout you can also control which Workers will execute their RUN phase (= the actual test). 
+Besides the cluster layout you can also control which Workers will execute their RUN phase (= the actual test). 
 The default is that client Workers are preferred over member Workers. That means if client Workers are used, they will create the load in the cluster, 
 otherwise the member Workers will be used. In addition you can limit the number of Workers which will generate the load.
 
