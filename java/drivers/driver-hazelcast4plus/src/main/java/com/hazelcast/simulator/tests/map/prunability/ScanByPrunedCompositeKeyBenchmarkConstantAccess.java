@@ -18,9 +18,6 @@ package com.hazelcast.simulator.tests.map.prunability;
 import com.hazelcast.config.MapConfig;
 import com.hazelcast.config.PartitioningAttributeConfig;
 import com.hazelcast.map.IMap;
-import com.hazelcast.nio.ObjectDataInput;
-import com.hazelcast.nio.ObjectDataOutput;
-import com.hazelcast.nio.serialization.DataSerializable;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.hz.IdentifiedDataSerializablePojo;
 import com.hazelcast.simulator.test.annotations.Prepare;
@@ -33,31 +30,33 @@ import com.hazelcast.sql.SqlResult;
 import com.hazelcast.sql.SqlRow;
 import com.hazelcast.sql.SqlService;
 
-import java.io.IOException;
 import java.util.List;
-import java.util.Random;
 
 import static java.util.Arrays.asList;
 
-
-public class ScanByPrunedCompositeKeyBenchmark extends HazelcastTest {
+public class ScanByPrunedCompositeKeyBenchmarkConstantAccess extends HazelcastTest {
 
     // properties
     // the number of map entries
-    public int entryCount = 10_000_000;
+    public int entryCount = 1_000_000;
 
     private IMap<KeyPojo, String> map;
+    private SqlService sqlService;
+    private String query;
+    private int key;
 
     @Setup
     public void setUp() {
-        this.map = targetInstance.getMap(name);
         final List<PartitioningAttributeConfig> attributeConfigs = asList(
                 new PartitioningAttributeConfig("a"),
-                new PartitioningAttributeConfig("b"),
                 new PartitioningAttributeConfig("c")
         );
         final MapConfig mapConfig = new MapConfig(name).setPartitioningAttributeConfigs(attributeConfigs);
         targetInstance.getConfig().addMapConfig(mapConfig);
+        this.sqlService = targetInstance.getSql();
+        this.map = targetInstance.getMap(name);
+
+        this.query = "SELECT this FROM " + name + " WHERE a = ? AND c = ?";
     }
 
     @Prepare(global = true)
@@ -76,6 +75,12 @@ public class ScanByPrunedCompositeKeyBenchmark extends HazelcastTest {
         SqlService sqlService = targetInstance.getSql();
         String query = "CREATE EXTERNAL MAPPING IF NOT EXISTS " + name + " "
                 + "EXTERNAL NAME " + name + " "
+                + " ( "
+                + " \"a\" INT     EXTERNAL NAME \"__key.a\",\n "
+                + " \"b\" VARCHAR EXTERNAL NAME \"__key.b\",\n "
+                + " \"c\" BIGINT  EXTERNAL NAME \"__key.c\",\n "
+                + " \"this\" VARCHAR \n"
+                + ") \n"
                 + "        TYPE IMap\n"
                 + "        OPTIONS (\n"
                 + "                'keyFormat' = 'java',\n"
@@ -85,20 +90,25 @@ public class ScanByPrunedCompositeKeyBenchmark extends HazelcastTest {
                 + "        )";
 
         sqlService.execute(query);
+
+        for (int i = entryCount / 2; i < entryCount; ++i) {
+            KeyPojo keyPojo = new KeyPojo(key, String.format("%010d", key), key);
+            if (map.containsKey(keyPojo)) {
+                this.key = i;
+                break;
+            }
+        }
     }
 
     @TimeStep
     public void timeStep() throws Exception {
-        SqlService sqlService = targetInstance.getSql();
-        String query = "SELECT __key, this FROM " + name + " WHERE \"__key\"= ?";
-        String keyMatch = String.format("%010d", new Random().nextInt(entryCount));
         int actual = 0;
-        try (SqlResult result = sqlService.execute(query, keyMatch)) {
+        try (SqlResult result = sqlService.execute(query, key, key)) {
             for (SqlRow row : result) {
-                Object key = row.getObject(0);
-                if (!(key instanceof KeyPojo)) {
+                Object _key = row.getObject(0);
+                if (!(_key instanceof String)) {
                     throw new IllegalStateException("Returned object is not "
-                            + IdentifiedDataSerializablePojo.class.getSimpleName() + ": " + key);
+                            + IdentifiedDataSerializablePojo.class.getSimpleName() + ": " + _key);
                 }
                 actual++;
             }
@@ -112,32 +122,6 @@ public class ScanByPrunedCompositeKeyBenchmark extends HazelcastTest {
     @Teardown
     public void tearDown() {
         map.destroy();
-    }
-
-    static class KeyPojo implements DataSerializable {
-        int a;
-        String b;
-        long c;
-
-        public KeyPojo(int a, String b, long c) {
-            this.a = a;
-            this.b = b;
-            this.c = c;
-        }
-
-        @Override
-        public void writeData(ObjectDataOutput out) throws IOException {
-            out.writeInt(a);
-            out.writeString(b);
-            out.writeLong(c);
-        }
-
-        @Override
-        public void readData(ObjectDataInput in) throws IOException {
-            a = in.readInt();
-            b = in.readString();
-            c = in.readLong();
-        }
     }
 }
 

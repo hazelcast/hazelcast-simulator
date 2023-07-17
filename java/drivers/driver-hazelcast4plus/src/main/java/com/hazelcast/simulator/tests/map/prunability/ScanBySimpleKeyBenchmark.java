@@ -15,12 +15,7 @@
  */
 package com.hazelcast.simulator.tests.map.prunability;
 
-import com.hazelcast.config.MapConfig;
-import com.hazelcast.config.PartitioningAttributeConfig;
 import com.hazelcast.map.IMap;
-import com.hazelcast.nio.ObjectDataInput;
-import com.hazelcast.nio.ObjectDataOutput;
-import com.hazelcast.nio.serialization.DataSerializable;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.hz.IdentifiedDataSerializablePojo;
 import com.hazelcast.simulator.test.annotations.Prepare;
@@ -33,52 +28,42 @@ import com.hazelcast.sql.SqlResult;
 import com.hazelcast.sql.SqlRow;
 import com.hazelcast.sql.SqlService;
 
-import java.io.IOException;
-import java.util.List;
 import java.util.Random;
 
-import static java.util.Arrays.asList;
-
-
-public class ScanByPrunedCompositePartialKeyBenchmark extends HazelcastTest {
+public class ScanBySimpleKeyBenchmark extends HazelcastTest {
 
     // properties
     // the number of map entries
     public int entryCount = 10_000_000;
 
-    private IMap<KeyPojo, String> map;
+    private IMap<Integer, String> map;
+    private SqlService sqlService;
+    private String query;
 
     @Setup
     public void setUp() {
+        this.sqlService = targetInstance.getSql();
         this.map = targetInstance.getMap(name);
-        final List<PartitioningAttributeConfig> attributeConfigs = asList(
-                new PartitioningAttributeConfig("a"),
-                new PartitioningAttributeConfig("b")
-        );
-        final MapConfig mapConfig = new MapConfig(name).setPartitioningAttributeConfigs(attributeConfigs);
-        targetInstance.getConfig().addMapConfig(mapConfig);
+        // enables partition pruning with FullScan rel in plan.
+        this.query = "SELECT this FROM " + name + " WHERE __key = ? AND this IS NOT NULL";
     }
 
     @Prepare(global = true)
     public void prepare() {
-        Streamer<KeyPojo, String> streamer = StreamerFactory.getInstance(map);
+        Streamer<Integer, String> streamer = StreamerFactory.getInstance(map);
 
         for (int i = 0; i < entryCount; i++) {
-            Integer iKey = i;
-            Long lKey = (long) i;
-            String v = String.format("%010d", iKey);
-            KeyPojo keyPojo = new KeyPojo(iKey, v, lKey);
-            streamer.pushEntry(keyPojo, v);
+            String v = String.format("%010d", i);
+            streamer.pushEntry(i, v);
         }
         streamer.await();
 
-        SqlService sqlService = targetInstance.getSql();
         String query = "CREATE EXTERNAL MAPPING IF NOT EXISTS " + name + " "
                 + "EXTERNAL NAME " + name + " "
                 + "        TYPE IMap\n"
                 + "        OPTIONS (\n"
                 + "                'keyFormat' = 'java',\n"
-                + "                'keyJavaClass' = 'com.hazelcast.simulator.tests.map.prunability.KeyPojo',\n"
+                + "                'keyJavaClass' = 'java.lang.Integer',\n"
                 + "                'valueFormat' = 'java',\n"
                 + "                'valueJavaClass' = 'java.lang.String'\n"
                 + "        )";
@@ -88,16 +73,14 @@ public class ScanByPrunedCompositePartialKeyBenchmark extends HazelcastTest {
 
     @TimeStep
     public void timeStep() throws Exception {
-        SqlService sqlService = targetInstance.getSql();
-        String query = "SELECT __key, this FROM " + name + " WHERE \"__key.a\"= ? AND \"__key.b\"= ?";
-        String keyMatch = String.format("%010d", new Random().nextInt(entryCount));
         int actual = 0;
-        try (SqlResult result = sqlService.execute(query, keyMatch)) {
+        int key = new Random().nextInt(entryCount);
+        try (SqlResult result = sqlService.execute(query, key)) {
             for (SqlRow row : result) {
-                Object key = row.getObject(0);
-                if (!(key instanceof KeyPojo)) {
+                Object _key = row.getObject(0);
+                if (!(_key instanceof String)) {
                     throw new IllegalStateException("Returned object is not "
-                            + IdentifiedDataSerializablePojo.class.getSimpleName() + ": " + key);
+                            + IdentifiedDataSerializablePojo.class.getSimpleName() + ": " + _key);
                 }
                 actual++;
             }
@@ -112,7 +95,5 @@ public class ScanByPrunedCompositePartialKeyBenchmark extends HazelcastTest {
     public void tearDown() {
         map.destroy();
     }
-
-
 }
 
