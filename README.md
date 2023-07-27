@@ -85,7 +85,7 @@ Also contains pointers where to go next.
 
    ```
    cd hazelcast-simulator
-   /build
+   ./build
    ```
     This will automatically build the Java code, download the artifacts and prepare the simulator for usage.   
 
