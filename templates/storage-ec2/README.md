@@ -1,4 +1,4 @@
-To modify the environment, edit the 'inventory_plan.yaml'.
+To modify the environment, edit the `inventory_plan.yaml`.
 
 To create the environment.
 ```
