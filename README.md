@@ -2,7 +2,7 @@
 
 Hazelcast Simulator is a production simulator used to test Hazelcast and Hazelcast-based applications in clustered environments.
 It also allows you to create your own tests and perform them on your Hazelcast clusters and applications that are deployed to
-cloud computing environments. In your tests, you can provide any property that can be specified on these environments (EC2 or your own environment): properties such as hardware specifications, operating system, Java version, etc.
+cloud computing environments. In your tests, you can provide any property that can be specified on these environments (Amazon EC2 or your own environment): properties such as hardware specifications, operating system, Java version, etc.
 
 Hazelcast Simulator allows you to add potential production problems, such as real-life failures, network problems, overloaded CPU,
 and failing nodes to your tests. It also provides a benchmarking and performance testing platform by supporting performance
@@ -170,9 +170,9 @@ In the future more templates will be added.
 
 Simulator makes use of Terraform for provisioning. After you have created a benchmark using the
 `perftest create` command, you want to edit the `inventory_plan.yaml`. This is where you can configure the
-type of instances, the number etc.
+type of instances, the number etc. The specified `cidr_block` will need to be updated to prevent conflicts.
 
-To apply the configuration on an existing environment, execute the following command:
+To apply the configuration on an existing environment, execute the following command from within the benchmark directory:
    ```shell
    inventory apply
    ```
@@ -195,6 +195,11 @@ And run the following to install a specific Java version.
    inventory install java --url https://corretto.aws/downloads/latest/amazon-corretto-17-x64-linux-jdk.tar.gz 
    ```
 This command will update the `JAVA_HOME`/`PATH` on the remote machine to reflect the last installed Java version.
+
+Install the Simulator:
+   ```shell
+   inventory install simulator && inventory tune
+   ```
 
 To destroy the environment, call the following:
    ```shell
