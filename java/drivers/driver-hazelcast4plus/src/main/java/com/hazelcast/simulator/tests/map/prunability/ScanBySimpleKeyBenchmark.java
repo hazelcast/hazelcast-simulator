@@ -77,10 +77,10 @@ public class ScanBySimpleKeyBenchmark extends HazelcastTest {
         int key = new Random().nextInt(entryCount);
         try (SqlResult result = sqlService.execute(query, key)) {
             for (SqlRow row : result) {
-                Object _key = row.getObject(0);
-                if (!(_key instanceof String)) {
+                Object value = row.getObject(0);
+                if (!(value instanceof String)) {
                     throw new IllegalStateException("Returned object is not "
-                            + IdentifiedDataSerializablePojo.class.getSimpleName() + ": " + _key);
+                            + String.class.getSimpleName() + ": " + value);
                 }
                 actual++;
             }

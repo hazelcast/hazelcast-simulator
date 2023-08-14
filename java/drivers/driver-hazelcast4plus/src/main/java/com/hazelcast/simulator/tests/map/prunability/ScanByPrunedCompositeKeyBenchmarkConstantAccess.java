@@ -30,7 +30,9 @@ import com.hazelcast.sql.SqlResult;
 import com.hazelcast.sql.SqlRow;
 import com.hazelcast.sql.SqlService;
 
+import java.io.Serializable;
 import java.util.List;
+import java.util.Random;
 
 import static java.util.Arrays.asList;
 
@@ -38,7 +40,7 @@ public class ScanByPrunedCompositeKeyBenchmarkConstantAccess extends HazelcastTe
 
     // properties
     // the number of map entries
-    public int entryCount = 1_000_000;
+    public int entryCount = 500_000;
 
     private IMap<KeyPojo, String> map;
     private SqlService sqlService;
@@ -73,14 +75,8 @@ public class ScanByPrunedCompositeKeyBenchmarkConstantAccess extends HazelcastTe
         streamer.await();
 
         SqlService sqlService = targetInstance.getSql();
-        String query = "CREATE EXTERNAL MAPPING IF NOT EXISTS " + name + " "
+        String createMappingQuery = "CREATE EXTERNAL MAPPING IF NOT EXISTS " + name + " "
                 + "EXTERNAL NAME " + name + " "
-                + " ( "
-                + " \"a\" INT     EXTERNAL NAME \"__key.a\",\n "
-                + " \"b\" VARCHAR EXTERNAL NAME \"__key.b\",\n "
-                + " \"c\" BIGINT  EXTERNAL NAME \"__key.c\",\n "
-                + " \"this\" VARCHAR \n"
-                + ") \n"
                 + "        TYPE IMap\n"
                 + "        OPTIONS (\n"
                 + "                'keyFormat' = 'java',\n"
@@ -89,10 +85,10 @@ public class ScanByPrunedCompositeKeyBenchmarkConstantAccess extends HazelcastTe
                 + "                'valueJavaClass' = 'java.lang.String'\n"
                 + "        )";
 
-        sqlService.execute(query);
+        sqlService.execute(createMappingQuery);
 
         for (int i = entryCount / 2; i < entryCount; ++i) {
-            KeyPojo keyPojo = new KeyPojo(key, String.format("%010d", key), key);
+            KeyPojo keyPojo = new KeyPojo(i, String.format("%010d", i), i);
             if (map.containsKey(keyPojo)) {
                 this.key = i;
                 break;
@@ -103,14 +99,15 @@ public class ScanByPrunedCompositeKeyBenchmarkConstantAccess extends HazelcastTe
     @TimeStep
     public void timeStep() throws Exception {
         int actual = 0;
-        try (SqlResult result = sqlService.execute(query, key, key)) {
+        try (SqlResult result = sqlService.execute(this.query, key, key)) {
             for (SqlRow row : result) {
-                Object _key = row.getObject(0);
-                if (!(_key instanceof String)) {
+                Object value = row.getObject(0);
+                if (!(value instanceof String)) {
                     throw new IllegalStateException("Returned object is not "
-                            + IdentifiedDataSerializablePojo.class.getSimpleName() + ": " + _key);
+                            + String.class.getSimpleName() + ": " + value);
+                } else {
+                    actual++;
                 }
-                actual++;
             }
         }
 
