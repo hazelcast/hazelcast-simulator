@@ -16,7 +16,6 @@ import com.hazelcast.sql.impl.client.SqlClientService;
 
 import java.util.Random;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class UpdateByKey1EntryBenchmark extends HazelcastTest {
@@ -29,6 +28,7 @@ public class UpdateByKey1EntryBenchmark extends HazelcastTest {
     private IMap<Integer, IdentifiedDataSerializablePojo> map;
     public int arraySize = 20;
     private Integer[] sampleArray;
+    private Random random;
 
     @Setup
     public void setUp() {
@@ -37,6 +37,7 @@ public class UpdateByKey1EntryBenchmark extends HazelcastTest {
         for (int i = 0; i < arraySize; i++) {
             sampleArray[i] = i;
         }
+        this.random = new Random();
     }
 
     @Prepare(global = true)
@@ -70,7 +71,6 @@ public class UpdateByKey1EntryBenchmark extends HazelcastTest {
         SqlClientService sqlService = (SqlClientService) targetInstance.getSql();
 
         String query = "UPDATE " + name + " SET numbers = ?, valueField = ? WHERE __key = ?";
-        Random random = new Random();
         int key = random.nextInt(entryCount);
         String value = String.format("updated%03d", random.nextInt(entryCount));
         try (SqlResult result = sqlService.execute(query, sampleArray, value, key)) {

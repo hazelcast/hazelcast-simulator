@@ -29,10 +29,12 @@ public class SQLReadWriteBenchmark extends HazelcastTest {
     private IMap<Integer, IdentifiedDataSerializablePojo> map;
     public int arraySize = 20;
     private Integer[] sampleArray;
+    private Random random;
 
     @Setup
     public void setUp() {
         this.map = targetInstance.getMap(name);
+        this.random = new Random();
     }
 
     @Prepare(global = true)
@@ -69,7 +71,7 @@ public class SQLReadWriteBenchmark extends HazelcastTest {
         SqlService sqlService = targetInstance.getSql();
 
         String query = "SELECT this FROM " + name + " WHERE __key = ?";
-        int key = new Random().nextInt(entryCount);
+        int key = random.nextInt(entryCount);
         int actual = 0;
         try (SqlResult result = sqlService.execute(query, key)) {
             for (SqlRow row : result) {
@@ -88,11 +90,10 @@ public class SQLReadWriteBenchmark extends HazelcastTest {
     }
 
     @TimeStep
-    public void update() throws Exception {
+    public void update() {
         SqlClientService sqlService = (SqlClientService) targetInstance.getSql();
 
         String query = "UPDATE " + name + " SET numbers = ?, valueField = ? WHERE __key = ?";
-        Random random = new Random();
         int key = random.nextInt(entryCount);
         String value = String.format("updated%03d", random.nextInt(entryCount));
         try (SqlResult result = sqlService.execute(query, sampleArray, value, key)) {

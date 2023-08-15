@@ -20,6 +20,7 @@ public class MapPutEntryIdentifiedDataSerializableBenchmark extends HazelcastTes
     //16 byte + N*(20*N
     private IMap<Integer, IdentifiedDataSerializablePojo> map;
     private Integer[] sampleArray;
+    private Random random;
 
     @Setup
     public void setUp() {
@@ -29,6 +30,7 @@ public class MapPutEntryIdentifiedDataSerializableBenchmark extends HazelcastTes
         for (int i = 0; i < arraySize; i++) {
             sampleArray[i] = i;
         }
+        this.random = new Random();
     }
 
     @Prepare(global = true)
@@ -45,7 +47,6 @@ public class MapPutEntryIdentifiedDataSerializableBenchmark extends HazelcastTes
 
     @TimeStep
     public void timeStep() throws Exception {
-        Random random = new Random();
         int key = random.nextInt(entryCount);
         IdentifiedDataSerializablePojo value = new IdentifiedDataSerializablePojo(sampleArray, String.format("%010d", random.nextInt(entryCount)));
         IdentifiedDataSerializablePojo serializablePojo = map.put(key, value);

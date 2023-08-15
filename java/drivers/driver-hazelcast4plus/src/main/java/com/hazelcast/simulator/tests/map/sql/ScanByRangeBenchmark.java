@@ -24,11 +24,17 @@ public class ScanByRangeBenchmark extends HazelcastTest {
 
     //16 byte + N*(20*N
     private IMap<Integer, IdentifiedDataWithLongSerializablePojo> map;
+    private SqlService sqlService;
+    private String query;
+    private Random random;
     public int arraySize = 20;
 
     @Setup
     public void setUp() {
         this.map = targetInstance.getMap(name);
+        this.sqlService = targetInstance.getSql();
+        this.query = "SELECT __key, this FROM " + name + " WHERE \"value\" BETWEEN ? AND ? ";
+        this.random = new Random();
     }
 
     @Prepare(global = true)
@@ -48,8 +54,7 @@ public class ScanByRangeBenchmark extends HazelcastTest {
         }
         streamer.await();
 
-        SqlService sqlService = targetInstance.getSql();
-        String query = "CREATE EXTERNAL MAPPING IF NOT EXISTS " + name + " "
+        String createQuery = "CREATE EXTERNAL MAPPING IF NOT EXISTS " + name + " "
                 + "EXTERNAL NAME " + name + " "
                 + "        TYPE IMap\n"
                 + "        OPTIONS (\n"
@@ -59,14 +64,11 @@ public class ScanByRangeBenchmark extends HazelcastTest {
                 + "                'valueJavaClass' = 'com.hazelcast.simulator.hz.IdentifiedDataWithLongSerializablePojo'\n"
                 + "        )";
 
-        sqlService.execute(query);
+        sqlService.execute(createQuery);
     }
 
     @TimeStep
     public void timeStep() throws Exception {
-        SqlService sqlService = targetInstance.getSql();
-        String query = "SELECT __key, this FROM " + name + " WHERE \"value\" BETWEEN ? AND ? ";
-        Random random = new Random();
         int min = random.nextInt(entryCount);
         int max = Integer.min(min + rangeSize, entryCount - 1);
         long actual = 0L;

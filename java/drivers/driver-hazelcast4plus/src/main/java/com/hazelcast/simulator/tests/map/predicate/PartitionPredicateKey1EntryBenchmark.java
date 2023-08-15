@@ -25,10 +25,12 @@ public class PartitionPredicateKey1EntryBenchmark extends HazelcastTest {
     //16 byte + N*(20*N
     private IMap<Integer, IdentifiedDataSerializablePojo> map;
     private final int arraySize = 20;
+    private Random random;
 
     @Setup
     public void setUp() {
         this.map = targetInstance.getMap(name);
+        this.random = new Random();
     }
 
     @Prepare(global = true)
@@ -49,7 +51,7 @@ public class PartitionPredicateKey1EntryBenchmark extends HazelcastTest {
 
     @TimeStep
     public void timeStep() throws Exception {
-        int key = new Random().nextInt(entryCount);
+        int key = random.nextInt(entryCount);
         Predicate<Integer, IdentifiedDataSerializablePojo> partitionPredicate =
                 Predicates.partitionPredicate(key, Predicates.sql("__key = " + key));
         Set<Map.Entry<Integer, IdentifiedDataSerializablePojo>> entries = map.entrySet(partitionPredicate);
