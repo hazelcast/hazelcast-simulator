@@ -195,7 +195,7 @@ class PerfTest:
                 exit_with_error(f"Failed run coordinator, exitcode={self.exitcode}")
             return self.exitcode
 
-    def run(self, tests, tags, do_report=True):
+    def run(self, tests, tags, auto_gen_report=True):
         for test in tests:
             repetitions = test.get('repetitions')
             if repetitions < 0:
@@ -207,12 +207,11 @@ class PerfTest:
             for i in range(0, repetitions):
                 exitcode, run_path = self.run_test(test)
 
-                if exitcode == 0:
+                if exitcode == 0 and auto_gen_report:
                     self.collect(run_path,
                                  tags,
                                  warmup_seconds=test.get('warmup_seconds'),
-                                 cooldown_seconds=test.get('cooldown_seconds'),
-                                 do_report=do_report)
+                                 cooldown_seconds=test.get('cooldown_seconds'))
         return
 
     def run_test(self, test, run_path=None):
@@ -226,7 +225,7 @@ class PerfTest:
             run_path=run_path,
             duration=test.get('duration'),
             performance_monitor_interval_seconds=test.get('performance_monitor_interval_seconds'),
-            parallel=test.get('parallel'),    
+            parallel=test.get('parallel'),
             node_hosts=test.get('node_hosts'),
             loadgenerator_hosts=test.get('loadgenerator_hosts'),
             license_key=test.get('license_key'),
@@ -259,7 +258,7 @@ class PerfTest:
         else:
             return shell(cmd, use_print=True)
 
-    def collect(self, dir, tags, warmup_seconds=None, cooldown_seconds=None, do_report=True):
+    def collect(self, dir, tags, warmup_seconds=None, cooldown_seconds=None):
         report_dir = f"{dir}/report"
 
         if not warmup_seconds:
@@ -267,10 +266,6 @@ class PerfTest:
 
         if not cooldown_seconds:
             cooldown_seconds = 0
-
-        # Skip report generation if False
-        if not do_report:
-            return
 
         if not os.path.exists(report_dir):
             self.__shell(f"perftest report  -w {warmup_seconds} -c {cooldown_seconds} -o {report_dir} {dir}")
@@ -448,13 +443,13 @@ class PerftestRunCli:
         #                     nargs=1,
         #                     help="The path where the result of the run need to be stored.")
 
-        parser.add_argument('-agr', '--auto_gen_report',
-                            nargs=1, default='True',
-                            help="Defines if a report should automatically be generated after the test completes.")
+        parser.add_argument('-agr', '--skip_auto_gen_report',
+                            action='store_false', dest='auto_gen_report', default=True,
+                            help="When set, this flag stops the automatic generation of reports after test completion.")
 
         args = parser.parse_args(argv)
         tags = parse_tags(args.tag)
-        kill_java = args.kill_java
+        # kill_java = args.kill_java
         # run_path = args.runPath
 
         tests = load_yaml_file(args.file)
