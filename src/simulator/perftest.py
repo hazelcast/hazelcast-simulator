@@ -122,7 +122,7 @@ class PerfTest:
         if license_key:
             args = f"{args} --licenseKey {license_key}"
 
-        if skip_download:
+        if skip_download is not None:
             args = f"{args} --skipDownload {skip_download}"
 
         if run_path:
@@ -165,10 +165,10 @@ class PerfTest:
         if version is not None:
             args = f"""{args} --version "{version}"  """
 
-        if fail_fast:
+        if fail_fast is not None:
             args = f"{args} --failFast {fail_fast}"
 
-        if verify_enabled:
+        if verify_enabled is not None:
             args = f"{args} --verifyEnabled {verify_enabled}"
 
         if member_worker_script:
@@ -195,7 +195,7 @@ class PerfTest:
                 exit_with_error(f"Failed run coordinator, exitcode={self.exitcode}")
             return self.exitcode
 
-    def run(self, tests, tags):
+    def run(self, tests, tags, do_report=True):
         for test in tests:
             repetitions = test.get('repetitions')
             if repetitions < 0:
@@ -211,7 +211,8 @@ class PerfTest:
                     self.collect(run_path,
                                  tags,
                                  warmup_seconds=test.get('warmup_seconds'),
-                                 cooldown_seconds=test.get('cooldown_seconds'))
+                                 cooldown_seconds=test.get('cooldown_seconds'),
+                                 do_report=do_report)
         return
 
     def run_test(self, test, run_path=None):
@@ -258,7 +259,7 @@ class PerfTest:
         else:
             return shell(cmd, use_print=True)
 
-    def collect(self, dir, tags, warmup_seconds=None, cooldown_seconds=None):
+    def collect(self, dir, tags, warmup_seconds=None, cooldown_seconds=None, do_report=True):
         report_dir = f"{dir}/report"
 
         if not warmup_seconds:
@@ -266,6 +267,10 @@ class PerfTest:
 
         if not cooldown_seconds:
             cooldown_seconds = 0
+
+        # Skip report generation if False
+        if not do_report:
+            return
 
         if not os.path.exists(report_dir):
             self.__shell(f"perftest report  -w {warmup_seconds} -c {cooldown_seconds} -o {report_dir} {dir}")
@@ -443,6 +448,10 @@ class PerftestRunCli:
         #                     nargs=1,
         #                     help="The path where the result of the run need to be stored.")
 
+        parser.add_argument('-agr', '--auto_gen_report',
+                            nargs=1, default='True',
+                            help="Defines if a report should automatically be generated after the test completes.")
+
         args = parser.parse_args(argv)
         tags = parse_tags(args.tag)
         kill_java = args.kill_java
@@ -451,7 +460,7 @@ class PerftestRunCli:
         tests = load_yaml_file(args.file)
         perftest = PerfTest()
 
-        perftest.run(tests, tags)
+        perftest.run(tests, tags, args.auto_gen_report)
 
 
 class PerftestExecCli:
@@ -559,7 +568,7 @@ class PerftestExecCli:
 
         parser.add_argument('--licenseKey',
                             nargs=1,
-                            default="-XX:+HeapDumpOnOutOfMemoryError",
+                            default="",
                             help="Sets the license key for Hazelcast Enterprise Edition.")
 
         parser.add_argument('--skipDownload',
