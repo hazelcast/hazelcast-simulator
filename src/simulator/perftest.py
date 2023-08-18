@@ -180,9 +180,12 @@ class PerfTest:
         with tempfile.NamedTemporaryFile(mode="w", delete=False, prefix="perftest_", suffix=".txt") as tmp:
             if isinstance(test, list):
                 for t in test:
-                    clazzName = t['class'].split('.')[-1]
+                    if 'name' in t:
+                        test_name = t['name']
+                    else:
+                        test_name = t['class'].split('.')[-1]
                     for key, value in t.items():
-                        tmp.write(clazzName+'@')
+                        tmp.write(test_name+'@')
                         tmp.write(f"{key}={value}\n")
             else:
                 for key, value in test.items():
