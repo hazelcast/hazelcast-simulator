@@ -18,54 +18,58 @@ You can use Hazelcast Simulator for the following use cases:
 Hazelcast Simulator is available as a downloadable package on the Hazelcast <a href="https://hazelcast.com/open-source-projects/downloads/" target="_blank">website</a>.
 Please refer to the [Quickstart](#quickstart) to start your Simulator journey.
 
-## Table of Content
 - [Quickstart](#quickstart)
+  * [Install](#install)
+  * [Creating a benchmark](#creating-a-benchmark)
+  * [Provisioning the environment](#provisioning-the-environment)
+  * [SSH to nodes](#ssh-to-nodes)
+  * [Running a test.](#running-a-test)
+  * [What's next](#whats-next)
 - [Key Concepts and Terminology](#key-concepts-and-terminology)
 - [Define test scenario](#define-test-scenario)
-    * [TestSuite configuration](#testsuite-configuration)
-        + [Specify test class and number of threads per worker](#specify-test-class-and-number-of-threads-per-worker)
-        + [Setting up operations frequency](#setting-up-operations-frequency)
-        + [Configuring parameters](#configuring-parameters)
-        + [Latency Testing](#latency-testing)
-    * [Controlling the Cluster Layout](#controlling-the-cluster-layout)
-        + [Set number of members and clients](#set-number-of-members-and-clients)
-        + [Control distribution of workers over machines](#control-distribution-of-workers-over-machines)
-            - [Default distribution algorithm](#default-distribution-algorithm)
-            - [Reserving machines for members only](#reserving-machines-for-members-only)
-                * [Order of the IP addresses](#order-of-the-ip-addresses)
-        + [Running tests against an already running cluster](#running-tests-against-an-already-running-cluster)
-        + [Running tests against a cluster in Hazelcast Cloud](#running-tests-against-a-cluster-in-hazelcast-cloud)
-    * [Controlling the Hazelcast Configuration](#controlling-the-hazelcast-configuration)
-        + [IP addresses and other configuration auto-filling](#ip-addresses-and-other-configuration-auto-filling)
-    * [Passing JVM options to client or member processes](#passing-jvm-options-to-client-or-member-processes)
+  * [TestSuite configuration](#testsuite-configuration)
+    + [Specify the test environment and non-class-specific parameters](#specify-the-test-environment-and-non-class-specific-parameters)
+    + [Specify test class(es) and number of threads per worker](#specify-test-classes-and-number-of-threads-per-worker)
+    + [Setting up operations frequency](#setting-up-operations-frequency)
+    + [Configuring parameters](#configuring-parameters)
+    + [Latency Testing](#latency-testing)
+  * [Controlling the Cluster Layout](#controlling-the-cluster-layout)
+    + [Set number of members and clients](#set-number-of-members-and-clients)
+    + [Control distribution of workers over machines](#control-distribution-of-workers-over-machines)
+      - [Default distribution algorithm](#default-distribution-algorithm)
+      - [Reserving machines for members only](#reserving-machines-for-members-only)
+        * [Order of the IP addresses](#order-of-the-ip-addresses)
+    + [Running tests against an already running cluster](#running-tests-against-an-already-running-cluster)
+    + [Running tests against a cluster in Hazelcast Cloud](#running-tests-against-a-cluster-in-hazelcast-cloud)
+  * [Controlling the Hazelcast Configuration](#controlling-the-hazelcast-configuration)
+    + [IP addresses and other configuration auto-filling](#ip-addresses-and-other-configuration-auto-filling)
 - [Run the test](#run-the-test)
-    * [Configure test duration](#configure-test-duration)
-    * [Specify testSuite file to be used](#specify-testsuite-file-to-be-used)
+  * [Configure test duration](#configure-test-duration)
+  * [Specify TestSuite file to be used](#specify-testsuite-file-to-be-used)
+  * [Installing Simulator on remote machines](#installing-simulator-on-remote-machines)
 - [Report generation](#report-generation)
-    * [Basics](#basics)
-    * [Generate comparison reports](#generate-comparison-reports)
-    * [Extensive reports](#extensive-reports)
-    * [Warmup and cooldown](#warmup-and-cooldown)
+  * [Basics](#basics)
+  * [Generate comparison reports](#generate-comparison-reports)
+  * [Extensive reports](#extensive-reports)
+  * [Warmup and cooldown](#warmup-and-cooldown)
 - [Simulator Properties reference](#simulator-properties-reference)
 - [Advanced topics](#advanced-topics)
-    * [Writing a Simulator test](#writing-a-simulator-test)
-        + [Adding properties](#adding-properties)
-        + [ThreadState](#threadstate)
-        + [AfterRun and BeforeRun](#afterrun-and-beforerun)
-        + [Verification](#verification)
-        + [TearDown](#teardown)
-        + [Complete Lifecycle of Calls on the Test](#complete-lifecycle-of-calls-on-the-test)
-        + [Stopping a Test](#stopping-a-test)
-        + [Code Generation](#code-generation)
-    * [Profiling your Simulator Test](#profiling-your-simulator-test)
-    * [GC analysis](#gc-analysis)
-    * [Reducing Fluctuations](#reducing-fluctuations)
-    * [Enabling Diagnostics](#enabling-diagnostics)
-    * [Logging](#logging)
-    * [Running multiple tests in parallel](#running-multiple-tests-in-parallel)
-    * [Coordinated Omission](#coordinated-omission)
-    * [Measuring Jitter](#measuring-jitter)
-    * [Controlling the load generation](#controlling-the-load-generation)
+  * [Writing a Simulator test](#writing-a-simulator-test)
+    + [Adding properties](#adding-properties)
+    + [ThreadState](#threadstate)
+    + [AfterRun and BeforeRun](#afterrun-and-beforerun)
+    + [Verification](#verification)
+    + [TearDown](#teardown)
+    + [Complete Lifecycle of Calls on the Test](#complete-lifecycle-of-calls-on-the-test)
+    + [Stopping a Test](#stopping-a-test)
+    + [Code Generation](#code-generation)
+  * [Profiling your Simulator Test](#profiling-your-simulator-test)
+  * [GC analysis](#gc-analysis)
+  * [Reducing Fluctuations](#reducing-fluctuations)
+  * [Enabling Diagnostics](#enabling-diagnostics)
+  * [Logging](#logging)
+  * [Running multiple tests in parallel](#running-multiple-tests-in-parallel)
+  * [Controlling the load generation](#controlling-the-load-generation)
 - [Get Help](#get-help)
 
 # Quickstart
@@ -115,32 +119,7 @@ Also contains pointers where to go next.
    ```
    PATH=<path-to-simulator>/bin/:$PATH
    ```
-
-
-6. Create a Hazelcast 5 benchmark that runs in Amazon EC2 run:
-
-    ```shell
-    perftest create mybenchmark
-    ```
-
-
-7. Configure AWS credentials
-
-   In your `~/.aws/credentials` file you need something like this:
-    ```
-    [default]
-    aws_access_key_id=AKIAIOSFODNN7EXAMPLE
-    aws_secret_access_key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
-    ```
-
-   Or when you make use of a token:
-    ```
-    [default]
-    aws_access_key_id=AKIAIOSFODNN7EXAMPLE
-    aws_secret_access_key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
-    aws_session_token=AQoEXAMPLEH4aoAH0gNCAPyJxz4BlCFFxWNE1OPTgk5TthT+FvwqnKwRcOIfrRh3c/LTo6UDdyJwOOvEVPvLXCrrrUtdnniCEXAMPLE/IvU1dYUg2RVAJBanLiHb4IgRmpRV3zrkuWJOgQs8IZZaIv2BXIa2R4OlgkBN9bkUDNCJiBeb/AXlzBBko7b15fjrBs2+cTQtpZ3CYWFXG8C5zqx37wnOE49mRl/+OtkIKGO7fAE
-    ```
-
+   
 
 ## Creating a benchmark
 
@@ -171,6 +150,25 @@ In the future more templates will be added.
 Simulator makes use of Terraform for provisioning. After you have created a benchmark using the
 `perftest create` command, you want to edit the `inventory_plan.yaml`. This is where you can configure the
 type of instances, the number etc. The specified `cidr_block` will need to be updated to prevent conflicts.
+
+To provision the environment, you will first need to configure your AWS credentials:
+
+   In your `~/.aws/credentials` file you need something like this:
+    ```
+    [default]
+    aws_access_key_id=AKIAIOSFODNN7EXAMPLE
+    aws_secret_access_key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+    ```
+
+   Or when you make use of a token:
+    ```
+    [default]
+    aws_access_key_id=AKIAIOSFODNN7EXAMPLE
+    aws_secret_access_key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+    aws_session_token=AQoEXAMPLEH4aoAH0gNCAPyJxz4BlCFFxWNE1OPTgk5TthT+FvwqnKwRcOIfrRh3c/LTo6UDdyJwOOvEVPvLXCrrrUtdnniCEXAMPLE/IvU1dYUg2RVAJBanLiHb4IgRmpRV3zrkuWJOgQs8IZZaIv2BXIa2R4OlgkBN9bkUDNCJiBeb/AXlzBBko7b15fjrBs2+cTQtpZ3CYWFXG8C5zqx37wnOE49mRl/+OtkIKGO7fAE
+    ```
+
+   Or alternatively you can use `aws sso login` and autorize your terminal via SSO.
 
 To apply the configuration on an existing environment, execute the following command from within the benchmark directory:
    ```shell
@@ -208,7 +206,7 @@ To destroy the environment, call the following:
 
 ## SSH to nodes
 
-To SSH into your remote nodes, the following command can be used:   
+To SSH into your remote nodes, the following command can be used from the test directory:   
 ```
 ssh -i key <username>@<ip>
 ```
@@ -271,7 +269,7 @@ The following are the key concepts mentioned with Hazelcast Simulator.
 - **Test** - A test class for the functionality you want to test, e.g. a Hazelcast map. This test class looks similar to a JUnit
   test, but it uses custom annotations to define methods for different test phases (e.g. `@Setup`, `@Warmup`, `@Run`, `@Verify`).
 
-- **TestSuite** - A property file that contains the name of the `Test` class and the properties you want to set on that `Test`
+- **TestSuite** - A yaml file that contains the name of the `Test` classes and the properties you want to set on those `Test`
   class instance. A `TestSuite` contains one or multiple tests. It can also contain the same `Test` class with different names and configurations.
 
 - **Worker** - This term `Worker` is used twice in Simulator.
@@ -306,7 +304,7 @@ The following are the key concepts mentioned with Hazelcast Simulator.
 - **Failure** - An indication that something has gone wrong. Failures are picked up by the `Agent` and sent back to the `Coordinator`.
 
 - **simulator.properties** - The configuration file you use to adapt the Hazelcast Simulator to your business needs (e.g. cloud
-  provider, SSH username, Hazelcast version, Java profiler settings).
+  provider, SSH username, Hazelcast version, Java profiler settings, etc.).
 
 # Define test scenario
 
@@ -316,44 +314,91 @@ in which ratio? Or should it execute SQL queries etc.?
 ## TestSuite configuration
 
 The TestSuite defines the Simulator Tests which are executed during the Simulator run.
-The TestSuite configuration is a simple properties file which contains `key = value` pairs. The common
-name of the file is `test.properties` which is also the default (e.g. generated by `simulator-wizard` as seen in [Quickstart](#quickstart)).
+The TestSuite configuration is a simple YAML file which contains `key-value` pairs. The common
+name of the file is `tests.yaml` which is also the default (e.g. generated by `perftest create` as seen in [Quickstart](#quickstart)).
 
-> We will use `test.properties` file name through the rest of the documentation for the TestSuite configuration. However,
+> We will use `tests.yaml` file name through the rest of the documentation for the TestSuite configuration. However,
 > the file can be named arbitrarily. See the [Specify TestSuite file to be used](#specify-testsuite-file-to-be-used) section on details how to specify
 > different properties file.
 
-When you open up the default (generated by `simulator-wizard`) `test.properties` file, you'll see:
+When you open up the default (generated by `perftest create`) `tests.yaml` file, you'll see (as well as a `write_only` variant):
 
 ```
-class = com.hazelcast.simulator.tests.map.IntByteMapTest
-threadCount = 10
-
-getProb = 0.9
-putProb = 0.1
-
-keyCount = 1000
+- name: read_only
+  repetitions: 1
+  duration: 300s
+  clients: 1
+  members: 1
+  loadgenerator_hosts: loadgenerators
+  node_hosts: nodes
+  driver: hazelcast5
+  version: maven=5.1
+  client_args: >
+    -Xms3g
+    -Xmx3g
+  member_args: >
+    -Xms3g
+    -Xmx3g
+  performance_monitor_interval_seconds: 1
+  verify_enabled: True
+  warmup_seconds: 0
+  cooldown_seconds: 0
+  license_key: <add_key_here_if_using_ee>
+  parallel: False
+  test:
+    - class: com.hazelcast.simulator.tests.map.IntByteMapTest
+      name: MyByteTest
+      threadCount: 40
+      getProb: 1
+      putProb: 0
+      keyCount: 1_000_000
 ```
 
 Let's explain the lines one by one.
 
-### Specify test class and number of threads per worker
+### Specify the test environment and non-class-specific parameters
 
-The first two properties are built-in "magic" properties of Simulator.
+Each section within the `tests.yaml` file contains properties for the environment the defined tests for that section should be conducted in.
+
+| Property      | Example value                                      | Description |
+| ---------     | -------------------------------------------------- | ------------|
+| `name`        | `read_only` | The name of the test suite (overriden by test-specific values |
+| `repititions` | `1` | The number of times this test suite should run (1 or more) |
+| `duration`    | `300s` | The amount of time this test suite should run for (45m, 1h, 2d, etc.) |
+| `clients`    | `1` | The number of Hazelcast Clients to use in this test suite (hosted on `loadgenerator_hosts` |
+| `members`    | `1` | The number of Hazelcast Members to use in this test suite (hosted on `node_hosts`) |
+| `loadgenerator_hosts` | `loadgenerators` | Defines the host for Clients, based on either `loadgenerators` or `nodes`, allowing both separate and mixed client/member setups |
+| `node_hosts`    | `nodes` | Defines the host for Members - this should generally always be `nodes`, and only `loadgenerator_hosts` should be changed for mixed testing. |
+| `driver`    | `hazelcast5` | The Hazelcast Driver to use - for 5.0+ testing, this is either `hazelcast5` or `hazelcast-enterprise5` for OS or EE respectively |
+| `version`    | `maven=5.1` | The Hazelcast version to use - typically provided by maven, i.e. `maven=5.3.0-SNAPSHOT` |
+| `client_args`    | `-Xms3g -Xmx3g` | The command-line Java parameters passed to all clients in this test suite |
+| `member_args`    | `-Xms3g -Xmx3g` | The command-line Java parameters passed to all members in this test suite |
+| `performance_monitor_interval_seconds`    | `1` | The interval of the Simulator performance monitor |
+| `verify_enabled`    | `True` | Defines whether tests should be verified after completion or not (default true) |
+| `warmup_seconds`    | `0` | The number of seconds from the start of the test to exclude in reporting (only used for report generation) |
+| `cooldown_seconds`  | `0` | The number of seconds before the end of the test to exclude in reporting (only used for report generation) |
+| `license_key`  | `your_ee_key` | The Hazelcast Enterprise Edition license to use in your test, if using `hazelcast-enterprise5` drivers |
+| `parallel`  | `True` | Defines whether tests should be run in parallel when multiple tests are defined within 1 suite (default false) |
+
+
+### Specify test class(es) and number of threads per worker
+
+Beyond the environment parameters above, under the `test` section we define the actual tests to run. The first three properties shown in the above example are built-in "magic" properties of Simulator.
 
 | Property      | Example value                                      | Description |
 | ---------     | -------------------------------------------------- | ------------|
 | `class`       | `com.hazelcast.simulator.tests.map.IntByteMapTest` | Defines the fully qualified class name for the Simulator Test. Used to create the test class instance on the Simulator Worker. This is the only mandatory property which has to be defined.    |
-| `threadCount` | `5`                                                | Defines how many threads are running the Test methods in parallel. In other words, defines the number of worker threads for Simulator Tests which use the `@RunWithWorker` annotation.         |
+| `name` | `MyByteTest`                                                | Defines a unique name for this Test. This property is only required when running multiple tests on the same test class, without it only 1 test will run per class type (as the class name is used as the name if not defined here).         |
+| `threadCount` | `40`                                                | Defines how many threads are running the Test methods in parallel. In other words, defines the number of worker threads for Simulator Tests which use the `@RunWithWorker` annotation.         |
 
 > :books: For details about available values for `class`, refer to the provided classes in the [drivers](drivers) directory or the [Writing a Simulator test](#writing-a-simulator-test) section.
 
 ### Setting up operations frequency
 
-Next up, there's a group of properties with special functionality, which all have their
+Next up, there's some properties with special functionality, which all have their
 names ending with `Prob` (short for "probability"), such as `getProb` and `putProb`.
 
-These properties conform to the format `<methodName>Prob = <probability>`, where:
+These properties conform to the format `<methodName>Prob: <probability>`, where:
 
 * `<methodName>` corresponds to the name of a timestep method (a method annotated with `@TimeStep` annotation) in the test class
   configured with `class` property. For example, the `com.hazelcast.simulator.tests.map.IntByteMapTest` test contains the following methods:
@@ -374,16 +419,16 @@ These properties conform to the format `<methodName>Prob = <probability>`, where
   For example, a probability of `0.1` means a 10 % probability for execution.
 
 
-As a complete example, the `putProb = 0.1` property sets the probability of execution of the `put` method to 10 %.
+As a complete example, a `putProb: 0.1` property sets the probability of execution of the `put` method to 10 %.
 In other words, out of all the things being done by the test, 10 % will be PUTs. This is the basic method for controlling the ratio of operations.
-For example, if you want to execute 80 % GETs and 20 % PUTs with `IntByteMapTest` you would set `getProb = 0.8` and `putProb = 0.2`.
+For example, if you want to execute 80 % GETs and 20 % PUTs with `IntByteMapTest` you would set `getProb: 0.8` and `putProb: 0.2`.
 
 A special case of probability value is `-1` which means "calculate the remaining probability to 1". An example:
 
 ```
-putProb = 0.1
-setProb = 0.2
-getProb = -1
+putProb: 0.1
+setProb: 0.2
+getProb: -1
 ```
 
 The above properties result in 10 % PUT operations, 20 % SET operations, and (`1-0.1-0.2=0.7`) 70 % GET operations.
@@ -412,16 +457,15 @@ public class IntByteMapTest extends HazelcastTest {
 ``` 
 
 Hopefully the names of the properties are self-explanatory. Therefore, if we wanted to change the test scenario
-and preload 1 million entries with a value size of exactly 10 KB, we would edit the `test.properties` file as follows:
+and preload 1 million entries with a value size of exactly 10 KB, we would edit the `tests.yaml` file as follows:
 
 ```
-class = com.hazelcast.simulator.tests.map.IntByteMapTest
-
-# probabilites and thread count settings
-
-keyCount = 1000000
-minSize = 10000
-maxSize = 10000
+  test:
+    - class: com.hazelcast.simulator.tests.map.IntByteMapTest
+      # probabilites and thread count settings
+      minSize: 10_000
+      maxSize: 10_000
+      keyCount: 1_000_000
 ```
 
 ### Latency Testing
@@ -434,15 +478,15 @@ By default the timestep-threads operate in throughput testing mode - they will l
 As a bonus you get an impression of the latency for that throughput.
 However, for a proper latency test, you want to control the rate and measure the latency for that rate. Luckily this is very easy with the Simulator.
 
-You can configure the fixed number of operations per second using following properties in `test.properties`:
+You can configure the fixed number of operations per second using following properties in the `test` section of `tests.yaml`:
 
-* `ratePerSecond=<X>` - where `<X>` is a desired number of operations per second per **load generating client/member** (not worker thread!).
+* `ratePerSecond: <X>` - where `<X>` is a desired number of operations per second per **load generating client/member** (not worker thread!).
   Example: if in your test, you configure 5 clients and you want to stress the cluster with 500 000 operations per second,
-  you set `ratePerSecond=100000`, because 5 clients times 100 000 ops = desired 500 K ops.
+  you set `ratePerSecond: 100000`, because 5 clients times 100 000 ops = desired 500 K ops.
 
-* `interval=<Y>` - where `<Y>` is the time interval between subsequent calls per **load generating client/member** (not worker thread!).
+* `interval: <Y>` - where `<Y>` is the time interval between subsequent calls per **load generating client/member** (not worker thread!).
   Example: if in your test, you configure 5 clients and you want to stress the cluster with 500 000 operations per second,
-  you set `interval=100us`, because 5 clients times 100 000 ops = desired 500 K ops.
+  you set `interval: 100us`, because 5 clients times 100 000 ops = desired 500 K ops.
 
 > Accepted time units for the `interval` property:
 > * `ns` - nanoseconds
@@ -466,10 +510,8 @@ Hazelcast has two basic instance types: member and client. The member instances 
 an existing cluster. Hazelcast Simulator can spawn Workers for both instance types. You can configure the number of member and
 client Workers and also their distribution on the available remote machines.
 
-> :books: To see how Simulator can help with setting up remote machines, refer to the [Set up cluster environment](#Set up cluster environment) section.
-
-> All configuration about the cluster layout is done through the `coordinator` command which is usually
-> called from the `run` script (as for example created in [Quickstart](#quickstart)).
+> All configuration about the cluster layout is managed through the `inventory_plan.yaml` file which handles the actual
+> provisisiong, as well as the `tests.yaml` file which handles the allocation of workers between hosts.
 
 ### Set number of members and clients
 
@@ -485,15 +527,26 @@ A setup without client Workers is fine, but out of the box it won't work without
 ### Control distribution of workers over machines
 
 Through this section, we'll assume that we have 3 remote machines that we're going to use. In other words,
-there are 3 IP addresses specified in the `agents.txt` like this:
+there are 3 IP addresses specified in the `inventory.yaml` like this:
 
 ```
-10.0.0.1
-10.0.0.2
-10.0.0.3
+nodes:
+  hosts:
+    21.333.44.55:
+      ansible_ssh_private_key_file: key
+      ansible_user: ec2-user
+      private_ip: 10.0.0.1
+    22.333.44.55:
+      ansible_ssh_private_key_file: key
+      ansible_user: ec2-user
+      private_ip: 10.0.0.2
+    23.333.44.55:
+      ansible_ssh_private_key_file: key
+      ansible_user: ec2-user
+      private_ip: 10.0.0.3
 ```
 
-> :books: To find out what the `agents.txt` file is and how to get remote machines setup, refer to the [Set up cluster environment](#set-up-cluster-environment) section.
+> :books: The `inventory.yaml` file is generated after AWS machines have been provisioned using `inventory apply`.
 
 #### Default distribution algorithm
 
@@ -502,36 +555,33 @@ fassion (going through the IP addresses from the top to the bottom). Once there 
 continues (= **not** starting from the first IP address but continuing with the next one) with distribution of the clients. By default, the machines will
 be mixed with member and client Workers. Let's see a couple of examples.
 
-| Coordinator arguments | Cluster layout |
+| Tests.yaml properties | Cluster layout |
 | --- | --- |
-| `--members 1 --clients 1` | <pre>10.0.0.1 - members:  1, clients:  0<br>10.0.0.2 - members:  0, clients:  1<br>10.0.0.3 - members:  0, clients:  0</pre> |
-| `--members 1 --clients 2` | <pre>10.0.0.1 - members:  1, clients:  0<br>10.0.0.2 - members:  0, clients:  1<br>10.0.0.3 - members:  0, clients:  1</pre> |
-| `--members 1 --clients 3` | <pre>10.0.0.1 - members:  1, clients:  1<br>10.0.0.2 - members:  0, clients:  1<br>10.0.0.3 - members:  0, clients:  1</pre> |
-| `--members 2 --clients 2` | <pre>10.0.0.1 - members:  1, clients:  1<br>10.0.0.2 - members:  1, clients:  0<br>10.0.0.3 - members:  0, clients:  1</pre> |
-| `--members 4 --clients 2` | <pre>10.0.0.1 - members:  2, clients:  0<br>10.0.0.2 - members:  1, clients:  1<br>10.0.0.3 - members:  1, clients:  1</pre> |
+| `members: 1, clients: 1` | <pre>10.0.0.1 - members:  1, clients:  0<br>10.0.0.2 - members:  0, clients:  1<br>10.0.0.3 - members:  0, clients:  0</pre> |
+| `members: 1, clients: 2` | <pre>10.0.0.1 - members:  1, clients:  0<br>10.0.0.2 - members:  0, clients:  1<br>10.0.0.3 - members:  0, clients:  1</pre> |
+| `members: 1, clients: 3` | <pre>10.0.0.1 - members:  1, clients:  1<br>10.0.0.2 - members:  0, clients:  1<br>10.0.0.3 - members:  0, clients:  1</pre> |
+| `members: 2, clients: 2` | <pre>10.0.0.1 - members:  1, clients:  1<br>10.0.0.2 - members:  1, clients:  0<br>10.0.0.3 - members:  0, clients:  1</pre> |
+| `members: 4, clients: 2` | <pre>10.0.0.1 - members:  2, clients:  0<br>10.0.0.2 - members:  1, clients:  1<br>10.0.0.3 - members:  1, clients:  1</pre> |
 
 #### Reserving machines for members only
 
-You can reserve machines for members only (which is a Hazelcast recommended setup) using:
+You can reserve machines for members only (which is a Hazelcast recommended setup) using the `--dedicatedMemberMachines` flag:
 
 ```
-coordinator --dedicatedMemberMachines 2
+perftest exec --dedicatedMemberMachines 2
 ```
 
 The algorithm that takes the first 2 IP addresses and distributes the members only across them in a round robin fashion.
 Then takes the rest of the IP addresses and distributes the clients across them, again in the round robin fashion.
 Continuing our [example](#control-distribution-of-workers-over-machines):
 
-| Coordinator arguments | Cluster layout |
+| Tests.yaml properties + perftest flag | Cluster layout |
 | --- | --- |
-| `--members 2 --clients 4 --dedicatedMemberMachines 1` | <pre>10.0.0.1 - members:  2, clients:  0<br>10.0.0.2 - members:  0, clients:  2<br>10.0.0.3 - members:  0, clients:  2</pre> |
-| `--members 3 --clients 4 --dedicatedMemberMachines 2` | <pre>10.0.0.1 - members:  2, clients:  0<br>10.0.0.2 - members:  1, clients:  0<br>10.0.0.3 - members:  0, clients:  4</pre> |
+| `members: 2, clients: 4, --dedicatedMemberMachines 1` | <pre>10.0.0.1 - members:  2, clients:  0<br>10.0.0.2 - members:  0, clients:  2<br>10.0.0.3 - members:  0, clients:  2</pre> |
+| `members: 3, clients: 4, --dedicatedMemberMachines 2` | <pre>10.0.0.1 - members:  2, clients:  0<br>10.0.0.2 - members:  1, clients:  0<br>10.0.0.3 - members:  0, clients:  4</pre> |
 
 You cannot specify more dedicated member machines than you have available. If you define client Workers, there must be at least
 a single remote machine left (e.g. with three remote machines you can specify a maximum of two dedicated member machines).
-
-> If you need more control over the cluster layout, you can make use of the `coordinator-remote` which allows full control on
-layout, versions of clients, servers, etc. Refer to the [Fine-grained control with Coordinator Remote](#fine-grained-control-with-coordinator-remote) section.
 
 ##### Order of the IP addresses
 
@@ -542,25 +592,6 @@ That allows you to fine tune the configuration of the environment. Imagine a typ
 the members on more powerful machines (e.g. more CPUs, more memory) and use lighter and cheaper (e.g. in the cloud) machines
 for the clients.
 
-Example: Suppose you have available 3 "big" machines `10.0.0.3-10.0.0.5` that you want use for 6 members, two members per
-machine and you have 4 "light" machines `10.0.1.1-10.0.1.4` that you want to use for 8 clients. Following command
-and `agents.txt` file achieves this setup:
-
-```
-coordinator --members 6 --clients 8 --dedicatedMemberMachines 2 ...
-```
-
-```
-$ cat agents.txt
-10.0.0.3
-10.0.0.4
-10.0.0.5
-10.0.1.1
-10.0.1.2
-10.0.1.3
-10.0.1.4
-```
-
 > :warning: Running multiple members on a single machines is a Hazelcast performance anti-pattern and should be avoided.
 > We used it only for a demonstration of the cluster layout distribution.
 > Consult [Hazelcast documentation](https://docs.hazelcast.com) for more information about the recommended setup.
@@ -569,7 +600,7 @@ $ cat agents.txt
 
 There are cases where you already have a running cluster and you want to execute performance test against it.
 In other words, you don't want the Simulator to manage your members but only orchestrate the clients.
-In order to do this, you have to:
+In order to do this, you need to use the internal `coordinator` command, and you have to:
 
 * Specify `--members` to `0` - Simulator will not care about members at all, won't control their lifecycle etc.
 * Put member IP addresses in the `client-hazelcast.xml` - since Simulator doesn't control the member lifecycle, it
@@ -601,13 +632,13 @@ in `client-hazelcast.xml`.
 ## Controlling the Hazelcast Configuration
 
 You can specify Hazelcast configuration by placing a `hazelcast.xml` (member configuration) or `client-hazelcast.xml` (client configuration) in your working directory
-(the one from which you're executing the `run` script or `coordinator` command). Simulator will handle the upload of them and makes sure that the
+(the one from which you're executing the `perftest` command). Simulator will handle the upload of them and makes sure that the
 workers are started with them transparently.
 
 If there's no `hazelcast.xml` or `client-hazelcast.xml` in the working directory, Coordinator uses the default files `${SIMULATOR_HOME}/conf/hazelcast.xml` and `${SIMULATOR_HOME}/conf/client-hazelcast.xml`.
 
 > The recommended approach is to either copy the default XML configurations (listed above) into your working directory and
-then modify them, or use the ones generated by `simulator-wizard` as shown in [Quickstart](#quickstart).
+then modify them, or use the ones generated by `perftest create` as shown in [Quickstart](#quickstart).
 > The reason for this is due to the auto-filling markers described below.
 
 ### IP addresses and other configuration auto-filling
@@ -638,50 +669,14 @@ the member lifecycle as well (= most of the time, everytime the `--members` is g
 See [Running tests against an already running cluster](#running-tests-against-an-already-running-cluster) for an
 example when editing this section is actually desired.
 
-## Passing JVM options to client or member processes
-
-Often you need to pass additional JVM arguments to the client or member processes such as enabling GC
-logging, enabling JFR or passing other useful arguments like `-Dhazelcast.partition.count` for Hazelcast partition count.
-You can achieve this simply via `coordinator --memberArgs` and `coordinator --clientArgs`. Here's a complete example:
-
-```
-gcArgs="-verbose:gc -Xloggc:verbosegc.log"
-gcArgs="${gcArgs} -XX:+PrintGCTimeStamps -XX:+PrintGCDetails -XX:+PrintTenuringDistribution -XX:+PrintGCApplicationStoppedTime -XX:+PrintGCApplicationConcurrentTime"
-
-memberJvmArgs="-Dhazelcast.partition.count=${partitions}"
-memberJvmArgs="${memberJvmArgs} -Dhazelcast.health.monitoring.level=NOISY -Dhazelcast.health.monitoring.delay.seconds=${monitorSec}"
-memberJvmArgs="${memberJvmArgs} -Xmx${memberHeapSZ} -XX:+HeapDumpOnOutOfMemoryError"
-memberJvmArgs="${memberJvmArgs} ${gcArgs}"
-
-clientJvmArgs="-Xmx${clientHeapSZ} -XX:+HeapDumpOnOutOfMemoryError"
-clientJvmArgs="${clientJvmArgs} ${gcArgs}"
-
-coordinator --members ${members} \
-            --clients ${clients} \
-            --duration ${duration} \
-            --memberArgs "${memberJvmArgs}" \
-            --clientArgs "${clientJvmArgs}" \
-            --driver hazelcast4 \
-            --version maven=4.2 \
-             ${testsuite}.properties
-```
-
-
 # Run the test
 
-The actual Simulator Test run is done with the `coordinator` command. The created `run` script (via `simulator-wizard` in [Quickstart](#quickstart))
+The actual Simulator Test run is done with the `perftest run` command. The created `tests.yaml` script (via `perftest create` in [Quickstart](#quickstart))
 is a good start to customize your test setup.
-
-It takes four optional parameters to define the number of member and client Workers, the run duration and the name of the TestSuite file.
-So the following command will spawn 4 member Workers, twenty 20 Workers and will run for five minutes (with the default `test.properties` file).
-
- ```
- ./run 4 20 5m
- ```
 
 ## Configure test duration
 
-You can control the duration of the test execution by using the `--duration` argument of the `coordinator` command.
+You can control the duration of the test execution by setting the `duration` property within the `tests.yaml` definition.
 You can specify the time unit for this argument by using
 
 - `s` for seconds
@@ -691,15 +686,6 @@ You can specify the time unit for this argument by using
 
 If you omit the time unit the value will be parsed as seconds. The default duration is 60 seconds.
 
-You can see the usage of the `--duration` argument in the following example commands.
-
-```
-coordinator --duration 90s
-coordinator --duration 3m
-coordinator --duration 12h
-coordinator --duration 2d
-```
-
 The duration is used as the run phase of a Simulator Test (that's the actual test execution). If you have long running warmup or
 verify phases, the total runtime of the TestSuite will be longer.
 
@@ -708,13 +694,10 @@ verify phases, the total runtime of the TestSuite will be longer.
 
 > If you want to run multiple tests in parallel, please refer to the [Running multiple tests in parallel](#running-multiple-tests-in-parallel) section.
 
+
 ## Specify TestSuite file to be used
 
-You can specify the TestSuite file used by passing it directly to the `coordinator` command.
-
-```
-coordinator small-testsuite.properties
-```
+By default `perftest run` will run the `tests.yaml` file in the current directory - you can specify a different file to use with `perftest run another_file.yaml`.
 
 This is very convenient when you want to test multiple test scenarios on the same cluster setup.
 
@@ -722,23 +705,24 @@ This is very convenient when you want to test multiple test scenarios on the sam
 ## Installing Simulator on remote machines
 
 Simulator needs to be installed on the remote machines before you run the tests.
-If you already have your cloud instances provisioned (see [Controlling provisioned machines](#controlling-provisioned-machines)) or run a `static` setup (see [Using static setup](#using-static-setup)),
-you can just install Hazelcast Simulator with the following command.
+If you already have your cloud instances provisioned (see [Controlling provisioned machines](#controlling-provisioned-machines)) or run a `static` setup (see [Using static setup](#using-static-setup)), you can just install Hazelcast Simulator with the following command.
 
 ```
-provisioner --install
+inventory install simulator
 ```
 
 This is also useful whenever you update or change your local Simulator installation (e.g. when developing a test TestSuite)
 and want to re-install Hazelcast Simulator on the remote machines.
 
-This is only necessary if the JAR files have been changed. Configuration changes in your `test.properties` or
+This is only necessary if the JAR files have been changed. Configuration changes in your `tests.yaml` or
 `simulator.properties` **don't require** a new Simulator installation.
 
 # Report generation
 
-Once a benchmark has been executed, a HTML report can be generated using the `perftest report` tool. This tool requires
-Gnuplot 4+ and Python 3.x to be installed for generating the diagrams.
+Once a benchmark has been executed, if using `perftest run`, an HTML report will automatically be generated for you. You can
+disable this behaviour by passing the `--skip_auto_gen_report` flag to `perftest`. You can always generate an HTML reprot on
+demand by using the `perftest report` tool. Report generation requires Gnuplot 4+ and Python 3.x to be installed for
+generating the diagrams.
 
 ## Basics
 
@@ -798,7 +782,7 @@ You can configure Simulator itself using the file `simulator.properties` in your
 always loaded from the `${SIMULATOR_HOME}/conf/simulator.properties` file. Your local properties will override the
 defaults.
 
-For the full reference of available settings and their descriptions, please refer to [default simulator.properties](dist/src/main/dist/conf/simulator.properties).
+For the full reference of available settings and their descriptions, please refer to [default simulator.properties](master/conf/simulator.properties).
 
 # Advanced topics
 
@@ -833,13 +817,14 @@ provides access to a logger, `testContext`, `targetInstance` HazelcastInstance, 
 
 A Simulator test class needs to be a public, non-abstract class with a public no-arg constructor.
 
-Assume the property file to start the test is as follows:
+Assume the tests file to start the test is as follows:
 
 ```
-class=example.MyTest
+  test:
+  - class: example.MyTest
 ```
 
-The main property that needs to be in the property file is the `class` property which needs to point to the full class name.
+The main property that needs to be in the tests file is the `class` property which needs to point to the full class name.
 
 Just like the other annotated methods, `Timestep` methods need to be public due to the code generator and they are allowed to
 throw `Throwable` like checked exceptions:
@@ -883,8 +868,9 @@ In most cases it is best to provide defaults for properties to make customizatio
 The `countersLength` value can be configured as shown below:
 
 ```
-class=example.MyTest
-countersLength=1000
+  test:
+  - class: example.MyTest
+    countersLength: 1000
 ```
 
 The order of the properties in the file is irrelevant.
@@ -910,8 +896,9 @@ public class SomeTest {
 The `config` object can be configured as shown below:
 
 ```
-class=SomeTest
-config.nestedConfig.value=10
+  test:
+  - class: example.SomeTest
+    config.nestedConfig.valu: 1000
 ```
 
 If a property is not used in a test, the test fails during its startup. The reason is that if you would make a typing error and,
@@ -1168,21 +1155,23 @@ When `global` is set to `true`, only one worker is going to trigger the `count.d
 
 ### Stopping a Test
 
-By default a Simulator test will run for a given amount of time using the duration property. Please see the following example:
+By default a Simulator test will run for a given amount of time using the duration property from the `tests.yaml` file. Please see the following example:
 
 ```
-coordinator --duration 5m test.properties
+- name: my_test_suite
+  duration: 300s
 ```
 
-In this example, the test will run for five minutes. In some cases you need more control over when to stop. Currently there are
+In this example, all tests in this suite will run for five minutes each. In some cases you need more control over when to stop. Currently there are
 the following options available:
 
 - **Configuring the number of iterations**:
   The number of iterations can be specified using the test properties:
 
    ```
-   class=example.MyTest
-   iterations=1000000
+    test:
+    - class: example.MyTest
+      iterations: 1000000
    ```
 
   In this case the test will run for 1000k iterations.
@@ -1193,10 +1182,10 @@ the following options available:
 - **`TestContext.stop` to stop all timestep threads**: All timestep threads for a given period on a single worker can be
   stopped using the `TestContext.stop` method.
 
-In all cases, the Coordinator will wait for all timestep threads of all workers to complete. If a duration has been specified, the
+In all cases, the Simulator will wait for all timestep threads of all workers to complete. If a duration has been specified, the
 test will not run longer than this duration.
 
-> :books: Use the `coordinator --waitForTestCaseCompletion` command to let Coordinator wait indefinitely.
+> :books: As the nuclear option, you can use the `inventory destroy` command to destroy your environment if you've got a rogue test that won't stop running!
 
 ### Code Generation
 
@@ -1230,16 +1219,9 @@ JFR_ARGS="-XX:+UnlockCommercialFeatures  \
           -XX:StartFlightRecording=duration=120m,filename=recording.jfr  \
           -XX:+UnlockDiagnosticVMOptions \
           -XX:+DebugNonSafepoints"
-
-coordinator --members 1 \
-            --workerVmOptions "$JFR_ARGS" \
-            --clients 1 \
-            --clientVmOptions "$JFR_ARGS" \
-            sometest.properties
 ```
 
-In the above example, both client and members are configured with JFR. Once the Simulator test has completed, all artifacts
-including the JFR files are downloaded. The JFR files can be opened using the Java Mission Control command `jmc`.
+If these `JFR_ARGS` are added to the `client_args` and `member_args` properties of the `tests.yaml`, then both client and members will be configured with JFR. Once the Simulator test has completed, all artifacts including the JFR files are downloaded. The JFR files can be opened using the Java Mission Control command `jmc`.
 
 ## GC analysis
 
@@ -1250,15 +1232,7 @@ By adding the following options to member/client args, the benchmark generator w
 
 ## Reducing Fluctuations
 
-For more stable performance numbers, set the minimum and maximum heap size to the same value. Please see the following example:
-
-```
-coordinator --members 1 \
-            --workerVmOptions "-Xmx4g -Xms4g" \
-            --clients 1 \
-            --clientVmOptions "-Xmx1g -Xms1g" \
-            sometest.properties
-```
+For more stable performance numbers, set the minimum and maximum heap size to the same value, i.e. `-Xms2G -Xmx2G`
 
 Also set the minimum cluster size to the expected number of members using the following property:
 
@@ -1274,22 +1248,22 @@ and short tests, this can lead to a very big impact on the benchmark numbers.
 
 Hazelcast has a diagnostics system which provides detailed insights on what is happening inside the client or server
 `HazelcastInstance`. It is designed to run in production and has very little performance overhead. It has so little overhead
-that we always enable it when doing benchmarks.
+that we always enable it when doing benchmarks. 
 
 ```
-coordinator --members 1 \
-            --workerVmOptions "-Dhazelcast.diagnostics.enabled=true \
+
+            members_args:     "-Dhazelcast.diagnostics.enabled=true \
                                -Dhazelcast.diagnostics.metric.level=info \
                                -Dhazelcast.diagnostics.invocation.sample.period.seconds=30 \
                                -Dhazelcast.diagnostics.pending.invocations.period.seconds=30 \
                                -Dhazelcast.diagnostics.slowoperations.period.seconds=30" \
-            --clients 1 \
-            --clientVmOptions "-Dhazelcast.diagnostics.enabled=true \
+
+            client_args:      "-Dhazelcast.diagnostics.enabled=true \
                                -Dhazelcast.diagnostics.metric.level=info" \
-            sometest.properties
+
 ```
 
-Using the above example, both client and server have diagnostics enabled. Both will write a diagnostics file. Once the Simulator
+If these flags are added to the `client_args` and `member_args` respectively, both client and server will have diagnostics enabled. Both will write a diagnostics file. Once the Simulator
 run is completed and the artifacts are downloaded, the diagnostics files can be analyzed.
 
 
@@ -1305,8 +1279,9 @@ based Simulator test. There are two types of logging:
 
 You can configure frequency based logging as shown below:
 ```
-class=example.MyTest
-logFrequency=10000
+  test:
+  - class: example.MyTest
+    logFrequency: 10000
 ```
 
 In this example, every 10000 iteration, a log entry is made per timestep thread.
@@ -1314,116 +1289,67 @@ In this example, every 10000 iteration, a log entry is made per timestep thread.
 You can configure time rate based logging as shown below:
 
 ```
-class=example.MyTest
-logRateMs=100
+  test:
+  - class: example.MyTest
+    logRateMs: 100
 ```
 
 In this example, at most every 100ms, a log entry is made per timestep thread.
 
 ## Running multiple tests in parallel
 
-It's possible to run multiple tests simultaneously. In order to do that:
-* You use the extended notation in the `test.properties` file which is:
+It's possible to run multiple tests simultaneously. In order to do that, the `tests.yaml` needs to be setup similarly to this:
 
   ```
-  TestId@key = value
+  - name: parallel_test
+  repetitions: 1
+  duration: 300s
+  clients: 1
+  members: 1
+  loadgenerator_hosts: loadgenerators
+  node_hosts: nodes
+  driver: hazelcast5
+  version: maven=5.1
+  client_args: >
+    -Xms3g
+    -Xmx3g
+  member_args: >
+    -Xms3g
+    -Xmx3g
+  parallel: True
+  test:
+    - class: com.hazelcast.simulator.tests.map.MapCasTest
+      threadCount: 3
+      keyCount: 1000
+    - class: com.hazelcast.simulator.tests.map.MapLockTest
+      name: MapLock_1k_keys
+      threadCount: 3
+      keyCount: 1000
+    - class: com.hazelcast.simulator.tests.map.MapLockTest
+      name: MapLock_5k_keys
+      threadCount: 3
+      keyCount: 5000
   ```
 
-  `TestId` is an arbitrary name that serves as an identifier, so that the Coordinator knows which
-  properties belong to which tests. Here's an example which runs two tests:
+The key aspects of this configuration that allows running multiple tests in parallel are:
 
-  ```
-  FirstTest@class=com.hazelcast.simulator.tests.map.MapEntryListenerTest
-  FirstTest@threadCount=10
-  FirstTest@valueLength=100
+* `parallel: True` needs to be set in the test suite properties - otherwise all tests are run serially.
+* Multiple `test` entries need to be defined; you can't run 1 test in parallel!
+* `test` entries that share the same test `class` should have unique `name` properties defined per test - otherwise only 1 of the tests will be run (as the `class` is used for the test name if not defined explicitly).
 
-  SecondTest@class=com.hazelcast.simulator.tests.map.MapStoreTest
-  SecondTest@threadCount=1
-  SecondTest@keyCount=1000  
-  ```
-
-* You pass `--parallel` to the `coordinator` command, e.g.
-
-  ```
-  coordinator --members ${members} \
-              ...
-              --parallel
-               test.properties
-  ```
-
-## Coordinated Omission
-
-By default the Simulator prevents coordinated omission problems by using the expected start time of a request instead of the
-actual time. So instead of trying to do some kind of a repair after it happened, the Simulator actually prevents the problem
-happening in the first place. A similar technique is used in [JLBH](http://www.rationaljava.com/2016/04/jlbh-introducing-java-latency.html).
-
-If you are interested in the impact of coordinated omission, the protection against it can be disabled using the `accountForCoordinatedOmission` property:
-```
-class=example.MyTest
-threadCount=10
-ratePerSecond=100
-accountForCoordinatedOmission=false
-```
-
-Be extremely careful when setting this property to false and publishing the results. Because the numbers will be a lot more positive
-than they actually are.
-
-The rate of handling requests is controlled using the `Metronome` abstraction and a few flavors are available. One very interesting
-metronome is the `ConstantCombinedRateMetronome`. By default each timestep-thread will wait for a given amount of time for the
-next request and if there is some kind of an obstruction, e.g., a `map.get` is obstructed by a fat entry processor, a bubble
-of requests is built up which is processed as soon as the entry processor has completed.
-
-Instead of building up this bubble, the `ConstantCombinedRateMetronome` can be used. If one thread is obstructing while it wants
-to do a `get`, other timestep-threads from the same execution group will continue with the requests this timestep thread was
-supposed to do. This way the bubble is prevented; unless all timestep threads from the same execution group are obstructed.
-
-The `ConstantCombinedRateMetronome` can be configured as shown below:
-
-```
-class=example.MyTest
-threadCount=10
-ratePerSecond=100
-metronomeClass=com.hazelcast.simulator.worker.metronome.ConstantCombinedRateMetronome
-```
-
-## Measuring Jitter
-To measure jitter caused by the OS/JVM it is possible to activate a Jitter thread using:
-```
-class=example.MyTest
-threadCount=10
-ratePerSecond=100
-recordJitter=true
-```
-This thread will do nothing else besides measuring time and recording it in a probe. The content of this probe results in hdr files
-and can be visualized using the [benchmark report generator](#report-generator).
-
-By default jitter greater or equal to 1000ns is recorded, but can be configured using the `recordJitterThresholdNs` property:
-```
-class=example.MyTest
-threadCount=10
-ratePerSecond=100
-recordJitter=true
-recordJitterThresholdNs=2_000
-```
-To disable the threshold, set `recordJitterThresholdNs` to 0. Warning: if the `recordJitterThresholdNs` is set to a value higher
-than zero, the latency distribution looks distorted because only the outliers are recorded and not the samples below the threshold.
-
-Measuring jitter is only recommended when doing a latency test because you will lose 1 core. Each test instance will create its
-own jitter thread (if the test is configured to use a jitter thread). So it is extremely unlikely that you want to run tests in
-parallel with this feature enabled.
 
 ## Controlling the load generation
 
-Besides the cluster layout you can also control which Workers will execute their RUN phase (= the actual test).
+Besides the cluster layout you can also control the number of Workers which will execute their RUN phase (= the actual test).
 The default is that client Workers are preferred over member Workers. That means if client Workers are used, they will create the load in the cluster,
-otherwise the member Workers will be used. In addition you can limit the number of Workers which will generate the load.
+otherwise the member Workers will be used.
 
 ```
-coordinator --targetType member --targetCount 2
+perftest exec --targetCount 2
 ```
 
-This will limit the load generation to two member Workers, regardless of the client Workers' availability. Please have a look
-at command line help via `coordinator --help` to see all allowed values for these arguments.
+This will limit the load generation to two Workers, regardless of the load generator Workers' availability. Please have a look
+at command line help via `perftest exec --help` to see all allowed values for these arguments.
 
 # Get Help
 
