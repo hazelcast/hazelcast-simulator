@@ -13,13 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.hazelcast.simulator.tests.map.prunability;
 
-public class ScanByPrunedCompositeKeyBenchmarkConstantAccess extends ScanByPrunedCompositeKeyBenchmarkBase {
+import java.util.concurrent.ThreadLocalRandom;
+
+public class PredicateCompoundKeyBenchmarkRandomAccess extends PredicateCompoundKeyBenchmarkBase {
+    private ThreadLocalRandom random;
 
     @Override
     protected int prepareKey() {
-        return entryCount - 1;
+        return random.nextInt(entryCount);
     }
 }
-

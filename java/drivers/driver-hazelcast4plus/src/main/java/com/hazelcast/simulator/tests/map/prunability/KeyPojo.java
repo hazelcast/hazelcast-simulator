@@ -1,8 +1,11 @@
 package com.hazelcast.simulator.tests.map.prunability;
 
-import java.io.Serializable;
+import com.hazelcast.partition.PartitionAware;
 
-public class KeyPojo implements Serializable {
+import java.io.Serializable;
+import java.util.Objects;
+
+public class KeyPojo implements Serializable, PartitionAware<Integer> {
     int a;
     String b;
     long c;
@@ -26,5 +29,10 @@ public class KeyPojo implements Serializable {
 
     public long getC() {
         return c;
+    }
+
+    @Override
+    public Integer getPartitionKey() {
+        return Objects.hash(a, c);
     }
 }
