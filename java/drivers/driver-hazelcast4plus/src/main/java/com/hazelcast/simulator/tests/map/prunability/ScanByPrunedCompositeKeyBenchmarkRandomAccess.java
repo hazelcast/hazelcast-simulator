@@ -15,102 +15,14 @@
  */
 package com.hazelcast.simulator.tests.map.prunability;
 
-import com.hazelcast.config.MapConfig;
-import com.hazelcast.config.PartitioningAttributeConfig;
-import com.hazelcast.map.IMap;
-import com.hazelcast.simulator.hz.HazelcastTest;
-import com.hazelcast.simulator.hz.IdentifiedDataSerializablePojo;
-import com.hazelcast.simulator.test.annotations.Prepare;
-import com.hazelcast.simulator.test.annotations.Setup;
-import com.hazelcast.simulator.test.annotations.Teardown;
-import com.hazelcast.simulator.test.annotations.TimeStep;
-import com.hazelcast.simulator.worker.loadsupport.Streamer;
-import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
-import com.hazelcast.sql.SqlResult;
-import com.hazelcast.sql.SqlRow;
-import com.hazelcast.sql.SqlService;
+import java.util.concurrent.ThreadLocalRandom;
 
-import java.io.Serializable;
-import java.util.List;
-import java.util.Random;
+public class ScanByPrunedCompositeKeyBenchmarkRandomAccess extends ScanByPrunedCompositeKeyBenchmarkBase {
+    private final ThreadLocalRandom random = ThreadLocalRandom.current();
 
-import static java.util.Arrays.asList;
-
-public class ScanByPrunedCompositeKeyBenchmarkRandomAccess extends HazelcastTest {
-
-    // properties
-    // the number of map entries
-    public int entryCount = 500_000;
-
-    private IMap<KeyPojo, String> map;
-    private SqlService sqlService;
-    private String query;
-
-    @Setup
-    public void setUp() {
-        final List<PartitioningAttributeConfig> attributeConfigs = asList(
-                new PartitioningAttributeConfig("a"),
-                new PartitioningAttributeConfig("c")
-        );
-        final MapConfig mapConfig = new MapConfig(name).setPartitioningAttributeConfigs(attributeConfigs);
-        targetInstance.getConfig().addMapConfig(mapConfig);
-        this.sqlService = targetInstance.getSql();
-        this.map = targetInstance.getMap(name);
-
-        this.query = "SELECT this FROM " + name + " WHERE a = ? AND c = ?";
-    }
-
-    @Prepare(global = true)
-    public void prepare() {
-        Streamer<KeyPojo, String> streamer = StreamerFactory.getInstance(map);
-
-        for (int i = 0; i < entryCount; i++) {
-            Integer iKey = i;
-            Long lKey = (long) i;
-            String v = String.format("%010d", iKey);
-            KeyPojo keyPojo = new KeyPojo(iKey, v, lKey);
-            streamer.pushEntry(keyPojo, v);
-        }
-        streamer.await();
-
-        SqlService sqlService = targetInstance.getSql();
-        String createMappingQuery = "CREATE EXTERNAL MAPPING IF NOT EXISTS " + name + " "
-                + "EXTERNAL NAME " + name + " "
-                + "        TYPE IMap\n"
-                + "        OPTIONS (\n"
-                + "                'keyFormat' = 'java',\n"
-                + "                'keyJavaClass' = 'com.hazelcast.simulator.tests.map.prunability.KeyPojo',\n"
-                + "                'valueFormat' = 'java',\n"
-                + "                'valueJavaClass' = 'java.lang.String'\n"
-                + "        )";
-
-        sqlService.execute(createMappingQuery);
-    }
-
-    @TimeStep
-    public void timeStep() throws Exception {
-        int actual = 0;
-        int key = new Random().nextInt(entryCount);
-        try (SqlResult result = sqlService.execute(this.query, key, key)) {
-            for (SqlRow row : result) {
-                Object value = row.getObject(0);
-                if (!(value instanceof String)) {
-                    throw new IllegalStateException("Returned object is not "
-                            + String.class.getSimpleName() + ": " + value);
-                } else {
-                    actual++;
-                }
-            }
-        }
-
-        if (actual != 1) {
-            throw new IllegalArgumentException("Invalid count [expected=" + 1 + ", actual=" + actual + "]");
-        }
-    }
-
-    @Teardown
-    public void tearDown() {
-        map.destroy();
+    @Override
+    protected int prepareKey() {
+        return random.nextInt(entryCount);
     }
 }
 
