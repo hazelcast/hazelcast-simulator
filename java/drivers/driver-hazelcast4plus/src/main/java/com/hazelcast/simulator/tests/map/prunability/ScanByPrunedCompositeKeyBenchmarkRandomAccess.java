@@ -18,11 +18,9 @@ package com.hazelcast.simulator.tests.map.prunability;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class ScanByPrunedCompositeKeyBenchmarkRandomAccess extends ScanByPrunedCompositeKeyBenchmarkBase {
-    private final ThreadLocalRandom random = ThreadLocalRandom.current();
-
     @Override
     protected int prepareKey() {
-        return random.nextInt(entryCount);
+        return ThreadLocalRandom.current().nextInt(entryCount);
     }
 }
 

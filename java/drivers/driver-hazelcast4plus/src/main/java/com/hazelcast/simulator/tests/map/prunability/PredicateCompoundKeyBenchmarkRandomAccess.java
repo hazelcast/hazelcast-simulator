@@ -19,10 +19,9 @@ package com.hazelcast.simulator.tests.map.prunability;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class PredicateCompoundKeyBenchmarkRandomAccess extends PredicateCompoundKeyBenchmarkBase {
-    private ThreadLocalRandom random;
 
     @Override
     protected int prepareKey() {
-        return random.nextInt(entryCount);
+        return ThreadLocalRandom.current().nextInt(entryCount);
     }
 }

@@ -28,17 +28,16 @@ import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 
 
 public abstract class PredicateCompoundKeyBenchmarkBase extends HazelcastTest {
-
     // properties
     // the number of map entries
-    public int entryCount = 10_000_000;
+    public int entryCount = 1_000_000;
 
     //16 byte + N*(20*N
     private IMap<KeyPojo, String> map;
-    private final int arraySize = 20;
 
     @Setup
     public void setUp() {
@@ -59,10 +58,11 @@ public abstract class PredicateCompoundKeyBenchmarkBase extends HazelcastTest {
 
     @TimeStep
     public void timeStep() throws Exception {
-        int i = new Random().nextInt(entryCount);
-        KeyPojo _key = new KeyPojo(i, "" + i, i);
+        int i = prepareKey();
+        final KeyPojo _key = new KeyPojo(i, "" + i, i);
         Set<Map.Entry<KeyPojo, String>> entries = map.entrySet(
-                Predicates.sql("a = " + _key + " AND c = " + _key));
+                Predicates.partitionPredicate(_key.getPartitionKey(), e ->
+                        e.getKey().getA() == _key.getA() && e.getKey().getC() == _key.getC()));
         if (entries.size() != 1) {
             throw new Exception("wrong entry count");
         }
