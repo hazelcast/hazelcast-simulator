@@ -1,6 +1,7 @@
 package com.hazelcast.simulator.tests.map.prunability;
 
 import com.hazelcast.partition.PartitionAware;
+import com.hazelcast.partition.strategy.AttributePartitioningStrategy;
 
 import java.io.Serializable;
 import java.util.Objects;
@@ -31,6 +32,9 @@ public class KeyPojo implements Serializable, PartitionAware<Integer> {
         return c;
     }
 
+    /**
+     * We're using {@link PartitionAware} as PredicateAPI equivalent of  SQL {@link AttributePartitioningStrategy}.
+     */
     @Override
     public Integer getPartitionKey() {
         return Objects.hash(a, c);
