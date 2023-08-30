@@ -88,8 +88,9 @@ public abstract class ScanByPrunedCompositeKeyBenchmarkBase extends HazelcastTes
 
     @TimeStep
     public void timeStep() throws Exception {
-        int key = prepareKey();
-        try (SqlResult result = sqlService.execute(query, key, key)) {
+        final int i = prepareKey();
+        final long l = i;
+        try (SqlResult result = sqlService.execute(query, i, l)) {
             int rowCount = 0;
             for (SqlRow ignored : result) {
                 rowCount++;

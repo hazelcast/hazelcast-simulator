@@ -52,7 +52,7 @@
     - class: com.hazelcast.simulator.tests.map.prunability.ScanByPrunedCompositeKeyBenchmarkRandomAccess
       threadCount: 16
       ratePerSecond: 100
-      entryCount: 100000
+      entryCount: 500000
 
 - name: SQL_CompoundKey_ConstantAccess
   repetitions: *repetitions
@@ -74,7 +74,7 @@
     - class: com.hazelcast.simulator.tests.map.prunability.ScanByPrunedCompositeKeyBenchmarkConstantAccess
       threadCount: 16
       ratePerSecond: 100
-      entryCount: 20000
+      entryCount: 500000
 
 - name: SQL_SimpleKey_RandomAccess
   repetitions: *repetitions
@@ -96,7 +96,7 @@
     - class: com.hazelcast.simulator.tests.map.prunability.ScanBySimpleKeyBenchmark
       threadCount: 16
       ratePerSecond: 100
-      entryCount: 1000000
+      entryCount: 500000
 
 - name: P_CompoundKey_ConstantAccess
   repetitions: *repetitions
@@ -118,7 +118,7 @@
     - class: com.hazelcast.simulator.tests.map.prunability.PredicateCompoundKeyBenchmarkConstantAccess
       threadCount: 16
       ratePerSecond: 100
-      entryCount: 1000000
+      entryCount: 500000
 
 - name: P_CompoundKey_RandomAccess
   repetitions: *repetitions
@@ -140,4 +140,4 @@
     - class: com.hazelcast.simulator.tests.map.prunability.PredicateCompoundKeyBenchmarkRandomAccess
       threadCount: 16
       ratePerSecond: 100
-      entryCount: 1000000
+      entryCount: 500000
