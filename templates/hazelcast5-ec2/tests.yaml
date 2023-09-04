@@ -8,8 +8,8 @@
   driver: hazelcast5
   version: maven=5.1
   client_args: >
-      -Xms3g
-      -Xmx3g
+    -Xms3g
+    -Xmx3g
   member_args: >
     -Xms3g
     -Xmx3g
@@ -17,8 +17,10 @@
   verify_enabled: True
   warmup_seconds: 0
   cooldown_seconds: 0
+  license_key: <add_key_here_if_using_ee>
   test:
-      class: com.hazelcast.simulator.tests.map.IntByteMapTest
+    - class: com.hazelcast.simulator.tests.map.IntByteMapTest
+      name: MyByteTest
       threadCount: 40
       getProb: 1
       putProb: 0
