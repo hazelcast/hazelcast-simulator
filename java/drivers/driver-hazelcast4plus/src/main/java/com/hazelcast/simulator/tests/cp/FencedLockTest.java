@@ -31,7 +31,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Acq/release for uncontended and contented locks.
+ * Acq/release for uncontended and contented locks. Only a single thread per-client should be used. Multiple clients are fine.
+ * This is because the uncontended locks are locks that I want to have no contention on.
  */
 public class FencedLockTest extends HazelcastTest {
     private static final List<String> CONTENDED_LOCKS =
@@ -39,6 +40,7 @@ public class FencedLockTest extends HazelcastTest {
     private AtomicLong totalWorkerAcquireReleases;
 
     private FencedLock[] contendedLocks;
+    private FencedLock[] uncontendedLocks; // these are locks I'm only accessing, I'm == my client; remember one thread please
 
     @Setup
     public void setup() {
@@ -47,11 +49,16 @@ public class FencedLockTest extends HazelcastTest {
         for (int i = 0 ; i < contendedLocks.length; i++) {
             contendedLocks[i] = targetInstance.getCPSubsystem().getLock(CONTENDED_LOCKS.get(i));
         }
+
+        uncontendedLocks = new FencedLock[1_000];
+        for (int i = 0 ; i < uncontendedLocks.length; i++) {
+            uncontendedLocks[i] = targetInstance.getCPSubsystem().getLock(UUID.randomUUID().toString());
+        }
     }
 
     @TimeStep(prob = 0)
     public void acquireReleaseUncontended(ThreadState state) {
-        FencedLock lock = targetInstance.getCPSubsystem().getLock(UUID.randomUUID().toString());
+        FencedLock lock = state.randomUncontendedLock();
         lock.lock();
         try {
         } finally {
@@ -76,6 +83,11 @@ public class FencedLockTest extends HazelcastTest {
         private FencedLock randomContendedLock() {
             int index = randomInt(contendedLocks.length);
             return contendedLocks[index];
+        }
+
+        private FencedLock randomUncontendedLock() {
+            int index = randomInt(uncontendedLocks.length);
+            return uncontendedLocks[index];
         }
     }
 
