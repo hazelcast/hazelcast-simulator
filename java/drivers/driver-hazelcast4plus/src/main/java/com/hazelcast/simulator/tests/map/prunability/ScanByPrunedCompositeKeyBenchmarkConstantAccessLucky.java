@@ -15,20 +15,14 @@
  */
 package com.hazelcast.simulator.tests.map.prunability;
 
-import com.hazelcast.core.HazelcastInstance;
-
-import java.util.concurrent.ThreadLocalRandom;
-
-public class ScanByPrunedCompositeKeyBenchmarkRandomAccess extends ScanByPrunedCompositeKeyBenchmarkBase {
-    @Override
-    protected int computeKey(HazelcastInstance target, boolean isKeyLocal) {
-        // ignore
-        return 0;
-    }
-
-    @Override
-    protected int prepareKey() {
-        return ThreadLocalRandom.current().nextInt(entryCount);
+/**
+ * This is the lucky version of {@link ScanByPrunedCompositeKeyBenchmarkConstantAccess}.
+ * 'Lucky' means that the accessed entry is local to the job coordinator.
+ */
+public class ScanByPrunedCompositeKeyBenchmarkConstantAccessLucky
+        extends ScanByPrunedCompositeKeyBenchmarkConstantAccess {
+    public ScanByPrunedCompositeKeyBenchmarkConstantAccessLucky() {
+        super();
+        this.shouldKeyBeLocal = true;
     }
 }
-

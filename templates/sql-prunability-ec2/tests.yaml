@@ -54,7 +54,7 @@
       ratePerSecond: 100
       entryCount: 500000
 
-- name: SQL_CompoundKey_ConstantAccess
+- name: SQL_CompoundKey_ConstantAccess_Lucky
   repetitions: *repetitions
   parallel: *parallel
   duration: *duration
@@ -71,7 +71,29 @@
   warmup_seconds: *warmup_seconds
   cooldown_seconds: *cooldown_seconds
   test:
-    - class: com.hazelcast.simulator.tests.map.prunability.ScanByPrunedCompositeKeyBenchmarkConstantAccess
+    - class: com.hazelcast.simulator.tests.map.prunability.ScanByPrunedCompositeKeyBenchmarkConstantAccessLucky
+      threadCount: 16
+      ratePerSecond: 100
+      entryCount: 500000
+
+- name: SQL_CompoundKey_ConstantAccess_Unlucky
+  repetitions: *repetitions
+  parallel: *parallel
+  duration: *duration
+  clients: *clients
+  members: *members
+  loadgenerator_hosts: *loadgenerator_hosts
+  node_hosts: *node_hosts
+  driver: *driver
+  version: *version
+  client_args: *client_args
+  member_args: *member_args
+  performance_monitor_interval_seconds: *performance_monitor_interval_seconds
+  verify_enabled: *verify_enabled
+  warmup_seconds: *warmup_seconds
+  cooldown_seconds: *cooldown_seconds
+  test:
+    - class: com.hazelcast.simulator.tests.map.prunability.ScanByPrunedCompositeKeyBenchmarkConstantAccessUnlucky
       threadCount: 16
       ratePerSecond: 100
       entryCount: 500000
@@ -98,7 +120,7 @@
       ratePerSecond: 100
       entryCount: 500000
 
-- name: P_CompoundKey_ConstantAccess
+- name: P_CompoundKey_ConstantAccess_Lucky
   repetitions: *repetitions
   parallel: *parallel
   duration: *duration
