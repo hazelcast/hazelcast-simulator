@@ -17,7 +17,6 @@ package com.hazelcast.simulator.tests.map.prunability;
 
 import com.hazelcast.config.MapConfig;
 import com.hazelcast.config.PartitioningAttributeConfig;
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.map.IMap;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.annotations.Prepare;
@@ -42,9 +41,6 @@ public abstract class ScanByPrunedCompositeKeyBenchmarkBase extends HazelcastTes
     private IMap<KeyPojo, String> map;
     private SqlService sqlService;
     private String query;
-
-    protected Boolean shouldKeyBeLocal;
-    protected int key;
 
     @Setup
     public void setUp() {
@@ -84,8 +80,6 @@ public abstract class ScanByPrunedCompositeKeyBenchmarkBase extends HazelcastTes
         }
         streamer.await();
 
-        key = computeKey(targetInstance, shouldKeyBeLocal);
-
         int size = map.size();
         if (size != entryCount) {
             throw new IllegalArgumentException("Invalid map size : " + size + ", when expecting " + entryCount);
@@ -94,9 +88,9 @@ public abstract class ScanByPrunedCompositeKeyBenchmarkBase extends HazelcastTes
 
     @TimeStep
     public void timeStep() throws Exception {
-        key = prepareKey();
-        final long lKey = key;
-        try (SqlResult result = sqlService.execute(query, key, lKey)) {
+        final int i = prepareKey();
+        final long l = i;
+        try (SqlResult result = sqlService.execute(query, i, l)) {
             int rowCount = 0;
             for (SqlRow ignored : result) {
                 rowCount++;
@@ -107,18 +101,6 @@ public abstract class ScanByPrunedCompositeKeyBenchmarkBase extends HazelcastTes
         }
     }
 
-    /**
-     * Compute the key to be used in the query during {@link #prepare()} phase.
-     * Suitable for constant key access benchmarks.
-     * @return the key to be used in the query.
-     */
-    abstract protected int computeKey(HazelcastInstance target, boolean isKeyLocal);
-
-    /**
-     * Compute the key to be used in the query during {@link #timeStep()} phase.
-     * Suitable for random key access benchmarks.
-     * @return the key to be used in the query.
-     */
     abstract protected int prepareKey();
 
     @Teardown
