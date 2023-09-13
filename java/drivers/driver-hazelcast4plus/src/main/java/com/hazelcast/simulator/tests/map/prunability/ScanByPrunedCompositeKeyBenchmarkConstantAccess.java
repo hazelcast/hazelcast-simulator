@@ -19,7 +19,7 @@ public class ScanByPrunedCompositeKeyBenchmarkConstantAccess extends ScanByPrune
 
     @Override
     protected int prepareKey() {
-        return entryCount - 1;
+        return 1;
     }
 }
 

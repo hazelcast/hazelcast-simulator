@@ -36,7 +36,7 @@ import static java.util.Arrays.asList;
 public abstract class ScanByPrunedCompositeKeyBenchmarkBase extends HazelcastTest {
     // properties
     // the number of map entries
-    public int entryCount = 100_000;
+    public int entryCount = 500_000;
 
     private IMap<KeyPojo, String> map;
     private SqlService sqlService;
@@ -46,19 +46,28 @@ public abstract class ScanByPrunedCompositeKeyBenchmarkBase extends HazelcastTes
     public void setUp() {
         final List<PartitioningAttributeConfig> attributeConfigs = asList(
                 new PartitioningAttributeConfig("a"),
-                new PartitioningAttributeConfig("c")
+                new PartitioningAttributeConfig("x")
         );
         final MapConfig mapConfig = new MapConfig(name).setPartitioningAttributeConfigs(attributeConfigs);
         targetInstance.getConfig().addMapConfig(mapConfig);
         this.sqlService = targetInstance.getSql();
         this.map = targetInstance.getMap(name);
 
-        this.query = "SELECT this FROM " + name + " WHERE a = ? AND c = ?";
+        this.query = "SELECT this FROM " + name + " WHERE a = ? AND x = ?";
     }
 
     @Prepare(global = true)
     public void prepare() {
         SqlService sqlService = targetInstance.getSql();
+        Streamer<KeyPojo, String> streamer = StreamerFactory.getInstance(map);
+
+        for (int i = 0; i < entryCount; i++) {
+            String v = "" + i;
+            KeyPojo keyPojo = new KeyPojo(i, v, i);
+            streamer.pushEntry(keyPojo, v);
+        }
+        streamer.await();
+
         String createMappingQuery = "CREATE EXTERNAL MAPPING IF NOT EXISTS " + name + " "
                 + "EXTERNAL NAME " + name + " "
                 + "        TYPE IMap\n"
@@ -71,15 +80,6 @@ public abstract class ScanByPrunedCompositeKeyBenchmarkBase extends HazelcastTes
 
         sqlService.execute(createMappingQuery);
 
-        Streamer<KeyPojo, String> streamer = StreamerFactory.getInstance(map);
-
-        for (int i = 0; i < entryCount; i++) {
-            String v = "" + i;
-            KeyPojo keyPojo = new KeyPojo(i, v, i);
-            streamer.pushEntry(keyPojo, v);
-        }
-        streamer.await();
-
         int size = map.size();
         if (size != entryCount) {
             throw new IllegalArgumentException("Invalid map size : " + size + ", when expecting " + entryCount);
@@ -89,8 +89,7 @@ public abstract class ScanByPrunedCompositeKeyBenchmarkBase extends HazelcastTes
     @TimeStep
     public void timeStep() throws Exception {
         final int i = prepareKey();
-        final long l = i;
-        try (SqlResult result = sqlService.execute(query, i, l)) {
+        try (SqlResult result = sqlService.execute(query, i, i)) {
             int rowCount = 0;
             for (SqlRow ignored : result) {
                 rowCount++;
