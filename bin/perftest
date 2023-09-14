@@ -19,5 +19,10 @@ if ! hash java 2>/dev/null ; then
     exit 1
 fi
 
+if ! hash rsync 2>/dev/null ; then
+    echo rsync is not detected! Aborting.
+    exit 1
+fi
+
 BINPATH=`dirname $0`
 python3 -u "$BINPATH/../src/perftest_cli.py" $@
