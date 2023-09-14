@@ -196,7 +196,7 @@ This command will update the `JAVA_HOME`/`PATH` on the remote machine to reflect
 
 Install the Simulator:
    ```shell
-   inventory install simulator && inventory tune
+   inventory install simulator
    ```
 
 To destroy the environment, call the following:
