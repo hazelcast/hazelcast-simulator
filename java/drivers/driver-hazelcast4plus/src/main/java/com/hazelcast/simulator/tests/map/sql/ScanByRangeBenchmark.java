@@ -1,20 +1,6 @@
-/*
- * Copyright (c) 2008-2016, Hazelcast, Inc. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.hazelcast.simulator.tests.map.sql;
 
+import com.hazelcast.config.IndexType;
 import com.hazelcast.map.IMap;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.hz.IdentifiedDataWithLongSerializablePojo;
@@ -28,28 +14,33 @@ import com.hazelcast.sql.SqlResult;
 import com.hazelcast.sql.SqlRow;
 import com.hazelcast.sql.SqlService;
 
-import java.math.BigDecimal;
+import java.util.Random;
 
+public class ScanByRangeBenchmark extends HazelcastTest {
 
-public class ScanWithSumAggregateBenchmark extends HazelcastTest {
-
-    // properties
-    // the number of map entries
     public int entryCount = 10_000_000;
-    public int arraySize = 20;
-
-    private long sum;
+    public boolean useIndex = true;
+    public int rangeSize = 10_000;
 
     //16 byte + N*(20*N
     private IMap<Integer, IdentifiedDataWithLongSerializablePojo> map;
+    private SqlService sqlService;
+    private String query;
+    private Random random;
+    public int arraySize = 20;
 
     @Setup
     public void setUp() {
         this.map = targetInstance.getMap(name);
+        this.sqlService = targetInstance.getSql();
+        this.query = "SELECT __key, this FROM " + name + " WHERE \"value\" BETWEEN ? AND ? ";
+        this.random = new Random();
     }
 
     @Prepare(global = true)
     public void prepare() {
+        if (useIndex) map.addIndex(IndexType.SORTED, "value");
+
         Streamer<Integer, IdentifiedDataWithLongSerializablePojo> streamer = StreamerFactory.getInstance(map);
         Integer[] sampleArray = new Integer[arraySize];
         for (int i = 0; i < arraySize; i++) {
@@ -58,15 +49,12 @@ public class ScanWithSumAggregateBenchmark extends HazelcastTest {
 
         for (int i = 0; i < entryCount; i++) {
             Integer key = i;
-            IdentifiedDataWithLongSerializablePojo value =
-                    new IdentifiedDataWithLongSerializablePojo(sampleArray, key.longValue());
-            sum += i;
+            IdentifiedDataWithLongSerializablePojo value = new IdentifiedDataWithLongSerializablePojo(sampleArray, key.longValue());
             streamer.pushEntry(key, value);
         }
         streamer.await();
 
-        SqlService sqlService = targetInstance.getSql();
-        String query = "CREATE EXTERNAL MAPPING IF NOT EXISTS " + name + " "
+        String createQuery = "CREATE EXTERNAL MAPPING IF NOT EXISTS " + name + " "
                 + "EXTERNAL NAME " + name + " "
                 + "        TYPE IMap\n"
                 + "        OPTIONS (\n"
@@ -76,28 +64,28 @@ public class ScanWithSumAggregateBenchmark extends HazelcastTest {
                 + "                'valueJavaClass' = 'com.hazelcast.simulator.hz.IdentifiedDataWithLongSerializablePojo'\n"
                 + "        )";
 
-        sqlService.execute(query);
-
+        sqlService.execute(createQuery);
     }
 
     @TimeStep
     public void timeStep() throws Exception {
-        SqlService sqlService = targetInstance.getSql();
-        String query = "SELECT sum(\"value\") FROM " + name ;
-        try (SqlResult result = sqlService.execute(query)) {
-            int rowCount = 0;
+        int min = random.nextInt(entryCount);
+        int max = Integer.min(min + rangeSize, entryCount - 1);
+        long actual = 0L;
+        try (SqlResult result = sqlService.execute(query, min, max)) {
             for (SqlRow row : result) {
-                long sum = ((BigDecimal) row.getObject(0)).longValue();
-
-                // That can fail with more than one client, feel free to remove it if needed.
-                if (sum != this.sum) {
-                    throw new IllegalArgumentException("Invalid sum [expected=" + this.sum + ", actual=" + sum + "]");
+                Object value = row.getObject(1);
+                if (!(value instanceof IdentifiedDataWithLongSerializablePojo)) {
+                    throw new IllegalStateException("Returned object is not "
+                            + IdentifiedDataWithLongSerializablePojo.class.getSimpleName() + ": " + value);
                 }
-                rowCount++;
+                actual++;
             }
-            if (rowCount != 1) {
-                throw new IllegalArgumentException("Invalid row count [expected=1 , actual=" + rowCount + "]");
-            }
+        }
+
+        int expected = max - min + 1;
+        if (actual != expected) {
+            throw new IllegalArgumentException("Invalid count [expected=" + expected + ", actual=" + actual + "]");
         }
     }
 
@@ -106,4 +94,3 @@ public class ScanWithSumAggregateBenchmark extends HazelcastTest {
         map.destroy();
     }
 }
-

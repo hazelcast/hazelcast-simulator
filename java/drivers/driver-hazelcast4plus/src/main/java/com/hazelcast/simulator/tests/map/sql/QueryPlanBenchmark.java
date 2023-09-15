@@ -66,7 +66,7 @@ public class QueryPlanBenchmark extends HazelcastTest {
         SqlService sqlService = targetInstance.getSql();
 
         int key = new Random().nextInt(entryCount);
-        String query = "SELECT __key, this FROM map0 WHERE CAST(\"value\" AS TINYINT) = " + key;
+        String query = "SELECT __key, this FROM map0 WHERE CAST(\"valueField\" AS TINYINT) = " + key;
         int actual = 0;
         try (SqlResult result = sqlService.execute(query)) {
             for (SqlRow row : result) {

@@ -1,18 +1,3 @@
-/*
- * Copyright (c) 2008-2016, Hazelcast, Inc. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.hazelcast.simulator.tests.map.sql;
 
 import com.hazelcast.map.IMap;
@@ -22,36 +7,42 @@ import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
+import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 import com.hazelcast.sql.SqlResult;
-import com.hazelcast.sql.SqlRow;
 import com.hazelcast.sql.SqlService;
+import com.hazelcast.sql.impl.client.SqlClientService;
 
+import java.util.Random;
 
-public class ScanWithAggregateBenchmark extends HazelcastTest {
+import static org.junit.Assert.assertTrue;
+
+public class UpdateByKey1EntryBenchmark extends HazelcastTest {
 
     // properties
     // the number of map entries
     public int entryCount = 10_000_000;
-    public boolean useKeyInsteadOfAsterisk = true;
 
     //16 byte + N*(20*N
     private IMap<Integer, IdentifiedDataSerializablePojo> map;
     public int arraySize = 20;
+    private Integer[] sampleArray;
+    private Random random;
 
     @Setup
     public void setUp() {
         this.map = targetInstance.getMap(name);
+        sampleArray = new Integer[arraySize];
+        for (int i = 0; i < arraySize; i++) {
+            sampleArray[i] = i;
+        }
+        this.random = new Random();
     }
 
     @Prepare(global = true)
     public void prepare() {
         Streamer<Integer, IdentifiedDataSerializablePojo> streamer = StreamerFactory.getInstance(map);
-        Integer[] sampleArray = new Integer[arraySize];
-        for (int i = 0; i < arraySize; i++) {
-            sampleArray[i] = i;
-        }
 
         for (int i = 0; i < entryCount; i++) {
             Integer key = i;
@@ -61,8 +52,9 @@ public class ScanWithAggregateBenchmark extends HazelcastTest {
         streamer.await();
 
         SqlService sqlService = targetInstance.getSql();
+
         String query = "CREATE EXTERNAL MAPPING IF NOT EXISTS " + name + " "
-                + "EXTERNAL NAME " + name + " "
+                + "EXTERNAL NAME " + name
                 + "        TYPE IMap\n"
                 + "        OPTIONS (\n"
                 + "                'keyFormat' = 'java',\n"
@@ -72,27 +64,35 @@ public class ScanWithAggregateBenchmark extends HazelcastTest {
                 + "        )";
 
         sqlService.execute(query);
-
     }
 
     @TimeStep
     public void timeStep() throws Exception {
+        SqlClientService sqlService = (SqlClientService) targetInstance.getSql();
+
+        String query = "UPDATE " + name + " SET numbers = ?, valueField = ? WHERE __key = ?";
+        int key = random.nextInt(entryCount);
+        String value = String.format("updated%03d", random.nextInt(entryCount));
+        try (SqlResult result = sqlService.execute(query, sampleArray, value, key)) {
+//            if (result.updateCount() != 1) {   // result.updateCount() not implemented see https://github.com/hazelcast/hazelcast/issues/22486
+//                throw new IllegalArgumentException("Invalid count [expected=" + 1 + ", actual=" + result.updateCount() + "]");
+//            }
+        }
+    }
+
+    /**
+     * Checks that values were updated. Since we're using random keys, there's no
+     * guarantee that each key will receive and update. There should be at least
+     * one updated entry, but in reality there will be many. Ideally this will be
+     * removed once `SqlResult.updateCount()` is implemented, and that can be used
+     * for verification per-TimeStep instead.
+     */
+    @Verify
+    public void verify() {
         SqlService sqlService = targetInstance.getSql();
-        String countingBy = useKeyInsteadOfAsterisk ? "__key" : "*";
-        String query = "SELECT COUNT(" + countingBy + ") FROM " + name ;
+        String query = "SELECT * FROM " + name + " WHERE valueField LIKE 'updated%' LIMIT 1";
         try (SqlResult result = sqlService.execute(query)) {
-            int rowCount = 0;
-            for (SqlRow row : result) {
-                long count = row.getObject(0);
-                if (count != entryCount) {
-                    throw new IllegalArgumentException("Invalid count [expected="
-                            + entryCount + ", actual=" + count + "]");
-                }
-                rowCount++;
-            }
-            if (rowCount != 1) {
-                throw new IllegalArgumentException("Invalid row count [expected=1 , actual=" + rowCount + "]");
-            }
+            assertTrue(result.iterator().hasNext());
         }
     }
 
@@ -101,4 +101,3 @@ public class ScanWithAggregateBenchmark extends HazelcastTest {
         map.destroy();
     }
 }
-
