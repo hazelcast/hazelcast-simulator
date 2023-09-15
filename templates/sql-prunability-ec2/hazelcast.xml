@@ -2,7 +2,7 @@
 <hazelcast xmlns="http://www.hazelcast.com/schema/config"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
            xsi:schemaLocation="http://www.hazelcast.com/schema/config
-           http://www.hazelcast.com/schema/config/hazelcast-config-5.0.xsd">
+           http://www.hazelcast.com/schema/config/hazelcast-config-5.3.xsd">
 
     <cluster-name>workers</cluster-name>
 
@@ -24,7 +24,19 @@
         <property name="hazelcast.logging.type">log4j2</property>
     </properties>
 
-    <!--LICENSE-KEY-->
+    <map name="map_constant">
+        <partition-attributes>
+            <attribute>a</attribute>
+            <attribute>x</attribute>
+        </partition-attributes>
+    </map>
+
+    <map name="map_random">
+        <partition-attributes>
+            <attribute>a</attribute>
+            <attribute>x</attribute>
+        </partition-attributes>
+    </map>
 
     <cache name="*">
     </cache>

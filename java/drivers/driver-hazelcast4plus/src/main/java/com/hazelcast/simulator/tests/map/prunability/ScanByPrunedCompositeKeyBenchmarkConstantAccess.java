@@ -18,6 +18,11 @@ package com.hazelcast.simulator.tests.map.prunability;
 public class ScanByPrunedCompositeKeyBenchmarkConstantAccess extends ScanByPrunedCompositeKeyBenchmarkBase {
 
     @Override
+    protected String prepareName() {
+        return "map_constant";
+    }
+
+    @Override
     protected int prepareKey() {
         return 1;
     }

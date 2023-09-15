@@ -15,8 +15,6 @@
  */
 package com.hazelcast.simulator.tests.map.prunability;
 
-import com.hazelcast.config.MapConfig;
-import com.hazelcast.config.PartitioningAttributeConfig;
 import com.hazelcast.map.IMap;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.annotations.Prepare;
@@ -29,10 +27,6 @@ import com.hazelcast.sql.SqlResult;
 import com.hazelcast.sql.SqlRow;
 import com.hazelcast.sql.SqlService;
 
-import java.util.List;
-
-import static java.util.Arrays.asList;
-
 public abstract class ScanByPrunedCompositeKeyBenchmarkBase extends HazelcastTest {
     // properties
     // the number of map entries
@@ -44,16 +38,10 @@ public abstract class ScanByPrunedCompositeKeyBenchmarkBase extends HazelcastTes
 
     @Setup
     public void setUp() {
-        final List<PartitioningAttributeConfig> attributeConfigs = asList(
-                new PartitioningAttributeConfig("a"),
-                new PartitioningAttributeConfig("x")
-        );
-        final MapConfig mapConfig = new MapConfig(name).setPartitioningAttributeConfigs(attributeConfigs);
-        targetInstance.getConfig().addMapConfig(mapConfig);
-        this.sqlService = targetInstance.getSql();
+        this.name = prepareName();
         this.map = targetInstance.getMap(name);
-
         this.query = "SELECT this FROM " + name + " WHERE a = ? AND x = ?";
+        this.sqlService = targetInstance.getSql();
     }
 
     @Prepare(global = true)
@@ -100,7 +88,12 @@ public abstract class ScanByPrunedCompositeKeyBenchmarkBase extends HazelcastTes
         }
     }
 
-    abstract protected int prepareKey();
+    /**
+     * @return map name to scan
+     */
+    protected abstract String prepareName();
+
+    protected abstract int prepareKey();
 
     @Teardown
     public void tearDown() {
