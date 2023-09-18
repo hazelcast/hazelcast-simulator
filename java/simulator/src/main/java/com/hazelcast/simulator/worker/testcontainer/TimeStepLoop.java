@@ -46,7 +46,7 @@ public abstract class TimeStepLoop implements Runnable {
     protected TestContext testContext;
     protected Metronome metronome;
 
-    private final Logger logger = LogManager.getLogger(getClass());
+    protected final Logger logger = LogManager.getLogger(getClass());
     protected final String executionGroup;
     protected final Object threadState;
     protected final Object testInstance;
