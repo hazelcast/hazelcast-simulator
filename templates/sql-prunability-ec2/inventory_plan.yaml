@@ -21,7 +21,6 @@ nodes:
     instance_type: c5.9xlarge
     ami: ami-0d527b8c289b4af7f
     user: ubuntu
-    placement_group: None
     tenancy: null
 
 loadgenerators:
@@ -29,7 +28,6 @@ loadgenerators:
     instance_type: c5.4xlarge
     ami: ami-0d527b8c289b4af7f
     user: ubuntu
-    placement_group: None
     tenancy: null
 
 mc:
@@ -37,5 +35,3 @@ mc:
     count: 0
     ami: ami-0d527b8c289b4af7f
     user: ubuntu
-    placement_group: None
-    tenancy: null

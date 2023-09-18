@@ -4,7 +4,6 @@ terraform_plan: aws
 basename: <id>-<rnd:5>
 # Enter something here that identifies you.
 owner: <id>
-placement_group_name: None
 region: eu-central-1
 availability_zone: eu-central-1a
 vpc_id: vpc-002b5a4e5f8b8ece2
@@ -24,7 +23,6 @@ nodes:
     # ubuntu
     ami: ami-0d527b8c289b4af7f
     user: ubuntu
-    placement_group: None
     tenancy: null
     
 loadgenerators:
@@ -35,7 +33,6 @@ loadgenerators:
     # ubuntu
     ami: ami-0d527b8c289b4af7f
     user: ubuntu
-    placement_group: None
     tenancy: null
 
 mc:
@@ -46,5 +43,4 @@ mc:
     # ubuntu
     ami: ami-0d527b8c289b4af7f
     user: ubuntu
-    placement_group: None
     tenancy: null
