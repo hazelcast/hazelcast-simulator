@@ -198,7 +198,7 @@ class PerfTest:
                 exit_with_error(f"Failed run coordinator, exitcode={self.exitcode}")
             return self.exitcode
 
-    def run(self, tests, tags, auto_gen_report=True):
+    def run(self, tests, tags, skip_report=False):
         for test in tests:
             repetitions = test.get('repetitions')
             if repetitions < 0:
@@ -210,7 +210,7 @@ class PerfTest:
             for i in range(0, repetitions):
                 exitcode, run_path = self.run_test(test)
 
-                if exitcode == 0 and auto_gen_report:
+                if exitcode == 0 and not skip_report:
                     self.collect(run_path,
                                  tags,
                                  warmup_seconds=test.get('warmup_seconds'),
@@ -447,7 +447,7 @@ class PerftestRunCli:
         #                     help="The path where the result of the run need to be stored.")
 
         parser.add_argument('-agr', '--skipReport',
-                            action='store_false', dest='auto_gen_report', default=True,
+                            action='store_true', dest='skip_report', default=False,
                             help="When set, this flag stops the automatic generation of reports after test completion.")
 
         args = parser.parse_args(argv)
@@ -458,7 +458,7 @@ class PerftestRunCli:
         tests = load_yaml_file(args.file)
         perftest = PerfTest()
 
-        perftest.run(tests, tags, args.auto_gen_report)
+        perftest.run(tests, tags, args.skip_report)
 
 
 class PerftestExecCli:
