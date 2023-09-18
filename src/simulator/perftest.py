@@ -446,7 +446,7 @@ class PerftestRunCli:
         #                     nargs=1,
         #                     help="The path where the result of the run need to be stored.")
 
-        parser.add_argument('-agr', '--skip_auto_gen_report',
+        parser.add_argument('-agr', '--skipReport',
                             action='store_false', dest='auto_gen_report', default=True,
                             help="When set, this flag stops the automatic generation of reports after test completion.")
 
