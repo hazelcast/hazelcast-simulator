@@ -20,7 +20,6 @@ import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Setup;
-import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 
@@ -33,6 +32,8 @@ import static org.junit.Assert.assertTrue;
 /**
  * Writes [1,2,4,8,16]kb key(name) value atomic references. These sizes could be slightly off and assume (correctly, I think)
  * no compression whatsoever on our side of the keys-values. You shouldn't enable such compression to be safe even if possible.
+ * <p>
+ * Default is 1kb writes.
  */
 public class IAtomicReferenceTest extends HazelcastTest {
     private AtomicLong totalWrites;
@@ -59,7 +60,7 @@ public class IAtomicReferenceTest extends HazelcastTest {
         return sb.toString();
     }
 
-    @TimeStep(prob = 0)
+    @TimeStep(prob = 1)
     public void oneKbWrite(ThreadState state) {
         write(0, state);
     }
@@ -102,10 +103,5 @@ public class IAtomicReferenceTest extends HazelcastTest {
     @Verify
     public void verify() {
         assertTrue(totalWrites.get() > 0);
-    }
-
-    @Teardown
-    public void teardown() {
-        // destruction won't help us here...
     }
 }

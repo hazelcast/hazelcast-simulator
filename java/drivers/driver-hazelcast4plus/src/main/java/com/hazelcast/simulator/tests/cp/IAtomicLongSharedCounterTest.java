@@ -20,7 +20,6 @@ import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Setup;
-import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 
@@ -65,10 +64,5 @@ public class IAtomicLongSharedCounterTest extends HazelcastTest {
     @Verify
     public void verify() {
         assertTrue(sharedCounter.get() >= totalWorkerIncrements.get());
-    }
-
-    @Teardown
-    public void teardown() {
-        // destruction won't help us here...
     }
 }

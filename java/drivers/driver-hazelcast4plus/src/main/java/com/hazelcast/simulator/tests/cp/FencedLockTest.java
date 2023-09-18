@@ -20,7 +20,6 @@ import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Setup;
-import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 
@@ -33,11 +32,17 @@ import static org.junit.Assert.assertTrue;
 /**
  * Acq/release for uncontended and contented locks. Only a single thread per-client should be used. Multiple clients are fine.
  * This is because the uncontended locks are locks that I want to have no contention on.
+ * <p>
+ * Default is to always acquire-release uncontended locks.
+ * <p>
+ * Default number of uncontended locks is 1000; this can be overridden by defining the property 'uncontendedLockCount'.
+ * Default set of contended locks is 10. You can override this by defining the property 'contendedLockNames' in your configuration.
  */
 public class FencedLockTest extends HazelcastTest {
-    private static final List<String> CONTENDED_LOCKS =
+    public List<String> contendedLockNames =
             List.of("mickey", "donald", "minnie", "daffy", "woody", "buzz", "stitch", "elsa", "ariel", "mulan");
     private AtomicLong totalWorkerAcquireReleases;
+    public int uncontendedLockCount = 1_000;
 
     private FencedLock[] contendedLocks;
     private FencedLock[] uncontendedLocks; // these are locks I'm only accessing, I'm == my client; remember one thread please
@@ -45,18 +50,18 @@ public class FencedLockTest extends HazelcastTest {
     @Setup
     public void setup() {
         totalWorkerAcquireReleases = new AtomicLong();
-        contendedLocks = new FencedLock[CONTENDED_LOCKS.size()];
+        contendedLocks = new FencedLock[contendedLockNames.size()];
         for (int i = 0 ; i < contendedLocks.length; i++) {
-            contendedLocks[i] = targetInstance.getCPSubsystem().getLock(CONTENDED_LOCKS.get(i));
+            contendedLocks[i] = targetInstance.getCPSubsystem().getLock(contendedLockNames.get(i));
         }
 
-        uncontendedLocks = new FencedLock[1_000];
+        uncontendedLocks = new FencedLock[uncontendedLockCount];
         for (int i = 0 ; i < uncontendedLocks.length; i++) {
             uncontendedLocks[i] = targetInstance.getCPSubsystem().getLock(UUID.randomUUID().toString());
         }
     }
 
-    @TimeStep(prob = 0)
+    @TimeStep(prob = 1)
     public void acquireReleaseUncontended(ThreadState state) {
         FencedLock lock = state.randomUncontendedLock();
         lock.lock();
@@ -99,10 +104,5 @@ public class FencedLockTest extends HazelcastTest {
     @Verify
     public void verify() {
         assertTrue(totalWorkerAcquireReleases.get() > 0);
-    }
-
-    @Teardown
-    public void teardown() {
-        // destruction won't help us here...
     }
 }
