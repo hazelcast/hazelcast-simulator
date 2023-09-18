@@ -47,7 +47,7 @@ Now, copy the `*.yaml` files to `myproject`. After you have spun up the environm
 `README.md` in the `myproject` directory you can then do the following (from `myproject`), e.g.
 
 ```bash
-> perftest run iatomiclong-sharedcounter.yaml
+> perftest run iatomicreference.yaml
 ```
 
 Keep an eye on the distribution of clients and members -- they're on distinct VMs and categories, if
