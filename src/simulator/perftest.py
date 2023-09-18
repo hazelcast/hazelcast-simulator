@@ -122,7 +122,7 @@ class PerfTest:
         if license_key:
             args = f"{args} --licenseKey {license_key}"
 
-        if skip_download:
+        if skip_download is not None:
             args = f"{args} --skipDownload {skip_download}"
 
         if run_path:
@@ -165,10 +165,10 @@ class PerfTest:
         if version is not None:
             args = f"""{args} --version "{version}"  """
 
-        if fail_fast:
+        if fail_fast is not None:
             args = f"{args} --failFast {fail_fast}"
 
-        if verify_enabled:
+        if verify_enabled is not None:
             args = f"{args} --verifyEnabled {verify_enabled}"
 
         if member_worker_script:
@@ -180,9 +180,12 @@ class PerfTest:
         with tempfile.NamedTemporaryFile(mode="w", delete=False, prefix="perftest_", suffix=".txt") as tmp:
             if isinstance(test, list):
                 for t in test:
-                    clazzName = t['class'].split('.')[-1]
+                    if 'name' in t:
+                        test_name = t['name']
+                    else:
+                        test_name = t['class'].split('.')[-1]
                     for key, value in t.items():
-                        tmp.write(clazzName+'@')
+                        tmp.write(test_name+'@')
                         tmp.write(f"{key}={value}\n")
             else:
                 for key, value in test.items():
@@ -195,7 +198,7 @@ class PerfTest:
                 exit_with_error(f"Failed run coordinator, exitcode={self.exitcode}")
             return self.exitcode
 
-    def run(self, tests, tags):
+    def run(self, tests, tags, skip_report=False):
         for test in tests:
             repetitions = test.get('repetitions')
             if repetitions < 0:
@@ -207,7 +210,7 @@ class PerfTest:
             for i in range(0, repetitions):
                 exitcode, run_path = self.run_test(test)
 
-                if exitcode == 0:
+                if exitcode == 0 and not skip_report:
                     self.collect(run_path,
                                  tags,
                                  warmup_seconds=test.get('warmup_seconds'),
@@ -225,7 +228,7 @@ class PerfTest:
             run_path=run_path,
             duration=test.get('duration'),
             performance_monitor_interval_seconds=test.get('performance_monitor_interval_seconds'),
-            parallel=test.get('parallel'),    
+            parallel=test.get('parallel'),
             node_hosts=test.get('node_hosts'),
             loadgenerator_hosts=test.get('loadgenerator_hosts'),
             license_key=test.get('license_key'),
@@ -443,15 +446,19 @@ class PerftestRunCli:
         #                     nargs=1,
         #                     help="The path where the result of the run need to be stored.")
 
+        parser.add_argument('-agr', '--skipReport',
+                            action='store_true', dest='skip_report', default=False,
+                            help="When set, this flag stops the automatic generation of reports after test completion.")
+
         args = parser.parse_args(argv)
         tags = parse_tags(args.tag)
-        kill_java = args.kill_java
+        # kill_java = args.kill_java
         # run_path = args.runPath
 
         tests = load_yaml_file(args.file)
         perftest = PerfTest()
 
-        perftest.run(tests, tags)
+        perftest.run(tests, tags, args.skip_report)
 
 
 class PerftestExecCli:
@@ -559,7 +566,7 @@ class PerftestExecCli:
 
         parser.add_argument('--licenseKey',
                             nargs=1,
-                            default="-XX:+HeapDumpOnOutOfMemoryError",
+                            default="",
                             help="Sets the license key for Hazelcast Enterprise Edition.")
 
         parser.add_argument('--skipDownload',

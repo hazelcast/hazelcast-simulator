@@ -14,8 +14,8 @@ The available commands are:
     create      Creates a new performance test based on a template.
     clone       Clones an existing performance test.
     collect     Collects the performance test data and stores it in result.yaml.
-    exec        Executes a performance test.'
-    run         Runs a tests.yaml which is a self contained set of tests'
+    exec        Executes a performance test.
+    run         Runs a tests.yaml which is a self contained set of tests
     kill_java   Kills all Java processes   
     report      Generate performance report 
 '''
