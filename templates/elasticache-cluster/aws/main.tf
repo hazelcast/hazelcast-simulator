@@ -44,7 +44,8 @@ resource "aws_route_table_association" "route_table_association" {
 
 # ========== nodes ==========================
 
-# Currently there is a single placement group defined for all nodes/load generators.
+# If you want to use placement_group, uncomment the commented out 'placementgroup'
+# configuration in the loadgenerators section.
 resource "aws_placement_group" "cluster_placement_group" {
     name     = "simulator-placement-group-${local.settings.basename}"
     strategy = "cluster"
@@ -146,7 +147,7 @@ resource "aws_instance" "loadgenerators" {
     count                   = local.settings.loadgenerators.count
     subnet_id               = aws_subnet.subnet.id
     availability_zone       = local.settings.availability_zone
-    #placement_group        = local.settings.loadgenerators.placement_group
+    #placement_group         = aws_placement_group.cluster_placement_group.name
     vpc_security_group_ids  = [ aws_security_group.loadgenerator-sg.id ]
     tenancy                 = local.settings.loadgenerators.tenancy
     tags = {
