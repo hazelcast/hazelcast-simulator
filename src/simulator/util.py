@@ -139,22 +139,27 @@ def exit_with_error(text):
     exit(1)
 
 
-def shell_logged(cmd, log_file, exit_on_error=False):
-    with open(log_file, "a") as f:
-        result = subprocess.run(cmd, shell=True, text=True, stdout=f, stderr=f)
-        if result.returncode != 0 and exit_on_error:
-            print(f"Failed to run [{cmd}], exitcode: {result.returncode}. Check {log} for details.")
-            exit(1)
-        return result.returncode
+def shell_logged(cmd, log_file_path, exit_on_error=False):
+    return_code = shell(cmd, shell=True, use_print=False, log_file_path=log_file_path)
+    if return_code != 0 and exit_on_error:
+        print(f"Failed to run [{cmd}], exitcode: {return_code}. Check {log_file_path} for details.")
+        exit(1)
+    return return_code
 
 
-def shell(cmd, shell=True, use_print=False):
-    print(cmd)
+def shell(cmd, shell=True, use_print=False, log_file_path=None):
     process = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=shell)
     selector = DefaultSelector()
     selector.register(process.stdout, EVENT_READ)
     selector.register(process.stderr, EVENT_READ)
 
+    if log_file_path:
+        with open(log_file_path, "a") as f:
+            return read_loop(process, selector, use_print, file=f)
+    else:
+        return read_loop(process, selector, use_print)
+
+def read_loop(process, selector, use_print, file=None):
     while True:
         for key, _ in selector.select():
             data = key.fileobj.read1().decode()
@@ -167,7 +172,7 @@ def shell(cmd, shell=True, use_print=False):
             else:
                 log_level = Level.info if key.fileobj is process.stdout else Level.warn
 
-            log(data, log_level)
+            log(data, log_level, file=file)
 
 
 def __parse_tag(s):

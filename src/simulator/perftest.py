@@ -200,6 +200,9 @@ class PerfTest:
     def run(self, tests, tags):
         for test in tests:
             repetitions = test.get('repetitions')
+            if repetitions < 0:
+                continue
+
             if not repetitions:
                 repetitions = 1
 

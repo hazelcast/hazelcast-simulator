@@ -1,0 +1,332 @@
+- name: Definitions
+  repetitions: -1
+  real_repetitions: &repetitions 1
+  parallel: &parallel False
+  duration: &duration 8m
+  clients: &clients 1
+  members: &members 1
+  loadgenerator_hosts: &loadgenerator_hosts loadgenerators
+  node_hosts: &node_hosts nodes
+  driver: &driver hazelcast-enterprise5
+  version: &version maven=5.4.0-SNAPSHOT
+  client_args: &client_args >
+    -Xms10G
+    -Xmx10G
+    -XX:+UnlockDiagnosticVMOptions 
+    -XX:+DebugNonSafepoints
+    -Xlog:codecache+sweep*=trace,class+unload,class+load,os+thread,safepoint,gc*,gc+ergo=trace,gc+age=trace,gc+phases=trace,gc+humongous=trace,jit+compilation=debug:file=verbosegc.log:level,tags,time,uptime:filesize=1048576000,filecount=5
+    -XX:+AlwaysPreTouch
+    -Dhazelcast.health.monitoring.level=NOISY 
+    -Dhazelcast.health.monitoring.delay.seconds=30
+  member_worker_script: &member_worker_script nocache-worker.sh
+  member_args: &member_args >
+    -Xms10G
+    -Xmx10G
+    -XX:+UnlockDiagnosticVMOptions
+    -XX:+DebugNonSafepoints
+    -Xlog:codecache+sweep*=trace,class+unload,class+load,os+thread,safepoint,gc*,gc+ergo=trace,gc+age=trace,gc+phases=trace,gc+humongous=trace,jit+compilation=debug:file=verbosegc.log:level,tags,time,uptime:filesize=1048576000,filecount=5
+    -XX:+AlwaysPreTouch
+    -Dhazelcast.health.monitoring.level=NOISY 
+    -Dhazelcast.health.monitoring.delay.seconds=30
+    -Dhz.licensekey=<your-license-here>
+  performance_monitor_interval_seconds: &performance_monitor_interval_seconds 1
+  verify_enabled: &verify_enabled True
+  warmup_seconds: &warmup_seconds 60
+  cooldown_seconds: &cooldown_seconds 60
+
+- name: SQL_JoinBenchmark_ByKey
+  repetitions: *repetitions
+  parallel: *parallel
+  duration: *duration
+  clients: *clients
+  members: *members
+  loadgenerator_hosts: *loadgenerator_hosts
+  node_hosts: *node_hosts
+  driver: *driver
+  version: *version
+  client_args: *client_args
+  member_worker_script: *member_worker_script
+  member_args: *member_args
+  performance_monitor_interval_seconds: *performance_monitor_interval_seconds
+  verify_enabled: *verify_enabled
+  warmup_seconds: *warmup_seconds
+  cooldown_seconds: *cooldown_seconds
+  test:
+    - class: com.hazelcast.simulator.tests.map.sql.JoinBenchmark
+      threadCount: 8
+      leftEntryCount: 2000
+      rightEntryCount: 4000000
+      rightKey: true
+      useIndices: false
+      arraySize: 20
+
+- name: SQL_JoinBenchmark_ByValueIdx
+  repetitions: *repetitions
+  parallel: *parallel
+  duration: *duration
+  clients: *clients
+  members: *members
+  loadgenerator_hosts: *loadgenerator_hosts
+  node_hosts: *node_hosts
+  driver: *driver
+  version: *version
+  client_args: *client_args
+  member_worker_script: *member_worker_script
+  member_args: *member_args
+  performance_monitor_interval_seconds: *performance_monitor_interval_seconds
+  verify_enabled: *verify_enabled
+  warmup_seconds: *warmup_seconds
+  cooldown_seconds: *cooldown_seconds
+  test:
+    - class: com.hazelcast.simulator.tests.map.sql.JoinBenchmark
+      threadCount: 8
+      leftEntryCount: 2000
+      leftKey: false
+      rightEntryCount: 4000000
+      rightKey: false
+      useIndices: true
+      arraySize: 20
+
+- name: SQL_FullFetchLatency_L24
+  repetitions: *repetitions
+  parallel: *parallel
+  duration: *duration
+  clients: *clients
+  members: *members
+  loadgenerator_hosts: *loadgenerator_hosts
+  node_hosts: *node_hosts
+  driver: *driver
+  version: *version
+  client_args: *client_args
+  member_worker_script: *member_worker_script
+  member_args: *member_args
+  performance_monitor_interval_seconds: *performance_monitor_interval_seconds
+  verify_enabled: *verify_enabled
+  warmup_seconds: *warmup_seconds
+  cooldown_seconds: *cooldown_seconds
+  test:
+   - class: com.hazelcast.simulator.tests.map.sql.JetEngineFullFetchBenchmark
+     threadCount: 8
+     entryCount: 100000
+     arraySize: 20
+
+- name: SQL_ByKey_L
+  repetitions: *repetitions
+  parallel: *parallel
+  duration: *duration
+  clients: *clients
+  members: *members
+  loadgenerator_hosts: *loadgenerator_hosts
+  node_hosts: *node_hosts
+  driver: *driver
+  version: *version
+  client_args: *client_args
+  member_worker_script: *member_worker_script
+  member_args: *member_args
+  performance_monitor_interval_seconds: *performance_monitor_interval_seconds
+  verify_enabled: *verify_enabled
+  warmup_seconds: *warmup_seconds
+  cooldown_seconds: *cooldown_seconds
+  test:
+   - class: com.hazelcast.simulator.tests.map.sql.ScanByKey1EntryBenchmark
+     threadCount: 8
+     entryCount: 20000000
+     arraySize: 20
+
+- name: SQL_ByValueIdx1_L
+  repetitions: *repetitions
+  parallel: *parallel
+  duration: *duration
+  clients: *clients
+  members: *members
+  loadgenerator_hosts: *loadgenerator_hosts
+  node_hosts: *node_hosts
+  driver: *driver
+  version: *version
+  client_args: *client_args
+  member_worker_script: *member_worker_script
+  member_args: *member_args
+  performance_monitor_interval_seconds: *performance_monitor_interval_seconds
+  verify_enabled: *verify_enabled
+  warmup_seconds: *warmup_seconds
+  cooldown_seconds: *cooldown_seconds
+  test:
+   - class: com.hazelcast.simulator.tests.map.sql.ScanByValueIndex1EntryBenchmark
+     threadCount: 8
+     entryCount: 20000000
+     arraySize: 20
+
+- name: SQL_ByRangeIndex
+  repetitions: *repetitions
+  parallel: *parallel
+  duration: *duration
+  clients: *clients
+  members: *members
+  loadgenerator_hosts: *loadgenerator_hosts
+  node_hosts: *node_hosts
+  driver: *driver
+  version: *version
+  client_args: *client_args
+  member_worker_script: *member_worker_script
+  member_args: *member_args
+  performance_monitor_interval_seconds: *performance_monitor_interval_seconds
+  verify_enabled: *verify_enabled
+  warmup_seconds: *warmup_seconds
+  cooldown_seconds: *cooldown_seconds
+  test:
+   - class: com.hazelcast.simulator.tests.map.sql.ScanByRangeBenchmark
+     threadCount: 8
+     entryCount: 4000000
+     useIndex: true
+     rangeSize: 4000
+     arraySize: 20
+
+- name: SQL_ByRange
+  repetitions: *repetitions
+  parallel: *parallel
+  duration: *duration
+  clients: *clients
+  members: *members
+  loadgenerator_hosts: *loadgenerator_hosts
+  node_hosts: *node_hosts
+  driver: *driver
+  version: *version
+  client_args: *client_args
+  member_worker_script: *member_worker_script
+  member_args: *member_args
+  performance_monitor_interval_seconds: *performance_monitor_interval_seconds
+  verify_enabled: *verify_enabled
+  warmup_seconds: *warmup_seconds
+  cooldown_seconds: *cooldown_seconds
+  test:
+    - class: com.hazelcast.simulator.tests.map.sql.ScanByRangeBenchmark
+      threadCount: 8
+      entryCount: 4000000
+      useIndex: false
+      rangeSize: 4000
+      arraySize: 20
+
+- name: SQL_UpdateByKey
+  repetitions: *repetitions
+  parallel: *parallel
+  duration: *duration
+  clients: *clients
+  members: *members
+  loadgenerator_hosts: *loadgenerator_hosts
+  node_hosts: *node_hosts
+  driver: *driver
+  version: *version
+  client_args: *client_args
+  member_worker_script: *member_worker_script
+  member_args: *member_args
+  performance_monitor_interval_seconds: *performance_monitor_interval_seconds
+  verify_enabled: *verify_enabled
+  warmup_seconds: *warmup_seconds
+  cooldown_seconds: *cooldown_seconds
+  test:
+   - class: com.hazelcast.simulator.tests.map.sql.UpdateByKey1EntryBenchmark
+     threadCount: 8
+     entryCount: 20000000
+     arraySize: 20
+
+- name: SQL_ReadWrite_ReadMostly
+  repetitions: *repetitions
+  parallel: *parallel
+  duration: *duration
+  clients: *clients
+  members: *members
+  loadgenerator_hosts: *loadgenerator_hosts
+  node_hosts: *node_hosts
+  driver: *driver
+  version: *version
+  client_args: *client_args
+  member_worker_script: *member_worker_script
+  member_args: *member_args
+  performance_monitor_interval_seconds: *performance_monitor_interval_seconds
+  verify_enabled: *verify_enabled
+  warmup_seconds: *warmup_seconds
+  cooldown_seconds: *cooldown_seconds
+  test:
+   - class: com.hazelcast.simulator.tests.map.sql.SQLReadWriteBenchmark
+     threadCount: 8
+     entryCount: 20000000
+     selectProb: 0.8
+     updateProb: -1
+     arraySize: 20
+
+- name: SQL_ReadWrite_EqualSplit
+  repetitions: *repetitions
+  parallel: *parallel
+  duration: *duration
+  clients: *clients
+  members: *members
+  loadgenerator_hosts: *loadgenerator_hosts
+  node_hosts: *node_hosts
+  driver: *driver
+  version: *version
+  client_args: *client_args
+  member_worker_script: *member_worker_script
+  member_args: *member_args
+  performance_monitor_interval_seconds: *performance_monitor_interval_seconds
+  verify_enabled: *verify_enabled
+  warmup_seconds: *warmup_seconds
+  cooldown_seconds: *cooldown_seconds
+  test:
+   - class: com.hazelcast.simulator.tests.map.sql.SQLReadWriteBenchmark
+     threadCount: 8
+     entryCount: 20000000
+     selectProb: 0.5
+     updateProb: 0.5
+     arraySize: 20
+
+- name: SQL_ReadWriteByValueIdx_ReadMostly
+  repetitions: *repetitions
+  parallel: *parallel
+  duration: *duration
+  clients: *clients
+  members: *members
+  loadgenerator_hosts: *loadgenerator_hosts
+  node_hosts: *node_hosts
+  driver: *driver
+  version: *version
+  client_args: *client_args
+  member_worker_script: *member_worker_script
+  member_args: *member_args
+  performance_monitor_interval_seconds: *performance_monitor_interval_seconds
+  verify_enabled: *verify_enabled
+  warmup_seconds: *warmup_seconds
+  cooldown_seconds: *cooldown_seconds
+  test:
+    - class: com.hazelcast.simulator.tests.map.sql.SQLReadWriteByValueBenchmark
+      threadCount: 8
+      entryCount: 20000000
+      selectProb: 0.8
+      updateProb: -1
+      useIndex: true
+      arraySize: 20
+
+- name: SQL_ReadWriteByValueIdx_EqualSplit
+  repetitions: *repetitions
+  parallel: *parallel
+  duration: *duration
+  clients: *clients
+  members: *members
+  loadgenerator_hosts: *loadgenerator_hosts
+  node_hosts: *node_hosts
+  driver: *driver
+  version: *version
+  client_args: *client_args
+  member_worker_script: *member_worker_script
+  member_args: *member_args
+  performance_monitor_interval_seconds: *performance_monitor_interval_seconds
+  verify_enabled: *verify_enabled
+  warmup_seconds: *warmup_seconds
+  cooldown_seconds: *cooldown_seconds
+  test:
+    - class: com.hazelcast.simulator.tests.map.sql.SQLReadWriteByValueBenchmark
+      threadCount: 8
+      entryCount: 20000000
+      selectProb: 0.5
+      updateProb: 0.5
+      useIndex: true
+      arraySize: 20

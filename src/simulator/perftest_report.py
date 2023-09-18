@@ -4,6 +4,7 @@
 import argparse
 import csv
 import os
+import glob
 import re
 import subprocess
 import shutil
@@ -897,6 +898,18 @@ class Comparison:
                     exit()
                 benchmark_names[last_benchmark] = benchmark_arg[1:len(benchmark_arg) - 1]
                 last_benchmark = None
+            elif compare_last:
+                benchmark_root = benchmark_arg
+                subdirectories = sorted(filter(os.path.isdir, glob.glob(benchmark_root + "/*")))
+
+                benchmark_dir = subdirectories[-1]
+                if not os.path.exists(benchmark_dir):
+                    error("benchmark directory '" + benchmark_dir + "' does not exist!")
+                    exit(1)
+                last_benchmark = benchmark_arg
+                benchmark_dirs.append(benchmark_dir)
+                name = os.path.basename(os.path.normpath(benchmark_root))
+                benchmark_names[benchmark_dir] = name
             else:
                 benchmark_dir = benchmark_arg
                 if not os.path.exists(benchmark_dir):
@@ -1088,6 +1101,7 @@ class PerfTestReportCli:
         parser.add_argument('-c', '--cooldown', nargs=1, default=[0], type=int,
                     help='The cooldown period in seconds. The cooldown removes datapoints from the end.')
         parser.add_argument('-f', '--full', help='Enable individual worker level diagrams.', action="store_true")
+        parser.add_argument('-l', '--last', help='Compare last results from each benchmark', action='store_true')
         parser.add_argument('--svg', help='SVG instead of PNG graphics.', action="store_true")
 
         global args
@@ -1110,6 +1124,9 @@ class PerfTestReportCli:
         warmup_seconds = int(args.warmup[0])
         global cooldown_seconds
         cooldown_seconds = int(args.cooldown[0])
+
+        global compare_last
+        compare_last = args.last
 
         info("Report directory '" + report_dir + "'")
 

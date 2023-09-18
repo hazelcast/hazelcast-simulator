@@ -373,6 +373,6 @@ class PerfRegressionSummaryCli:
         for commit in commits:
             cmd = f"""git --git-dir {git_dir} show -s --format='%H | %ai' {commit}"""
             out = subprocess.check_output(cmd, shell=True, text=True).strip()
-            result_count = sum(r is r for r in Path(f"{dir}/{commit}").rglob('results.yaml'))
+            result_count = sum(r is r for r in Path(f"{dir}/{commit[:10]}").rglob('results.yaml'))
             print(f"{out} results={result_count}")
         return

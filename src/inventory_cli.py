@@ -27,7 +27,7 @@ The available commands are:
 # https://chase-seibert.github.io/blog/2014/03/21/python-multilevel-argparse.html
 
 
-default_url = "https://download.java.net/java/ga/jdk11/openjdk-11_linux-x64_bin.tar.gz"
+default_url = "https://download.java.net/java/GA/jdk17.0.2/dfd4a8d0985749f896bed50d7138ee7f/8/GPL/openjdk-17.0.2_linux-x64_bin.tar.gz"
 
 examples = """
 Oracle JDK:
@@ -41,6 +41,7 @@ Oracle JDK:
         --url=https://simulator-jdk.s3.amazonaws.com/jdk-8u261-linux-x64.tar.gz
         --url=https://download.oracle.com/otn-pub/java/jdk/15+36/779bf45e88a44cbd9ea6621d33e33db1/jdk-15_linux-x64_bin.tar.gz
         --url=https://download.oracle.com/java/17/latest/jdk-17_linux-x64_bin.tar.gz
+        --url=https://download.oracle.com/java/19/latest/jdk-19_linux-x64_bin.tar.gz
 
 OpenJDK jdk.java.net:
 
@@ -51,6 +52,7 @@ OpenJDK jdk.java.net:
         --url=https://download.java.net/java/ga/jdk11/openjdk-11_linux-x64_bin.tar.gz
         --url=https://download.java.net/java/GA/jdk15/779bf45e88a44cbd9ea6621d33e33db1/36/GPL/openjdk-15_linux-x64_bin.tar.gz
         --url=https://download.java.net/java/GA/jdk17.0.2/dfd4a8d0985749f896bed50d7138ee7f/8/GPL/openjdk-17.0.2_linux-x64_bin.tar.gz
+        --url=https://download.java.net/java/GA/jdk19.0.1/afdd2e245b014143b62ccb916125e3ce/10/GPL/openjdk-19.0.1_linux-aarch64_bin.tar.gz
 
 AdoptOpenJDK:
 
@@ -84,6 +86,7 @@ Amazon Coretto:
         --url=https://corretto.aws/downloads/latest/amazon-corretto-15-x64-linux-jdk.tar.gz
         --url=https://corretto.aws/downloads/latest/amazon-corretto-16-x64-linux-jdk.tar.gz
         --url=https://corretto.aws/downloads/latest/amazon-corretto-17-x64-linux-jdk.tar.gz
+        --url=https://corretto.aws/downloads/latest/amazon-corretto-19-x64-linux-jdk.tar.gz
 
 Zulu:
 
@@ -165,7 +168,7 @@ class InventoryInstallCli:
     def async_profiler(self, argv):
         parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter,
                                          description='Install Async Profiler')
-        parser.add_argument("--version", help="Async profiler version", default="2.7")
+        parser.add_argument("--version", help="Async profiler version", default="2.9")
         parser.add_argument("--hosts", help="The target hosts.", default="all:!mc")
 
         args = parser.parse_args(argv)

@@ -1,18 +1,32 @@
 #!/bin/bash
 
-# See https://www.unixteacher.org/blog/display-packets-per-second-on-linux/
 
-time="1"     # one second
-int="eth0"   # network interface
+# Script comes from:
+# https://www.xmodulo.com/measure-packets-per-second-throughput-high-speed-network-interface.html
+
+
+INTERVAL="1"  # update interval in seconds
+
+if [ -z "$1" ]; then
+        echo
+        echo usage: $0 [network-interface]
+        echo
+        echo e.g. $0 eth0
+        echo
+        echo shows packets-per-second
+        exit
+fi
+
+IF=$1
 
 while true
-	do
-		txpkts_old="`cat /sys/class/net/$int/statistics/tx_packets`" # sent packets
-		rxpkts_old="`cat /sys/class/net/$int/statistics/rx_packets`" # recv packets
-			sleep $time
-		txpkts_new="`cat /sys/class/net/$int/statistics/tx_packets`" # sent packets
-                rxpkts_new="`cat /sys/class/net/$int/statistics/rx_packets`" # recv packets
-		txpkts="`expr $txpkts_new - $txpkts_old`"		     # evaluate expressions for sent packets
-		rxpkts="`expr $rxpkts_new - $rxpkts_old`"		     # evaluate expressions for recv packets
-			echo "tx $txpkts pkts/s - rx $rxpkts pkts/ on interface $int"
-	done
+do
+        R1=`cat /sys/class/net/$1/statistics/rx_packets`
+        T1=`cat /sys/class/net/$1/statistics/tx_packets`
+        sleep $INTERVAL
+        R2=`cat /sys/class/net/$1/statistics/rx_packets`
+        T2=`cat /sys/class/net/$1/statistics/tx_packets`
+        TXPPS=`expr $T2 - $T1`
+        RXPPS=`expr $R2 - $R1`
+        echo "TX $1: $TXPPS pkts/s RX $1: $RXPPS pkts/s"
+done

@@ -1,0 +1,41 @@
+provisioner: terraform
+terraform_plan: aws
+# Used for naming resources; give it some unique name specific to a set of benchmarks
+basename: <id>-<rnd:5>
+# Enter something here that identifies you.
+owner: <id>
+placement_group_name: None
+region: us-east-1
+availability_zone: us-east-1b
+vpc_id: vpc-<your-vpc-id-here>
+internet_gateway_id: igw-<your-igw-id-here>
+# Change to a different cidr_block as-needed.
+cidr_block: 10.0.5.0/24
+
+keypair:
+    public_key: key.pub
+    private_key: key
+
+nodes:
+    count: 1
+    instance_type: i3.xlarge
+    ami: ami-04505e74c0741db8d
+    user: ubuntu
+    placement_group: None
+    tenancy: null
+
+loadgenerators:
+    count: 1
+    instance_type: c5.2xlarge
+    ami: ami-04505e74c0741db8d
+    user: ubuntu
+    placement_group: None
+    tenancy: null
+
+mc:
+    instance_type: c5.4xlarge
+    count: 1
+    ami: ami-04505e74c0741db8d
+    user: ubuntu
+    placement_group: None
+    tenancy: null

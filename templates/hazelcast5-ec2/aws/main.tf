@@ -109,7 +109,15 @@ resource "aws_security_group" "node-sg" {
         protocol    = "tcp"
         cidr_blocks = ["0.0.0.0/0"]
     }
-  
+
+    ingress {
+        description = "Hazelcast-tpc"
+        from_port   = 11000
+        to_port     = 12000
+        protocol    = "tcp"
+        cidr_blocks = ["0.0.0.0/0"]
+    }
+
     egress {
         from_port   = 0
         to_port     = 0

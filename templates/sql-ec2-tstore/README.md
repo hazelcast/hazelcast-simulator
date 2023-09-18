@@ -21,10 +21,7 @@ If you want to get the best performance for your environment
 inventory tune
 ```
 
-
 Modify the tests by editing the tests.yaml file.
-
-Also add the License Key to the tests.yaml.
 
 To run the tests
 ```
