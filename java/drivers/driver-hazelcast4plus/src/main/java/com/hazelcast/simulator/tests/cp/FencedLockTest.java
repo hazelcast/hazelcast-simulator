@@ -76,10 +76,7 @@ public class FencedLockTest extends HazelcastTest {
     public void acquireReleaseContended(ThreadState state) {
         FencedLock lock = state.randomContendedLock();
         lock.lock();
-        try {
-        } finally {
-            lock.unlock();
-        }
+        lock.unlock();
         state.acquireReleases++;
     }
 
