@@ -10,7 +10,7 @@ availability_zone: eu-central-1a
 vpc_id: vpc-002b5a4e5f8b8ece2
 internet_gateway_id: igw-02b8fe3ab75871205
 # Change the '20' to a different octet to prevent running into conflicts.
-cidr_block: 10.0.47.0/24
+cidr_block: 10.0.20.0/24
 
 keypair:
     public_key: key.pub
