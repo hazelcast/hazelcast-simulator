@@ -96,6 +96,23 @@ resource "aws_security_group" "node-sg" {
         cidr_blocks = ["0.0.0.0/0"]
     }
 
+
+    ingress {
+        description = "iperf3_udp"
+        from_port   = 3000
+        to_port     = 3000
+        protocol    = "udp"
+        cidr_blocks = ["0.0.0.0/0"]
+    }
+
+    ingress {
+        description = "iperf3_tcp"
+        from_port   = 3000
+        to_port     = 3000
+        protocol    = "tcp"
+        cidr_blocks = ["0.0.0.0/0"]
+    }
+
     ingress {
         description = "Hazelcast"
         from_port   = 5701
@@ -167,6 +184,23 @@ resource "aws_security_group" "loadgenerator-sg" {
         description = "SSH"
         from_port   = 22
         to_port     = 22
+        protocol    = "tcp"
+        cidr_blocks = ["0.0.0.0/0"]
+    }
+
+
+    ingress {
+        description = "iperf3_udp"
+        from_port   = 3000
+        to_port     = 3000
+        protocol    = "udp"
+        cidr_blocks = ["0.0.0.0/0"]
+    }
+
+    ingress {
+        description = "iperf3_tcp"
+        from_port   = 3000
+        to_port     = 3000
         protocol    = "tcp"
         cidr_blocks = ["0.0.0.0/0"]
     }

@@ -132,6 +132,7 @@ class InventoryInstallCli:
             simulator       Installs Simulator
             perf            Installs Linux Perf
             async_profiler  Installs Async Profiler
+            iperf3          Installs iperf3 Profiler
         '''
 
         parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -224,6 +225,22 @@ class InventoryInstallCli:
             exit_with_error(f'Failed to install Simulator, exitcode={exitcode} command=[{cmd}])')
         log_header("Installing Simulator: Done")
 
+    def iperf3(self, argv):
+        parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+                                         description='Install iperf3')
+        parser.add_argument("--hosts", help="The target hosts.", default="all:!mc")
+        args = parser.parse_args(argv)
+
+        hosts = args.hosts
+
+        log_header("Installing iperf3")
+        info(f"hosts={hosts}")
+        cmd = f"ansible-playbook --limit {hosts} --inventory inventory.yaml {simulator_home}/playbooks/install_iperf3.yaml -e simulator_home='{simulator_home}'"
+        info(cmd)
+        exitcode = shell(cmd)
+        if exitcode != 0:
+            exit_with_error(f'Failed to install iperf3, exitcode={exitcode} command=[{cmd}])')
+        log_header("Installing iperf3: Done")
 
 class InventoryImportCli:
 
@@ -436,5 +453,4 @@ class InventoryCli:
 
 
 if __name__ == '__main__':
-    os.path.expanduser('~/your_directory')
     InventoryCli()
