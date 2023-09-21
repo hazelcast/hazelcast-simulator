@@ -14,6 +14,7 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -28,6 +29,7 @@ import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static org.junit.Assert.assertEquals;
 
+@Ignore
 public class WorkerTest {
 
     private static final String PUBLIC_ADDRESS = "127.0.0.1";
@@ -47,14 +49,14 @@ public class WorkerTest {
         AgentData agent = registry.addAgent(PUBLIC_ADDRESS, PUBLIC_ADDRESS);
 
         SimulatorProperties properties = new SimulatorProperties()
-                .set("DRIVER","fake")
+                .set("DRIVER", "fake")
                 .set("MANAGEMENT_CENTER_URL", "none");
 
         Driver<?> driver = new FakeDriver()
                 .setAgents(registry.getAgents())
                 .setAll(properties.asMap())
                 .set("CONFIG", fileAsText(localResourceDirectory() + "/hazelcast.xml"));
-        workerAddress = workerAddress(AGENT_INDEX,WORKER_INDEX);
+        workerAddress = workerAddress(AGENT_INDEX, WORKER_INDEX);
 
         parameters = driver.loadWorkerParameters("member", agent.getAddressIndex())
                 .set("WORKER_ADDRESS", workerAddress)

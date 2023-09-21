@@ -35,11 +35,11 @@ import static java.lang.String.format;
 
 public final class BuildInfoUtils {
 
-    static final int DEFAULT_MAJOR_VERSION = 4;
-    static final int DEFAULT_MINOR_VERSION = 0;
+    static final int DEFAULT_MAJOR_VERSION = 5;
+    static final int DEFAULT_MINOR_VERSION = 3;
 
-    static final int DEFAULT_FALLBACK_MAJOR_VERSION = 4;
-    static final int DEFAULT_FALLBACK_MINOR_VERSION = 0;
+    static final int DEFAULT_FALLBACK_MAJOR_VERSION = 5;
+    static final int DEFAULT_FALLBACK_MINOR_VERSION = 3;
 
     private BuildInfoUtils() {
     }
