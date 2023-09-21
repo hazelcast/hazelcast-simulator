@@ -1,0 +1,15 @@
+---
+- hosts: all
+  tasks:
+    - name: yum update/apt-get update
+      shell: |
+        yum -y update || true
+        apt-get update || true
+      become: yes
+
+    # needed for pcp dstat.
+    - name: Install iperf3
+      ansible.builtin.package:
+        name: iperf3
+        state: present
+      become: yes
