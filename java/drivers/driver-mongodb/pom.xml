@@ -18,7 +18,7 @@
 
     <properties>
         <main.basedir>${project.parent.basedir}</main.basedir>
-        <mongodb-javaclient.version>3.8.0</mongodb-javaclient.version>
+        <mongodb-javaclient.version>3.12.14</mongodb-javaclient.version>
     </properties>
 
     <build>
