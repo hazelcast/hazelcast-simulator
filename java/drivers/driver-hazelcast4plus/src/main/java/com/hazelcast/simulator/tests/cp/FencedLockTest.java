@@ -36,11 +36,10 @@ import static org.junit.Assert.assertTrue;
  * Default is to always acquire-release uncontended locks.
  * <p>
  * Default number of uncontended locks is 1000; this can be overridden by defining the property 'uncontendedLockCount'.
- * Default set of contended locks is 10. You can override this by defining the property 'contendedLockNames' in your configuration.
+ * Default set of contended locks is 100. You can override this by defining the property 'contendedLockCount' in your configuration.
  */
 public class FencedLockTest extends HazelcastTest {
-    public List<String> contendedLockNames =
-            List.of("mickey", "donald", "minnie", "daffy", "woody", "buzz", "stitch", "elsa", "ariel", "mulan");
+    public int contendedLockCount = 100;
     private AtomicLong totalWorkerAcquireReleases;
     public int uncontendedLockCount = 1_000;
 
@@ -50,9 +49,9 @@ public class FencedLockTest extends HazelcastTest {
     @Setup
     public void setup() {
         totalWorkerAcquireReleases = new AtomicLong();
-        contendedLocks = new FencedLock[contendedLockNames.size()];
+        contendedLocks = new FencedLock[contendedLockCount];
         for (int i = 0 ; i < contendedLocks.length; i++) {
-            contendedLocks[i] = targetInstance.getCPSubsystem().getLock(contendedLockNames.get(i));
+            contendedLocks[i] = targetInstance.getCPSubsystem().getLock(String.valueOf(i));
         }
 
         uncontendedLocks = new FencedLock[uncontendedLockCount];
