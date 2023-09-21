@@ -36,9 +36,21 @@
   client_args: >
     -Xms3g
     -Xmx3g
+    --add-modules java.se 
+    --add-exports java.base/jdk.internal.ref=ALL-UNNAMED 
+    --add-opens java.base/java.lang=ALL-UNNAMED 
+    --add-opens java.base/sun.nio.ch=ALL-UNNAMED 
+    --add-opens java.management/sun.management=ALL-UNNAMED 
+    --add-opens jdk.management/com.sun.management.internal=ALL-UNNAMED
   member_args: >
     -Xms3g
     -Xmx3g
+    --add-modules java.se 
+    --add-exports java.base/jdk.internal.ref=ALL-UNNAMED 
+    --add-opens java.base/java.lang=ALL-UNNAMED 
+    --add-opens java.base/sun.nio.ch=ALL-UNNAMED 
+    --add-opens java.management/sun.management=ALL-UNNAMED 
+    --add-opens jdk.management/com.sun.management.internal=ALL-UNNAMED
   loadgenerator_hosts: loadgenerators
   node_hosts: nodes
   verify_enabled: False

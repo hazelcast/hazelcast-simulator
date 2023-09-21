@@ -19,6 +19,12 @@
     -XX:+AlwaysPreTouch
     -Dhazelcast.health.monitoring.level=NOISY 
     -Dhazelcast.health.monitoring.delay.seconds=30
+    --add-modules java.se 
+    --add-exports java.base/jdk.internal.ref=ALL-UNNAMED 
+    --add-opens java.base/java.lang=ALL-UNNAMED 
+    --add-opens java.base/sun.nio.ch=ALL-UNNAMED 
+    --add-opens java.management/sun.management=ALL-UNNAMED 
+    --add-opens jdk.management/com.sun.management.internal=ALL-UNNAMED
   member_args: &member_args >
     -Xms8G
     -Xmx8G
@@ -28,6 +34,12 @@
     -XX:+AlwaysPreTouch
     -Dhazelcast.health.monitoring.level=NOISY 
     -Dhazelcast.health.monitoring.delay.seconds=30
+    --add-modules java.se 
+    --add-exports java.base/jdk.internal.ref=ALL-UNNAMED 
+    --add-opens java.base/java.lang=ALL-UNNAMED 
+    --add-opens java.base/sun.nio.ch=ALL-UNNAMED 
+    --add-opens java.management/sun.management=ALL-UNNAMED 
+    --add-opens jdk.management/com.sun.management.internal=ALL-UNNAMED
   performance_monitor_interval_seconds: &performance_monitor_interval_seconds 5
   verify_enabled: &verify_enabled True
   warmup_seconds: &warmup_seconds 60
