@@ -23,8 +23,6 @@ import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.Assert.assertTrue;
@@ -33,21 +31,19 @@ import static org.junit.Assert.assertTrue;
  * Writes [1,2,4,8,16]kb key(name) value atomic references. These sizes could be slightly off and assume (correctly, I think)
  * no compression whatsoever on our side of the keys-values. You shouldn't enable such compression to be safe even if possible.
  * <p>
- * Default is 1kb writes.
+ * Default is 1kb writes. You can specify the KB size by overriding the [keyValueSizeKb] configuration property.
  */
 public class IAtomicReferenceTest extends HazelcastTest {
     private AtomicLong totalWrites;
 
-    private List<IAtomicReference<String>> atomicReferences;
+    private IAtomicReference<String> atomicReference;
+    public int keyValueSizeKb = 1;
 
     @Setup
     public void setup() {
         totalWrites = new AtomicLong();
-        atomicReferences = new ArrayList<>();
-        for (int i = 1; i <= 16; i *= 2) {
-            String kv = createString(i);
-            atomicReferences.add(targetInstance.getCPSubsystem().getAtomicReference(kv));
-        }
+        String kv = createString(keyValueSizeKb);
+        atomicReference = targetInstance.getCPSubsystem().getAtomicReference(kv);
     }
 
     String createString(int kb) {
@@ -61,32 +57,7 @@ public class IAtomicReferenceTest extends HazelcastTest {
     }
 
     @TimeStep(prob = 1)
-    public void oneKbWrite(ThreadState state) {
-        write(0, state);
-    }
-
-    @TimeStep(prob = 0)
-    public void twoKbWrite(ThreadState state) {
-        write(1, state);
-    }
-
-    @TimeStep(prob = 0)
-    public void fourKbWrite(ThreadState state) {
-        write(2, state);
-    }
-
-    @TimeStep(prob = 0)
-    public void eightKbWrite(ThreadState state) {
-        write(3, state);
-    }
-
-    @TimeStep(prob = 0)
-    public void sixteenKbWrite(ThreadState state) {
-        write(4, state);
-    }
-
-    private void write(int index, ThreadState state) {
-        IAtomicReference<String> atomicReference = atomicReferences.get(index);
+    public void write(ThreadState state) {
         atomicReference.set(atomicReference.getName());
         state.writes++;
     }
