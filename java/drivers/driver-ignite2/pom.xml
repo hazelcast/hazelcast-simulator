@@ -74,6 +74,5 @@
             <version>${commons-logging.version}</version>
         </dependency>
 
-
     </dependencies>
 </project>
