@@ -19,11 +19,7 @@
   cooldown_seconds: 0
   test:
     - class: com.hazelcast.simulator.tests.cp.IAtomicReferenceTest
-      oneKbWriteProb: 1.0
-      twoKbWriteProb: 0.0
-      fourKbWriteProb: 0.0
-      eightKbWriteProb: 0.0
-      sixteenKbWriteProb: 0.0
+      keyValueSizeKb: 1
       threadCount: 40
 - name: set2kb-1client3member
   repetitions: 1
@@ -46,11 +42,7 @@
   cooldown_seconds: 0
   test:
     - class: com.hazelcast.simulator.tests.cp.IAtomicReferenceTest
-      oneKbWriteProb: 0.0
-      twoKbWriteProb: 1.0
-      fourKbWriteProb: 0.0
-      eightKbWriteProb: 0.0
-      sixteenKbWriteProb: 0.0
+      keyValueSizeKb: 2
       threadCount: 40
 - name: set4kb-1client3member
   repetitions: 1
@@ -73,11 +65,7 @@
   cooldown_seconds: 0
   test:
     - class: com.hazelcast.simulator.tests.cp.IAtomicReferenceTest
-      oneKbWriteProb: 0.0
-      twoKbWriteProb: 0.0
-      fourKbWriteProb: 1.0
-      eightKbWriteProb: 0.0
-      sixteenKbWriteProb: 0.0
+      keyValueSizeKb: 4
       threadCount: 40
 - name: set8kb-1client3member
   repetitions: 1
@@ -100,11 +88,7 @@
   cooldown_seconds: 0
   test:
     - class: com.hazelcast.simulator.tests.cp.IAtomicReferenceTest
-      oneKbWriteProb: 0.0
-      twoKbWriteProb: 0.0
-      fourKbWriteProb: 0.0
-      eightKbWriteProb: 1.0
-      sixteenKbWriteProb: 0.0
+      keyValueSizeKb: 8
       threadCount: 40
 - name: set16kb-1client3member
   repetitions: 1
@@ -127,9 +111,5 @@
   cooldown_seconds: 0
   test:
     - class: com.hazelcast.simulator.tests.cp.IAtomicReferenceTest
-      oneKbWriteProb: 0.0
-      twoKbWriteProb: 0.0
-      fourKbWriteProb: 0.0
-      eightKbWriteProb: 0.0
-      sixteenKbWriteProb: 1.0
+      keyValueSizeKb: 16
       threadCount: 40
