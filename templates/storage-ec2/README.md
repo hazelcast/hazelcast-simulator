@@ -1,3 +1,5 @@
+The purpose of this simulator test is to test Hazelcast tiered-storage.
+
 To modify the environment, edit the `inventory_plan.yaml`.
 
 To create the environment.
