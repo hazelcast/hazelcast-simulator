@@ -16,7 +16,7 @@ keypair:
     private_key: key
 
 nodes:
-    count: 2
+    count: 1
     instance_type: c5.4xlarge
     # default AWS AMI
     # ami: ami-05cafdf7c9f772ad2
@@ -26,7 +26,7 @@ nodes:
     tenancy: null
     
 loadgenerators:
-    count: 4
+    count: 1
     instance_type: c5.4xlarge
     # default AWS AMI
     # ami: ami-05cafdf7c9f772ad2

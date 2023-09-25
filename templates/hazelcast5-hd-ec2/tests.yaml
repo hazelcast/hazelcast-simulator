@@ -3,7 +3,7 @@
   duration: 300s
   driver: hazelcast-enterprise5
   version: maven=5.3.0
-  clients: 2
+  clients: 1
   members: 1
   node_hosts: nodes
   loadgenerator_hosts: loadgenerators
