@@ -1540,7 +1540,7 @@ For example:
 
 Each load generator (e.g. client) will run with 40 threads and call the IMap.get method.
 
-This is the most common form of througput testing but isn't ideal. The ideal form of throughput testing would
+This is the most common form of throughput testing but isn't ideal. The ideal form of throughput testing would
 be to determine the max possible throughput of a system by increasing the load.
 
 ### Latency testing
