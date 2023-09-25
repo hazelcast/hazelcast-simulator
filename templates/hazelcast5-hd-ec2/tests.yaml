@@ -1,8 +1,8 @@
 - name: mixed
   repetitions: 1
   duration: 300s
-  driver: hazelcast5
-  version: maven=5.1
+  driver: hazelcast-enterprise5
+  version: maven=5.3.0
   clients: 2
   members: 1
   node_hosts: nodes
@@ -31,8 +31,12 @@
   cooldown_seconds: 0
   license_key: <add key here>
   test:
-      class: com.hazelcast.simulator.tests.map.IntByteMapTest
+    - class: com.hazelcast.simulator.tests.map.LongByteArrayMapTest
+      name: mapnative
       threadCount: 40
-      getProb: 80
-      putProb: 20
-      keyCount: 100_000_000
+      getProb: 1
+      putProb: 0
+      keyDomain: 1_000_000
+      valueCount: 10
+      minValueLength: 1_000
+      maxValueLength: 1_000
