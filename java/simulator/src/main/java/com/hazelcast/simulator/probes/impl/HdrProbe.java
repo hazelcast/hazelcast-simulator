@@ -18,7 +18,7 @@ package com.hazelcast.simulator.probes.impl;
 import com.hazelcast.simulator.probes.Probe;
 import org.HdrHistogram.Recorder;
 
-import static java.util.concurrent.TimeUnit.HOURS;
+import static java.util.concurrent.TimeUnit.DAYS;
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
 
 /**
@@ -26,7 +26,7 @@ import static java.util.concurrent.TimeUnit.MICROSECONDS;
  */
 public class HdrProbe implements Probe {
     // we want to track up to 24-hour.
-    static final long HIGHEST_TRACKABLE_VALUE_NANOS = HOURS.toNanos(24);
+    static final long HIGHEST_TRACKABLE_VALUE_NANOS = DAYS.toNanos(1);
 
     // we care only about microsecond accuracy.
     private static final long LOWEST_DISCERNIBLE_VALUE = MICROSECONDS.toNanos(1);
