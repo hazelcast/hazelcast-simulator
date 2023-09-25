@@ -1609,7 +1609,7 @@ duration with a high value e.g. 12h. Example:
 ### Volume testing
 
 A volume test determines if a system can handle large volumes of data. The simplest approach would
-be to set the keyCount to a large value (it depends on the test of this property is available):
+be to set the `keyCount` to a large value (it depends on the test of this property is available):
 
   ```yaml
         test:
