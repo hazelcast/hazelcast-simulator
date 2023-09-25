@@ -26,11 +26,11 @@
 
     <!--LICENSE-KEY-->
 
-    <map name="map_native">
+    <map name="mapnative">
         <in-memory-format>NATIVE</in-memory-format>
     </map>
 
-    <native-memory enabled="true" allocator-type="POOLED">
+    <native-memory enabled="true">
         <size value="10" unit="GIGABYTES"/>
     </native-memory>
 
