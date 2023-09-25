@@ -25,8 +25,8 @@ import static java.util.concurrent.TimeUnit.MICROSECONDS;
  * HDR-Histogram implementation of the {@link Probe}.
  */
 public class HdrProbe implements Probe {
-    // we want to track up to an hour.
-    static final long HIGHEST_TRACKABLE_VALUE = HOURS.toNanos(1);
+    // we want to track up to 24-hour.
+    static final long HIGHEST_TRACKABLE_VALUE_NANOS = HOURS.toNanos(24);
 
     // we care only about microsecond accuracy.
     private static final long LOWEST_DISCERNIBLE_VALUE = MICROSECONDS.toNanos(1);
@@ -38,7 +38,7 @@ public class HdrProbe implements Probe {
     //https://github.com/HdrHistogram/HdrHistogram#histogram-variants-and-internal-representation
     private final Recorder recorder = new Recorder(
             LOWEST_DISCERNIBLE_VALUE,
-            HIGHEST_TRACKABLE_VALUE,
+            HIGHEST_TRACKABLE_VALUE_NANOS,
             NUMBER_OF_SIGNIFICANT_VALUE_DIGITS);
 
     private final boolean partOfTotalThroughput;
@@ -64,8 +64,8 @@ public class HdrProbe implements Probe {
 
     @Override
     public void recordValue(long latencyNanos) {
-        if (latencyNanos > HIGHEST_TRACKABLE_VALUE) {
-            latencyNanos = HIGHEST_TRACKABLE_VALUE;
+        if (latencyNanos > HIGHEST_TRACKABLE_VALUE_NANOS) {
+            latencyNanos = HIGHEST_TRACKABLE_VALUE_NANOS;
         }
         recorder.recordValue(latencyNanos);
     }
