@@ -1583,8 +1583,8 @@ This will happen at every load generator (e.g. client).
 
 ### Soak testing
 
-A soak test determines how the system behaves over a long period of time to check if there are for
-example any memory leaks. The only thing that needs to be done for this is to configure the test
+A soak test determines how the system behaves over a long period of time, for example to check 
+if there any memory leaks. The only thing that needs to be done for this is to configure the test
 duration with a high value e.g. 12h. Example:
 
   ```yaml
