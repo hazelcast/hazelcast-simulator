@@ -1578,7 +1578,7 @@ With a stress test the load is increased until the system collapses. This can be
       rampupSeconds: 400
   ```
 
-The rampupSeconds is configured as 400; which means that every second 1 thread is going to start.
+The `rampupSeconds` is configured as 400; which means that every second 1 thread is going to start.
 This will happen at every load generator (e.g. client).
 
 ### Soak testing
