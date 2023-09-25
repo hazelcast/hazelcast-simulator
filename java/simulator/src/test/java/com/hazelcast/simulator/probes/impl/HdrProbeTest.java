@@ -7,7 +7,7 @@ import org.junit.Test;
 
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.simulator.probes.impl.HdrProbe.HIGHEST_TRACKABLE_VALUE;
+import static com.hazelcast.simulator.probes.impl.HdrProbe.HIGHEST_TRACKABLE_VALUE_NANOS;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -74,11 +74,11 @@ public class HdrProbeTest {
 
     @Test
     public void testRecord_whenTooLarge() {
-        long value = HIGHEST_TRACKABLE_VALUE * 2;
+        long value = HIGHEST_TRACKABLE_VALUE_NANOS * 2;
         probe.recordValue(value);
 
         Histogram histogram = probe.getRecorder().getIntervalHistogram();
-        assertHistogramContent(histogram, HIGHEST_TRACKABLE_VALUE);
+        assertHistogramContent(histogram, HIGHEST_TRACKABLE_VALUE_NANOS);
     }
 
     private void assertHistogramContent(Histogram histogram, long... requiredValues) {
