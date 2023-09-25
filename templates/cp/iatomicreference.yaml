@@ -6,10 +6,10 @@
   loadgenerator_hosts: loadgenerators
   node_hosts: nodes
   driver: hazelcast5
-  version: maven=5.1
+  version: maven=5.3
   client_args: >
-    -Xms24g
-    -Xmx24g
+    -Xms8g
+    -Xmx8g
   member_args: >
     -Xms24g
     -Xmx24g
@@ -29,10 +29,10 @@
   loadgenerator_hosts: loadgenerators
   node_hosts: nodes
   driver: hazelcast5
-  version: maven=5.1
+  version: maven=5.3
   client_args: >
-    -Xms24g
-    -Xmx24g
+    -Xms8g
+    -Xmx8g
   member_args: >
     -Xms24g
     -Xmx24g
@@ -52,10 +52,10 @@
   loadgenerator_hosts: loadgenerators
   node_hosts: nodes
   driver: hazelcast5
-  version: maven=5.1
+  version: maven=5.3
   client_args: >
-    -Xms24g
-    -Xmx24g
+    -Xms8g
+    -Xmx8g
   member_args: >
     -Xms24g
     -Xmx24g
@@ -75,10 +75,10 @@
   loadgenerator_hosts: loadgenerators
   node_hosts: nodes
   driver: hazelcast5
-  version: maven=5.1
+  version: maven=5.3
   client_args: >
-    -Xms24g
-    -Xmx24g
+    -Xms8g
+    -Xmx8g
   member_args: >
     -Xms24g
     -Xmx24g
@@ -98,10 +98,10 @@
   loadgenerator_hosts: loadgenerators
   node_hosts: nodes
   driver: hazelcast5
-  version: maven=5.1
+  version: maven=5.3
   client_args: >
-    -Xms24g
-    -Xmx24g
+    -Xms8g
+    -Xmx8g
   member_args: >
     -Xms24g
     -Xmx24g
