@@ -1564,7 +1564,7 @@ Simulator will handle coordinated omission correctly.
 ### Stress testing
 
 With a stress test the load is increased until the system collapses. This can be done using the
-rampupSeconds. This is demonstrated in the following example:
+`rampupSeconds`. This is demonstrated in the following example:
 
   ```yaml
   test:
