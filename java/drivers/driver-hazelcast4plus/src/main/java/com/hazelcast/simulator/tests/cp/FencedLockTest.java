@@ -23,7 +23,6 @@ import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -40,9 +39,8 @@ import static org.junit.Assert.assertTrue;
  */
 public class FencedLockTest extends HazelcastTest {
     public int contendedLockCount = 100;
-    private AtomicLong totalWorkerAcquireReleases;
     public int uncontendedLockCount = 1_000;
-
+    private AtomicLong totalWorkerAcquireReleases;
     private FencedLock[] contendedLocks;
     private FencedLock[] uncontendedLocks; // these are locks I'm only accessing, I'm == my client; remember one thread please
 

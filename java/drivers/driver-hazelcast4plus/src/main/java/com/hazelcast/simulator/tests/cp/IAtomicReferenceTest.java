@@ -22,6 +22,7 @@ import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
+import com.hazelcast.simulator.utils.GeneratorUtils;
 
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -34,10 +35,9 @@ import static org.junit.Assert.assertTrue;
  * Default is 1kb writes. You can specify the KB size by overriding the [keyValueSizeKb] configuration property.
  */
 public class IAtomicReferenceTest extends HazelcastTest {
-    private AtomicLong totalWrites;
-
-    private IAtomicReference<String> atomicReference;
     public int keyValueSizeKb = 1;
+    private AtomicLong totalWrites;
+    private IAtomicReference<String> atomicReference;
 
     @Setup
     public void setup() {
@@ -49,11 +49,7 @@ public class IAtomicReferenceTest extends HazelcastTest {
     String createString(int kb) {
         int bytes = kb * 1024;
         int charsRequired = bytes / 2;
-        StringBuilder sb = new StringBuilder(bytes);
-        for (int i = 0; i < charsRequired; i++) {
-            sb.append('a');
-        }
-        return sb.toString();
+        return GeneratorUtils.generateAsciiString(charsRequired);
     }
 
     @TimeStep(prob = 1)
