@@ -15,10 +15,38 @@
  */
 package com.hazelcast.simulator.test;
 
+import com.hazelcast.simulator.probes.Probe;
+
 /**
  * The TestContext is they way for a test to get access to test related information. Most importantly if a test is running.
  */
 public interface TestContext {
+
+    /**
+     * Gets a probe with the given name.
+     *
+     * @param name the name of the probe
+     * @return the Probe
+     * @throws NullPointerException if name is null.
+     */
+    default Probe getProbe(String name) {
+        return getProbe(name, true);
+    }
+
+    /**
+     * Gets a probe with the given name.
+     *
+     * @param name             the name of the probe
+     * @param partOfThroughput if the measurements of this probe are part of the
+     *                         throughput. Within timestep methods, the throughput
+     *                         is already accounted for by tracking it in a counter.
+     *                         So in that case probes need to be created where
+     *                         the throughput is ignored; otherwise it would lead
+     *                         to double counting.
+     * @return the Probe
+     * @throws NullPointerException if name is null.
+     */
+    Probe getProbe(String name, boolean partOfThroughput);
 
     /**
      * Returns the id of the current test.
@@ -48,7 +76,7 @@ public interface TestContext {
      * Stops the run or warmup phase. In most cases an outside duration is passed and the test will run as long as needed or
      * until an exception is thrown. But in certain condition the implementer of a test wants to stop the run/warmup phase
      * directly.
-     *
+     * <p>
      * Once stopped, the test moves on to the next phase. If the warmup is stopped, the test will eventually move on to the
      * run phase.
      */
@@ -56,12 +84,12 @@ public interface TestContext {
 
     /**
      * Echoes a message to coordinator.
-     *
+     * <p>
      * Be very careful sending huge quantities of messages to the coordinator because it cause stability issues. Messages are
      * written async, so you could easily kill the by flooding it or causing other problems. So don't use this as a debug logging
      * alternative.
      *
-     * @param msg the message to send
+     * @param msg  the message to send
      * @param args the arguments
      */
     void echoCoordinator(String msg, Object... args);

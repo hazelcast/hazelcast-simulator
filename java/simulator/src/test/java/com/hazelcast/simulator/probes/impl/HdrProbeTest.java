@@ -21,13 +21,13 @@ public class HdrProbeTest {
     @Test
     public void testConstructor_throughputProbe() {
         Probe tmpProbe = new HdrProbe(true);
-        assertTrue(tmpProbe.isPartOfTotalThroughput());
+        assertTrue(tmpProbe.isPartOfThroughput());
     }
 
     @Test
     public void testConstructor_noThroughputProbe() {
         Probe tmpProbe = new HdrProbe(false);
-        assertFalse(tmpProbe.isPartOfTotalThroughput());
+        assertFalse(tmpProbe.isPartOfThroughput());
     }
 
     @Test

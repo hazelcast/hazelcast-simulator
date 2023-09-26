@@ -12,6 +12,6 @@ public class EmptyProbeTest {
         emptyProbe.reset();
         emptyProbe.done(10);
         emptyProbe.recordValue(20);
-        assertFalse(emptyProbe.isPartOfTotalThroughput());
+        assertFalse(emptyProbe.isPartOfThroughput());
     }
 }

@@ -88,13 +88,6 @@ public class TestContainer_BasicTest extends TestContainer_AbstractTest {
     }
 
     @Test
-    public void testGetProbeMap() {
-        testContainer = createTestContainer(new BaseTest());
-
-        assertEquals(0, testContainer.getProbeMap().size());
-    }
-
-    @Test
     public void testAnnotationInheritance_withSetupInBaseClass_withRunInChildClass() throws Exception {
         // @Setup method will be called from base class, not from child class
         // @Run method will be called from child class, not from base class

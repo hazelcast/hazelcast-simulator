@@ -67,7 +67,6 @@ public class PropertyBinding {
     private MetronomeSupplier workerMetronomeConstructor;
     private final Class<? extends Probe> probeClass;
     private TestContextImpl testContext;
-    private final Map<String, Probe> probeMap = new ConcurrentHashMap<>();
     private final TestCase testCase;
     private final Set<String> unusedProperties = new HashSet<>();
     private Object driverInstance;
@@ -104,10 +103,6 @@ public class PropertyBinding {
             throw new BindException(format("The following properties %s have not been used on '%s'"
                     , unusedProperties, testCase.getClassname()));
         }
-    }
-
-    public Map<String, Probe> getProbeMap() {
-        return probeMap;
     }
 
     public String load(String property) {
@@ -239,19 +234,6 @@ public class PropertyBinding {
 
     private Class<? extends Probe> loadProbeClass() {
         return measureLatency ? HdrProbe.class : null;
-    }
-
-    public Probe getOrCreateProbe(String probeName, boolean partOfTotalThroughput) {
-        if (probeClass == null) {
-            return EmptyProbe.INSTANCE;
-        }
-
-        Probe probe = probeMap.get(probeName);
-        if (probe == null) {
-            probe = new HdrProbe(partOfTotalThroughput);
-            probeMap.put(probeName, probe);
-        }
-        return probe;
     }
 
     public TestCase getTestCase() {

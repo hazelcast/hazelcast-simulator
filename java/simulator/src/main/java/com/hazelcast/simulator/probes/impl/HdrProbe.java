@@ -41,15 +41,15 @@ public class HdrProbe implements Probe {
             HIGHEST_TRACKABLE_VALUE_NANOS,
             NUMBER_OF_SIGNIFICANT_VALUE_DIGITS);
 
-    private final boolean partOfTotalThroughput;
+    private final boolean partOfThroughput;
 
-    public HdrProbe(boolean partOfTotalThroughput) {
-        this.partOfTotalThroughput = partOfTotalThroughput;
+    public HdrProbe(boolean partOfThroughput) {
+        this.partOfThroughput = partOfThroughput;
     }
 
     @Override
-    public boolean isPartOfTotalThroughput() {
-        return partOfTotalThroughput;
+    public boolean isPartOfThroughput() {
+        return partOfThroughput;
     }
 
     @Override
