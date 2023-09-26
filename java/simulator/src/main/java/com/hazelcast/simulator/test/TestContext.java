@@ -15,11 +15,43 @@
  */
 package com.hazelcast.simulator.test;
 
+import com.hazelcast.simulator.probes.Probe;
+
 /**
  * The TestContext is they way for a test to get access to test related
  * information. Most importantly if a test is running.
  */
 public interface TestContext {
+
+    /**
+     * Gets a probe with the given name.
+     * <p/>
+     * This method is threadsafe.
+     *
+     * @param name the name of the probe
+     * @return the Probe
+     * @throws NullPointerException if name is null.
+     */
+    default Probe getProbe(String name) {
+        return getProbe(name, true);
+    }
+
+    /**
+     * Gets a probe with the given name.
+     * <p/>
+     * This method is threadsafe.
+     *
+     * @param name             the name of the probe
+     * @param partOfThroughput if the measurements of this probe are part of the
+     *                         throughput. Within timestep methods, the throughput
+     *                         is already accounted for by tracking it in a counter.
+     *                         So in that case probes need to be created where
+     *                         the throughput is ignored; otherwise it would lead
+     *                         to double counting.
+     * @return the Probe
+     * @throws NullPointerException if name is null.
+     */
+    Probe getProbe(String name, boolean partOfThroughput);
 
     /**
      * Returns the id of the current test.

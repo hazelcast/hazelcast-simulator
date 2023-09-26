@@ -29,7 +29,7 @@ public class EmptyProbe implements Probe {
     public static final EmptyProbe INSTANCE = new EmptyProbe();
 
     @Override
-    public boolean isPartOfTotalThroughput() {
+    public boolean isPartOfThroughput() {
         return false;
     }
 

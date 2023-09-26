@@ -96,7 +96,7 @@ public class TestContainer {
                 .setTestContext(testContext);
 
         propertyBinding.bind(this);
-
+        testContext.setProbeClass(propertyBinding.getProbeClass());
         if (givenTestInstance == null) {
             this.testInstance = newTestInstance();
         } else {
@@ -151,7 +151,7 @@ public class TestContainer {
         return testInstance;
     }
 
-    public TestContext getTestContext() {
+    public TestContextImpl getTestContext() {
         return testContext;
     }
 
@@ -169,10 +169,6 @@ public class TestContainer {
 
     public long iteration() {
         return runner == null ? 0 : runner.iterations();
-    }
-
-    public Map<String, Probe> getProbeMap() {
-        return propertyBinding.getProbeMap();
     }
 
     public void invoke(TestPhase testPhase) throws Exception {
@@ -210,7 +206,7 @@ public class TestContainer {
 
             taskPerPhaseMap.put(RUN, () -> {
                 if (propertyBinding.recordJitter) {
-                    Probe probe = propertyBinding.getOrCreateProbe("jitter", false);
+                    Probe probe = testContext.getProbe("jitter", false);
                     new JitterThread(testContext, probe, propertyBinding.recordJitterThresholdNs).start();
                 }
                 runner.run();
