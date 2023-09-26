@@ -25,6 +25,8 @@ public interface TestContext {
 
     /**
      * Gets a probe with the given name.
+     * <p/>
+     * This method is threadsafe.
      *
      * @param name the name of the probe
      * @return the Probe
@@ -36,6 +38,8 @@ public interface TestContext {
 
     /**
      * Gets a probe with the given name.
+     * <p/>
+     * This method is threadsafe.
      *
      * @param name             the name of the probe
      * @param partOfThroughput if the measurements of this probe are part of the
