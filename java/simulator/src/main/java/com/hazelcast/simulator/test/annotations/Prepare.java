@@ -22,11 +22,13 @@ import java.lang.annotation.Target;
 
 /**
  * In the Prepare expensive things like filling a Map can be done.
- *
- * Multiple {@link Prepare} methods are allowed. The {@link Prepare} methods on a subclass are executed before
- * the {@link Prepare} methods on a super class, however there is no ordering within the same class. This is the same
- * semantics as provided by junit. However local {@link Prepare} always happens before global {@link Prepare}.
- *
+ * <p/>
+ * Multiple {@link Prepare} methods are allowed. The {@link Prepare} methods
+ * on a subclass are executed before the {@link Prepare} methods on a super class,
+ * however there is no ordering within the same class. This is the same semantics
+ * as provided by junit. However local {@link Prepare} always happens before
+ * global {@link Prepare}.
+ * <p/>
  * The prepare method(s) is called only once per test-instance.
  */
 @Retention(RetentionPolicy.RUNTIME)
@@ -34,12 +36,13 @@ import java.lang.annotation.Target;
 public @interface Prepare {
 
     /**
-     * Global indicates that a single member in the cluster is responsible for the warmup. If not global, then
-     * all members in the cluster will do the warmup. Be careful that not every worker is going to do the exact
-     * same warmup.
-     *
-     * If you have a lot of data you want to put in the system, then probably you don't want to use global = true
-     * because all loads will be generated through a single member in the cluster.
+     * Global indicates that a single member in the cluster is responsible for
+     * the warmup. If not global, then all members in the cluster will do the warmup.
+     * Be careful that not every worker is going to do the exact same warmup.
+     * <p/>
+     * If you have a lot of data you want to put in the system, then probably
+     * you don't want to use global = true because all loads will be generated
+     * through a single member in the cluster.
      *
      * @return <tt>true</tt> if global teardown method, <tt>false</tt> otherwise
      */

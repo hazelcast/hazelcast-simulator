@@ -22,16 +22,18 @@ import java.lang.annotation.Target;
 
 /**
  * Is run after a thread is executing its {@link TimeStep} methods.
- *
- * For every load generating thread, there will be one call to the {@link AfterRun} method.
- * If the test has no {@link TimeStep} methods, methods with {@link AfterRun} are ignored.
- *
- * An AfterRun is only called if preceding methods like BeforeRun, TimeStep and other
- * AfterRun methods have completed without exception.
- *
- * Multiple {@link AfterRun} methods are allowed. The {@link AfterRun} method on a subclass is executed before
- * the {@link AfterRun} methods on a super class, however there is no ordering within the same class. This is the same
- * semantics as provided by junit.
+ * <p/>
+ * For every load generating thread, there will be one call to the {@link AfterRun}
+ * method. If the test has no {@link TimeStep} methods, methods with {@link AfterRun}
+ * are ignored.
+ * <p/>
+ * An AfterRun is only called if preceding methods like BeforeRun, TimeStep and
+ * other AfterRun methods have completed without exception.
+ * <p/>
+ * Multiple {@link AfterRun} methods are allowed. The {@link AfterRun} method on
+ * a subclass is executed before the {@link AfterRun} methods on a super class,
+ * however there is no ordering within the same class. This is the same semantics
+ * as provided by junit.
  *
  * @see TimeStep
  * @see BeforeRun

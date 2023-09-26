@@ -16,10 +16,11 @@
 package com.hazelcast.simulator.test;
 
 /**
- * The {@link StopException} can be thrown in an {@link com.hazelcast.simulator.test.annotations.TimeStep} based test
- * to signal that the timestep thread doesn't want to run any longer, but doesn't want to cause any failures. Also it doesn't
- * impact any other timestep-thread.
- *
+ * The {@link StopException} can be thrown in an
+ * {@link com.hazelcast.simulator.test.annotations.TimeStep} based test to signal
+ * that the timestep thread doesn't want to run any longer, but doesn't want to
+ * cause any failures. Also it doesn't impact any other timestep-thread.
+ * <p/>
  * e.g.
  *
  * <pre>
@@ -30,8 +31,9 @@ package com.hazelcast.simulator.test;
  * }
  * </pre>
  *
- * The StopException can only be thrown in the TimeStep exceptions without leading to failure. If a StopException is thrown
- * in any other method, it will be considered a normal exception.
+ * The StopException can only be thrown in the TimeStep exceptions without
+ * leading to failure. If a StopException is thrown in any other method,
+ * it will be considered a normal exception.
  */
 public class StopException extends RuntimeException {
 }
