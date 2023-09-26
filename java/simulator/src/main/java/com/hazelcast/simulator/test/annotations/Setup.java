@@ -21,10 +21,11 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Multiple {@link Setup} methods are allowed. The {@link Setup} methods on a subclass are executed before
- * the {@link Setup} methods on a super class, however there is no ordering within the same class. This is the same
- * semantics as provided by junit.
- *
+ * Multiple {@link Setup} methods are allowed. The {@link Setup} methods on a
+ * subclass are executed before the {@link Setup} methods on a super class,
+ * however there is no ordering within the same class. This is the same semantics
+ * as provided by junit.
+ * <p/>
  * The setup method(s) is called at most once per test-instance.
  */
 @Retention(RetentionPolicy.RUNTIME)

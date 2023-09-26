@@ -22,15 +22,18 @@ import java.lang.annotation.Target;
 
 /**
  * Is run before a thread is executing its {@link TimeStep} methods.
- *
- * For every load generating thread, there will be one call to the {@link BeforeRun} method.
- * If the test has no {@link TimeStep} methods, methods with {@link BeforeRun} are ignored.
- *
- * {@link BeforeRun} can be useful for some initialization actions on the {@link com.hazelcast.simulator.test.BaseThreadState}.
- *
- * Multiple {@link BeforeRun} methods are allowed. The {@link BeforeRun} methods on a subclass are executed before
- * the {@link AfterRun} methods on a super class, however there is no ordering within the same class. This is the same
- * semantics as provided by junit.
+ * <p/>
+ * For every load generating thread, there will be one call to the {@link BeforeRun}
+ * method. If the test has no {@link TimeStep} methods, methods with {@link BeforeRun}
+ * are ignored.
+ * <p/>
+ * {@link BeforeRun} can be useful for some initialization actions on the
+ * {@link com.hazelcast.simulator.test.BaseThreadState}.
+ * <p/>
+ * Multiple {@link BeforeRun} methods are allowed. The {@link BeforeRun} methods
+ * on a subclass are executed before the {@link AfterRun} methods on a super class,
+ * however there is no ordering within the same class. This is the same semantics
+ * as provided by junit.
  *
  * @see AfterRun
  * @see TimeStep
