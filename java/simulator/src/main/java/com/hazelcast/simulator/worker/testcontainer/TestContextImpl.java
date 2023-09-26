@@ -93,6 +93,7 @@ public class TestContextImpl implements TestContext {
         stopped = true;
     }
 
+
     @Override
     public void echoCoordinator(String msg, Object... args) {
         String message = format(msg, args);
