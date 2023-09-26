@@ -17,7 +17,7 @@ package com.hazelcast.simulator.worker.testcontainer;
 
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestPhase;
-import com.hazelcast.simulator.probes.Probe;
+import com.hazelcast.simulator.probes.LatencyProbe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Run;
@@ -96,7 +96,7 @@ public class TestContainer {
                 .setTestContext(testContext);
 
         propertyBinding.bind(this);
-        testContext.setProbeClass(propertyBinding.getProbeClass());
+        testContext.setLatencyProbeClass(propertyBinding.getProbeClass());
         if (givenTestInstance == null) {
             this.testInstance = newTestInstance();
         } else {
@@ -206,7 +206,7 @@ public class TestContainer {
 
             taskPerPhaseMap.put(RUN, () -> {
                 if (propertyBinding.recordJitter) {
-                    Probe probe = testContext.getProbe("jitter", false);
+                    LatencyProbe probe = testContext.getLatencyProbe("jitter", false);
                     new JitterThread(testContext, probe, propertyBinding.recordJitterThresholdNs).start();
                 }
                 runner.run();

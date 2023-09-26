@@ -16,7 +16,7 @@
 package com.hazelcast.simulator.utils;
 
 import com.hazelcast.simulator.common.TestCase;
-import com.hazelcast.simulator.probes.Probe;
+import com.hazelcast.simulator.probes.LatencyProbe;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -175,7 +175,7 @@ public final class PropertyBindingSupport {
     }
 
     private static boolean isProbeField(Field field) {
-        return Probe.class.equals(field.getType());
+        return LatencyProbe.class.equals(field.getType());
     }
 
     private static void setField(Field field, Object object, String value) throws IllegalAccessException {

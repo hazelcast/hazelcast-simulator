@@ -16,9 +16,8 @@
 package com.hazelcast.simulator.worker.testcontainer;
 
 import com.hazelcast.simulator.common.TestCase;
-import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.probes.impl.EmptyProbe;
-import com.hazelcast.simulator.probes.impl.HdrProbe;
+import com.hazelcast.simulator.probes.LatencyProbe;
+import com.hazelcast.simulator.probes.impl.HdrLatencyProbe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.InjectTestContext;
 import com.hazelcast.simulator.test.annotations.InjectDriver;
@@ -28,9 +27,7 @@ import com.hazelcast.simulator.utils.PropertyBindingSupport;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 import static com.hazelcast.simulator.utils.PropertyBindingSupport.bindAll;
@@ -65,7 +62,7 @@ public class PropertyBinding {
 
     // this can be removed as soon as the @InjectMetronome/worker functionality is dropped
     private MetronomeSupplier workerMetronomeConstructor;
-    private final Class<? extends Probe> probeClass;
+    private final Class<? extends LatencyProbe> probeClass;
     private TestContextImpl testContext;
     private final TestCase testCase;
     private final Set<String> unusedProperties = new HashSet<>();
@@ -228,12 +225,12 @@ public class PropertyBinding {
         }
     }
 
-    public Class<? extends Probe> getProbeClass() {
+    public Class<? extends LatencyProbe> getProbeClass() {
         return probeClass;
     }
 
-    private Class<? extends Probe> loadProbeClass() {
-        return measureLatency ? HdrProbe.class : null;
+    private Class<? extends LatencyProbe> loadProbeClass() {
+        return measureLatency ? HdrLatencyProbe.class : null;
     }
 
     public TestCase getTestCase() {

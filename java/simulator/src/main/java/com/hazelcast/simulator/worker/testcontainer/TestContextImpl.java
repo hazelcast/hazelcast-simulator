@@ -15,9 +15,9 @@
  */
 package com.hazelcast.simulator.worker.testcontainer;
 
-import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.probes.impl.EmptyProbe;
-import com.hazelcast.simulator.probes.impl.HdrProbe;
+import com.hazelcast.simulator.probes.LatencyProbe;
+import com.hazelcast.simulator.probes.impl.NoopLatencyProbe;
+import com.hazelcast.simulator.probes.impl.HdrLatencyProbe;
 import com.hazelcast.simulator.protocol.Server;
 import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.test.TestContext;
@@ -33,9 +33,9 @@ public class TestContextImpl implements TestContext {
     private final String testId;
     private final String publicIpAddress;
     private final Server server;
-    private final ConcurrentMap<String, Probe> probeMap = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, LatencyProbe> latencyProbes = new ConcurrentHashMap<>();
     private volatile boolean stopped;
-    private Class probeClass;
+    private Class latencyProbeClass;
 
     public TestContextImpl(String testId,
                            String publicIpAddress,
@@ -45,27 +45,27 @@ public class TestContextImpl implements TestContext {
         this.server = server;
     }
 
-    public void setProbeClass(Class probeClass) {
-        this.probeClass = probeClass;
+    public void setLatencyProbeClass(Class latencyProbeClass) {
+        this.latencyProbeClass = latencyProbeClass;
     }
 
-    public Map<String, Probe> getProbeMap() {
-        return probeMap;
+    public Map<String, LatencyProbe> getLatencyProbes() {
+        return latencyProbes;
     }
 
-    public Probe getProbe(String probeName, boolean partOfThroughput) {
+    public LatencyProbe getLatencyProbe(String probeName, boolean partOfThroughput) {
         if (probeName == null) {
             throw new RuntimeException("probeName can't be null");
         }
 
-        if (probeClass == null) {
-            return EmptyProbe.INSTANCE;
+        if (latencyProbeClass == null) {
+            return NoopLatencyProbe.INSTANCE;
         }
 
-        Probe probe = probeMap.get(probeName);
+        LatencyProbe probe = latencyProbes.get(probeName);
         if (probe == null) {
-            probe = new HdrProbe(partOfThroughput);
-            Probe found = probeMap.putIfAbsent(probeName, probe);
+            probe = new HdrLatencyProbe(partOfThroughput);
+            LatencyProbe found = latencyProbes.putIfAbsent(probeName, probe);
             if (found != null) {
                 probe = found;
             }

@@ -15,7 +15,7 @@
  */
 package com.hazelcast.simulator.test;
 
-import com.hazelcast.simulator.probes.Probe;
+import com.hazelcast.simulator.probes.LatencyProbe;
 
 /**
  * The TestContext is they way for a test to get access to test related
@@ -24,7 +24,7 @@ import com.hazelcast.simulator.probes.Probe;
 public interface TestContext {
 
     /**
-     * Gets a probe with the given name.
+     * Gets a {@link LatencyProbe} with the given name.
      * <p/>
      * This method is threadsafe.
      *
@@ -32,12 +32,12 @@ public interface TestContext {
      * @return the Probe
      * @throws NullPointerException if name is null.
      */
-    default Probe getProbe(String name) {
-        return getProbe(name, true);
+    default LatencyProbe getLatencyProbe(String name) {
+        return getLatencyProbe(name, true);
     }
 
     /**
-     * Gets a probe with the given name.
+     * Gets a {@link LatencyProbe} with the given name.
      * <p/>
      * This method is threadsafe.
      *
@@ -51,7 +51,7 @@ public interface TestContext {
      * @return the Probe
      * @throws NullPointerException if name is null.
      */
-    Probe getProbe(String name, boolean partOfThroughput);
+    LatencyProbe getLatencyProbe(String name, boolean partOfThroughput);
 
     /**
      * Returns the id of the current test.
@@ -99,7 +99,7 @@ public interface TestContext {
      * could easily kill the by flooding it or causing other problems. So don't
      * use this as a debug logging alternative.
      *
-     * @param msg the message to send
+     * @param msg  the message to send
      * @param args the arguments
      */
     void echoCoordinator(String msg, Object... args);

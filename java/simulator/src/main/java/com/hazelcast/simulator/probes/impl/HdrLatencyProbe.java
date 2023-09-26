@@ -15,16 +15,16 @@
  */
 package com.hazelcast.simulator.probes.impl;
 
-import com.hazelcast.simulator.probes.Probe;
+import com.hazelcast.simulator.probes.LatencyProbe;
 import org.HdrHistogram.Recorder;
 
 import static java.util.concurrent.TimeUnit.DAYS;
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
 
 /**
- * HDR-Histogram implementation of the {@link Probe}.
+ * HDR-Histogram implementation of the {@link LatencyProbe}.
  */
-public class HdrProbe implements Probe {
+public class HdrLatencyProbe implements LatencyProbe {
     // we want to track up to 24-hour.
     static final long HIGHEST_TRACKABLE_VALUE_NANOS = DAYS.toNanos(1);
 
@@ -43,7 +43,7 @@ public class HdrProbe implements Probe {
 
     private final boolean partOfThroughput;
 
-    public HdrProbe(boolean partOfThroughput) {
+    public HdrLatencyProbe(boolean partOfThroughput) {
         this.partOfThroughput = partOfThroughput;
     }
 

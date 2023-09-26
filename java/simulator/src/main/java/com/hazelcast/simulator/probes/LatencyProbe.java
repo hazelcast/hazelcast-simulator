@@ -15,7 +15,7 @@
  */
 package com.hazelcast.simulator.probes;
 
-public interface Probe {
+public interface LatencyProbe {
 
     /**
      * Checks if a probe should be considered to calculate the throughput of a test.

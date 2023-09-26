@@ -16,7 +16,7 @@
 
 package com.hazelcast.simulator.worker.testcontainer;
 
-import com.hazelcast.simulator.probes.Probe;
+import com.hazelcast.simulator.probes.LatencyProbe;
 import com.hazelcast.simulator.worker.metronome.EmptyMetronome;
 import com.hazelcast.simulator.worker.metronome.Metronome;
 import freemarker.ext.util.WrapperTemplateModel;
@@ -63,7 +63,7 @@ class TimeStepLoopCodeGenerator {
             String executionGroup,
             TimeStepModel timeStepModel,
             Class<? extends Metronome> metronomeClass,
-            Class<? extends Probe> probeClass,
+            Class<? extends LatencyProbe> probeClass,
             long logFrequency,
             long logRateMs,
             boolean hasIterationCap) {
@@ -128,7 +128,7 @@ class TimeStepLoopCodeGenerator {
             String executionGroup,
             Class<? extends Metronome> metronomeClass,
             TimeStepModel timeStepModel,
-            Class<? extends Probe> probeClass,
+            Class<? extends LatencyProbe> probeClass,
             long logFrequency,
             long logRateMs,
             boolean hasIterationCap) {
@@ -147,7 +147,7 @@ class TimeStepLoopCodeGenerator {
             root.put("isStartNanos", new IsStartNanos(timeStepModel));
             root.put("isAssignableFrom", new IsAssignableFromMethod());
             root.put("isAsyncResult", new IsAsyncResult());
-            root.put("Probe", Probe.class);
+            root.put("Probe", LatencyProbe.class);
             root.put("threadStateClass", getClassName(timeStepModel.getThreadStateClass(executionGroup)));
             root.put("hasProbe", new HasProbeMethod());
             root.put("className", className);
@@ -292,7 +292,7 @@ class TimeStepLoopCodeGenerator {
 
             Method method = (Method) arg1;
             for (Class paramType : method.getParameterTypes()) {
-                if (Probe.class.isAssignableFrom(paramType)) {
+                if (LatencyProbe.class.isAssignableFrom(paramType)) {
                     return true;
                 }
             }

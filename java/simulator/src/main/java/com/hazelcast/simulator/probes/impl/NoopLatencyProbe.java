@@ -15,18 +15,18 @@
  */
 package com.hazelcast.simulator.probes.impl;
 
-import com.hazelcast.simulator.probes.Probe;
+import com.hazelcast.simulator.probes.LatencyProbe;
 
 /**
- * A {@link Probe} implementation that doesn't do anything.
+ * A {@link LatencyProbe} implementation that doesn't do anything.
  *
  * This probe is used for code generation; when a user has defined a
  * {@link com.hazelcast.simulator.test.annotations.TimeStep} method with a probe argument,
  * but latency is not being tracked.
  */
-public class EmptyProbe implements Probe {
+public class NoopLatencyProbe implements LatencyProbe {
 
-    public static final EmptyProbe INSTANCE = new EmptyProbe();
+    public static final NoopLatencyProbe INSTANCE = new NoopLatencyProbe();
 
     @Override
     public boolean isPartOfThroughput() {
