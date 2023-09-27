@@ -15,6 +15,7 @@
  */
 package com.hazelcast.simulator.tests.cp;
 
+import com.hazelcast.core.IFunction;
 import com.hazelcast.cp.IAtomicReference;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
@@ -36,12 +37,13 @@ import static org.junit.Assert.assertTrue;
  */
 public class IAtomicReferenceTest extends HazelcastTest {
     public int keyValueSizeKb = 1;
-    private AtomicLong totalWrites;
+    // [totalOps] is used as the most basic of assertions simplify to ensure we actually did something
+    private AtomicLong totalOps;
     private IAtomicReference<String> atomicReference;
 
     @Setup
     public void setup() {
-        totalWrites = new AtomicLong();
+        totalOps = new AtomicLong();
         String kv = createString(keyValueSizeKb);
         atomicReference = targetInstance.getCPSubsystem().getAtomicReference(kv);
     }
@@ -55,20 +57,28 @@ public class IAtomicReferenceTest extends HazelcastTest {
     @TimeStep(prob = 1)
     public void set(ThreadState state) {
         atomicReference.set(atomicReference.getName());
-        state.writes++;
+        state.ops++;
+    }
+
+    @TimeStep(prob = 0)
+    public void alter(ThreadState state) {
+        atomicReference.alter(state.identity);
+        state.ops++;
     }
 
     public class ThreadState extends BaseThreadState {
-        long writes;
+        long ops;
+
+        final IFunction<String, String> identity = s -> s;
     }
 
     @AfterRun
     public void afterRun(ThreadState state) {
-        totalWrites.addAndGet(state.writes);
+        totalOps.addAndGet(state.ops);
     }
 
     @Verify
     public void verify() {
-        assertTrue(totalWrites.get() > 0);
+        assertTrue(totalOps.get() > 0);
     }
 }
