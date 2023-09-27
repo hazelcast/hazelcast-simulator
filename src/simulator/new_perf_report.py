@@ -433,20 +433,29 @@ def merge_worker_hdr(dir):
 
 def load_latency_history(run_dir):
     result = None
-    for dir_name in os.listdir(run_dir):
-        dir_path = f"{run_dir}/{dir_name}"
-        worker_name = find_worker_id(dir_path)
-        if not worker_name:
+    for worker_dir_name in os.listdir(run_dir):
+        worker_path = f"{run_dir}/{worker_dir_name}"
+        worker_id = find_worker_id(worker_path)
+        if not worker_id:
             continue
 
-        for file_name in os.listdir(dir_path):
+        print(worker_id)
+
+        for file_name in os.listdir(worker_path):
             if not file_name.endswith(".latency-history.csv"):
                 continue
-            csv_df = pd.read_csv(f"{run_dir}/{dir_name}/{file_name}", skiprows=2)
+
+            test_id = file_name.replace(".latency-history.csv", "")
+            csv_df = pd.read_csv(f"{run_dir}/{worker_dir_name}/{file_name}", skiprows=2)
             csv_df['time'] = csv_df['StartTime'].round(0).astype(int)
             csv_df['time'] = pd.to_datetime(csv_df['time'], unit='s')
             csv_df.set_index('time', inplace=True)
-            print(csv_df)
+            #print(csv_df)
+
+            for column_name in csv_df.columns:
+                if column_name == "time":
+                    continue
+                csv_df.rename(columns={column_name: f"latency[{worker_id}|{test_id}|{column_name}]"}, inplace=True)
 
             if result is None:
                 result = csv_df
@@ -516,6 +525,7 @@ class Benchmark:
     def run_count(self):
         return len(self.runs)
 
+
 def plot_performance(report_dir, df):
     for (test_id, worker_id), df_per_run in df_per_run_per_test_worker.items():
         run_id_list = list(df_per_run.keys())
@@ -571,15 +581,22 @@ performance_data_runs = {}
 
 run = benchmark_htable.latest_run_path()
 print(f"Analyzing run_path:{run.path}")
-processing_hdr(run.path)
+#processing_hdr(run.path)
 df_performance = load_performance_data(run.path)
-#df_latency_history = load_latency_history(run_path)
-#df = pd.concat([df_performance, df_latency_history], axis=1, join="inner")
-df = df_performance
+df_latency_history = load_latency_history(run.path)
+df = pd.concat([df_performance, df_latency_history], axis=1, join="inner")
+#df = df_latency_history
 
 path_excel = f"{run.path}/data.xlsx"
 print(f"path excel: {path_excel}")
 df.to_excel(path_excel)
+
+path_csv = f"{run.path}/data.csv"
+print(f"path csv: {path_csv}")
+df.to_csv(path_csv)
+
+for column_name in df.columns:
+   print(column_name)
 
 #     # for (test_id, agent_id), df in data.items():
 #     #    performance_data_runs[(test_id, agent_id, run.id)] = df
