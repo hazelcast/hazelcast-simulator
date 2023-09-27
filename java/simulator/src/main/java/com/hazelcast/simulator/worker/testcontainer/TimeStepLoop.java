@@ -18,7 +18,6 @@ package com.hazelcast.simulator.worker.testcontainer;
 
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.StopException;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.worker.metronome.Metronome;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -43,7 +42,7 @@ import static java.lang.String.format;
  */
 public abstract class TimeStepLoop implements Runnable {
 
-    protected TestContext testContext;
+    protected TestContextImpl testContext;
     protected Metronome metronome;
 
     protected final Logger logger = LogManager.getLogger(getClass());
@@ -77,7 +76,7 @@ public abstract class TimeStepLoop implements Runnable {
 
     public void bind(PropertyBinding binding) {
         for (Method method : timeStepModel.getActiveTimeStepMethods(executionGroup)) {
-            Probe probe = binding.getOrCreateProbe(method.getName(), false);
+            Probe probe = testContext.getProbe(method.getName(), false);
             if (probe != null) {
                 probeMap.put(method.getName(), probe);
             }

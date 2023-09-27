@@ -23,8 +23,8 @@ import java.lang.annotation.Target;
 /**
  * Annotates {@link com.hazelcast.simulator.test.TestContext} fields.
  *
- * Probably you don't want to use this annotation directly, but make use of com.hazelcast.simulator.test.AbstractTest
- * instead.
+ * Probably you don't want to use this annotation directly, but make use
+ * of com.hazelcast.simulator.test.AbstractTest instead.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)

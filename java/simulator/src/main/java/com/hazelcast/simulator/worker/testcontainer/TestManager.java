@@ -37,7 +37,7 @@ import static java.lang.String.format;
 
 /**
  * Responsible for managing the TestContainers.
- *
+ * <p/>
  * So creating them, starting their phases, and termination.
  */
 public class TestManager {

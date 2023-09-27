@@ -71,6 +71,8 @@ resource "aws_route_table_association" "route_table_association" {
 # ========== nodes ==========================
 
 # Currently there is a single placement group defined for all nodes/load generators.
+# If you want to use placement_group, uncomment the commented out 'placementgroup'
+# configuration in the nodes and loadgenerators sections.
 resource "aws_placement_group" "cluster_placement_group" {
     name     = "simulator-placement-group-${local.settings.basename}"
     strategy = "cluster"
@@ -132,7 +134,7 @@ resource "aws_instance" "nodes" {
     instance_type           = local.settings.nodes.instance_type
     count                   = local.settings.nodes.count
     availability_zone       = local.settings.availability_zone
-    #placement_group        = local.settings.nodes.placement_group
+    #placement_group         = aws_placement_group.cluster_placement_group.name
     vpc_security_group_ids  = [ aws_security_group.node-sg.id ]
     subnet_id               = aws_subnet.subnet.id
     tenancy                 = local.settings.nodes.tenancy
@@ -200,7 +202,7 @@ resource "aws_instance" "loadgenerators" {
     count                   = local.settings.loadgenerators.count
     subnet_id               = aws_subnet.subnet.id
     availability_zone       = local.settings.availability_zone
-    #placement_group        = local.settings.loadgenerators.placement_group
+    #placement_group         = aws_placement_group.cluster_placement_group.name
     vpc_security_group_ids  = [ aws_security_group.loadgenerator-sg.id ]
     tenancy                 = local.settings.loadgenerators.tenancy
     tags = {
@@ -267,7 +269,6 @@ resource "aws_instance" "mc" {
     subnet_id               = aws_subnet.subnet.id
     availability_zone       = local.settings.availability_zone
     vpc_security_group_ids  = [ aws_security_group.mc-sg.id ]
-    tenancy                 = local.settings.mc.tenancy
 
     tags = {
         Name  = "Simulator MC ${local.settings.basename}"

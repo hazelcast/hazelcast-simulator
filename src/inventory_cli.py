@@ -27,7 +27,7 @@ The available commands are:
 # https://chase-seibert.github.io/blog/2014/03/21/python-multilevel-argparse.html
 
 
-default_url = "https://download.java.net/java/GA/jdk17.0.2/dfd4a8d0985749f896bed50d7138ee7f/8/GPL/openjdk-17.0.2_linux-x64_bin.tar.gz"
+default_url = "https://download.java.net/java/GA/jdk21/fd2272bbf8e04c3dbaee13770090416c/35/GPL/openjdk-21_linux-x64_bin.tar.gz"
 
 examples = """
 Oracle JDK:
@@ -42,6 +42,8 @@ Oracle JDK:
         --url=https://download.oracle.com/otn-pub/java/jdk/15+36/779bf45e88a44cbd9ea6621d33e33db1/jdk-15_linux-x64_bin.tar.gz
         --url=https://download.oracle.com/java/17/latest/jdk-17_linux-x64_bin.tar.gz
         --url=https://download.oracle.com/java/19/latest/jdk-19_linux-x64_bin.tar.gz
+        --url=https://download.oracle.com/java/20/archive/jdk-20.0.2_linux-x64_bin.tar.gz
+        --url=https://download.oracle.com/java/21/latest/jdk-21_linux-x64_bin.tar.gz
 
 OpenJDK jdk.java.net:
 
@@ -53,6 +55,8 @@ OpenJDK jdk.java.net:
         --url=https://download.java.net/java/GA/jdk15/779bf45e88a44cbd9ea6621d33e33db1/36/GPL/openjdk-15_linux-x64_bin.tar.gz
         --url=https://download.java.net/java/GA/jdk17.0.2/dfd4a8d0985749f896bed50d7138ee7f/8/GPL/openjdk-17.0.2_linux-x64_bin.tar.gz
         --url=https://download.java.net/java/GA/jdk19.0.1/afdd2e245b014143b62ccb916125e3ce/10/GPL/openjdk-19.0.1_linux-aarch64_bin.tar.gz
+        --url=https://download.java.net/java/GA/jdk20.0.2/6e380f22cbe7469fa75fb448bd903d8e/9/GPL/openjdk-20.0.2_linux-x64_bin.tar.gz
+        --url=https://download.java.net/java/GA/jdk21/fd2272bbf8e04c3dbaee13770090416c/35/GPL/openjdk-21_linux-x64_bin.tar.gz
 
 AdoptOpenJDK:
 
@@ -87,6 +91,7 @@ Amazon Coretto:
         --url=https://corretto.aws/downloads/latest/amazon-corretto-16-x64-linux-jdk.tar.gz
         --url=https://corretto.aws/downloads/latest/amazon-corretto-17-x64-linux-jdk.tar.gz
         --url=https://corretto.aws/downloads/latest/amazon-corretto-19-x64-linux-jdk.tar.gz
+        --url=https://corretto.aws/downloads/latest/amazon-corretto-21-x64-linux-jdk.tar.gz
 
 Zulu:
 
@@ -97,6 +102,7 @@ Zulu:
         --url=https://cdn.azul.com/zulu/bin/zulu11.41.23-ca-jdk11.0.8-linux_x64.tar.gz
         --url=https://cdn.azul.com/zulu/bin/zulu15.27.17-ca-jdk15.0.0-linux_x64.tar.gz
         --url=https://cdn.azul.com/zulu/bin/zulu17.28.13-ca-jdk17.0.0-linux_x64.tar.gz
+        --url=https://cdn.azul.com/zulu/bin/zulu21.28.85-ca-jdk21.0.0-linux_x64.tar.gz
 
 Bellsoft:
 

@@ -21,12 +21,14 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Can be placed on a method in a Simulator test that takes care of tearing down the test. E.g. delete resources.
- *
- * Multiple {@link Teardown} methods are allowed. The {@link Teardown} methods on a subclass are executed before
- * the {@link Teardown} methods on a super class, however there is no ordering within the same class. However global
- * teardown will be executed before local teardown.
- *
+ * Can be placed on a method in a Simulator test that takes care of tearing down
+ * the test. E.g. delete resources.
+ * <p/>
+ * Multiple {@link Teardown} methods are allowed. The {@link Teardown} methods on
+ * a subclass are executed before the {@link Teardown} methods on a super class,
+ * however there is no ordering within the same class. However global teardown
+ * will be executed before local teardown.
+ * <p/>
  * The teardown method(s) is called at most once per test-instance.
  */
 @Retention(RetentionPolicy.RUNTIME)
@@ -34,8 +36,9 @@ import java.lang.annotation.Target;
 public @interface Teardown {
 
     /**
-     * Global indicates that a single member in the cluster is responsible for the tear down. If not global, then
-     * all members in the cluster will do the teardown.
+     * Global indicates that a single member in the cluster is responsible for
+     * the tear down. If not global, then all members in the cluster will do the
+     * teardown.
      *
      * @return <tt>true</tt> if global teardown method, <tt>false</tt> otherwise
      */

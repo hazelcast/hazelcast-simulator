@@ -6,6 +6,10 @@
 
     <cluster-name>workers</cluster-name>
 
+<cp-subsystem>
+<cp-member-count>3</cp-member-count>
+</cp-subsystem>
+
     <!--LITE_MEMBER_CONFIG-->
 
     <network>
@@ -26,5 +30,7 @@
 
     <!--LICENSE-KEY-->
 
+    <cache name="*">
+    </cache>
 </hazelcast>
 

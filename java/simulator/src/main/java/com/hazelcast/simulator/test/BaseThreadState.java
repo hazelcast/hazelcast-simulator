@@ -19,10 +19,12 @@ import java.io.Serializable;
 import java.util.Random;
 
 /**
- * Implementations of this class should be public. This is required for the generated TimeStepLoop class to work.
+ * Implementations of this class should be public. This is required for the
+ * generated TimeStepLoop class to work.
  * <p>
- * This class is called BaseThreadState instead of ThreadState, since in most cases a test needs to subclass BaseThreadState.
- * In this case the prettier and shorter name ThreadState can be used.
+ * This class is called BaseThreadState instead of ThreadState, since in most
+ * cases a test needs to subclass BaseThreadState. In this case the prettier and
+ * shorter name ThreadState can be used.
  */
 @SuppressWarnings("unused")
 public class BaseThreadState implements Serializable {

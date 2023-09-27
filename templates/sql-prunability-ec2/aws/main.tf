@@ -71,8 +71,6 @@ resource "aws_route_table_association" "route_table_association" {
 # ========== nodes ==========================
 
 # Currently there is a single placement group defined for all nodes/load generators.
-# If you want to use placement_group, uncomment the commented out 'placementgroup'
-# configuration in the nodes and loadgenerators sections.
 resource "aws_placement_group" "cluster_placement_group" {
     name     = "simulator-placement-group-${local.settings.basename}"
     strategy = "cluster"
@@ -111,15 +109,7 @@ resource "aws_security_group" "node-sg" {
         protocol    = "tcp"
         cidr_blocks = ["0.0.0.0/0"]
     }
-
-    ingress {
-        description = "Hazelcast-tpc"
-        from_port   = 11000
-        to_port     = 12000
-        protocol    = "tcp"
-        cidr_blocks = ["0.0.0.0/0"]
-    }
-
+  
     egress {
         from_port   = 0
         to_port     = 0
@@ -134,7 +124,7 @@ resource "aws_instance" "nodes" {
     instance_type           = local.settings.nodes.instance_type
     count                   = local.settings.nodes.count
     availability_zone       = local.settings.availability_zone
-    #placement_group         = aws_placement_group.cluster_placement_group.name
+    #placement_group        = local.settings.nodes.placement_group
     vpc_security_group_ids  = [ aws_security_group.node-sg.id ]
     subnet_id               = aws_subnet.subnet.id
     tenancy                 = local.settings.nodes.tenancy
@@ -202,7 +192,7 @@ resource "aws_instance" "loadgenerators" {
     count                   = local.settings.loadgenerators.count
     subnet_id               = aws_subnet.subnet.id
     availability_zone       = local.settings.availability_zone
-    #placement_group         = aws_placement_group.cluster_placement_group.name
+    #placement_group        = local.settings.loadgenerators.placement_group
     vpc_security_group_ids  = [ aws_security_group.loadgenerator-sg.id ]
     tenancy                 = local.settings.loadgenerators.tenancy
     tags = {

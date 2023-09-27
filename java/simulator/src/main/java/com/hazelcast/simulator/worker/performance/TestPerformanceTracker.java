@@ -19,6 +19,7 @@ import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.probes.impl.HdrProbe;
 import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.worker.testcontainer.TestContainer;
+import com.hazelcast.simulator.worker.testcontainer.TestContextImpl;
 import org.HdrHistogram.Histogram;
 import org.HdrHistogram.HistogramLogWriter;
 
@@ -49,6 +50,7 @@ public final class TestPerformanceTracker {
     private final TestContainer testContainer;
     private final Map<String, HistogramLogWriter> histogramLogWriterMap = new HashMap<>();
     private final PerformanceLogWriter performanceLogWriter;
+    private final TestContextImpl testContext;
     private long lastUpdateMillis;
     private Map<String, Histogram> intervalHistogramMap;
 
@@ -65,6 +67,7 @@ public final class TestPerformanceTracker {
 
     public TestPerformanceTracker(TestContainer container) {
         this.testContainer = container;
+        this.testContext = container.getTestContext();
         this.performanceLogWriter = new PerformanceLogWriter(
                 new File(getUserDir(), container.getTestCase().getId() + ".performance.csv"));
     }
@@ -96,7 +99,7 @@ public final class TestPerformanceTracker {
         if (lastUpdateMillis == 0) {
             // first time
             iterationsDuringWarmup = testContainer.iteration();
-            for (Probe probe : testContainer.getProbeMap().values()) {
+            for (Probe probe : testContext.getProbeMap().values()) {
                 probe.reset();
             }
             lastUpdateMillis = currentTimeMillis;
@@ -108,7 +111,7 @@ public final class TestPerformanceTracker {
     }
 
     private void makeUpdate(long updateIntervalMillis, long currentTimeMillis) {
-        Map<String, Probe> probeMap = testContainer.getProbeMap();
+        Map<String, Probe> probeMap = testContext.getProbeMap();
         Map<String, Histogram> intervalHistograms = new HashMap<>(probeMap.size());
 
         long intervalPercentileLatency = -1;
@@ -146,7 +149,7 @@ public final class TestPerformanceTracker {
                 intervalMaxLatency = maxValue;
             }
 
-            if (probe.isPartOfTotalThroughput()) {
+            if (probe.isPartOfThroughput()) {
                 intervalOperationCount += intervalHistogram.getTotalCount();
             }
         }

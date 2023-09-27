@@ -21,15 +21,18 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * An annotation put on the argument of a timestep method to indicate that the argument contains the startime in
- * nanos. It depends on the metronome configuration if it contains the intended starttime or actual start time.
- * If the test isn't using a metronome, this method contains the actual time (System.nanotime).
- *
- * This is required for e.g. async method call testing where the timestep runner can't take care of recording the
- * value on the probe because it doesn't know when the asynchronous method has completed.
- *
- * If you need this annotation, then probably you also need to pass the Probe as an argument. For a full example
- * AsyncAtomicLongTest.
+ * An annotation put on the argument of a timestep method to indicate that the
+ * argument contains the startime in nanos. It depends on the metronome
+ * configuration if it contains the intended starttime or actual start time. If
+ * the test isn't using a metronome, this method contains the actual time
+ * (System.nanotime).
+ * <p/>
+ * This is required for e.g. async method call testing where the timestep runner
+ * can't take care of recording the value on the probe because it doesn't know
+ * when the asynchronous method has completed.
+ * <p/>
+ * If you need this annotation, then probably you also need to pass the Probe as
+ * an argument. For a full example AsyncAtomicLongTest.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.PARAMETER)

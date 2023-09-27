@@ -15,9 +15,16 @@
  */
 package com.hazelcast.simulator.worker.testcontainer;
 
+import com.hazelcast.simulator.probes.Probe;
+import com.hazelcast.simulator.probes.impl.EmptyProbe;
+import com.hazelcast.simulator.probes.impl.HdrProbe;
 import com.hazelcast.simulator.protocol.Server;
 import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.test.TestContext;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import static java.lang.String.format;
 
@@ -26,7 +33,9 @@ public class TestContextImpl implements TestContext {
     private final String testId;
     private final String publicIpAddress;
     private final Server server;
+    private final ConcurrentMap<String, Probe> probeMap = new ConcurrentHashMap<>();
     private volatile boolean stopped;
+    private Class probeClass;
 
     public TestContextImpl(String testId,
                            String publicIpAddress,
@@ -34,6 +43,34 @@ public class TestContextImpl implements TestContext {
         this.testId = testId;
         this.publicIpAddress = publicIpAddress;
         this.server = server;
+    }
+
+    public void setProbeClass(Class probeClass) {
+        this.probeClass = probeClass;
+    }
+
+    public Map<String, Probe> getProbeMap() {
+        return probeMap;
+    }
+
+    public Probe getProbe(String probeName, boolean partOfThroughput) {
+        if (probeName == null) {
+            throw new RuntimeException("probeName can't be null");
+        }
+
+        if (probeClass == null) {
+            return EmptyProbe.INSTANCE;
+        }
+
+        Probe probe = probeMap.get(probeName);
+        if (probe == null) {
+            probe = new HdrProbe(partOfThroughput);
+            Probe found = probeMap.putIfAbsent(probeName, probe);
+            if (found != null) {
+                probe = found;
+            }
+        }
+        return probe;
     }
 
     @Override

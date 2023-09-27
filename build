@@ -14,14 +14,14 @@ def mvn_clean_install():
     os.chdir(cwd)
 
 
-def empty_dir(dir):
+def make_empty_dir(dir):
     if os.path.isdir(dir):
         shutil.rmtree(dir)
     os.mkdir(dir)
 
 
 mvn_clean_install()
-empty_dir("drivers")
+make_empty_dir("drivers")
 
 # Copy the drivers.
 for driver_dir_name in os.listdir("java/drivers"):
@@ -36,7 +36,7 @@ for driver_dir_name in os.listdir("java/drivers"):
     if os.path.isdir(f"{driver_dir}/conf"):
         os.system(f"cp -r {driver_dir}/conf drivers/{driver_dir_name}")
 
-empty_dir("lib")
+make_empty_dir("lib")
 os.system(f"cp java/simulator/target/*.jar lib/")
 os.system(f"cp java/extra/* lib/")
 os.system(f"rm drivers/driver-hazelcast4plus/hazelcast-*.jar")
