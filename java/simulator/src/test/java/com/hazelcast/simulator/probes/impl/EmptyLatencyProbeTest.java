@@ -12,6 +12,6 @@ public class EmptyLatencyProbeTest {
         probe.reset();
         probe.done(10);
         probe.recordValue(20);
-        assertFalse(probe.isPartOfThroughput());
+        assertFalse(probe.includeInThroughput());
     }
 }

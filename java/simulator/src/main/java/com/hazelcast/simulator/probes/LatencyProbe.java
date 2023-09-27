@@ -22,7 +22,7 @@ public interface LatencyProbe {
      *
      * @return {@code true} if probe is relevant for throughput, {@code false} otherwise
      */
-    boolean isPartOfThroughput();
+    boolean includeInThroughput();
 
     /**
      * Calculates the latency from an external start time and records the value.

@@ -53,7 +53,7 @@ public class TestContextImpl implements TestContext {
         return latencyProbes;
     }
 
-    public LatencyProbe getLatencyProbe(String probeName, boolean partOfThroughput) {
+    public LatencyProbe getLatencyProbe(String probeName, boolean includeInThroughput) {
         if (probeName == null) {
             throw new RuntimeException("probeName can't be null");
         }
@@ -64,7 +64,7 @@ public class TestContextImpl implements TestContext {
 
         LatencyProbe probe = latencyProbes.get(probeName);
         if (probe == null) {
-            probe = new HdrLatencyProbe(partOfThroughput);
+            probe = new HdrLatencyProbe(includeInThroughput);
             LatencyProbe found = latencyProbes.putIfAbsent(probeName, probe);
             if (found != null) {
                 probe = found;

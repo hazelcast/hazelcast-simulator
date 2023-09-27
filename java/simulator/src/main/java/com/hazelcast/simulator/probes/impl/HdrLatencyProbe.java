@@ -31,7 +31,7 @@ public class HdrLatencyProbe implements LatencyProbe {
     // we care only about microsecond accuracy.
     private static final long LOWEST_DISCERNIBLE_VALUE = MICROSECONDS.toNanos(1);
 
-    // since we care about us, the value should be 1000 according to the javadoc of Recorder.
+    // since we care about u    s, the value should be 1000 according to the javadoc of Recorder.
     private static final int NUMBER_OF_SIGNIFICANT_VALUE_DIGITS = 3;
 
     // these settings come the website; just above the following link
@@ -41,15 +41,15 @@ public class HdrLatencyProbe implements LatencyProbe {
             HIGHEST_TRACKABLE_VALUE_NANOS,
             NUMBER_OF_SIGNIFICANT_VALUE_DIGITS);
 
-    private final boolean partOfThroughput;
+    private final boolean includeInThroughput;
 
-    public HdrLatencyProbe(boolean partOfThroughput) {
-        this.partOfThroughput = partOfThroughput;
+    public HdrLatencyProbe(boolean includeInThroughput) {
+        this.includeInThroughput = includeInThroughput;
     }
 
     @Override
-    public boolean isPartOfThroughput() {
-        return partOfThroughput;
+    public boolean includeInThroughput() {
+        return includeInThroughput;
     }
 
     @Override

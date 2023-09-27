@@ -29,7 +29,7 @@ public class NoopLatencyProbe implements LatencyProbe {
     public static final NoopLatencyProbe INSTANCE = new NoopLatencyProbe();
 
     @Override
-    public boolean isPartOfThroughput() {
+    public boolean includeInThroughput() {
         return false;
     }
 

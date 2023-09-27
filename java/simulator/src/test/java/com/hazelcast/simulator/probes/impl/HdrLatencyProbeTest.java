@@ -21,13 +21,13 @@ public class HdrLatencyProbeTest {
     @Test
     public void testConstructor_throughputProbe() {
         LatencyProbe tmpProbe = new HdrLatencyProbe(true);
-        assertTrue(tmpProbe.isPartOfThroughput());
+        assertTrue(tmpProbe.includeInThroughput());
     }
 
     @Test
     public void testConstructor_noThroughputProbe() {
         LatencyProbe tmpProbe = new HdrLatencyProbe(false);
-        assertFalse(tmpProbe.isPartOfThroughput());
+        assertFalse(tmpProbe.includeInThroughput());
     }
 
     @Test

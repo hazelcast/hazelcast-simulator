@@ -42,7 +42,7 @@ public interface TestContext {
      * This method is threadsafe.
      *
      * @param name             the name of the probe
-     * @param partOfThroughput if the measurements of this probe are part of the
+     * @param includeInThroughput if the measurements of this probe are part of the
      *                         throughput. Within timestep methods, the throughput
      *                         is already accounted for by tracking it in a counter.
      *                         So in that case probes need to be created where
@@ -51,7 +51,7 @@ public interface TestContext {
      * @return the Probe
      * @throws NullPointerException if name is null.
      */
-    LatencyProbe getLatencyProbe(String name, boolean partOfThroughput);
+    LatencyProbe getLatencyProbe(String name, boolean includeInThroughput);
 
     /**
      * Returns the id of the current test.

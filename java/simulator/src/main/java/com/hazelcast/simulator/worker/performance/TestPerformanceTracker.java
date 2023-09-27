@@ -149,7 +149,7 @@ public final class TestPerformanceTracker {
                 intervalMaxLatency = maxValue;
             }
 
-            if (latencyProbe.isPartOfThroughput()) {
+            if (latencyProbe.includeInThroughput()) {
                 intervalOperationCount += intervalHistogram.getTotalCount();
             }
         }
