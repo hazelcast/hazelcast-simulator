@@ -53,7 +53,7 @@ public class IAtomicReferenceTest extends HazelcastTest {
     }
 
     @TimeStep(prob = 1)
-    public void write(ThreadState state) {
+    public void set(ThreadState state) {
         atomicReference.set(atomicReference.getName());
         state.writes++;
     }
