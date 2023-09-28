@@ -29,23 +29,21 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.Assert.assertTrue;
 
-/**
- * Writes [1,2,4,8,16]kb key(name) value atomic references. These sizes could be slightly off and assume (correctly, I think)
- * no compression whatsoever on our side of the keys-values. You shouldn't enable such compression to be safe even if possible.
- * <p>
- * Default is 1kb writes. You can specify the KB size by overriding the [keyValueSizeKb] configuration property.
- */
 public class IAtomicReferenceTest extends HazelcastTest {
     public int keyValueSizeKb = 1;
     // [totalOps] is used as the most basic of assertions simplify to ensure we actually did something
     private AtomicLong totalOps;
     private IAtomicReference<String> atomicReference;
 
+    private String v; // this is always the value of [atomicReference]; before + after, irrespective of the op
+
     @Setup
     public void setup() {
-        totalOps = new AtomicLong();
         String kv = createString(keyValueSizeKb);
+        v = kv;
+        totalOps = new AtomicLong();
         atomicReference = targetInstance.getCPSubsystem().getAtomicReference(kv);
+        atomicReference.set(v);
     }
 
     String createString(int kb) {
@@ -63,6 +61,23 @@ public class IAtomicReferenceTest extends HazelcastTest {
     @TimeStep(prob = 0)
     public void alter(ThreadState state) {
         atomicReference.alter(state.identity);
+        state.ops++;
+    }
+
+    @TimeStep(prob = 0)
+    public void cas(ThreadState state) {
+        atomicReference.compareAndSet(v, v);
+        state.ops++;
+    }
+
+    @TimeStep(prob = 0)
+    public void casOptimisticConcurrencyControl(ThreadState state) {
+        String observed;
+        String newValue;
+        do {
+            observed = atomicReference.get(); // because we're modelling the pattern -- we know it's [v]...
+            newValue = observed;
+        } while (!atomicReference.compareAndSet(observed, newValue));
         state.ops++;
     }
 
