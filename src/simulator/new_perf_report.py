@@ -347,35 +347,33 @@ cooldown_seconds = 5
 def load_performance_data(run_dir):
     result = None
 
-    for dir_name in os.listdir(run_dir):
-        worker_dir = f"{run_dir}/{dir_name}"
+    for outer_file in os.listdir(run_dir):
+        worker_dir = f"{run_dir}/{outer_file}"
         worker_id = find_worker_id(worker_dir)
 
         if not worker_id:
             continue
 
-        for file_name in os.listdir(worker_dir):
-            if not file_name.startswith("performance-") or not file_name.endswith(".csv"):
+        for inner_file in os.listdir(worker_dir):
+            if not inner_file.startswith("performance-") or not inner_file.endswith(".csv"):
                 continue
 
-            test_id = file_name.replace("performance-", "").replace(".csv", "")
-            csv_path = f"{worker_dir}/{file_name}"
+            test_id = inner_file.replace("performance-", "").replace(".csv", "")
+            csv_path = f"{worker_dir}/{inner_file}"
             csv_df = pd.read_csv(csv_path)
              # we need to round the epoch time to the nearest second
             csv_df['time'] = csv_df['epoch'].round(0).astype(int)
             csv_df['time'] = pd.to_datetime(csv_df['time'], unit='s')
             csv_df.set_index('time', inplace=True)
             csv_df.drop(['epoch'], inplace=True, axis=1)
+            csv_df.drop(['timestamp'], inplace=True, axis=1)
 
             for column_name in csv_df.columns:
                 if column_name == "time":
                     continue
                 csv_df.rename(columns={column_name: f"Performance[{worker_id}|{test_id}|{column_name}]"}, inplace=True)
 
-            if result is None:
-                result = csv_df
-            else:
-                result = pd.concat([result, csv_df], axis=1, join="inner")
+            result = inner_join(result, csv_df)
 
     return result
 
@@ -433,35 +431,59 @@ def merge_worker_hdr(dir):
 
 def load_latency_history(run_dir):
     result = None
-    for worker_dir_name in os.listdir(run_dir):
-        worker_path = f"{run_dir}/{worker_dir_name}"
-        worker_id = find_worker_id(worker_path)
-        if not worker_id:
-            continue
 
-        print(worker_id)
+    # iterate over the files in the run directory
+    for outer_file_name in os.listdir(run_dir):
+        outer_path = f"{run_dir}/{outer_file_name}";
+        if outer_file_name.endswith(".latency-history.csv"):
+            csv_df = load_latency_history_csv(outer_path,None)
+            result = inner_join(result, csv_df)
+        else:
+            worker_id = find_worker_id(outer_path)
 
-        for file_name in os.listdir(worker_path):
-            if not file_name.endswith(".latency-history.csv"):
+            if not worker_id:
                 continue
 
-            test_id = file_name.replace(".latency-history.csv", "")
-            csv_df = pd.read_csv(f"{run_dir}/{worker_dir_name}/{file_name}", skiprows=2)
-            csv_df['time'] = csv_df['StartTime'].round(0).astype(int)
-            csv_df['time'] = pd.to_datetime(csv_df['time'], unit='s')
-            csv_df.set_index('time', inplace=True)
-            #print(csv_df)
-
-            for column_name in csv_df.columns:
-                if column_name == "time":
+            # iterate over the files in the worker directory
+            for inner_file_name in os.listdir(outer_path):
+                if not inner_file_name.endswith(".latency-history.csv"):
                     continue
-                csv_df.rename(columns={column_name: f"latency[{worker_id}|{test_id}|{column_name}]"}, inplace=True)
 
-            if result is None:
-                result = csv_df
-            else:
-                result = pd.concat([result, csv_df], axis=1, join="inner")
+                csv_df = load_latency_history_csv(f"{outer_path}/{inner_file_name}", worker_id)
+                result = inner_join(result, csv_df)
+
     return result
+
+
+def inner_join(df_a, df_b):
+    if df_a is None:
+        return df_b
+    else:
+        return pd.concat([df_a, df_b], axis=1, join="inner")
+
+
+def load_latency_history_csv(file_path, worker_id):
+    print(f"load_latency_history_csv {file_path}")
+    test_id = os.path.basename(file_path).replace(".latency-history.csv", "")
+    csv_df = pd.read_csv(file_path, skiprows=2)
+
+    for column_name in csv_df.columns:
+        if column_name.startswith("Unnamed"):
+            csv_df.drop([column_name], inplace=True, axis=1)
+
+    csv_df['time'] = csv_df['StartTime'].round(0).astype(int)
+    csv_df['time'] = pd.to_datetime(csv_df['time'], unit='s')
+    csv_df.set_index('time', inplace=True)
+    # print(csv_df)
+    for column_name in csv_df.columns:
+        if column_name == "time":
+            continue
+        if worker_id is None:
+            csv_df.rename(columns={column_name: f"Latency[{test_id}|{column_name}]"}, inplace=True)
+        else:
+            csv_df.rename(columns={column_name: f"Latency[{worker_id}|{test_id}|{column_name}]"}, inplace=True)
+    return csv_df
+
 
 @dataclass
 class Period:
@@ -584,7 +606,8 @@ print(f"Analyzing run_path:{run.path}")
 #processing_hdr(run.path)
 df_performance = load_performance_data(run.path)
 df_latency_history = load_latency_history(run.path)
-df = pd.concat([df_performance, df_latency_history], axis=1, join="inner")
+df = inner_join(df_performance, df_latency_history)
+
 #df = df_latency_history
 
 path_excel = f"{run.path}/data.xlsx"
