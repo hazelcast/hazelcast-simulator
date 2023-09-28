@@ -23,7 +23,7 @@ import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.utils.ExceptionReporter;
 import com.hazelcast.simulator.drivers.Driver;
 import com.hazelcast.simulator.worker.operations.TerminateWorkerOperation;
-import com.hazelcast.simulator.worker.performance.PerformanceMonitor;
+import com.hazelcast.simulator.worker.performance.OperationsMonitor;
 import com.hazelcast.simulator.worker.testcontainer.TestManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -55,7 +55,7 @@ public class Worker {
 
     private final AtomicBoolean shutdownStarted = new AtomicBoolean();
     private final String publicAddress;
-    private final PerformanceMonitor performanceMonitor;
+    private final OperationsMonitor performanceMonitor;
     private final Server server;
     private final TestManager testManager;
     private final Driver driver;
@@ -80,7 +80,7 @@ public class Worker {
         Runtime.getRuntime().addShutdownHook(new WorkerShutdownThread(true));
 
         int interval = Integer.parseInt(parameters.get("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS"));
-        this.performanceMonitor = new PerformanceMonitor(server, testManager, interval);
+        this.performanceMonitor = new OperationsMonitor(server, testManager, interval);
     }
 
     public void start() throws Exception {

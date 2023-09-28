@@ -29,7 +29,7 @@ import com.hazelcast.simulator.utils.AnnotatedMethodRetriever;
 import com.hazelcast.simulator.utils.AnnotationFilter;
 import com.hazelcast.simulator.utils.AnnotationFilter.TeardownFilter;
 import com.hazelcast.simulator.utils.AnnotationFilter.VerifyFilter;
-import com.hazelcast.simulator.worker.performance.TestPerformanceTracker;
+import com.hazelcast.simulator.worker.performance.TestOperationsTracker;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
@@ -77,7 +77,7 @@ public class TestContainer {
     private final PropertyBinding propertyBinding;
     private final Class testClass;
     private final TestRunner runner;
-    private final TestPerformanceTracker testPerformanceTracker;
+    private final TestOperationsTracker testOperationsTracker;
     private final AtomicReference<TestPhase> currentPhase = new AtomicReference<>();
 
     public TestContainer(TestContextImpl targetInstance, TestCase testCase, Object driverInstance) {
@@ -111,7 +111,7 @@ public class TestContainer {
 
         propertyBinding.ensureNoUnusedProperties();
 
-        this.testPerformanceTracker = new TestPerformanceTracker(this);
+        this.testOperationsTracker = new TestOperationsTracker(this);
     }
 
     public void stop(){
@@ -123,8 +123,8 @@ public class TestContainer {
         return currentPhase.get();
     }
 
-    public TestPerformanceTracker getTestPerformanceTracker() {
-        return testPerformanceTracker;
+    public TestOperationsTracker getTestOperationsTracker() {
+        return testOperationsTracker;
     }
 
     @SuppressWarnings({"unchecked", "PMD.PreserveStackTrace"})

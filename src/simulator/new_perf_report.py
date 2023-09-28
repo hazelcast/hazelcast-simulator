@@ -1,4 +1,5 @@
 import os
+import shutil
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -268,7 +269,6 @@ def load_latency_distribution(run_dir):
             if not file_name.endswith(".hgrm"):
                 continue
             csv_path = f"{worker_dir}/{file_name}"
-            print(csv_path)
             if not os.path.exists(csv_path):
                 continue
             df = pd.read_csv(csv_path, delim_whitespace=True, comment='#')
@@ -349,6 +349,10 @@ cooldown_seconds = 5
 def load_operations_data(run_dir):
     result = None
 
+    rename_performance_csv(run_dir)
+
+    merge_worker_operations_csv(run_dir)
+
     df_list = []
 
     # load the df of the workers.
@@ -359,13 +363,16 @@ def load_operations_data(run_dir):
         if not worker_id:
             continue
 
-        for inner_file in os.listdir(worker_dir):
-            if not inner_file.startswith("performance-") or not inner_file.endswith(".csv"):
+        for inner_file_name in os.listdir(worker_dir):
+            if not inner_file_name.startswith("operations-") or not inner_file_name.endswith(".csv"):
                 continue
 
-            test_id = inner_file.replace("performance-", "").replace(".csv", "")
-            csv_path = f"{worker_dir}/{inner_file}"
+            test_id = inner_file_name.replace("operations-", "").replace(".csv", "")
+            csv_path = f"{worker_dir}/{inner_file_name}"
             df = pd.read_csv(csv_path)
+            if len(df.index) == 0:
+                continue
+
             # we need to round the epoch time to the nearest second
             df['time'] = df['epoch'].round(0).astype(int)
             df['time'] = pd.to_datetime(df['time'], unit='s')
@@ -380,15 +387,83 @@ def load_operations_data(run_dir):
 
             df_list.append(df)
 
-    # aggregate
-    if len(df_list) > 0:
-        df = pd.DataFrame()
-
     # merge the df into the result
     for df in df_list:
         result = inner_join(result, df)
 
     return result
+
+
+# Renames the old performance csv files to operations csv files
+def rename_performance_csv(run_dir):
+    for outer_file_name in os.listdir(run_dir):
+        outer_dir = f"{run_dir}/{outer_file_name}"
+        worker_id = find_worker_id(outer_dir)
+
+        if not worker_id:
+            continue
+
+        for inner_file_name in os.listdir(outer_dir):
+            if not inner_file_name.startswith("performance") or not inner_file_name.endswith(".csv"):
+                continue
+
+            name = inner_file_name.replace("performance", "").replace(".csv", "")
+            shutil.copyfile(f"{outer_dir}/{inner_file_name}", f"{outer_dir}/operations{name}.csv")
+
+
+def merge_worker_operations_csv(run_dir):
+    df_list_map = {}
+
+    # load all the operation datafromes for every worker/test
+    for outer_file_name in os.listdir(run_dir):
+        outer_dir = f"{run_dir}/{outer_file_name}"
+        worker_id = find_worker_id(outer_dir)
+        if not worker_id:
+            continue
+
+        for inner_file_name in os.listdir(outer_dir):
+            if not inner_file_name.startswith("operations") or not inner_file_name.endswith(".csv"):
+                continue
+            test_id = inner_file_name.replace("operations", "").replace(".csv", "")
+            df_list = df_list_map.get(test_id)
+            if df_list is None:
+                df_list = []
+                df_list_map[test_id] = df_list
+            df = pd.read_csv(f"{outer_dir}/{inner_file_name}")
+            df['time'] = df['epoch'].round(0).astype(int)
+            df['time'] = pd.to_datetime(df['time'], unit='s')
+            df.drop(['epoch'], inplace=True, axis=1)
+            df.drop(['timestamp'], inplace=True, axis=1)
+            df.set_index('time', inplace=True)
+            if len(df.index) > 0:
+                df_list.append(df)
+
+    # merge the frames into the
+    for test_id, df_list in df_list_map.items():
+        aggregate_df = df_list[0]
+        for df_index in range(1, len(df_list)):
+            df = df_list[df_index]
+            for ind in df.index:
+                # print(f"ind {ind}")
+                row = df.T.get(ind)
+                aggregate_row = aggregate_df.T.get(ind)
+                if aggregate_row is None:
+                    # it is a row with a time that doesn't exist in the aggregate
+                    # so the whole row can be added.
+                    aggregate_df = aggregate_df.append(df.loc[ind])
+                else:
+                    # it is a row with a time that already exist. So a new row is
+                    # created whereby every value from the 2 rows are added into
+                    # a new row and that is written back to the aggregate_df
+                    new_row = []
+                    for value_ind in range(len(row)):
+                        df_value = row.iloc[value_ind]
+                        aggregated_df_value = aggregate_row.iloc[value_ind]
+                        result = df_value + aggregated_df_value
+                        new_row.append(result)
+                    aggregate_df.loc[ind] = new_row
+
+        aggregate_df.to_csv(f"{run_dir}/operations{test_id}.csv")
 
 
 def processing_hdr(dir):
@@ -495,7 +570,7 @@ def load_latency_history_csv(file_path, worker_id):
         if worker_id is None:
             new_column_name = seperator.join(["Latency", column_name, test_id])
         else:
-            new_column_name = seperator.join(["Latency", column_name, test_id,worker_id])
+            new_column_name = seperator.join(["Latency", column_name, test_id, worker_id])
 
         df.rename(columns={column_name: new_column_name}, inplace=True)
 

@@ -38,7 +38,7 @@ public class PerformanceMonitorTest {
     private final ConcurrentMap<String, TestContainer> tests = new ConcurrentHashMap<String, TestContainer>();
 
     private Server server;
-    private PerformanceMonitor performanceMonitor;
+    private OperationsMonitor performanceMonitor;
     private TestManager containerManager;
 
     @Before
@@ -50,7 +50,7 @@ public class PerformanceMonitorTest {
         containerManager = mock(TestManager.class);
         when(containerManager.getContainers()).thenReturn(tests.values());
 
-        performanceMonitor = new PerformanceMonitor(server, containerManager, 1);
+        performanceMonitor = new OperationsMonitor(server, containerManager, 1);
     }
 
     @After

@@ -43,13 +43,13 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  * This is caused by the Recorder that gets reset when getIntervalHistogram is called. Meaning that writing to file
  * and sending to remote, needs to rely on the same set of Histograms to write/send.
  */
-public final class TestPerformanceTracker {
+public final class TestOperationsTracker {
 
     private static final long ONE_SECOND_IN_MILLIS = SECONDS.toMillis(1);
 
     private final TestContainer testContainer;
     private final Map<String, HistogramLogWriter> histogramLogWriterMap = new HashMap<>();
-    private final PerformanceLogWriter performanceLogWriter;
+    private final OperationsLogWriter performanceLogWriter;
     private final TestContextImpl testContext;
     private long lastUpdateMillis;
     private Map<String, Histogram> intervalHistogramMap;
@@ -65,11 +65,11 @@ public final class TestPerformanceTracker {
     private double totalThroughput;
     private long nextUpdateMillis;
 
-    public TestPerformanceTracker(TestContainer container) {
+    public TestOperationsTracker(TestContainer container) {
         this.testContainer = container;
         this.testContext = container.getTestContext();
-        this.performanceLogWriter = new PerformanceLogWriter(
-                new File(getUserDir(), container.getTestCase().getId() + ".performance.csv"));
+        this.performanceLogWriter = new OperationsLogWriter(
+                new File(getUserDir(), container.getTestCase().getId() + ".operations.csv"));
     }
 
     /**

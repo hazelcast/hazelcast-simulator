@@ -44,25 +44,25 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 /**
  * Monitors the performance of all running Simulator Tests.
  */
-public class PerformanceMonitor implements Closeable {
+public class OperationsMonitor implements Closeable {
 
     private static final int SHUTDOWN_TIMEOUT_SECONDS = 10;
     private static final long WAIT_FOR_TEST_CONTAINERS_DELAY_NANOS = MILLISECONDS.toNanos(100);
-    private static final Logger LOGGER = LogManager.getLogger(PerformanceMonitor.class);
+    private static final Logger LOGGER = LogManager.getLogger(OperationsMonitor.class);
 
-    private final PerformanceMonitorThread thread;
+    private final OperationsMonitorThread thread;
     private final AtomicBoolean shutdown = new AtomicBoolean();
     private final TestManager testManager;
     private final Server server;
     private final int updateIntervalSeconds;
 
-    public PerformanceMonitor(Server server,
-                              TestManager testManager,
-                              int updateIntervalSeconds) {
+    public OperationsMonitor(Server server,
+                             TestManager testManager,
+                             int updateIntervalSeconds) {
         this.testManager = testManager;
         this.server = server;
         this.updateIntervalSeconds = updateIntervalSeconds;
-        this.thread = new PerformanceMonitorThread();
+        this.thread = new OperationsMonitorThread();
         thread.setUncaughtExceptionHandler((t, e) -> LOGGER.fatal(e.getMessage(), e));
     }
 
@@ -87,19 +87,19 @@ public class PerformanceMonitor implements Closeable {
     /**
      * Thread to monitor the performance of Simulator Tests.
      */
-    private final class PerformanceMonitorThread extends Thread {
+    private final class OperationsMonitorThread extends Thread {
 
         private final long scanIntervalNanos = SECONDS.toNanos(1);
-        private final PerformanceLogWriter globalPerformanceLogWriter;
+        private final OperationsLogWriter globalOperationsLogWriter;
         private final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
         private final long updateIntervalMillis;
         private final List<TestContainer> dirtyContainers = new ArrayList<>();
 
-        private PerformanceMonitorThread() {
-            super("WorkerPerformanceMonitor");
+        private OperationsMonitorThread() {
+            super("WorkerOperationsMonitor");
             setDaemon(true);
             this.updateIntervalMillis = SECONDS.toMillis(updateIntervalSeconds);
-            this.globalPerformanceLogWriter = new PerformanceLogWriter(new File(getUserDir(), "performance.csv"));
+            this.globalOperationsLogWriter = new OperationsLogWriter(new File(getUserDir(), "operations.csv"));
         }
 
         @Override
@@ -137,7 +137,7 @@ public class PerformanceMonitor implements Closeable {
             dirtyContainers.clear();
 
             for (TestContainer container : testManager.getContainers()) {
-                TestPerformanceTracker tracker = container.getTestPerformanceTracker();
+                TestOperationsTracker tracker = container.getTestOperationsTracker();
                 if (tracker.update(updateIntervalMillis, currentTimeMillis)) {
                     dirtyContainers.add(container);
                 }
@@ -148,7 +148,7 @@ public class PerformanceMonitor implements Closeable {
             PerformanceStatsOperation operation = new PerformanceStatsOperation();
 
             for (TestContainer container : dirtyContainers) {
-                TestPerformanceTracker tracker = container.getTestPerformanceTracker();
+                TestOperationsTracker tracker = container.getTestOperationsTracker();
                 operation.addPerformanceStats(container.getTestCase().getId(), tracker.createPerformanceStats());
             }
 
@@ -164,7 +164,7 @@ public class PerformanceMonitor implements Closeable {
             double globalIntervalThroughput = 0;
 
             for (TestContainer container : dirtyContainers) {
-                TestPerformanceTracker tracker = container.getTestPerformanceTracker();
+                TestOperationsTracker tracker = container.getTestOperationsTracker();
                 tracker.persist(currentTimestamp, dateString);
 
                 globalIntervalOperationCount += tracker.intervalOperationCount();
@@ -173,7 +173,7 @@ public class PerformanceMonitor implements Closeable {
             }
 
             // global performance stats
-            globalPerformanceLogWriter.write(
+            globalOperationsLogWriter.write(
                     currentTimestamp,
                     dateString,
                     globalOperationsCount,
