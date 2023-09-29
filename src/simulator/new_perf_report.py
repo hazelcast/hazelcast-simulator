@@ -30,38 +30,6 @@ import matplotlib.dates as mdates
 import os
 from glob import glob
 
-seperator = "#"
-
-
-# todo:
-# - improved dstat title
-# - hgrm proper unit for y-label
-# - hgrm location for files
-# - generate html report
-# - trimming
-# - perf: multiplot labels
-# - dstat: multiplot labels
-# - hgrm: multiplot labels
-# - performance: y values comma seperated
-# - latency global vs local latency files
-# - test specific files
-# - performance: aggregated performance is missing
-# - latency distribution make use of run_list
-# - instead of modifying the epoch column, we add a new column
-# - performance epoch column is not formatted anymore as string
-# - dstat format epoch column
-# - dstat in relative time has a prefix '01' in front.
-# - fix absolute time
-# - trimming of latency history
-# - latency history time scale
-
-
-# done
-# - latency history merging
-# - fixed the mess with hgrm
-# - latency: fix hgrm location
-# - latency: fix hgrm csv location
-
 
 def multiple_by(df, amount, *column_names):
     for column_name in column_names:
@@ -89,6 +57,46 @@ def sizeof_fmt(x, pos):
         x /= 1024.0
 
 
+class ColumnTitle:
+    seperator = "::"
+    kv_seperator = "=="
+
+    def __init__(self, group, metric, attributes=None):
+        if attributes is None:
+            attributes = {}
+        self.group = group
+        self.metric = metric
+        self.attributes = attributes
+
+    def to_string(self):
+        result = f"{self.group}{ColumnTitle.seperator}{self.metric}"
+
+        if self.attributes is not None:
+            for key, value in self.attributes.items():
+                if not value is None:
+                    result = result + f"{ColumnTitle.seperator}{key}{ColumnTitle.kv_seperator}{value}"
+        return result
+
+    @staticmethod
+    def from_string(column_name):
+        args = column_name.split(ColumnTitle.seperator)
+        group = args[0]
+        metric = args[1]
+        attributes = {}
+        for k in range(2, len(args)):
+            pair = args[k].split(ColumnTitle.kv_seperator)
+            attributes[pair[0]] = pair[1]
+
+        return ColumnTitle(group, metric, attributes)
+
+
+def inner_join(df_a, df_b):
+    if df_a is None:
+        return df_b
+    else:
+        return pd.concat([df_a, df_b], axis=1, join="inner")
+
+
 def find_worker_id(path):
     if not os.path.isdir(path):
         return None
@@ -101,45 +109,47 @@ def find_worker_id(path):
     return workername[:index]
 
 
-def aggregate_performance_data(perf_data):
-    log("Aggregating performance data")
-
-    delta_map = {}
-    epochs_data = []
-    for df in perf_data.values():
-        epoch_column = df['epoch']
-        delta_column = df['operations-delta']
-        for i in range(len(epoch_column.values)):
-            epoch = epoch_column.iloc[i]
-
-            if epoch in delta_map:
-                delta_map[epoch] = delta_column.iloc[i] + delta_map[epoch]
-            else:
-                epochs_data.append(epoch)
-                delta_map[epoch] = delta_column.iloc[i]
-
-    operations_delta_data = []
-    operations_data = []
-    last_operations = None
-    last_epoch = None
-    epochs_data.sort()
-    for epoch in epochs_data:
-        if not last_epoch:
-            last_epoch = epoch
-            last_operations = 0
-
-        delta = delta_map[epoch]
-        operations_delta_data.append(delta)
-        last_operations += delta
-        operations_data.append(last_operations)
-
-    df = pd.DataFrame({'epoch': epochs_data,
-                       'operations': operations_data,
-                       'operations-delta': operations_delta_data,
-                       'operations/second': operations_delta_data})
-    # print(df)
-    perf_data[''] = df
-    log("Aggregating performance data: done")
+#
+#
+# def aggregate_performance_data(perf_data):
+#     log("Aggregating performance data")
+#
+#     delta_map = {}
+#     epochs_data = []
+#     for df in perf_data.values():
+#         epoch_column = df['epoch']
+#         delta_column = df['operations-delta']
+#         for i in range(len(epoch_column.values)):
+#             epoch = epoch_column.iloc[i]
+#
+#             if epoch in delta_map:
+#                 delta_map[epoch] = delta_column.iloc[i] + delta_map[epoch]
+#             else:
+#                 epochs_data.append(epoch)
+#                 delta_map[epoch] = delta_column.iloc[i]
+#
+#     operations_delta_data = []
+#     operations_data = []
+#     last_operations = None
+#     last_epoch = None
+#     epochs_data.sort()
+#     for epoch in epochs_data:
+#         if not last_epoch:
+#             last_epoch = epoch
+#             last_operations = 0
+#
+#         delta = delta_map[epoch]
+#         operations_delta_data.append(delta)
+#         last_operations += delta
+#         operations_data.append(last_operations)
+#
+#     df = pd.DataFrame({'epoch': epochs_data,
+#                        'operations': operations_data,
+#                        'operations-delta': operations_delta_data,
+#                        'operations/second': operations_delta_data})
+#     # print(df)
+#     perf_data[''] = df
+#     log("Aggregating performance data: done")
 
 
 def plot_latency_history(report_dir, latency_history_data_runs):
@@ -187,20 +197,20 @@ def plot_latency_history(report_dir, latency_history_data_runs):
             plt.close()
 
 
-def load_dstat(benchmark_dir):
-    result = {}
-    for csv_filename in os.listdir(benchmark_dir):
-        if not csv_filename.endswith("_dstat.csv"):
-            continue
-        agent_name = csv_filename[:csv_filename.index("_")]
-        csv_path = f"{benchmark_dir}/{csv_filename}"
-        df = pd.read_csv(csv_path, skiprows=5)
-        multiple_by(df, 1000, 'used', 'free', 'buf', 'cach')
-        # if not absolute_time:
-        #     to_relative_time(df, "epoch")
-        # df['epoch'] = pd.to_datetime(df['epoch'], unit='s')
-        result[agent_name] = df
-    return result
+# def load_dstat(benchmark_dir):
+#     result = {}
+#     for csv_filename in os.listdir(benchmark_dir):
+#         if not csv_filename.endswith("_dstat.csv"):
+#             continue
+#         agent_name = csv_filename[:csv_filename.index("_")]
+#         csv_path = f"{benchmark_dir}/{csv_filename}"
+#         df = pd.read_csv(csv_path, skiprows=5)
+#         multiple_by(df, 1000, 'used', 'free', 'buf', 'cach')
+#         # if not absolute_time:
+#         #     to_relative_time(df, "epoch")
+#         # df['epoch'] = pd.to_datetime(df['epoch'], unit='s')
+#         result[agent_name] = df
+#     return result
 
 
 dstat_titles = {"1m": "1 Minute load average",
@@ -212,49 +222,49 @@ dstat_titles = {"1m": "1 Minute load average",
                 "used": "Memory Usage: Used"}
 
 
-def plot_dstat(report_dir, data_runs):
-    df_per_agent_per_run = {}
-    for (agent_id, run_id), df in data_runs.items():
-        df_per_run = df_per_agent_per_run.get(agent_id)
-        if not df_per_run:
-            df_per_run = {}
-            df_per_agent_per_run[agent_id] = df_per_run
-        df_per_run[run_id] = df
-
-    agent_list = list(df_per_agent_per_run.keys())
-    for agent_id in agent_list:
-        df_per_run = df_per_agent_per_run[agent_id]
-        result_dir = f"{report_dir}/dstat/{agent_id}"
-
-        os.makedirs(result_dir)
-        run_id_list = list(df_per_run.keys())
-        print(run_id_list)
-        first_df = df_per_run[run_id_list[0]]
-        for c in range(2, len(first_df.columns)):
-            column_name = first_df.columns[c]
-            fig = plt.figure(figsize=(image_width_px / image_dpi, image_height_px / image_dpi), dpi=image_dpi)
-
-            title = dstat_titles.get(column_name)
-            if title:
-                plt.title(f"{agent_id} - {title} ({column_name})")
-            else:
-                plt.title(f"{agent_id} - {column_name}")
-
-            for i in range(0, len(run_id_list)):
-                run_id = run_id_list[i]
-                df = df_per_run[run_id]
-                if not column_name in df:
-                    continue
-                plt.plot(pd.to_datetime(df['epoch'], unit='s'),
-                         df[column_name],
-                         label=agent_id + " " + run_id)
-
-            filename = column_name.replace("/", "_")
-            plt.xlabel("Time")
-            plt.legend()
-            plt.grid()
-            plt.savefig(f'{result_dir}/{filename}.png')
-            plt.close()
+# def plot_dstat(report_dir, data_runs):
+#     df_per_agent_per_run = {}
+#     for (agent_id, run_id), df in data_runs.items():
+#         df_per_run = df_per_agent_per_run.get(agent_id)
+#         if not df_per_run:
+#             df_per_run = {}
+#             df_per_agent_per_run[agent_id] = df_per_run
+#         df_per_run[run_id] = df
+#
+#     agent_list = list(df_per_agent_per_run.keys())
+#     for agent_id in agent_list:
+#         df_per_run = df_per_agent_per_run[agent_id]
+#         result_dir = f"{report_dir}/dstat/{agent_id}"
+#
+#         os.makedirs(result_dir)
+#         run_id_list = list(df_per_run.keys())
+#         print(run_id_list)
+#         first_df = df_per_run[run_id_list[0]]
+#         for c in range(2, len(first_df.columns)):
+#             column_name = first_df.columns[c]
+#             fig = plt.figure(figsize=(image_width_px / image_dpi, image_height_px / image_dpi), dpi=image_dpi)
+#
+#             title = dstat_titles.get(column_name)
+#             if title:
+#                 plt.title(f"{agent_id} - {title} ({column_name})")
+#             else:
+#                 plt.title(f"{agent_id} - {column_name}")
+#
+#             for i in range(0, len(run_id_list)):
+#                 run_id = run_id_list[i]
+#                 df = df_per_run[run_id]
+#                 if not column_name in df:
+#                     continue
+#                 plt.plot(pd.to_datetime(df['epoch'], unit='s'),
+#                          df[column_name],
+#                          label=agent_id + " " + run_id)
+#
+#             filename = column_name.replace("/", "_")
+#             plt.xlabel("Time")
+#             plt.legend()
+#             plt.grid()
+#             plt.savefig(f'{result_dir}/{filename}.png')
+#             plt.close()
 
 
 def load_latency_distribution(run_dir):
@@ -286,59 +296,59 @@ def load_latency_distribution(run_dir):
     return result
 
 
-def plot_cumulative_latency_distribution(report_dir, *df_workers_list):
-    log("Plotting cumulative latency distribution data")
+# def plot_cumulative_latency_distribution(report_dir, *df_workers_list):
+#     log("Plotting cumulative latency distribution data")
+#
+#     first_df_workers = df_workers_list[0]
+#     for worker_name, first_df in first_df_workers.items():
+#         result_dir = f"{report_dir}/latency/{worker_name}"
+#         os.makedirs(result_dir, exist_ok=True)
+#
+#         fig = plt.figure(figsize=(image_width_px / image_dpi, image_height_px / image_dpi), dpi=image_dpi)
+#         # plt.yscale('log')
+#         plt.xscale('log')
+#         axes = plt.gca()
+#
+#         axes.set_xticks([1, 10, 100, 1000, 10000, 100000, 1000000, 10000000])
+#         axes.set_xticklabels(["0%", "90%", "99%", "99.9%", "99.99%", "99.999%", "99.9999%", "99.99999%"])
+#         plt.plot(first_df['1/(1-Percentile)'], first_df['Value'])
+#         for i in range(1, len(df_workers_list)):
+#             other_df_worker = df_workers_list[i]
+#             if not worker_name in other_df_worker:
+#                 continue
+#
+#             other_df = other_df_worker[worker_name]
+#             plt.plot(other_df['1/(1-Percentile)'], other_df['Value'])
+#
+#         plt.grid()
+#         plt.savefig(f'{result_dir}/cumulative_latency_distribution.png')
+#         plt.close()
+#
+#     log("Plotting cumulative latency distribution data: done")
 
-    first_df_workers = df_workers_list[0]
-    for worker_name, first_df in first_df_workers.items():
-        result_dir = f"{report_dir}/latency/{worker_name}"
-        os.makedirs(result_dir, exist_ok=True)
-
-        fig = plt.figure(figsize=(image_width_px / image_dpi, image_height_px / image_dpi), dpi=image_dpi)
-        # plt.yscale('log')
-        plt.xscale('log')
-        axes = plt.gca()
-
-        axes.set_xticks([1, 10, 100, 1000, 10000, 100000, 1000000, 10000000])
-        axes.set_xticklabels(["0%", "90%", "99%", "99.9%", "99.99%", "99.999%", "99.9999%", "99.99999%"])
-        plt.plot(first_df['1/(1-Percentile)'], first_df['Value'])
-        for i in range(1, len(df_workers_list)):
-            other_df_worker = df_workers_list[i]
-            if not worker_name in other_df_worker:
-                continue
-
-            other_df = other_df_worker[worker_name]
-            plt.plot(other_df['1/(1-Percentile)'], other_df['Value'])
-
-        plt.grid()
-        plt.savefig(f'{result_dir}/cumulative_latency_distribution.png')
-        plt.close()
-
-    log("Plotting cumulative latency distribution data: done")
-
-
-def plot_latency_histogram(report_dir, *df_workers_list):
-    first_df_workers = df_workers_list[0]
-    for worker_name, first_df in first_df_workers.items():
-        result_dir = f"{report_dir}/latency/{worker_name}"
-
-        os.makedirs(result_dir, exist_ok=True)
-        fig = plt.figure(figsize=(2 * image_width_px / image_dpi, image_height_px / image_dpi), dpi=image_dpi)
-        first_df.plot(kind='bar', x='Value', y="Count", ax=plt.gca())
-        for i in range(1, len(df_workers_list)):
-            other_df_worker = df_workers_list[i]
-            if not worker_name in other_df_worker:
-                continue
-
-            other_df = other_df_worker[worker_name]
-            other_df.plot(kind='bar', x='Value', y="Count", ax=plt.gca())
-        plt.xlabel("Latency (microseconds)")
-        plt.ylabel("Count")
-        plt.yscale('log')
-
-        plt.grid()
-        plt.savefig(f'{result_dir}/latency_histogram.png')
-        plt.close()
+#
+# def plot_latency_histogram(report_dir, *df_workers_list):
+#     first_df_workers = df_workers_list[0]
+#     for worker_name, first_df in first_df_workers.items():
+#         result_dir = f"{report_dir}/latency/{worker_name}"
+#
+#         os.makedirs(result_dir, exist_ok=True)
+#         fig = plt.figure(figsize=(2 * image_width_px / image_dpi, image_height_px / image_dpi), dpi=image_dpi)
+#         first_df.plot(kind='bar', x='Value', y="Count", ax=plt.gca())
+#         for i in range(1, len(df_workers_list)):
+#             other_df_worker = df_workers_list[i]
+#             if not worker_name in other_df_worker:
+#                 continue
+#
+#             other_df = other_df_worker[worker_name]
+#             other_df.plot(kind='bar', x='Value', y="Count", ax=plt.gca())
+#         plt.xlabel("Latency (microseconds)")
+#         plt.ylabel("Count")
+#         plt.yscale('log')
+#
+#         plt.grid()
+#         plt.savefig(f'{result_dir}/latency_histogram.png')
+#         plt.close()
 
 
 absolute_time = True
@@ -347,14 +357,22 @@ cooldown_seconds = 5
 
 
 def load_operations_data(run_dir):
-    result = None
-
     rename_performance_csv(run_dir)
-
-    merge_worker_operations_csv(run_dir)
+    create_aggregated_operations_csv(run_dir)
 
     df_list = []
+    df_list.extend(load_aggregated_operations_csv(run_dir))
+    df_list.extend(load_worker_operations_csv(run_dir))
 
+    result = None
+    for df in df_list:
+        result = inner_join(result, df)
+
+    return result
+
+
+def load_worker_operations_csv(run_dir):
+    result = []
     # load the df of the workers.
     for outer_file in os.listdir(run_dir):
         worker_dir = f"{run_dir}/{outer_file}"
@@ -382,15 +400,10 @@ def load_operations_data(run_dir):
             for column_name in df.columns:
                 if column_name == "time":
                     continue
-                new_column_name = seperator.join(["Operations", column_name, test_id, worker_id])
-                df.rename(columns={column_name: new_column_name}, inplace=True)
-
-            df_list.append(df)
-
-    # merge the df into the result
-    for df in df_list:
-        result = inner_join(result, df)
-
+                column_title = ColumnTitle("Operations", column_name,
+                                           {"test_id": test_id, "worker_id": worker_id})
+                df.rename(columns={column_name: column_title.to_string()}, inplace=True)
+            result.append(df)
     return result
 
 
@@ -411,7 +424,39 @@ def rename_performance_csv(run_dir):
             shutil.copyfile(f"{outer_dir}/{inner_file_name}", f"{outer_dir}/operations{name}.csv")
 
 
-def merge_worker_operations_csv(run_dir):
+def load_aggregated_operations_csv(run_dir):
+    result = []
+    # load the aggregated performance data
+    for file_name in os.listdir(run_dir):
+        if not file_name.startswith("operations") or not file_name.endswith(".csv"):
+            continue
+        if file_name.startswith("operations-"):
+            test_id = file_name.replace("operations-", "").replace(".csv", "")
+        else:
+            test_id = None
+        csv_path = f"{run_dir}/{file_name}"
+        df = pd.read_csv(csv_path)
+        if len(df.index) == 0:
+            continue
+
+        print(df)
+        df['time'] = df['epoch'].round(0).astype(int)
+        df['time'] = pd.to_datetime(df['time'], unit='s')
+        df.set_index('time', inplace=True)
+        df.drop(['epoch'], inplace=True, axis=1)
+        df.drop(['timestamp'], inplace=True, axis=1)
+
+        for column_name in df.columns:
+            if column_name == "time":
+                continue
+            column_title = ColumnTitle("Operations", column_name, {"test_id": test_id})
+            df.rename(columns={column_name: column_title.to_string()}, inplace=True)
+
+        result.append(df)
+    return result
+
+
+def create_aggregated_operations_csv(run_dir):
     df_list_map = {}
 
     # load all the operation datafromes for every worker/test
@@ -430,11 +475,8 @@ def merge_worker_operations_csv(run_dir):
                 df_list = []
                 df_list_map[test_id] = df_list
             df = pd.read_csv(f"{outer_dir}/{inner_file_name}")
-            df['time'] = df['epoch'].round(0).astype(int)
-            df['time'] = pd.to_datetime(df['time'], unit='s')
-            df.drop(['epoch'], inplace=True, axis=1)
-            df.drop(['timestamp'], inplace=True, axis=1)
-            df.set_index('time', inplace=True)
+            df['epoch'] = df['epoch'].round(0).astype(int)
+            df.set_index('epoch', inplace=True)
             if len(df.index) > 0:
                 df_list.append(df)
 
@@ -444,7 +486,6 @@ def merge_worker_operations_csv(run_dir):
         for df_index in range(1, len(df_list)):
             df = df_list[df_index]
             for ind in df.index:
-                # print(f"ind {ind}")
                 row = df.T.get(ind)
                 aggregate_row = aggregate_df.T.get(ind)
                 if aggregate_row is None:
@@ -543,13 +584,6 @@ def load_latency_history(run_dir):
     return result
 
 
-def inner_join(df_a, df_b):
-    if df_a is None:
-        return df_b
-    else:
-        return pd.concat([df_a, df_b], axis=1, join="inner")
-
-
 def load_latency_history_csv(file_path, worker_id):
     print(f"load_latency_history_csv {file_path}")
     test_id = os.path.basename(file_path).replace(".latency-history.csv", "")
@@ -567,13 +601,9 @@ def load_latency_history_csv(file_path, worker_id):
         if column_name == "time":
             continue
 
-        if worker_id is None:
-            new_column_name = seperator.join(["Latency", column_name, test_id])
-        else:
-            new_column_name = seperator.join(["Latency", column_name, test_id, worker_id])
-
-        df.rename(columns={column_name: new_column_name}, inplace=True)
-
+        column_title = ColumnTitle("Latency", column_name,
+                                   {"test_id": test_id, "worker_id": worker_id})
+        df.rename(columns={column_name: column_title.to_string()}, inplace=True)
     return df
 
 
@@ -640,45 +670,40 @@ class Benchmark:
         return len(self.runs)
 
 
-def plot_performance(report_dir, df):
-    for (test_id, worker_id), df_per_run in df_per_run_per_test_worker.items():
-        run_id_list = list(df_per_run.keys())
-        first_df = None
-        if not first_df:
-            first_df = df
+def plot_operations(report_dir, df):
+    for column_name in df.columns:
+        column_title = ColumnTitle.from_string(column_name)
+        if column_title.group != "Operations":
+            continue
 
-        result_dir = f"{report_dir}/performance/{worker_id}"
-        if worker_id != '':
-            os.makedirs(result_dir, exist_ok=True)
+        if column_title.metric != "operations/second":
+            continue
 
-        for column_index in range(2, len(first_df.columns)):
-            column_name = first_df.columns[column_index]
-            fig = plt.figure(figsize=(image_width_px / image_dpi, image_height_px / image_dpi), dpi=image_dpi)
+        if column_title.attributes.get("worker_id") is not None:
+            continue
 
-            for run_index in range(0, len(run_id_list)):
-                run_id = run_id_list[run_index]
-                df = df_per_run[run_id]
-                if not column_name in df:
-                    continue
-                plt.plot(pd.to_datetime(df['epoch'], unit='s'), df[column_name], label=run_id)
+        fig = plt.figure(figsize=(image_width_px / image_dpi, image_height_px / image_dpi), dpi=image_dpi)
 
-            plt.ticklabel_format(style='plain', axis='y')
-            plt.ylabel("Throughput (operations/second)")
-            plt.xlabel("Time")
+        plt.plot(df.index, df[column_name], label=column_name)
+
+        plt.ticklabel_format(style='plain', axis='y')
+        plt.ylabel("Throughput (operations/second)")
+        plt.xlabel("Time")
             # plt.gca.xaxis.set_major_formatter(mdates.DateFormatter('%m-%S'))
-            plt.legend()
-            if worker_id == '':
-                plt.title(f"{test_id} {column_name.capitalize()}")
-            else:
-                plt.title(f"{test_id} {worker_id} - {column_name.capitalize()}")
-            plt.grid()
+        plt.legend()
+        #if worker_id == '':
+        #    plt.title(f"{test_id} {column_name.capitalize()}")
+        #else:
+        plt.title(f"{column_name.capitalize()}")
+        plt.grid()
 
-            filename = column_name.replace("/", "_") + ".png"
-            if test_id != '':
-                filename = test_id + '.' + filename
+        filename = column_name.replace("/", "_") + ".png"
+        #if test_id != '':
+        #    filename = test_id + '.' + filename
 
-            plt.savefig(f'{result_dir}/{filename}')
-            plt.close()
+        plt.savefig(f'{report_dir}/{filename}')
+        plt.close()
+        print(f'{report_dir}/{filename}')
 
 
 benchmark_htable = Benchmark("htable", "/home/pveentjer/cpu_1_affinity_1")
@@ -688,7 +713,7 @@ benchmark_htable.latest_run_path()
 # benchmark_map = Benchmark("map", "/eng/Hazelcast/alto-testing/alto-new-testing/runs/htable/read_only/1KB/cpu_1/")
 # print(benchmark_map.run_count())
 
-report_dir = tempfile.mkdtemp()
+report_dir = "/mnt/home/pveentjer/cpu_1_affinity_1/18-09-2023_10-10-22/report/"#tempfile.mkdtemp()
 print(f"Report directory {report_dir}")
 
 log("Loading performance data: Starting")
@@ -698,8 +723,8 @@ run = benchmark_htable.latest_run_path()
 print(f"Analyzing run_path:{run.path}")
 # processing_hdr(run.path)
 df_performance = load_operations_data(run.path)
-df_latency_history = load_latency_history(run.path)
-df = inner_join(df_performance, df_latency_history)
+#df_latency_history = load_latency_history(run.path)
+df = df_performance #df_performance # inner_join(df_performance, df_latency_history)
 
 # df = df_latency_history
 
@@ -710,9 +735,11 @@ df.to_excel(path_excel)
 path_csv = f"{run.path}/data.csv"
 print(f"path csv: {path_csv}")
 df.to_csv(path_csv)
-
 for column_name in df.columns:
     print(column_name)
+plot_operations(report_dir, df)
+
+
 
 #     # for (test_id, agent_id), df in data.items():
 #     #    performance_data_runs[(test_id, agent_id, run.id)] = df
