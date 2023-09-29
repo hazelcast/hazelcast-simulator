@@ -197,6 +197,50 @@ def plot_latency_history(report_dir, latency_history_data_runs):
             plt.close()
 
 
+def plot_latency_history(report_dir, df):
+    for column_name in df.columns:
+        column_title = ColumnTitle.from_string(column_name)
+        if column_title.group != "Latency":
+            continue
+        metric = column_title.metric
+        if metric == "StartTime" or metric == "Timestamp":
+            continue
+
+        fig = plt.figure(figsize=(image_width_px / image_dpi, image_height_px / image_dpi), dpi=image_dpi)
+
+        plt.plot(df.index, df[column_name], label=column_name)
+
+        plt.ticklabel_format(style='plain', axis='y')
+        plt.title(metric.replace('_',' '))
+        plt.ylabel("us")
+        plt.xlabel("Time")
+            # plt.gca.xaxis.set_major_formatter(mdates.DateFormatter('%m-%S'))
+        plt.legend()
+        #if worker_id == '':
+        #    plt.title(f"{test_id} {column_name.capitalize()}")
+        #else:
+
+        test_id = column_title.attributes.get("test_id")
+        if test_id is None:
+            test_str = ""
+        else:
+            test_str = f"-{test_id}"
+
+        worker_id = column_title.attributes.get("worker_id")
+
+        plt.grid()
+
+        if worker_id is None:
+            path = f"{report_dir}/{metric}{test_str}.png"
+        else:
+            dir =  f"{report_dir}/{worker_id}"
+            if not os.path.exists(dir):
+                os.mkdir(dir)
+            path = f"{dir}/{metric}{test_str}.png"
+        print(f"Generating [{path}]")
+        plt.savefig(path)
+        plt.close()
+
 # def load_dstat(benchmark_dir):
 #     result = {}
 #     for csv_filename in os.listdir(benchmark_dir):
@@ -679,9 +723,6 @@ def plot_operations(report_dir, df):
         if column_title.metric != "operations/second":
             continue
 
-        if column_title.attributes.get("worker_id") is not None:
-            continue
-
         fig = plt.figure(figsize=(image_width_px / image_dpi, image_height_px / image_dpi), dpi=image_dpi)
 
         plt.plot(df.index, df[column_name], label=column_name)
@@ -694,16 +735,29 @@ def plot_operations(report_dir, df):
         #if worker_id == '':
         #    plt.title(f"{test_id} {column_name.capitalize()}")
         #else:
+
+        test_id = column_title.attributes.get("test_id")
+        if test_id is None:
+            test_str = ""
+        else:
+            test_str = f"-{test_id}"
+
+        worker_id = column_title.attributes.get("worker_id")
+
         plt.title(f"{column_name.capitalize()}")
         plt.grid()
 
-        filename = column_name.replace("/", "_") + ".png"
-        #if test_id != '':
-        #    filename = test_id + '.' + filename
+        if worker_id is None:
+            path = f"{report_dir}/throughput{test_str}.png"
+        else:
+            dir = f"{report_dir}/{worker_id}"
+            if not os.path.exists(dir):
+                os.mkdir(dir)
+            path = f"{dir}/throughput{test_str}.png"
 
-        plt.savefig(f'{report_dir}/{filename}')
+        print(f"Generating [{path}]")
+        plt.savefig(path)
         plt.close()
-        print(f'{report_dir}/{filename}')
 
 
 benchmark_htable = Benchmark("htable", "/home/pveentjer/cpu_1_affinity_1")
@@ -723,8 +777,8 @@ run = benchmark_htable.latest_run_path()
 print(f"Analyzing run_path:{run.path}")
 # processing_hdr(run.path)
 df_performance = load_operations_data(run.path)
-#df_latency_history = load_latency_history(run.path)
-df = df_performance #df_performance # inner_join(df_performance, df_latency_history)
+df_latency_history = load_latency_history(run.path)
+df = inner_join(df_performance, df_latency_history)
 
 # df = df_latency_history
 
@@ -738,7 +792,7 @@ df.to_csv(path_csv)
 for column_name in df.columns:
     print(column_name)
 plot_operations(report_dir, df)
-
+plot_latency_history(report_dir, df)
 
 
 #     # for (test_id, agent_id), df in data.items():
