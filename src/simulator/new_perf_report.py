@@ -30,6 +30,7 @@ import matplotlib.dates as mdates
 import os
 from glob import glob
 
+
 def multiple_by(df, amount, *column_names):
     for column_name in column_names:
         column = df[column_name]
@@ -94,11 +95,25 @@ class ColumnTitle:
         return ColumnTitle(group, metric, attributes)
 
 
-def inner_join(df_a, df_b):
-    if df_a is None:
-        return df_b
-    else:
-        return pd.concat([df_a, df_b], axis=1, join="inner")
+def merge_on_time(*frames):
+    result = None
+    for frame in frames:
+        if frame is None:
+            continue
+        elif result is None:
+            result = frame
+        else:
+            result = pd.concat([result, frame], axis=1, join="outer")
+    return result
+
+
+#
+# def merge_on_time(df_a, df_b):
+#     if df_a is None:
+#         return df_b
+#     else:
+#
+#         result = pd.concat([df_a, df_b], axis=1, join="outer")
 
 
 def find_worker_id(path):
@@ -112,11 +127,11 @@ def find_worker_id(path):
     index = worker_name.index("-")
     return worker_name[:index]
 
+
 def log_section(text):
     print("---------------------------------------------------")
     print(text)
     print("---------------------------------------------------")
-
 
 
 def plot_latency_history(report_dir, latency_history_data_runs):
@@ -166,6 +181,7 @@ def plot_latency_history(report_dir, latency_history_data_runs):
 
 def plot_latency_history(report_dir, df):
     log_section("Plotting latency history: Start")
+    start_sec = time.time()
 
     for column_name in df.columns:
         column_title = ColumnTitle.from_string(column_name)
@@ -211,15 +227,17 @@ def plot_latency_history(report_dir, df):
             dir = f"{report_dir}/{worker_id}"
             mkdir(dir)
             path = f"{dir}/{metric}{test_str}.png"
-        print(f"Generating [{path}]")
+        print(f"\tGenerating [{path}]")
         plt.savefig(path)
         plt.close()
 
-    log_section("Plotting latency history: Done")
+    duration_sec = time.time() - start_sec
+    log_section(f"Plotting latency history: Done (duration {duration_sec:.2f} seconds)")
 
 
 def load_dstat(run_dir):
     log_section("Loading dstat data: Start")
+    start_sec = time.time()
 
     result = None
     for csv_filename in os.listdir(run_dir):
@@ -227,7 +245,7 @@ def load_dstat(run_dir):
             continue
         agent_name = csv_filename[:csv_filename.index("_")]
         csv_path = f"{run_dir}/{csv_filename}"
-        print(f"Loading {csv_path}")
+        print(f"\tLoading {csv_path}")
         df = pd.read_csv(csv_path, skiprows=5)
         multiple_by(df, 1000, 'used', 'free', 'buf', 'cach')
 
@@ -238,17 +256,18 @@ def load_dstat(run_dir):
         for column_name in df.columns:
             if column_name == "time":
                 continue
-            column_title = ColumnTitle("dstat", column_name, {"agent_id":agent_name})
+            column_title = ColumnTitle("dstat", column_name, {"agent_id": agent_name})
             df.rename(columns={column_name: column_title.to_string()}, inplace=True)
 
-        result = inner_join(result, df)
+        result = merge_on_time(result, df)
         # if not absolute_time:
         #     to_relative_time(df, "epoch")
         # df['epoch'] = pd.to_datetime(df['epoch'], unit='s')
 
-    log_section("Loading dstat data: Done")
-
+    duration_sec = time.time() - start_sec
+    log_section(f"Loading dstat data: Done (duration {duration_sec:.2f} seconds)")
     return result
+
 
 # def plot_dstat(report_dir, data_runs):
 #     df_per_agent_per_run = {}
@@ -297,6 +316,7 @@ def load_dstat(run_dir):
 
 def plot_dstat(report_dir, df):
     log_section("Plotting dstat data: Start")
+    start_sec = time.time()
 
     for column_name in df.columns:
         column_title = ColumnTitle.from_string(column_name)
@@ -320,14 +340,15 @@ def plot_dstat(report_dir, df):
         plt.title(f"Agent {agent_id} : {column_title.metric}")
         plt.grid()
 
-        nice_metric_name = column_title.metric.replace("/", "_").replace(":","_")
+        nice_metric_name = column_title.metric.replace("/", "_").replace(":", "_")
         path = f"{report_dir}/{agent_id}_{nice_metric_name}.png"
 
-        print(f"Generating [{path}]")
+        print(f"\tGenerating [{path}]")
         plt.savefig(path)
         plt.close()
 
-    log_section("Plotting dstat data: Done")
+    duration_sec = time.time() - start_sec
+    log_section(f"Plotting dstat data: Done (duration {duration_sec:.2f} seconds)")
 
 
 dstat_titles = {"1m": "1 Minute load average",
@@ -353,7 +374,7 @@ def load_latency_distribution(run_dir):
             csv_path = f"{worker_dir}/{file_name}"
             if not os.path.exists(csv_path):
                 continue
-            print(f"Loading {csv_path}")
+            print(f"\tLoading {csv_path}")
             df = pd.read_csv(csv_path, delim_whitespace=True, comment='#')
 
             total_count_column = df['TotalCount']
@@ -429,6 +450,8 @@ cooldown_seconds = 5
 
 
 def load_operations_data(run_dir):
+    log_section("Loading operations data: Start")
+    start_sec = time.time()
     rename_performance_csv(run_dir)
     create_aggregated_operations_csv(run_dir)
 
@@ -438,15 +461,15 @@ def load_operations_data(run_dir):
 
     result = None
     for df in df_list:
-        result = inner_join(result, df)
+        result = merge_on_time(result, df)
+
+    duration_sec = time.time() - start_sec
+    log_section(f"Loading operations data: Done (duration {duration_sec:.2f} seconds)")
 
     return result
 
 
-
 def load_worker_operations_csv(run_dir):
-    log_section("Loading operations data: Start")
-
     result = []
     # load the df of the workers.
     for outer_file in os.listdir(run_dir):
@@ -462,7 +485,7 @@ def load_worker_operations_csv(run_dir):
 
             test_id = inner_file_name.replace("operations-", "").replace(".csv", "")
             csv_path = f"{worker_dir}/{inner_file_name}"
-            print(f"Loading {csv_path}")
+            print(f"\tLoading {csv_path}")
             df = pd.read_csv(csv_path)
             if len(df.index) == 0:
                 continue
@@ -481,7 +504,6 @@ def load_worker_operations_csv(run_dir):
                 df.rename(columns={column_name: column_title.to_string()}, inplace=True)
             result.append(df)
 
-    log_section("Loading operations data: Done")
     return result
 
 
@@ -513,7 +535,7 @@ def load_aggregated_operations_csv(run_dir):
         else:
             test_id = None
         csv_path = f"{run_dir}/{file_name}"
-        print(f"Loading {csv_path}")
+        print(f"\tLoading {csv_path}")
         df = pd.read_csv(csv_path)
         if len(df.index) == 0:
             continue
@@ -553,7 +575,7 @@ def create_aggregated_operations_csv(run_dir):
                 df_list = []
                 df_list_map[test_id] = df_list
             csv_path = f"{outer_dir}/{inner_file_name}"
-            print(f"Loading {csv_path}")
+            print(f"\tLoading {csv_path}")
             df = pd.read_csv(csv_path)
             df['epoch'] = df['epoch'].round(0).astype(int)
             df.set_index('epoch', inplace=True)
@@ -588,6 +610,9 @@ def create_aggregated_operations_csv(run_dir):
 
 
 def processing_hdr(dir):
+    log_section("Processing hdr files: Start")
+    start_sec = time.time()
+
     merge_worker_hdr(dir)
 
     for hdr_file in list(Path(dir).rglob("*.hdr")):
@@ -610,6 +635,9 @@ def processing_hdr(dir):
         os.rename(f"{hdr_file_dir}/{hdr_file_name_no_ext}.hgrm.bak", f"{hdr_file_dir}/{hdr_file_name_no_ext}.hgrm")
         os.rename(f"{hdr_file_dir}/{hdr_file_name_no_ext}",
                   f"{hdr_file_dir}/{hdr_file_name_no_ext}.latency-history.csv")
+
+    duration_sec = time.time() - start_sec
+    log_section(f"Processing hdr files: Done {duration_sec:.2f} seconds)")
     pass
 
 
@@ -640,7 +668,7 @@ def merge_worker_hdr(dir):
 
 def load_latency_history(run_dir):
     log_section("Loading latency history data: Start")
-
+    start_sec = time.time()
     result = None
 
     # iterate over the files in the run directory
@@ -648,7 +676,7 @@ def load_latency_history(run_dir):
         outer_path = f"{run_dir}/{outer_file_name}";
         if outer_file_name.endswith(".latency-history.csv"):
             csv_df = load_latency_history_csv(outer_path, None)
-            result = inner_join(result, csv_df)
+            result = merge_on_time(result, csv_df)
         else:
             worker_id = find_worker_id(outer_path)
 
@@ -661,15 +689,16 @@ def load_latency_history(run_dir):
                     continue
 
                 csv_df = load_latency_history_csv(f"{outer_path}/{inner_file_name}", worker_id)
-                result = inner_join(result, csv_df)
+                result = merge_on_time(result, csv_df)
 
-    log_section("Loading latency history data: Done")
+    duration_sec = time.time() - start_sec
+    log_section(f"Loading latency history data: Done (duration {duration_sec:.2f} seconds)")
     return result
 
 
 def load_latency_history_csv(file_path, worker_id):
     test_id = os.path.basename(file_path).replace(".latency-history.csv", "")
-    print(f"Loading {file_path}")
+    print(f"\tLoading {file_path}")
     df = pd.read_csv(file_path, skiprows=2)
 
     for column_name in df.columns:
@@ -780,7 +809,7 @@ def plot_operations(report_dir, df):
         plt.ticklabel_format(style='plain', axis='y')
         plt.ylabel("operations/second")
         plt.xlabel("Time")
-        # plt.gca.xaxis.set_major_formatter(mdates.DateFormatter('%m-%S'))
+
         plt.legend()
         # if worker_id == '':
         #    plt.title(f"{test_id} {column_name.capitalize()}")
@@ -804,11 +833,26 @@ def plot_operations(report_dir, df):
             mkdir(dir)
             path = f"{dir}/throughput{test_str}.png"
 
-        print(f"Generating [{path}]")
+        print(f"\tGenerating [{path}]")
         plt.savefig(path)
         plt.close()
 
     log_section("Plotting operations data: Done")
+
+
+def write_xlsx(df):
+    path_excel = f"{report_dir}/data.xlsx"
+    print(f"path excel: {path_excel}")
+    df.to_excel(path_excel)
+
+
+def write_csv(df):
+    path_csv = f"{report_dir}/data.csv"
+    print(f"path csv: {path_csv}")
+    df.to_csv(path_csv)
+
+
+start_sec = time.time()
 
 benchmark_htable = Benchmark("htable", "/home/pveentjer/1000M/put")
 #benchmark_htable = Benchmark("htable", "/home/pveentjer/cpu_1_affinity_1")
@@ -822,84 +866,28 @@ report_dir = "/mnt/home/pveentjer/report/"  # tempfile.mkdtemp()
 mkdir(report_dir)
 print(f"Report directory {report_dir}")
 
-log("Loading performance data: Starting")
-performance_data_runs = {}
-
 run = benchmark_htable.latest_run_path()
 print(f"Analyzing run_path:{run.path}")
-# processing_hdr(run.path)
-#df_performance = load_operations_data(run.path)
-#df_latency_history = load_latency_history(run.path)
+
+df_operations = load_operations_data(run.path)
+
+processing_hdr(run.path)
+df_latency_history = load_latency_history(run.path)
+
 df_dstat = load_dstat(run.path)
-df = df_dstat
-#df = inner_join(df_performance, df_latency_history)
 
-# df = df_latency_history
+df = merge_on_time(df_operations, df_latency_history, df_dstat)
 
-path_excel = f"{report_dir}/data.xlsx"
-print(f"path excel: {path_excel}")
-df.to_excel(path_excel)
+write_xlsx(df)
+write_csv(df)
 
-path_csv = f"{report_dir}/data.csv"
-print(f"path csv: {path_csv}")
-df.to_csv(path_csv)
 for column_name in df.columns:
     print(column_name)
+
 plot_operations(report_dir, df)
 plot_latency_history(report_dir, df)
 plot_dstat(report_dir, df)
 
-#     # for (test_id, agent_id), df in data.items():
-#     #    performance_data_runs[(test_id, agent_id, run.id)] = df
-#
-#     # for worker_id, df in worker_map.items():
-#     #     epoch_column = df['epoch']
-#     #     run.worker_periods[(worker_id, test_id)] = Period(epoch_column.iloc[0], epoch_column.iloc[-1])
-
-log("Loading performance data: Done")
-# aggregate_performance_data(performance_dfs_1)
-# aggregate_performance_data(performance_dfs_2)
-# log("Plotting performance data: Starting")
-# plot_performance(report_dir, performance_data_runs)
-# log("Plotting performance data: Done")
-
-# log("Processing HDR: Starting")
-# latency_history_data_runs = {}
-# for run in run_list:
-#     print(f"run {run}")
-#     processing_hdr(run.path)
-# log("Processing HDR: Done")
-# log("Loading latency history: Starting")
-# latency_history_data_runs = {}
-# for run in run_list:
-#     latency_history_data_runs[run.id] = load_latency_history(run.path)
-# log("Loading latency history: Done")
-# log("Plotting latency history: Starting")
-# plot_latency_history(report_dir, latency_history_data_runs)
-# log("Plotting latency history: Done")
-#
-# log("Loading dstat data: Starting")
-# dstat_data_runs = {}
-# for run in run_list:
-#     data = load_dstat(run.path)
-#     for agent_id, df in data.items():
-#         if not absolute_time:
-#             to_relative_time(df, "epoch")
-#         dstat_data_runs[(agent_id, run.id)] = df
-# log("Loading dstat data: Done")
-# log("Plotting dstat data: Starting")
-# plot_dstat(report_dir, dstat_data_runs)
-# log("Plotting dstat data: Done")
-#
-# log("Loading latency-distribution data")
-# # r1 = load_latency_distribution(
-# #     "/home/eng/Hazelcast/simulator-tng/storage/runs/insert/1000M/map_tiered/02-08-2022_15-33-08/report/tmp/1")
-# # r2 = load_latency_distribution(
-# #     "/home/eng/Hazelcast/simulator-tng/storage/runs/insert/1000M/map_tiered/01-08-2022_08-57-42/report/tmp/1")
-# #
-#
-# log("Loading latency-distribution data: Done")
-# log("Plotting latency histogram data: Starting")
-# # plot_cumulative_latency_distribution(report_dir, r1, r2)
-# # plot_latency_histogram(report_dir, r1)
-# log("Plotting latency histogram data: Done")
+log("Generating report: Done")
+duration_sec = time.time() - start_sec
+log(f"Duration {duration_sec:.2f} seconds")
