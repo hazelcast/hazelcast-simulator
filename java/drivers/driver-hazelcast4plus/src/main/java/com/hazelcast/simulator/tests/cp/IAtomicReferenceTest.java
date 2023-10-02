@@ -54,8 +54,8 @@ public class IAtomicReferenceTest extends HazelcastTest {
     }
 
     @TimeStep(prob = 0)
-    public void cas(ThreadState state) {
-        atomicReference.compareAndSet(v, v);
+    public boolean cas(ThreadState state) {
+        return atomicReference.compareAndSet(v, v);
     }
 
     @TimeStep(prob = 0)
