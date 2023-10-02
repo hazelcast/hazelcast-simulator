@@ -64,11 +64,11 @@ class ColumnTitle:
         if attributes is None:
             attributes = {}
         self.group = group
-        self.metric = metric
+        self.metric_id = metric
         self.attributes = attributes
 
     def to_string(self):
-        result = f"{self.group}{ColumnTitle.seperator}{self.metric}"
+        result = f"{self.group}{ColumnTitle.seperator}{self.metric_id}"
 
         if self.attributes is not None:
             for key, value in self.attributes.items():
@@ -128,72 +128,39 @@ def log_section(text):
     print("---------------------------------------------------")
 
 
-def plot_latency_history(report_dir, latency_history_data_runs):
-    df_workers_list = list(latency_history_data_runs.values())
-
-    first_df_workers = df_workers_list[0]
-    for worker_name, first_df in first_df_workers.items():
-        result_dir = f"{report_dir}/latency/{worker_name}"
-        os.makedirs(result_dir)
-
-        for column_index in range(2, len(first_df.columns)):
-            column_name = first_df.columns[column_index]
-            if column_name.startswith("Unnamed"):
-                continue
-
-            fig = plt.figure(figsize=(image_width_px / image_dpi, image_height_px / image_dpi), dpi=image_dpi)
-
-            plt.plot(first_df['epoch'], first_df[column_name])
-            for i in range(1, len(df_workers_list)):
-                other_df_worker = df_workers_list[i]
-                if not worker_name in other_df_worker:
-                    continue
-
-                other_df = other_df_worker[worker_name]
-                if not column_name in other_df:
-                    continue
-                plt.plot(other_df['epoch'], other_df[column_name])
-
-            filename = column_name.replace("/", "_")
-            plt.grid()
-            if column_name == "Total_Count":
-                plt.ylabel("Count")
-            elif "Throughput" in column_name:
-                plt.ylabel("Throughput (operations/second)")
-            else:
-                plt.ylabel("Latency (microseconds)")
-            plt.xlabel("Time")
-
-            pretty_column_name = column_name.replace("_", " ")
-            if pretty_column_name.startswith("Int "):
-                pretty_column_name = pretty_column_name.replace("Int ", "Interval ")
-
-            plt.title(f"{worker_name} - {pretty_column_name}")
-            plt.savefig(f'{result_dir}/{filename}.png')
-            plt.close()
-
 
 def plot_latency_history(report_dir, df):
     log_section("Plotting latency history: Start")
     start_sec = time.time()
 
+    grouped_column_names = {}
     for column_name in df.columns:
         column_title = ColumnTitle.from_string(column_name)
         if column_title.group != "Latency":
             continue
-        metric = column_title.metric
-        if metric == "StartTime" or metric == "Timestamp":
+        if column_title.metric_id == "StartTime" or column_title.metric_id == "Timestamp":
             continue
+        metric_id = column_title.metric_id
+        worker_id = column_title.attributes.get("worker_id")
+        test_id = column_title.attributes.get("test_id")
+        column_names = grouped_column_names.get((worker_id, metric_id, test_id, worker_id))
+        if column_names is None:
+            column_names = []
+            grouped_column_names[(worker_id, metric_id, test_id, worker_id)] = column_names
+        column_names.append(column_name)
 
+    for (worker_id, metric_id, test_id, worker_id), column_name_list in grouped_column_names.items():
         fig = plt.figure(figsize=(image_width_px / image_dpi, image_height_px / image_dpi), dpi=image_dpi)
 
-        plt.plot(df.index, df[column_name], label=column_name)
+        for column_name in column_name_list:
+            column_title = ColumnTitle.from_string(column_name)
+            plt.plot(df.index, df[column_name], label=column_title.attributes["run_id"])
 
         plt.ticklabel_format(style='plain', axis='y')
-        plt.title(metric.replace('_', ' '))
-        if metric == "Int_Throughput" or metric == "Total_Throughput":
+        plt.title(metric_id.replace('_', ' '))
+        if metric_id == "Int_Throughput" or metric_id == "Total_Throughput":
             plt.ylabel("operations/second")
-        elif metric == "Inc_Count" or metric == "Total_Count":
+        elif metric_id == "Inc_Count" or metric_id == "Total_Count":
             plt.ylabel("operations")
         else:
             plt.ylabel("microseconds")
@@ -205,22 +172,19 @@ def plot_latency_history(report_dir, df):
         #    plt.title(f"{test_id} {column_name.capitalize()}")
         # else:
 
-        test_id = column_title.attributes.get("test_id")
         if test_id is None:
             test_str = ""
         else:
             test_str = f"-{test_id}"
 
-        worker_id = column_title.attributes.get("worker_id")
-
         plt.grid()
 
         if worker_id is None:
-            path = f"{report_dir}/{metric}{test_str}.png"
+            path = f"{report_dir}/{metric_id}{test_str}.png"
         else:
             dir = f"{report_dir}/{worker_id}"
             mkdir(dir)
-            path = f"{dir}/{metric}{test_str}.png"
+            path = f"{dir}/{metric_id}{test_str}.png"
         print(f"\tGenerating [{path}]")
         plt.savefig(path)
         plt.close()
@@ -270,29 +234,35 @@ def plot_dstat(report_dir, df):
     log_section("Plotting dstat data: Start")
     start_sec = time.time()
 
+    grouped_column_names = {}
     for column_name in df.columns:
         column_title = ColumnTitle.from_string(column_name)
         if column_title.group != "dstat":
             continue
-
+        metric_id = column_title.metric_id
         agent_id = column_title.attributes["agent_id"]
-        fig = plt.figure(figsize=(image_width_px / image_dpi, image_height_px / image_dpi), dpi=image_dpi)
+        column_names = grouped_column_names.get((agent_id, metric_id))
+        if column_names is None:
+            column_names = []
+            grouped_column_names[(agent_id, metric_id)] = column_names
+        column_names.append(column_name)
 
-        plt.plot(df.index, df[column_name], label=column_name)
+    for (agent_id, metric_id), column_name_list in grouped_column_names.items():
+        fig = plt.figure(figsize=(image_width_px / image_dpi, image_height_px / image_dpi), dpi=image_dpi)
+        for column_name in column_name_list:
+            column_title = ColumnTitle.from_string(column_name)
+            plt.plot(df.index, df[column_name], label=column_title.attributes["run_id"])
 
         plt.ticklabel_format(style='plain', axis='y')
-        plt.ylabel(column_title.metric)
+        plt.ylabel(metric_id)
         plt.xlabel("Time")
         # plt.gca.xaxis.set_major_formatter(mdates.DateFormatter('%m-%S'))
         plt.legend()
-        # if worker_id == '':
-        #    plt.title(f"{test_id} {column_name.capitalize()}")
-        # else:
 
-        plt.title(f"Agent {agent_id} : {column_title.metric}")
+        plt.title(f"Agent {agent_id} : {metric_id}")
         plt.grid()
 
-        nice_metric_name = column_title.metric.replace("/", "_").replace(":", "_")
+        nice_metric_name = column_title.metric_id.replace("/", "_").replace(":", "_")
         path = f"{report_dir}/{agent_id}_{nice_metric_name}.png"
 
         print(f"\tGenerating [{path}]")
@@ -755,17 +725,27 @@ def plot_operations(report_dir, df):
     log_section("Plotting operations data: Start")
     start_sec = time.time()
 
+    grouped_column_names = {}
     for column_name in df.columns:
         column_title = ColumnTitle.from_string(column_name)
-        if column_title.group != "Operations":
+        if column_title.group != "Operations" or column_title.metric_id != "operations/second":
             continue
+        metric_id = column_title.metric_id
+        worker_id = column_title.attributes.get("worker_id")
+        test_id = column_title.attributes.get("test_id")
+        column_names = grouped_column_names.get((worker_id, metric_id, test_id, worker_id))
+        if column_names is None:
+            column_names = []
+            grouped_column_names[(worker_id, metric_id, test_id, worker_id)] = column_names
+        column_names.append(column_name)
 
-        if column_title.metric != "operations/second":
-            continue
+    for (worker_id, metric_id, test_id, worker_id), column_name_list in grouped_column_names.items():
 
         fig = plt.figure(figsize=(image_width_px / image_dpi, image_height_px / image_dpi), dpi=image_dpi)
 
-        plt.plot(df.index, df[column_name], label=column_name)
+        for column_name in column_name_list:
+            column_title = ColumnTitle.from_string(column_name)
+            plt.plot(df.index, df[column_name], label=column_title.attributes["run_id"])
 
         plt.ticklabel_format(style='plain', axis='y')
         plt.ylabel("operations/second")
@@ -776,13 +756,10 @@ def plot_operations(report_dir, df):
         #    plt.title(f"{test_id} {column_name.capitalize()}")
         # else:
 
-        test_id = column_title.attributes.get("test_id")
         if test_id is None:
             test_str = ""
         else:
             test_str = f"-{test_id}"
-
-        worker_id = column_title.attributes.get("worker_id")
 
         plt.title(f"Throughput")
         plt.grid()
@@ -801,6 +778,12 @@ def plot_operations(report_dir, df):
     duration_sec = time.time() - start_sec
     log_section(f"Plotting operations data: Done (duration {duration_sec:.2f} seconds)")
 
+
+# def to_start(df):
+#     if len(df.index) == 0:
+#         return
+#
+#     index = df.index
 
 def write_xlsx(df):
     path_excel = f"{report_dir}/data.xlsx"
