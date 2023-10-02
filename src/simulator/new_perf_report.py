@@ -779,11 +779,16 @@ def plot_operations(report_dir, df):
     log_section(f"Plotting operations data: Done (duration {duration_sec:.2f} seconds)")
 
 
-# def to_start(df):
-#     if len(df.index) == 0:
-#         return
-#
-#     index = df.index
+# Shifts the vales in the time index to the beginning (epoch). This is needed
+# to be able to compare benchmarks that have run at different times.
+def shift_to_epoch(df):
+    if len(df.index) == 0:
+        return
+
+    epoch_time = -df.index[0].timestamp()
+    print(epoch_time)
+    shifted_df = df.shift(periods=epoch_time, freq='S')
+    return shifted_df
 
 def write_xlsx(df):
     path_excel = f"{report_dir}/data.xlsx"
@@ -823,6 +828,8 @@ df_latency_history = collect_latency_history(run_path.path, attributes)
 df_dstat = collect_dstat(run_path.path, attributes)
 
 df = merge_on_time(df_operations, df_latency_history, df_dstat)
+
+df = shift_to_epoch(df)
 
 write_xlsx(df)
 write_csv(df)
