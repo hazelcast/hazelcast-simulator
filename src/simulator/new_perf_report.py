@@ -12,8 +12,6 @@ import pandas as pd
 from matplotlib.ticker import StrMethodFormatter
 
 pd.options.mode.chained_assignment = None
-from matplotlib import pyplot as plt
-import tempfile
 import util
 from simulator.log import log
 from typing import Dict, Tuple
@@ -22,13 +20,9 @@ from typing import Dict, Tuple
 image_dpi = 96
 image_width_px = 1600
 image_height_px = 1200
-import matplotlib.pyplot as plt, mpld3
 import matplotlib.pyplot as plt
-import matplotlib.ticker as mtick
 import time
-import matplotlib.dates as mdates
 import os
-from glob import glob
 
 
 def multiple_by(df, amount, *column_names):
@@ -235,7 +229,7 @@ def plot_latency_history(report_dir, df):
     log_section(f"Plotting latency history: Done (duration {duration_sec:.2f} seconds)")
 
 
-def load_dstat(run_dir):
+def collect_dstat(run_dir, attributes):
     log_section("Loading dstat data: Start")
     start_sec = time.time()
 
@@ -243,7 +237,7 @@ def load_dstat(run_dir):
     for csv_filename in os.listdir(run_dir):
         if not csv_filename.endswith("_dstat.csv"):
             continue
-        agent_name = csv_filename[:csv_filename.index("_")]
+        agent_id = csv_filename[:csv_filename.index("_")]
         csv_path = f"{run_dir}/{csv_filename}"
         print(f"\tLoading {csv_path}")
         df = pd.read_csv(csv_path, skiprows=5)
@@ -253,10 +247,13 @@ def load_dstat(run_dir):
         df.set_index('time', inplace=True)
         df.drop(['epoch'], inplace=True, axis=1)
 
+        new_attributes = attributes.copy()
+        new_attributes["agent_id"] = agent_id
         for column_name in df.columns:
             if column_name == "time":
                 continue
-            column_title = ColumnTitle("dstat", column_name, {"agent_id": agent_name})
+
+            column_title = ColumnTitle("dstat", column_name, new_attributes)
             df.rename(columns={column_name: column_title.to_string()}, inplace=True)
 
         result = merge_on_time(result, df)
@@ -267,51 +264,6 @@ def load_dstat(run_dir):
     duration_sec = time.time() - start_sec
     log_section(f"Loading dstat data: Done (duration {duration_sec:.2f} seconds)")
     return result
-
-
-# def plot_dstat(report_dir, data_runs):
-#     df_per_agent_per_run = {}
-#     for (agent_id, run_id), df in data_runs.items():
-#         df_per_run = df_per_agent_per_run.get(agent_id)
-#         if not df_per_run:
-#             df_per_run = {}
-#             df_per_agent_per_run[agent_id] = df_per_run
-#         df_per_run[run_id] = df
-#
-#     agent_list = list(df_per_agent_per_run.keys())
-#     for agent_id in agent_list:
-#         df_per_run = df_per_agent_per_run[agent_id]
-#         result_dir = f"{report_dir}/dstat/{agent_id}"
-#
-#         os.makedirs(result_dir)
-#         run_id_list = list(df_per_run.keys())
-#         print(run_id_list)
-#         first_df = df_per_run[run_id_list[0]]
-#         for c in range(2, len(first_df.columns)):
-#             column_name = first_df.columns[c]
-#             fig = plt.figure(figsize=(image_width_px / image_dpi, image_height_px / image_dpi), dpi=image_dpi)
-#
-#             title = dstat_titles.get(column_name)
-#             if title:
-#                 plt.title(f"{agent_id} - {title} ({column_name})")
-#             else:
-#                 plt.title(f"{agent_id} - {column_name}")
-#
-#             for i in range(0, len(run_id_list)):
-#                 run_id = run_id_list[i]
-#                 df = df_per_run[run_id]
-#                 if not column_name in df:
-#                     continue
-#                 plt.plot(pd.to_datetime(df['epoch'], unit='s'),
-#                          df[column_name],
-#                          label=agent_id + " " + run_id)
-#
-#             filename = column_name.replace("/", "_")
-#             plt.xlabel("Time")
-#             plt.legend()
-#             plt.grid()
-#             plt.savefig(f'{result_dir}/{filename}.png')
-#             plt.close()
 
 
 def plot_dstat(report_dir, df):
@@ -449,15 +401,15 @@ warmup_seconds = 5
 cooldown_seconds = 5
 
 
-def load_operations_data(run_dir):
+def collect_operations_data(run_dir, attributes):
     log_section("Loading operations data: Start")
     start_sec = time.time()
     rename_performance_csv(run_dir)
     create_aggregated_operations_csv(run_dir)
 
     df_list = []
-    df_list.extend(load_aggregated_operations_csv(run_dir))
-    df_list.extend(load_worker_operations_csv(run_dir))
+    df_list.extend(load_aggregated_operations_csv(run_dir, attributes))
+    df_list.extend(load_worker_operations_csv(run_dir, attributes))
 
     result = None
     for df in df_list:
@@ -469,7 +421,7 @@ def load_operations_data(run_dir):
     return result
 
 
-def load_worker_operations_csv(run_dir):
+def load_worker_operations_csv(run_dir, attributes):
     result = []
     # load the df of the workers.
     for outer_file in os.listdir(run_dir):
@@ -496,11 +448,13 @@ def load_worker_operations_csv(run_dir):
             df.set_index('time', inplace=True)
             df.drop(['epoch'], inplace=True, axis=1)
             df.drop(['timestamp'], inplace=True, axis=1)
+            new_attributes = attributes.copy()
+            new_attributes["test_id"] = test_id
+            new_attributes["worker_id"] = worker_id
             for column_name in df.columns:
                 if column_name == "time":
                     continue
-                column_title = ColumnTitle("Operations", column_name,
-                                           {"test_id": test_id, "worker_id": worker_id})
+                column_title = ColumnTitle("Operations", column_name, new_attributes)
                 df.rename(columns={column_name: column_title.to_string()}, inplace=True)
             result.append(df)
 
@@ -524,7 +478,7 @@ def rename_performance_csv(run_dir):
             shutil.copyfile(f"{outer_dir}/{inner_file_name}", f"{outer_dir}/operations{name}.csv")
 
 
-def load_aggregated_operations_csv(run_dir):
+def load_aggregated_operations_csv(run_dir, attributes):
     result = []
     # load the aggregated performance data
     for file_name in os.listdir(run_dir):
@@ -546,10 +500,12 @@ def load_aggregated_operations_csv(run_dir):
         df.drop(['epoch'], inplace=True, axis=1)
         df.drop(['timestamp'], inplace=True, axis=1)
 
+        new_attributes = attributes.copy()
+        new_attributes["test_id"] = test_id
         for column_name in df.columns:
             if column_name == "time":
                 continue
-            column_title = ColumnTitle("Operations", column_name, {"test_id": test_id})
+            column_title = ColumnTitle("Operations", column_name, new_attributes)
             df.rename(columns={column_name: column_title.to_string()}, inplace=True)
 
         result.append(df)
@@ -666,7 +622,7 @@ def merge_worker_hdr(dir):
                          {dir}/{file_name} {" ".join(hdr_files)} 2>/dev/null""")
 
 
-def load_latency_history(run_dir):
+def collect_latency_history(run_dir, attributes):
     log_section("Loading latency history data: Start")
     start_sec = time.time()
     result = None
@@ -675,7 +631,7 @@ def load_latency_history(run_dir):
     for outer_file_name in os.listdir(run_dir):
         outer_path = f"{run_dir}/{outer_file_name}";
         if outer_file_name.endswith(".latency-history.csv"):
-            csv_df = load_latency_history_csv(outer_path, None)
+            csv_df = load_latency_history_csv(outer_path, attributes, None)
             result = merge_on_time(result, csv_df)
         else:
             worker_id = find_worker_id(outer_path)
@@ -688,7 +644,8 @@ def load_latency_history(run_dir):
                 if not inner_file_name.endswith(".latency-history.csv"):
                     continue
 
-                csv_df = load_latency_history_csv(f"{outer_path}/{inner_file_name}", worker_id)
+                csv_df = load_latency_history_csv(
+                    f"{outer_path}/{inner_file_name}", attributes, worker_id)
                 result = merge_on_time(result, csv_df)
 
     duration_sec = time.time() - start_sec
@@ -696,7 +653,7 @@ def load_latency_history(run_dir):
     return result
 
 
-def load_latency_history_csv(file_path, worker_id):
+def load_latency_history_csv(file_path, attributes, worker_id):
     test_id = os.path.basename(file_path).replace(".latency-history.csv", "")
     print(f"\tLoading {file_path}")
     df = pd.read_csv(file_path, skiprows=2)
@@ -709,6 +666,10 @@ def load_latency_history_csv(file_path, worker_id):
     df['time'] = pd.to_datetime(df['time'], unit='s')
     df.set_index('time', inplace=True)
     # print(csv_df)
+
+    new_attributes = attributes.copy()
+    new_attributes["test_id"] = test_id
+    new_attributes["worker_id"] = worker_id
     for column_name in df.columns:
         if column_name == "time":
             continue
@@ -722,8 +683,7 @@ def load_latency_history_csv(file_path, worker_id):
                 metric = metric.replace("Int_", "Int_p")
             elif metric.startswith("Total_"):
                 metric = metric.replace("Total_", "Total_p")
-        column_title = ColumnTitle("Latency", metric,
-                                   {"test_id": test_id, "worker_id": worker_id})
+        column_title = ColumnTitle("Latency", metric, new_attributes)
         df.rename(columns={column_name: column_title.to_string()}, inplace=True)
     return df
 
@@ -793,6 +753,7 @@ class Benchmark:
 
 def plot_operations(report_dir, df):
     log_section("Plotting operations data: Start")
+    start_sec = time.time()
 
     for column_name in df.columns:
         column_title = ColumnTitle.from_string(column_name)
@@ -837,7 +798,8 @@ def plot_operations(report_dir, df):
         plt.savefig(path)
         plt.close()
 
-    log_section("Plotting operations data: Done")
+    duration_sec = time.time() - start_sec
+    log_section(f"Plotting operations data: Done (duration {duration_sec:.2f} seconds)")
 
 
 def write_xlsx(df):
@@ -854,9 +816,8 @@ def write_csv(df):
 
 start_sec = time.time()
 
-benchmark_htable = Benchmark("htable", "/home/pveentjer/1000M/put")
-#benchmark_htable = Benchmark("htable", "/home/pveentjer/cpu_1_affinity_1")
-print(benchmark_htable.run_count())
+benchmark_htable = Benchmark("htable", "/mnt/home/pveentjer/1000M/verification")
+# benchmark_htable = Benchmark("htable", "/home/pveentjer/cpu_1_affinity_1")
 benchmark_htable.latest_run_path()
 
 # benchmark_map = Benchmark("map", "/eng/Hazelcast/alto-testing/alto-new-testing/runs/htable/read_only/1KB/cpu_1/")
@@ -866,15 +827,17 @@ report_dir = "/mnt/home/pveentjer/report/"  # tempfile.mkdtemp()
 mkdir(report_dir)
 print(f"Report directory {report_dir}")
 
-run = benchmark_htable.latest_run_path()
-print(f"Analyzing run_path:{run.path}")
+run_path = benchmark_htable.latest_run_path()
+run_id = "banana"
+attributes = {"run_id": run_id}
+print(f"Analyzing run_path:{run_path.path}")
 
-df_operations = load_operations_data(run.path)
+df_operations = collect_operations_data(run_path.path, attributes)
 
-processing_hdr(run.path)
-df_latency_history = load_latency_history(run.path)
+processing_hdr(run_path.path)
+df_latency_history = collect_latency_history(run_path.path, attributes)
 
-df_dstat = load_dstat(run.path)
+df_dstat = collect_dstat(run_path.path, attributes)
 
 df = merge_on_time(df_operations, df_latency_history, df_dstat)
 
@@ -884,10 +847,9 @@ write_csv(df)
 for column_name in df.columns:
     print(column_name)
 
-plot_operations(report_dir, df)
-plot_latency_history(report_dir, df)
-plot_dstat(report_dir, df)
+plot_operations(report_dir, df_operations)
+plot_latency_history(report_dir, df_latency_history)
+plot_dstat(report_dir, df_dstat)
 
-log("Generating report: Done")
 duration_sec = time.time() - start_sec
-log(f"Duration {duration_sec:.2f} seconds")
+log(f"Generating report: Done  (duration {duration_sec:.2f} seconds)")
