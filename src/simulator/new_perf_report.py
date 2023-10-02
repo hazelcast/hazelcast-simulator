@@ -89,7 +89,7 @@ class ColumnTitle:
         return ColumnTitle(group, metric, attributes)
 
 
-def merge_on_time(*frames):
+def merge(*frames):
     result = None
     for frame in frames:
         if frame is None:
@@ -126,7 +126,6 @@ def log_section(text):
     print("---------------------------------------------------")
     print(text)
     print("---------------------------------------------------")
-
 
 
 def plot_latency_history(report_dir, df):
@@ -193,7 +192,7 @@ def plot_latency_history(report_dir, df):
     log_section(f"Plotting latency history: Done (duration {duration_sec:.2f} seconds)")
 
 
-def collect_dstat(run_dir, attributes):
+def analyze_dstat(run_dir, attributes):
     log_section("Loading dstat data: Start")
     start_sec = time.time()
 
@@ -220,7 +219,7 @@ def collect_dstat(run_dir, attributes):
             column_title = ColumnTitle("dstat", column_name, new_attributes)
             df.rename(columns={column_name: column_title.to_string()}, inplace=True)
 
-        result = merge_on_time(result, df)
+        result = merge(result, df)
         # if not absolute_time:
         #     to_relative_time(df, "epoch")
         # df['epoch'] = pd.to_datetime(df['epoch'], unit='s')
@@ -371,10 +370,13 @@ warmup_seconds = 5
 cooldown_seconds = 5
 
 
-def collect_operations_data(run_dir, attributes):
+def analyze_operations_data(run_dir, attributes):
     log_section("Loading operations data: Start")
     start_sec = time.time()
-    rename_performance_csv(run_dir)
+
+    # deal with legacy 'performance csv files'
+    fix_operations_filenames(run_dir)
+
     create_aggregated_operations_csv(run_dir)
 
     df_list = []
@@ -383,7 +385,7 @@ def collect_operations_data(run_dir, attributes):
 
     result = None
     for df in df_list:
-        result = merge_on_time(result, df)
+        result = merge(result, df)
 
     duration_sec = time.time() - start_sec
     log_section(f"Loading operations data: Done (duration {duration_sec:.2f} seconds)")
@@ -402,10 +404,14 @@ def load_worker_operations_csv(run_dir, attributes):
             continue
 
         for inner_file_name in os.listdir(worker_dir):
-            if not inner_file_name.startswith("operations-") or not inner_file_name.endswith(".csv"):
+            if not inner_file_name.startswith("operations") or not inner_file_name.endswith(".csv"):
                 continue
 
-            test_id = inner_file_name.replace("operations-", "").replace(".csv", "")
+            if inner_file_name.startswith("operations"):
+                test_id = inner_file_name.replace("operations-", "").replace(".csv", "")
+            else:
+                test_id = None
+
             csv_path = f"{worker_dir}/{inner_file_name}"
             print(f"\tLoading {csv_path}")
             df = pd.read_csv(csv_path)
@@ -418,9 +424,12 @@ def load_worker_operations_csv(run_dir, attributes):
             df.set_index('time', inplace=True)
             df.drop(['epoch'], inplace=True, axis=1)
             df.drop(['timestamp'], inplace=True, axis=1)
+
             new_attributes = attributes.copy()
             new_attributes["test_id"] = test_id
             new_attributes["worker_id"] = worker_id
+
+            print(new_attributes)
             for column_name in df.columns:
                 if column_name == "time":
                     continue
@@ -431,8 +440,8 @@ def load_worker_operations_csv(run_dir, attributes):
     return result
 
 
-# Renames the old performance csv files to operations csv files
-def rename_performance_csv(run_dir):
+# Renames the names of old performance csv files
+def fix_operations_filenames(run_dir):
     for outer_file_name in os.listdir(run_dir):
         outer_dir = f"{run_dir}/{outer_file_name}"
         worker_id = find_worker_id(outer_dir)
@@ -443,9 +452,17 @@ def rename_performance_csv(run_dir):
         for inner_file_name in os.listdir(outer_dir):
             if not inner_file_name.startswith("performance") or not inner_file_name.endswith(".csv"):
                 continue
-
-            name = inner_file_name.replace("performance", "").replace(".csv", "")
-            shutil.copyfile(f"{outer_dir}/{inner_file_name}", f"{outer_dir}/operations{name}.csv")
+            if inner_file_name == "performance.csv":
+                shutil.copyfile(f"{outer_dir}/{inner_file_name}",
+                                f"{outer_dir}/operations.csv")
+            elif inner_file_name.startswith("performance."):
+                test_id = inner_file_name.replace("performance.", "").replace(".csv", "")
+                shutil.copyfile(f"{outer_dir}/{inner_file_name}",
+                                f"{outer_dir}/operations-{test_id}.csv")
+            elif inner_file_name.startswith("performance-"):
+                test_id = inner_file_name.replace("performance-", "").replace(".csv", "")
+                shutil.copyfile(f"{outer_dir}/{inner_file_name}",
+                                f"{outer_dir}/operations-{test_id}.csv")
 
 
 def load_aggregated_operations_csv(run_dir, attributes):
@@ -536,8 +553,8 @@ def create_aggregated_operations_csv(run_dir):
 
 
 def processing_hdr(dir):
-    log_section("Processing hdr files: Start")
-    start_sec = time.time()
+    # log_section("Processing hdr files: Start")
+    # start_sec = time.time()
 
     merge_worker_hdr(dir)
 
@@ -562,8 +579,8 @@ def processing_hdr(dir):
         os.rename(f"{hdr_file_dir}/{hdr_file_name_no_ext}",
                   f"{hdr_file_dir}/{hdr_file_name_no_ext}.latency-history.csv")
 
-    duration_sec = time.time() - start_sec
-    log_section(f"Processing hdr files: Done {duration_sec:.2f} seconds)")
+    # duration_sec = time.time() - start_sec
+    # log_section(f"Processing hdr files: Done {duration_sec:.2f} seconds)")
     pass
 
 
@@ -592,17 +609,20 @@ def merge_worker_hdr(dir):
                          {dir}/{file_name} {" ".join(hdr_files)} 2>/dev/null""")
 
 
-def collect_latency_history(run_dir, attributes):
+def analyze_latency_history(run_dir, attributes):
     log_section("Loading latency history data: Start")
+
     start_sec = time.time()
     result = None
+
+    processing_hdr(run_dir)
 
     # iterate over the files in the run directory
     for outer_file_name in os.listdir(run_dir):
         outer_path = f"{run_dir}/{outer_file_name}";
         if outer_file_name.endswith(".latency-history.csv"):
             csv_df = load_latency_history_csv(outer_path, attributes, None)
-            result = merge_on_time(result, csv_df)
+            result = merge(result, csv_df)
         else:
             worker_id = find_worker_id(outer_path)
 
@@ -616,7 +636,7 @@ def collect_latency_history(run_dir, attributes):
 
                 csv_df = load_latency_history_csv(
                     f"{outer_path}/{inner_file_name}", attributes, worker_id)
-                result = merge_on_time(result, csv_df)
+                result = merge(result, csv_df)
 
     duration_sec = time.time() - start_sec
     log_section(f"Loading latency history data: Done (duration {duration_sec:.2f} seconds)")
@@ -667,7 +687,7 @@ class Period:
 @dataclass
 class Run:
     id: str
-    path: str
+    dir: str
     date: datetime
     worker_periods: Dict[Tuple[str, str], Period]
 
@@ -702,7 +722,7 @@ class Benchmark:
                 run = Run("foo", run_path, date, {})
                 self.runs.append(run)
 
-    def latest_run_path(self):
+    def latest_run(self):
         run_path_len = len(self.runs)
         if run_path_len == 0:
             return None
@@ -764,6 +784,7 @@ def plot_operations(report_dir, df):
         plt.title(f"Throughput")
         plt.grid()
 
+        print(worker_id)
         if worker_id is None:
             path = f"{report_dir}/throughput{test_str}.png"
         else:
@@ -790,6 +811,7 @@ def shift_to_epoch(df):
     shifted_df = df.shift(periods=epoch_time, freq='S')
     return shifted_df
 
+
 def write_xlsx(df):
     path_excel = f"{report_dir}/data.xlsx"
     print(f"path excel: {path_excel}")
@@ -802,11 +824,35 @@ def write_csv(df):
     df.to_csv(path_csv)
 
 
+def analyze_run(run_dir, attributes):
+    print(f"Analyzing run_path:{run_dir}")
+
+    df_operations = analyze_operations_data(run_dir, attributes)
+    df_latency_history = analyze_latency_history(run_dir, attributes)
+    df_dstat = analyze_dstat(run_dir, attributes)
+
+    print(f"Analyzing run_path:{run_dir}: Done")
+
+    return merge(df_operations, df_latency_history, df_dstat)
+
+
+def make_report(df):
+    write_xlsx(df)
+    write_csv(df)
+
+    for column_name in df.columns:
+        print(column_name)
+
+    plot_operations(report_dir, df)
+    plot_latency_history(report_dir, df)
+    plot_dstat(report_dir, df)
+
+
 start_sec = time.time()
 
 benchmark_htable = Benchmark("htable", "/mnt/home/pveentjer/1000M/verification")
 # benchmark_htable = Benchmark("htable", "/home/pveentjer/cpu_1_affinity_1")
-benchmark_htable.latest_run_path()
+
 
 # benchmark_map = Benchmark("map", "/eng/Hazelcast/alto-testing/alto-new-testing/runs/htable/read_only/1KB/cpu_1/")
 # print(benchmark_map.run_count())
@@ -815,31 +861,14 @@ report_dir = "/mnt/home/pveentjer/report/"  # tempfile.mkdtemp()
 mkdir(report_dir)
 print(f"Report directory {report_dir}")
 
-run_path = benchmark_htable.latest_run_path()
-run_id = "banana"
-attributes = {"run_id": run_id}
-print(f"Analyzing run_path:{run_path.path}")
+run = benchmark_htable.latest_run()
+attributes = {"run_id": "banana"}
 
-df_operations = collect_operations_data(run_path.path, attributes)
-
-processing_hdr(run_path.path)
-df_latency_history = collect_latency_history(run_path.path, attributes)
-
-df_dstat = collect_dstat(run_path.path, attributes)
-
-df = merge_on_time(df_operations, df_latency_history, df_dstat)
+df = analyze_run(run.dir, attributes)
 
 df = shift_to_epoch(df)
 
-write_xlsx(df)
-write_csv(df)
-
-for column_name in df.columns:
-    print(column_name)
-
-plot_operations(report_dir, df_operations)
-plot_latency_history(report_dir, df_latency_history)
-plot_dstat(report_dir, df_dstat)
+make_report(df)
 
 duration_sec = time.time() - start_sec
 log(f"Generating report: Done  (duration {duration_sec:.2f} seconds)")
