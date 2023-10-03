@@ -32,7 +32,6 @@ def agent_for_worker(worker_name):
 # ================ plotting =========================
 
 class Gnuplot:
-
     image_width = 1280
     image_height = 1024
     image_path = None
@@ -208,13 +207,14 @@ class LatencyDistributionGnuplot(Gnuplot):
         self._write("unset xtics")
         self._write("set ylabel 'Latency (μs)'")
         self._write("set logscale x")
-#        if slef.logscaley:
-#            self._write("set logscale y")
+        #        if slef.logscaley:
+        #            self._write("set logscale y")
         self._write('set key top left')
         self._write("set style line 1 lt 1 lw 3 pt 3 linecolor rgb \"red\"")
         self._write("set output '" + self.image_path + "'")
 
-        self._write("plot '" + simulator_home + "/src/simulator/xlabels.csv' notitle with labels center offset 0, 1.5 point,\\")
+        self._write(
+            "plot '" + simulator_home + "/src/simulator/xlabels.csv' notitle with labels center offset 0, 1.5 point,\\")
         for ts in self.ts_list:
             ts_file = ts.to_data_file()
 
@@ -236,8 +236,8 @@ class LatencyDistributionGnuplot(Gnuplot):
         self._complete()
 
 
-
 seriesCounter = Counter()
+
 
 # a series is a list of key/values. It could be a time series where the key is the time and the value
 # is the measured value e.g. cpu usage.
@@ -422,12 +422,14 @@ class HdrAnalyzer:
                 SeriesHandle("latency", "latency_interval_mean_" + name, "Interval Mean", "Latency (μs)",
                              self._load_latency_ts, args=[file_path, 13]))
             handles.append(
-                SeriesHandle("latency", "latency_interval_std_deviation_" + name, "Interval Standard Deviation", "Latency (μs)",
+                SeriesHandle("latency", "latency_interval_std_deviation_" + name, "Interval Standard Deviation",
+                             "Latency (μs)",
                              self._load_latency_ts, args=[file_path, 14]))
 
             hgrm_path = os.path.join(self.directory, file_name + ".hgrm")
             handles.append(
-                SeriesHandle("latency-distribution", "latency_distribution_" + name, "Latency distribution", "Latency (μs)",
+                SeriesHandle("latency-distribution", "latency_distribution_" + name, "Latency distribution",
+                             "Latency (μs)",
                              self._load_latency_distribution_ts, args=[hgrm_path]))
 
         return handles
@@ -710,11 +712,14 @@ class DstatAnalyzer:
                 csvreader = csv.reader(csvfile, delimiter=',', quotechar='|')
                 try:
                     # we need to skip the first 6 header-lines
-                    for x in range(0, 6):
+                    for x in range(6):
                         next(csvreader)
                     for row in csvreader:
                         if column < len(row):  # protection if column doesn't exist
-                            result.append(KeyValue(row[0], row[column]))
+                            value = row[column]
+                            if value == '':
+                                continue
+                            result.append(KeyValue(row[0], value))
                 except StopIteration:
                     pass
         return result
@@ -727,10 +732,14 @@ class DstatAnalyzer:
                 csvreader = csv.reader(csvfile, delimiter=',', quotechar='|')
                 try:
                     # we need to skip the first 6 header-lines
-                    for x in range(0, 6):
+                    for x in range(6):
                         next(csvreader)
                     for row in csvreader:
                         if len(row) > 6:  # protection if column doesn't exist
+                            value_5 = row[5]
+                            value_6 = row[6]
+                            if value_5 == '' or value_6 == '':
+                                continue
                             result.append(KeyValue(row[0], float(row[5]) + float(row[6])))
                 except StopIteration:
                     pass
@@ -786,10 +795,10 @@ class Period:
         self.end_time = end_time
 
     def start_millis(self):
-        return int(round(float(self.start_time)*1000))
+        return int(round(float(self.start_time) * 1000))
 
     def end_millis(self):
-        return int(round(float(self.end_time)*1000))
+        return int(round(float(self.end_time) * 1000))
 
 
 class Benchmark:
@@ -803,7 +812,7 @@ class Benchmark:
         self.src_dir = src_dir
         self.name = name
         self.handles = []
-        self.id=id
+        self.id = id
 
     def load_workers(self):
         # load all workers
@@ -824,8 +833,8 @@ class Benchmark:
 
         self.handles.append(
             SeriesHandle("throughput", "throughput", "Throughput", "Operations/sec", self.aggregated_throughput))
-        self.handles.extend(DstatAnalyzer(report_dir+"/tmp/"+str(self.id), self.period).analyze())
-        self.handles.extend(HdrAnalyzer(report_dir+"/tmp/"+str(self.id)).analyze())
+        self.handles.extend(DstatAnalyzer(report_dir + "/tmp/" + str(self.id), self.period).analyze())
+        self.handles.extend(HdrAnalyzer(report_dir + "/tmp/" + str(self.id)).analyze())
 
         agents = {}
         for worker in self.workers:
@@ -871,10 +880,11 @@ class Benchmark:
                     self.period = Period(min(self.period.start_time, start_time), max(self.period.end_time, end_time))
 
     def init_files(self):
-        cmd = simulator_home + "/bin/hidden/init_report_files " + self.src_dir+ " " + report_dir + " " + str(self.id) + " "+ str(self.period.start_millis()) + " " + str(self.period.end_millis())
+        cmd = simulator_home + "/bin/hidden/init_report_files " + self.src_dir + " " + report_dir + " " + str(
+            self.id) + " " + str(self.period.start_millis()) + " " + str(self.period.end_millis())
         out = subprocess.check_output(cmd.split())
-        
-# todo: better name
+
+    # todo: better name
     def x(self, handle):
         return handle.load().items
 
@@ -927,7 +937,7 @@ class Comparison:
                 benchmark_names[benchmark_dir] = name
 
         # Make the benchmarks
-        benchmark_id=0
+        benchmark_id = 0
         self.benchmarks = []
         for benchmark_dir in benchmark_dirs:
             benchmark_id += 1
@@ -987,7 +997,8 @@ class Comparison:
                             title = worker.name + " " + handle.title
                             if not plot:
                                 if handle.src == "latency-distribution":
-                                    plot = LatencyDistributionGnuplot(self.output_dir("latency"), title, basefilename=name)
+                                    plot = LatencyDistributionGnuplot(self.output_dir("latency"), title,
+                                                                      basefilename=name)
                                 else:
                                     plot = TimeseriesGnuplot(self.output_dir(handle.src), title, basefilename=name)
                                 plots[name] = plot
@@ -1002,6 +1013,7 @@ class Comparison:
         for benchmark in self.benchmarks:
             info(" benchmark [" + benchmark.name + "] benchmark.dir [" + benchmark.src_dir + "]")
 
+
 class HTMLReport:
 
     def __init__(self):
@@ -1012,12 +1024,12 @@ class HTMLReport:
     def addImage(self, plot):
 
         if plot.skipped:
-          return
+            return
 
         metric_name = plot.image_path.split('/')[-2]
 
         with open(plot.image_path, "rb") as image_file:
-           encoded_image = str(base64.b64encode(image_file.read()), encoding='utf-8')
+            encoded_image = str(base64.b64encode(image_file.read()), encoding='utf-8')
 
         encoded_image = "data:image/png;base64,%s" % encoded_image
 
@@ -1098,14 +1110,14 @@ class PerfTestReportCli:
         parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter,
                                          description='Creating a benchmark report from one or more benchmarks.')
         parser.add_argument('benchmarks', metavar='B', nargs='+',
-                    help='a benchmark to be used in the comparison')
+                            help='a benchmark to be used in the comparison')
         # parser.add_argument('-r', '--realtime', default='report', help='print the real time of the datapoints.')
         parser.add_argument('-o', '--output', nargs=1,
-                    help='The output directory for the report. By hazelcast4 a report directory in the working directory is created.')
+                            help='The output directory for the report. By hazelcast4 a report directory in the working directory is created.')
         parser.add_argument('-w', '--warmup', nargs=1, default=[0], type=int,
-                    help='The warmup period in seconds. The warmup removes datapoints from the start.')
+                            help='The warmup period in seconds. The warmup removes datapoints from the start.')
         parser.add_argument('-c', '--cooldown', nargs=1, default=[0], type=int,
-                    help='The cooldown period in seconds. The cooldown removes datapoints from the end.')
+                            help='The cooldown period in seconds. The cooldown removes datapoints from the end.')
         parser.add_argument('-f', '--full', help='Enable individual worker level diagrams.', action="store_true")
         parser.add_argument('-l', '--last', help='Compare last results from each benchmark', action='store_true')
         parser.add_argument('--svg', help='SVG instead of PNG graphics.', action="store_true")
