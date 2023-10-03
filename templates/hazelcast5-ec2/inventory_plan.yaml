@@ -21,7 +21,7 @@ nodes:
     # default AWS AMI
     # ami: ami-05cafdf7c9f772ad2
     # ubuntu
-    ami: ami-0d527b8c289b4af7f
+    ami: ami-04e601abe3e1a910f
     user: ubuntu
     tenancy: null
     
@@ -31,7 +31,7 @@ loadgenerators:
     # default AWS AMI
     # ami: ami-05cafdf7c9f772ad2
     # ubuntu
-    ami: ami-0d527b8c289b4af7f
+    ami: ami-04e601abe3e1a910f
     user: ubuntu
     tenancy: null
 
@@ -41,6 +41,6 @@ mc:
     # default AWS AMI
     # ami: ami-05cafdf7c9f772ad2
     # ubuntu
-    ami: ami-0d527b8c289b4af7f
+    ami: ami-04e601abe3e1a910f
     user: ubuntu
     tenancy: null
