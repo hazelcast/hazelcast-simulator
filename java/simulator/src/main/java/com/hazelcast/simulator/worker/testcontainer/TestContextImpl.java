@@ -64,7 +64,7 @@ public class TestContextImpl implements TestContext {
 
         LatencyProbe probe = latencyProbes.get(probeName);
         if (probe == null) {
-            probe = new HdrLatencyProbe(includeInThroughput);
+            probe = new HdrLatencyProbe(probeName, includeInThroughput);
             LatencyProbe found = latencyProbes.putIfAbsent(probeName, probe);
             if (found != null) {
                 probe = found;
@@ -92,7 +92,6 @@ public class TestContextImpl implements TestContext {
     public void stop() {
         stopped = true;
     }
-
 
     @Override
     public void echoCoordinator(String msg, Object... args) {
