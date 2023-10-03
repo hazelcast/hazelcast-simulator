@@ -708,12 +708,15 @@ class DstatAnalyzer:
         if os.path.exists(dstat_csv):
             with open(dstat_csv) as csvfile:
                 csvreader = csv.reader(csvfile, delimiter=',', quotechar='|')
-                # we need to skip the first 7 lines
-                for x in range(0, 8):
-                    next(csvreader)
-                for row in csvreader:
-                    if column < len(row):  # protection if column doesn't exist
-                        result.append(KeyValue(row[0], row[column]))
+                try:
+                    # we need to skip the first 6 header-lines
+                    for x in range(0, 6):
+                        next(csvreader)
+                    for row in csvreader:
+                        if column < len(row):  # protection if column doesn't exist
+                            result.append(KeyValue(row[0], row[column]))
+                except StopIteration:
+                    pass
         return result
 
     # total cpu usage isn't explicitly provided by dstat, so we just sum the user+system
@@ -722,12 +725,15 @@ class DstatAnalyzer:
         if os.path.exists(dstat_csv):
             with open(dstat_csv) as csvfile:
                 csvreader = csv.reader(csvfile, delimiter=',', quotechar='|')
-                # we need to skip the first 7 lines
-                for x in range(0, 8):
-                    next(csvreader)
-                for row in csvreader:
-                    if len(row) > 6:  # protection if column doesn't exist
-                        result.append(KeyValue(row[0], float(row[5]) + float(row[6])))
+                try:
+                    # we need to skip the first 6 header-lines
+                    for x in range(0, 6):
+                        next(csvreader)
+                    for row in csvreader:
+                        if len(row) > 6:  # protection if column doesn't exist
+                            result.append(KeyValue(row[0], float(row[5]) + float(row[6])))
+                except StopIteration:
+                    pass
         return result
 
 
