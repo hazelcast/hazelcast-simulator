@@ -116,7 +116,7 @@ public class WorkerOperationProcessorTest {
 
         assertTrue(promise.getAnswer() instanceof IndexOutOfBoundsException);
         File exceptionFile = new File(getUserDir(), "1.exception");
-        assertTrue(exceptionFile.exists());
+        assertFalse(exceptionFile.exists());
         assertFalse(new File(getUserDir(), "1.exception.tmp").exists());
         assertNotNull(fileAsText(exceptionFile));
     }
