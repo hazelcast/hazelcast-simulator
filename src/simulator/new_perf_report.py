@@ -871,8 +871,8 @@ report_dir = "/mnt/home/pveentjer/report/"  # tempfile.mkdtemp()
 mkdir(report_dir)
 print(f"Report directory {report_dir}")
 
-df_1 = analyze_run("/home/pveentjer/1000M/get/29-08-2022_12-14-30")
-df_2 = analyze_run("/home/pveentjer/1000M/get/29-08-2022_11-07-19")
+df_1 = analyze_run("/home/pveentjer/tmp/report/runs/valuelength=10/03-10-2023_08-46-15")
+df_2 = analyze_run("/home/pveentjer/tmp/report/runs/valuelength=1000/03-10-2023_09-15-09")
 
 df = None
 df = merge_dataframes(df, shift_to_epoch(df_1))
