@@ -73,6 +73,26 @@ public class HdrLatencyProbeTest {
     }
 
     @Test
+    public void testNegativeValue() {
+        long value1 = MILLISECONDS.toNanos(-200);
+
+        probe.recordValue(value1);
+
+        Histogram histogram = probe.getRecorder().getIntervalHistogram();
+        assertHistogramContent(histogram, -value1);
+    }
+
+    @Test
+    public void testLongMinValue() {
+        long value1 = MILLISECONDS.toNanos(Long.MIN_VALUE);
+
+        probe.recordValue(value1);
+
+        Histogram histogram = probe.getRecorder().getIntervalHistogram();
+        assertHistogramContent(histogram, HIGHEST_TRACKABLE_VALUE_NANOS);
+    }
+
+    @Test
     public void testRecord_whenTooLarge() {
         long value = HIGHEST_TRACKABLE_VALUE_NANOS * 2;
         probe.recordValue(value);
