@@ -154,7 +154,7 @@ public class ${className} extends TimeStepLoop {
             <#if isStartNanos(m, param?counter)>
                 <#if metronomeClass??>startNanos<#else>System.nanoTime()</#if>
             <#elseif isAssignableFrom(param, Probe)>
-                <#if probeClass??>${m.name}Probe<#else>com.hazelcast.simulator.probes.impl.EmptyProbe.INSTANCE</#if>
+                <#if probeClass??>${m.name}Probe<#else>com.hazelcast.simulator.probes.impl.NoopLatencyProbe.INSTANCE</#if>
             <#else>
                 threadState
             </#if>

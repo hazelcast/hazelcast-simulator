@@ -19,7 +19,7 @@ package com.hazelcast.simulator.hz.concurrent;
 import com.hazelcast.core.Pipelining;
 import com.hazelcast.cp.IAtomicLong;
 import com.hazelcast.simulator.hz.HazelcastTest;
-import com.hazelcast.simulator.probes.Probe;
+import com.hazelcast.simulator.probes.LatencyProbe;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.StartNanos;
@@ -59,7 +59,7 @@ public class AtomicLongTest extends HazelcastTest {
     }
 
     @TimeStep(prob = 0)
-    public void pipelinedGet(final ThreadState state, @StartNanos final long startNanos, final Probe probe) throws Exception {
+    public void pipelinedGet(final ThreadState state, @StartNanos final long startNanos, final LatencyProbe probe) throws Exception {
         if (state.pipeline == null) {
             state.pipeline = new Pipelining<>(pipelineDepth);
         }

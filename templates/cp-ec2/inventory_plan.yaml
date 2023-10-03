@@ -1,9 +1,9 @@
 provisioner: terraform
 terraform_plan: aws
 # Used for naming resources; give it some unique name specific to a set of benchmarks
-basename: <id>-<rnd:5>
+basename: gbarnett-ooaxh
 # Enter something here that identifies you.
-owner: <id>
+owner: gbarnett
 region: eu-central-1
 availability_zone: eu-central-1a
 vpc_id: vpc-002b5a4e5f8b8ece2
@@ -15,24 +15,32 @@ keypair:
     public_key: key.pub
     private_key: key
 
-redis:
-    node_type: cache.m4.large
-    parameter_group_name: default.redis6.x.cluster.on
-    cluster_id: cluster-example
-     # we don't use 6379 to make it less likely to scanned
-    port: 7000
-    replicas_per_node_group: 1
-    num_node_groups: 2 
-    description: <id> Redis Cluster
-    replication_group_id: <id>
-    automatic_failover_enabled: true
-    transit_encryption_enabled: false
-    auth_token: null
- 
-loadgenerators:
-    count: 2
+nodes:
+    count: 3
     instance_type: c5.4xlarge
+    # default AWS AMI
+    # ami: ami-05cafdf7c9f772ad2
     # ubuntu
-    ami: ami-04e601abe3e1a910f
+    ami: ami-0d527b8c289b4af7f
+    user: ubuntu
+    tenancy: null
+    
+loadgenerators:
+    count: 1
+    instance_type: c5.4xlarge
+    # default AWS AMI
+    # ami: ami-05cafdf7c9f772ad2
+    # ubuntu
+    ami: ami-0d527b8c289b4af7f
+    user: ubuntu
+    tenancy: null
+
+mc:
+    instance_type: c5.4xlarge
+    count: 1
+    # default AWS AMI
+    # ami: ami-05cafdf7c9f772ad2
+    # ubuntu
+    ami: ami-0d527b8c289b4af7f
     user: ubuntu
     tenancy: null

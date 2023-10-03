@@ -1,33 +1,33 @@
 package com.hazelcast.simulator.probes.impl;
 
-import com.hazelcast.simulator.probes.Probe;
+import com.hazelcast.simulator.probes.LatencyProbe;
 import org.HdrHistogram.Histogram;
 import org.HdrHistogram.HistogramIterationValue;
 import org.junit.Test;
 
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.simulator.probes.impl.HdrProbe.HIGHEST_TRACKABLE_VALUE_NANOS;
+import static com.hazelcast.simulator.probes.impl.HdrLatencyProbe.HIGHEST_TRACKABLE_VALUE_NANOS;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-public class HdrProbeTest {
+public class HdrLatencyProbeTest {
 
-    private HdrProbe probe = new HdrProbe(false);
+    private HdrLatencyProbe probe = new HdrLatencyProbe(false);
 
     @Test
     public void testConstructor_throughputProbe() {
-        Probe tmpProbe = new HdrProbe(true);
-        assertTrue(tmpProbe.isPartOfThroughput());
+        LatencyProbe tmpProbe = new HdrLatencyProbe(true);
+        assertTrue(tmpProbe.includeInThroughput());
     }
 
     @Test
     public void testConstructor_noThroughputProbe() {
-        Probe tmpProbe = new HdrProbe(false);
-        assertFalse(tmpProbe.isPartOfThroughput());
+        LatencyProbe tmpProbe = new HdrLatencyProbe(false);
+        assertFalse(tmpProbe.includeInThroughput());
     }
 
     @Test

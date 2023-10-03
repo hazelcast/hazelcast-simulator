@@ -18,19 +18,19 @@ keypair:
 nodes:
     count: 4
     instance_type: c5.9xlarge
-    ami: ami-0d527b8c289b4af7f
+    ami: ami-04e601abe3e1a910f
     user: ubuntu
     tenancy: null
     
 loadgenerators:
     count: 1
     instance_type: c5.9xlarge
-    ami: ami-0d527b8c289b4af7f
+    ami: ami-04e601abe3e1a910f
     user: ubuntu
     tenancy: null
 
 mc:
     instance_type: c5.4xlarge
     count: 0
-    ami: ami-0d527b8c289b4af7f
+    ami: ami-04e601abe3e1a910f
     user: ubuntu

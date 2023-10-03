@@ -27,7 +27,7 @@ import com.hazelcast.nio.serialization.PortableWriter;
 import com.hazelcast.query.Predicate;
 import com.hazelcast.query.Predicates;
 import com.hazelcast.simulator.hz.HazelcastTest;
-import com.hazelcast.simulator.probes.Probe;
+import com.hazelcast.simulator.probes.LatencyProbe;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -90,7 +90,7 @@ public class MultiValueMapTest extends HazelcastTest {
     }
 
     @TimeStep(prob = -1)
-    public void query(ThreadState state, Probe probe, @StartNanos long startNanos) {
+    public void query(ThreadState state, LatencyProbe probe, @StartNanos long startNanos) {
         int key = state.getRandomKey();
         Predicate predicate = Predicates.equal("payloadField[any]", key);
         Collection<Object> result = null;
