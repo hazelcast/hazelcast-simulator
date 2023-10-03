@@ -59,7 +59,7 @@ public class AgentsDownloadTask {
                 .ensureJavaOnPath()
                 .addEnvironment(simulatorProperties)
                 .addParams(runPath, runId, AgentData.toYaml(registry))
-                .setThrowsException(true)
+                .setThrowsExceptionOnError(true)
                 .execute();
 
         LOGGER.info("Downloading complete!");

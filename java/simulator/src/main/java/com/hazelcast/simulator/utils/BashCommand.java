@@ -31,6 +31,7 @@ import java.util.Map;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
+import static com.hazelcast.simulator.utils.EmptyStatement.ignore;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
@@ -38,6 +39,7 @@ import static java.lang.String.format;
 
 public class BashCommand {
     private static final Logger LOGGER = LogManager.getLogger(BashCommand.class);
+
     private static final String INFO = "[INFO]";
     private static final String WARN = "[WARN]";
     private static final String ERROR = "[ERROR]";
@@ -89,12 +91,12 @@ public class BashCommand {
         return this;
     }
 
-    public BashCommand setThrowsException(boolean throwException) {
+    public BashCommand setThrowsExceptionOnError(boolean throwException) {
         this.throwException = throwException;
         return this;
     }
 
-    public BashCommand dumpOutputOnError(boolean dumpOutputOnError) {
+    public BashCommand setDumpOutputOnError(boolean dumpOutputOnError) {
         this.dumpOutputOnError = dumpOutputOnError;
         return this;
     }
@@ -109,7 +111,7 @@ public class BashCommand {
         for (String param : params) {
             sb.append(param).append(' ');
         }
-        String command =  sb.toString();
+        String command = sb.toString();
 
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Executing bash command: " + command);
@@ -128,18 +130,19 @@ public class BashCommand {
             ProcessBuilder pb = newProcessBuilder(command);
 
             Process shell = pb.start();
+
             new BashStreamGobbler(shell.getInputStream(), sb).start();
 
             // wait for the shell to finish and get the return code
             int shellExitStatus = shell.waitFor();
 
             if (shellExitStatus != 0) {
-                if (throwException) {
-                    throw new ScriptException(format("Failed to execute [%s]", command));
-                }
                 if (dumpOutputOnError) {
                     LOGGER.error(format("Failed to execute [%s]", command));
                     LOGGER.error(sb.toString());
+                }
+                if (throwException) {
+                    throw new ScriptException(format("Failed to execute [%s].", command));
                 }
                 exitWithError();
             } else {
@@ -200,19 +203,19 @@ public class BashCommand {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     if (line.startsWith(ERROR)) {
-                        String s = line.substring(ERROR.length(), line.length());
+                        String s = line.substring(ERROR.length());
                         if (systemOut) {
                             System.out.println(s);
                         }
                         LOGGER.error(s);
                     } else if (line.startsWith(WARN)) {
-                        String s = line.substring(WARN.length(), line.length());
+                        String s = line.substring(WARN.length());
                         if (systemOut) {
                             System.out.println(s);
                         }
                         LOGGER.warn(s);
                     } else if (line.startsWith(INFO)) {
-                        String s = line.substring(INFO.length(), line.length());
+                        String s = line.substring(INFO.length());
                         if (systemOut) {
                             System.out.println(s);
                         }
@@ -228,7 +231,7 @@ public class BashCommand {
                     }
                 }
             } catch (IOException ignored) {
-                EmptyStatement.ignore(ignored);
+                ignore(ignored);
             } finally {
                 closeQuietly(reader);
                 closeQuietly(inputStreamReader);
