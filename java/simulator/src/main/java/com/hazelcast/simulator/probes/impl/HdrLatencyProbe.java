@@ -30,7 +30,7 @@ public class HdrLatencyProbe implements LatencyProbe {
     // we want to track up to 24-hour.
     static final long HIGHEST_TRACKABLE_VALUE_NANOS = DAYS.toNanos(1);
 
-    private static final AtomicLong negativeCount = new AtomicLong();
+    private final AtomicLong negativeCount = new AtomicLong();
 
     // we care only about microsecond accuracy.
     private static final long LOWEST_DISCERNIBLE_VALUE = MICROSECONDS.toNanos(1);
