@@ -30,7 +30,7 @@ import com.hazelcast.query.extractor.ValueCollector;
 import com.hazelcast.query.extractor.ValueExtractor;
 import com.hazelcast.query.extractor.ValueReader;
 import com.hazelcast.simulator.hz.HazelcastTest;
-import com.hazelcast.simulator.probes.Probe;
+import com.hazelcast.simulator.probes.LatencyProbe;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -97,7 +97,7 @@ public class ExtractorMapTest extends HazelcastTest {
     }
 
     @TimeStep(prob = -1)
-    public void query(ThreadState state, Probe probe, @StartNanos long startedNanos) {
+    public void query(ThreadState state, LatencyProbe probe, @StartNanos long startedNanos) {
         int key = state.getRandomKey();
         int index = key % nestedValuesCount;
         String query = format("payloadFromExtractor[%d]", index);

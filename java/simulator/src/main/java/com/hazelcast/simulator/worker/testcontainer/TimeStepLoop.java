@@ -16,7 +16,7 @@
 package com.hazelcast.simulator.worker.testcontainer;
 
 
-import com.hazelcast.simulator.probes.Probe;
+import com.hazelcast.simulator.probes.LatencyProbe;
 import com.hazelcast.simulator.test.StopException;
 import com.hazelcast.simulator.worker.metronome.Metronome;
 import org.apache.logging.log4j.LogManager;
@@ -52,7 +52,7 @@ public abstract class TimeStepLoop implements Runnable {
     protected final AtomicLong iterations = new AtomicLong();
     protected final TimeStepModel timeStepModel;
     protected final byte[] timeStepProbabilities;
-    protected final Map<String, Probe> probeMap = new HashMap<>();
+    protected final Map<String, LatencyProbe> probeMap = new HashMap<>();
     protected long maxIterations;
     protected long delayMillis;
 
@@ -76,7 +76,7 @@ public abstract class TimeStepLoop implements Runnable {
 
     public void bind(PropertyBinding binding) {
         for (Method method : timeStepModel.getActiveTimeStepMethods(executionGroup)) {
-            Probe probe = testContext.getProbe(method.getName(), false);
+            LatencyProbe probe = testContext.getLatencyProbe(method.getName(), false);
             if (probe != null) {
                 probeMap.put(method.getName(), probe);
             }

@@ -15,7 +15,7 @@
  */
 package com.hazelcast.simulator.worker.testcontainer;
 
-import com.hazelcast.simulator.probes.Probe;
+import com.hazelcast.simulator.probes.LatencyProbe;
 import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.BeforeRun;
 import com.hazelcast.simulator.test.annotations.StartNanos;
@@ -308,7 +308,7 @@ public class TimeStepModel {
                 case 0:
                     break;
                 case 1:
-                    if (Probe.class.isAssignableFrom(method.getParameterTypes()[0])) {
+                    if (LatencyProbe.class.isAssignableFrom(method.getParameterTypes()[0])) {
                         throw new IllegalTestException(owner + " method '" + method + "' can't have a Probe argument");
                     }
                     break;
@@ -377,7 +377,7 @@ public class TimeStepModel {
                 for (int parameterIndex = 0; parameterIndex < parameterTypes.length; parameterIndex++) {
                     Class<?> paramType = parameterTypes[parameterIndex];
 
-                    if (paramType.isAssignableFrom(Probe.class)
+                    if (paramType.isAssignableFrom(LatencyProbe.class)
                             || hasStartNanosAnnotation(method, parameterIndex)) {
                         continue;
                     }

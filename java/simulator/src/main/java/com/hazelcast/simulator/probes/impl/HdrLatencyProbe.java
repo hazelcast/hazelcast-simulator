@@ -15,23 +15,23 @@
  */
 package com.hazelcast.simulator.probes.impl;
 
-import com.hazelcast.simulator.probes.Probe;
+import com.hazelcast.simulator.probes.LatencyProbe;
 import org.HdrHistogram.Recorder;
 
 import static java.util.concurrent.TimeUnit.DAYS;
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
 
 /**
- * HDR-Histogram implementation of the {@link Probe}.
+ * HDR-Histogram implementation of the {@link LatencyProbe}.
  */
-public class HdrProbe implements Probe {
+public class HdrLatencyProbe implements LatencyProbe {
     // we want to track up to 24-hour.
     static final long HIGHEST_TRACKABLE_VALUE_NANOS = DAYS.toNanos(1);
 
     // we care only about microsecond accuracy.
     private static final long LOWEST_DISCERNIBLE_VALUE = MICROSECONDS.toNanos(1);
 
-    // since we care about us, the value should be 1000 according to the javadoc of Recorder.
+    // since we care about u    s, the value should be 1000 according to the javadoc of Recorder.
     private static final int NUMBER_OF_SIGNIFICANT_VALUE_DIGITS = 3;
 
     // these settings come the website; just above the following link
@@ -41,15 +41,15 @@ public class HdrProbe implements Probe {
             HIGHEST_TRACKABLE_VALUE_NANOS,
             NUMBER_OF_SIGNIFICANT_VALUE_DIGITS);
 
-    private final boolean partOfThroughput;
+    private final boolean includeInThroughput;
 
-    public HdrProbe(boolean partOfThroughput) {
-        this.partOfThroughput = partOfThroughput;
+    public HdrLatencyProbe(boolean includeInThroughput) {
+        this.includeInThroughput = includeInThroughput;
     }
 
     @Override
-    public boolean isPartOfThroughput() {
-        return partOfThroughput;
+    public boolean includeInThroughput() {
+        return includeInThroughput;
     }
 
     @Override

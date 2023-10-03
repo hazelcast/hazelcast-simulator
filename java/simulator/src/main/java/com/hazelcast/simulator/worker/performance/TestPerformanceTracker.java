@@ -15,8 +15,8 @@
  */
 package com.hazelcast.simulator.worker.performance;
 
-import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.probes.impl.HdrProbe;
+import com.hazelcast.simulator.probes.LatencyProbe;
+import com.hazelcast.simulator.probes.impl.HdrLatencyProbe;
 import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.worker.testcontainer.TestContainer;
 import com.hazelcast.simulator.worker.testcontainer.TestContextImpl;
@@ -37,7 +37,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  * <p>
  * Has methods to update the performance values and write them to files.
  * <p>
- * Holds a map of {@link Histogram} for each {@link com.hazelcast.simulator.probes.Probe} of a Simulator Test.
+ * Holds a map of {@link Histogram} for each {@link LatencyProbe} of a Simulator Test.
  *
  * This class has a shitty design due to conflated concerns due to file writing and remoting sending the histograms.
  * This is caused by the Recorder that gets reset when getIntervalHistogram is called. Meaning that writing to file
@@ -99,7 +99,7 @@ public final class TestPerformanceTracker {
         if (lastUpdateMillis == 0) {
             // first time
             iterationsDuringWarmup = testContainer.iteration();
-            for (Probe probe : testContext.getProbeMap().values()) {
+            for (LatencyProbe probe : testContext.getLatencyProbes().values()) {
                 probe.reset();
             }
             lastUpdateMillis = currentTimeMillis;
@@ -111,8 +111,8 @@ public final class TestPerformanceTracker {
     }
 
     private void makeUpdate(long updateIntervalMillis, long currentTimeMillis) {
-        Map<String, Probe> probeMap = testContext.getProbeMap();
-        Map<String, Histogram> intervalHistograms = new HashMap<>(probeMap.size());
+        Map<String, LatencyProbe> latencyProbes = testContext.getLatencyProbes();
+        Map<String, Histogram> intervalHistograms = new HashMap<>(latencyProbes.size());
 
         long intervalPercentileLatency = -1;
         double intervalMean = -1;
@@ -121,15 +121,15 @@ public final class TestPerformanceTracker {
         long iterations = testContainer.iteration() - iterationsDuringWarmup;
         long intervalOperationCount = iterations - lastIterations;
 
-        for (Map.Entry<String, Probe> entry : probeMap.entrySet()) {
+        for (Map.Entry<String, LatencyProbe> entry : latencyProbes.entrySet()) {
             String probeName = entry.getKey();
-            Probe probe = entry.getValue();
-            if (!(probe instanceof HdrProbe)) {
+            LatencyProbe latencyProbe = entry.getValue();
+            if (!(latencyProbe instanceof HdrLatencyProbe)) {
                 continue;
             }
 
-            HdrProbe hdrProbe = (HdrProbe) probe;
-            Histogram intervalHistogram = hdrProbe.getRecorder().getIntervalHistogram();
+            HdrLatencyProbe hdrLatencyProbe = (HdrLatencyProbe) latencyProbe;
+            Histogram intervalHistogram = hdrLatencyProbe.getRecorder().getIntervalHistogram();
             intervalHistogram.setStartTimeStamp(lastUpdateMillis);
             intervalHistogram.setEndTimeStamp(currentTimeMillis);
             intervalHistograms.put(probeName, intervalHistogram);
@@ -149,7 +149,7 @@ public final class TestPerformanceTracker {
                 intervalMaxLatency = maxValue;
             }
 
-            if (probe.isPartOfThroughput()) {
+            if (latencyProbe.includeInThroughput()) {
                 intervalOperationCount += intervalHistogram.getTotalCount();
             }
         }
