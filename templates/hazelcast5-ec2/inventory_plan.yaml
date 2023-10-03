@@ -20,6 +20,7 @@ nodes:
     instance_type: c5.4xlarge
     # default AWS AMI
     # ami: ami-05cafdf7c9f772ad2
+    # user: ec2-user
     # ubuntu
     ami: ami-04e601abe3e1a910f
     user: ubuntu
@@ -30,6 +31,7 @@ loadgenerators:
     instance_type: c5.4xlarge
     # default AWS AMI
     # ami: ami-05cafdf7c9f772ad2
+    # user: ec2-user
     # ubuntu
     ami: ami-04e601abe3e1a910f
     user: ubuntu
@@ -40,6 +42,7 @@ mc:
     count: 1
     # default AWS AMI
     # ami: ami-05cafdf7c9f772ad2
+    # user: ec2-user
     # ubuntu
     ami: ami-04e601abe3e1a910f
     user: ubuntu
