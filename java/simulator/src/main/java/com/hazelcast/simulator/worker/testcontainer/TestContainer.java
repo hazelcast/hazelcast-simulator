@@ -199,9 +199,7 @@ public class TestContainer {
             if (testPhase == RUN) {
                 for (LatencyProbe probe : testContext.getLatencyProbes().values()) {
                     if (probe.negativeCount() > 0) {
-                        String msg = "HdrLatencyProbe [" + probe.name() + "] has encounter "
-                                + probe.negativeCount() + " negative measurements! Maybe there"
-                                + " is a clock problem.";
+                        String msg = MessageFormat.format("HdrLatencyProbe [{0}] has encountered {1} negative measurements! Maybe there is a clock problem.", probe.name(), probe.negativeCount());
                         System.err.println(msg);
                         testContext.echoCoordinator(msg);
                     }
