@@ -15,35 +15,26 @@
  */
 package com.hazelcast.simulator.tests.cp;
 
+import com.hazelcast.core.IFunction;
 import com.hazelcast.cp.IAtomicReference;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
-import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.TimeStep;
-import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.utils.GeneratorUtils;
 
-import java.util.concurrent.atomic.AtomicLong;
-
-import static org.junit.Assert.assertTrue;
-
-/**
- * Writes [1,2,4,8,16]kb key(name) value atomic references. These sizes could be slightly off and assume (correctly, I think)
- * no compression whatsoever on our side of the keys-values. You shouldn't enable such compression to be safe even if possible.
- * <p>
- * Default is 1kb writes. You can specify the KB size by overriding the [keyValueSizeKb] configuration property.
- */
 public class IAtomicReferenceTest extends HazelcastTest {
     public int keyValueSizeKb = 1;
-    private AtomicLong totalWrites;
     private IAtomicReference<String> atomicReference;
+
+    private String v; // this is always the value of [atomicReference]; before + after, irrespective of the op
 
     @Setup
     public void setup() {
-        totalWrites = new AtomicLong();
         String kv = createString(keyValueSizeKb);
+        v = kv;
         atomicReference = targetInstance.getCPSubsystem().getAtomicReference(kv);
+        atomicReference.set(v);
     }
 
     String createString(int kb) {
@@ -53,22 +44,31 @@ public class IAtomicReferenceTest extends HazelcastTest {
     }
 
     @TimeStep(prob = 1)
-    public void write(ThreadState state) {
+    public void set(ThreadState state) {
         atomicReference.set(atomicReference.getName());
-        state.writes++;
+    }
+
+    @TimeStep(prob = 0)
+    public void alter(ThreadState state) {
+        atomicReference.alter(state.identity);
+    }
+
+    @TimeStep(prob = 0)
+    public boolean cas(ThreadState state) {
+        return atomicReference.compareAndSet(v, v);
+    }
+
+    @TimeStep(prob = 0)
+    public void casOptimisticConcurrencyControl(ThreadState state) {
+        String observed;
+        String newValue;
+        do {
+            observed = atomicReference.get(); // because we're modelling the pattern -- we know it's [v]...
+            newValue = observed;
+        } while (!atomicReference.compareAndSet(observed, newValue));
     }
 
     public class ThreadState extends BaseThreadState {
-        long writes;
-    }
-
-    @AfterRun
-    public void afterRun(ThreadState state) {
-        totalWrites.addAndGet(state.writes);
-    }
-
-    @Verify
-    public void verify() {
-        assertTrue(totalWrites.get() > 0);
+        final IFunction<String, String> identity = s -> s;
     }
 }
