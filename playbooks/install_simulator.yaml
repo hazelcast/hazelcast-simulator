@@ -14,7 +14,9 @@
 
 
   # we want to install either dstat or pcp.
-  # pcp is a replacement for dstat and will
+  # pcp is a replacement for dstat. dstat project
+  # is a very bad state and very iffy if it will work.
+  # under ubuntu for example, dstat is broken for our needs.
   - name: Install pcp
     ansible.builtin.package:
       name: pcp
