@@ -33,6 +33,6 @@ loadgenerators:
     count: 2
     instance_type: c5.4xlarge
     # ubuntu
-    ami: ami-0d527b8c289b4af7f
+    ami: ami-04e601abe3e1a910f
     user: ubuntu
     tenancy: null
