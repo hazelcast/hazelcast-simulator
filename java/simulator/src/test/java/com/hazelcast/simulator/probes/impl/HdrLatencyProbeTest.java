@@ -16,17 +16,17 @@ import static org.junit.Assert.fail;
 
 public class HdrLatencyProbeTest {
 
-    private HdrLatencyProbe probe = new HdrLatencyProbe(false);
+    private HdrLatencyProbe probe = new HdrLatencyProbe("foo", false);
 
     @Test
     public void testConstructor_throughputProbe() {
-        LatencyProbe tmpProbe = new HdrLatencyProbe(true);
+        LatencyProbe tmpProbe = new HdrLatencyProbe("foo", true);
         assertTrue(tmpProbe.includeInThroughput());
     }
 
     @Test
     public void testConstructor_noThroughputProbe() {
-        LatencyProbe tmpProbe = new HdrLatencyProbe(false);
+        LatencyProbe tmpProbe = new HdrLatencyProbe("foo", false);
         assertFalse(tmpProbe.includeInThroughput());
     }
 
@@ -136,4 +136,6 @@ public class HdrLatencyProbeTest {
 
         assertEquals(3, probe.getRecorder().getIntervalHistogram().getTotalCount());
     }
+
+
 }

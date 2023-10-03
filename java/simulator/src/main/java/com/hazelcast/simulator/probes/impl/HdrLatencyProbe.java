@@ -30,7 +30,7 @@ public class HdrLatencyProbe implements LatencyProbe {
     // we want to track up to 24-hour.
     static final long HIGHEST_TRACKABLE_VALUE_NANOS = DAYS.toNanos(1);
 
-    public static final AtomicLong NEG_ELAPSED_COUNT = new AtomicLong();
+    private static final AtomicLong negativeCount = new AtomicLong();
 
     // we care only about microsecond accuracy.
     private static final long LOWEST_DISCERNIBLE_VALUE = MICROSECONDS.toNanos(1);
@@ -46,8 +46,10 @@ public class HdrLatencyProbe implements LatencyProbe {
             NUMBER_OF_SIGNIFICANT_VALUE_DIGITS);
 
     private final boolean includeInThroughput;
+    private final String name;
 
-    public HdrLatencyProbe(boolean includeInThroughput) {
+    public HdrLatencyProbe(String name, boolean includeInThroughput) {
+        this.name = name;
         this.includeInThroughput = includeInThroughput;
     }
 
@@ -70,7 +72,7 @@ public class HdrLatencyProbe implements LatencyProbe {
     public void recordValue(long latencyNanos) {
 
         if (latencyNanos < 0) {
-            NEG_ELAPSED_COUNT.incrementAndGet();
+            negativeCount.incrementAndGet();
 
             // Negative values should normally not happen.
             // But it could happen when the clock jump or when there is an
@@ -95,5 +97,15 @@ public class HdrLatencyProbe implements LatencyProbe {
     @Override
     public void reset() {
         recorder.reset();
+    }
+
+    @Override
+    public long negativeCount() {
+        return negativeCount.get();
+    }
+
+    @Override
+    public String name() {
+        return name;
     }
 }

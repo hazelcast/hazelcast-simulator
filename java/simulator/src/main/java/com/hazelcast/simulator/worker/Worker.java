@@ -102,10 +102,6 @@ public class Worker {
 
     public void shutdown(TerminateWorkerOperation op) {
         LOGGER.warn("Terminating worker");
-        long negCount = HdrLatencyProbe.NEG_ELAPSED_COUNT.get();
-        if (negCount > 0) {
-            LOGGER.warn("HdrLatencyProbe has encounter " + negCount + " negative measurements.");
-        }
         closeQuietly(server);
         shutdownThread = new WorkerShutdownThread(op.isRealShutdown());
         shutdownThread.start();
