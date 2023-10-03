@@ -12,18 +12,20 @@
       apt-get update || true
     become: yes
 
+
   # we want to install either dstat or pcp.
   # pcp is a replacement for dstat and will
   # provide the dstat command
+#  - name: Install dstat
+#    ansible.builtin.package:
+#      name: dstat
+#      state: present
+#    become: yes
+#    ignore_errors: yes
+
   - name: Install pcp
     ansible.builtin.package:
       name: pcp
-      state: present
-    become: yes
-    ignore_errors: yes
-  - name: Install dstat
-    ansible.builtin.package:
-      name: dstat
       state: present
     become: yes
     ignore_errors: yes
