@@ -37,10 +37,11 @@ def download(artifact_id, version, repo):
     print(f"[INFO]{cmd}")
     exitcode = shell(cmd)
     if exitcode != 0:
-        print(f"Failed {cmd}, exitcode: {exitcode}")
+        print(f"[ERROR] Failed to download artifact {artifact}")
+        raise Exception(f"Failed to download artifact {artifact}")
     path = local_jar_path(artifact_id, version)
     if not os.path.exists(path):
-        print(f"[INFO] Could not find {path} in maven repo.")
+        print(f"[ERROR] Could not find {path} in maven repo.")
         exit(1)
 
 
@@ -132,6 +133,13 @@ for artifact_id in artifact_ids:
 
     if not os.path.exists(path):
         download(artifact_id, version, remote_repo)
+
+# verify that the artifacts are actually available.
+for artifact_id in artifact_ids:
+    path = local_jar_path(artifact_id, version)
+    if not os.path.exists(path):
+        print(f"[ERROR]Could not find {artifact_id}")
+        raise Exception(f"Could not find {path}")
 
 for artifact_id in artifact_ids:
     print(f"[INFO]Uploading {artifact_id}")

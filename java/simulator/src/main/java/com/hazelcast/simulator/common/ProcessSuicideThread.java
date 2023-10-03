@@ -51,7 +51,7 @@ public final class ProcessSuicideThread extends Thread {
             for (; ; ) {
                 SECONDS.sleep(intervalSeconds);
                 BashCommand bashCommand = new BashCommand("ps -p " + parentPid);
-                bashCommand.setThrowsException(true);
+                bashCommand.setThrowsExceptionOnError(true);
 
                 try {
                     bashCommand.execute();

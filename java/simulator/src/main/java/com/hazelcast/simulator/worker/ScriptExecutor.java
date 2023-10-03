@@ -77,7 +77,7 @@ public class ScriptExecutor {
             return new BashCommand(command)
                     .setDirectory(getUserDir())
                     .addEnvironment(environment)
-                    .setThrowsException(true)
+                    .setThrowsExceptionOnError(true)
                     .execute();
         };
         return task;
