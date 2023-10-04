@@ -162,7 +162,10 @@ def plot_latency_history(report_dir, df):
 
         for column_name in column_name_list:
             column_desc = ColumnDesc.from_string(column_name)
-            plt.plot(df.index, df[column_name], label=column_desc.attributes["run_id"])
+            filtered_df = pd.DataFrame({"time": df.index, column_name: df[column_name]})
+            filtered_df.dropna(inplace=True)
+
+            plt.plot(filtered_df.index, filtered_df[column_name], label=column_desc.attributes["run_id"])
 
         plt.ticklabel_format(style='plain', axis='y')
         plt.title(metric_id.replace('_', ' '))
@@ -188,11 +191,11 @@ def plot_latency_history(report_dir, df):
         plt.grid()
 
         if worker_id is None:
-            path = f"{report_dir}/{metric_id}{test_str}.png"
+            target_dir = f"{report_dir}/latency/"
         else:
-            dir = f"{report_dir}/{worker_id}"
-            mkdir(dir)
-            path = f"{dir}/{metric_id}{test_str}.png"
+            target_dir = f"{report_dir}/latency/{worker_id}"
+        mkdir(target_dir)
+        path = f"{target_dir}/{metric_id}{test_str}.png"
         print(f"\tGenerating [{path}]")
         plt.savefig(path)
         plt.close()
@@ -260,8 +263,11 @@ def plot_dstat(report_dir, df):
     for (agent_id, metric_id), column_name_list in grouped_column_names.items():
         fig = plt.figure(figsize=(image_width_px / image_dpi, image_height_px / image_dpi), dpi=image_dpi)
         for column_name in column_name_list:
+            filtered_df = pd.DataFrame({"time": df.index, column_name: df[column_name]})
+            filtered_df.dropna(inplace=True)
+
             column_desc = ColumnDesc.from_string(column_name)
-            plt.plot(df.index, df[column_name], label=column_desc.attributes["run_id"])
+            plt.plot(filtered_df.index, filtered_df[column_name], label=column_desc.attributes["run_id"])
 
         plt.ticklabel_format(style='plain', axis='y')
         plt.ylabel(metric_id)
@@ -272,8 +278,10 @@ def plot_dstat(report_dir, df):
         plt.title(f"Agent {agent_id} : {metric_id}")
         plt.grid()
 
-        nice_metric_name = column_desc.metric_id.replace("/", "_").replace(":", "_")
-        path = f"{report_dir}/{agent_id}_{nice_metric_name}.png"
+        nice_metric_name = metric_id.replace("/", "_").replace(":", "_")
+        target_dir = f"{report_dir}/dstat/{agent_id}"
+        mkdir(target_dir)
+        path = f"{target_dir}/{nice_metric_name}.png"
 
         print(f"\tGenerating [{path}]")
         plt.savefig(path)
@@ -790,8 +798,11 @@ def plot_operations(report_dir, df):
         fig = plt.figure(figsize=(image_width_px / image_dpi, image_height_px / image_dpi), dpi=image_dpi)
 
         for column_name in column_name_list:
+            filtered_df = pd.DataFrame({"time": df.index, column_name: df[column_name]})
+            filtered_df.dropna(inplace=True)
+
             column_desc = ColumnDesc.from_string(column_name)
-            plt.plot(df.index, df[column_name], label=column_desc.attributes["run_id"])
+            plt.plot(filtered_df.index, filtered_df[column_name], label=column_desc.attributes["run_id"])
 
         plt.ticklabel_format(style='plain', axis='y')
         plt.ylabel("operations/second")
@@ -811,12 +822,12 @@ def plot_operations(report_dir, df):
         plt.grid()
 
         if worker_id is None:
-            path = f"{report_dir}/throughput{test_str}.png"
+            target_dir = f"{report_dir}/operations"
         else:
-            dir = f"{report_dir}/{worker_id}"
-            mkdir(dir)
-            path = f"{dir}/throughput{test_str}.png"
+            target_dir = f"{report_dir}/operations/{worker_id}"
 
+        mkdir(target_dir)
+        path = f"{target_dir}/throughput{test_str}.png"
         print(f"\tGenerating [{path}]")
         plt.savefig(path)
         plt.close()
@@ -871,8 +882,8 @@ report_dir = "/mnt/home/pveentjer/report/"  # tempfile.mkdtemp()
 mkdir(report_dir)
 print(f"Report directory {report_dir}")
 
-df_1 = analyze_run("/home/pveentjer/tmp/report/runs/valuelength=10/03-10-2023_08-46-15")
-df_2 = analyze_run("/home/pveentjer/tmp/report/runs/valuelength=1000/03-10-2023_09-15-09")
+df_1 = analyze_run("/home/pveentjer/tmp/report/runs/valuelength_1000/04-10-2023_06-35-01","valuelength_1000")
+df_2 = analyze_run("/home/pveentjer/tmp/report/runs/valuelength_1/04-10-2023_08-00-07","valuelength_1")
 
 df = None
 df = merge_dataframes(df, shift_to_epoch(df_1))

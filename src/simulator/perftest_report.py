@@ -763,10 +763,10 @@ class ThroughputAnalyzer:
         return handles
 
     def __load_throughput(self):
-        performance_csv = os.path.join(self.worker_dir, "performance.csv")
+        operations_csv = os.path.join(self.worker_dir, "operations.csv")
         result = []
-        if os.path.exists(performance_csv):
-            with open(performance_csv) as csvfile:
+        if os.path.exists(operations_csv):
+            with open(operations_csv) as csvfile:
                 csvreader = csv.reader(csvfile, delimiter=',', quotechar='|')
                 # skip the first line
                 next(csvreader)
@@ -851,11 +851,11 @@ class Benchmark:
                 continue
 
             agent_name = agent_for_worker(worker_name)
-            performance_csv_file = os.path.join(worker_dir, "performance.csv")
-            if not os.path.isfile(performance_csv_file):
+            operations_csv_file = os.path.join(worker_dir, "operations.csv")
+            if not os.path.isfile(operations_csv_file):
                 continue
 
-            with open(performance_csv_file) as csv_file:
+            with open(operations_csv_file) as csv_file:
                 csv_reader = csv.reader(csv_file, delimiter=',', quotechar='|')
                 # skip first line
                 next(csv_reader)
