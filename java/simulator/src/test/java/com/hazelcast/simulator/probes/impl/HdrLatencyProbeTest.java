@@ -16,17 +16,17 @@ import static org.junit.Assert.fail;
 
 public class HdrLatencyProbeTest {
 
-    private HdrLatencyProbe probe = new HdrLatencyProbe(false);
+    private HdrLatencyProbe probe = new HdrLatencyProbe("foo", false);
 
     @Test
     public void testConstructor_throughputProbe() {
-        LatencyProbe tmpProbe = new HdrLatencyProbe(true);
+        LatencyProbe tmpProbe = new HdrLatencyProbe("foo", true);
         assertTrue(tmpProbe.includeInThroughput());
     }
 
     @Test
     public void testConstructor_noThroughputProbe() {
-        LatencyProbe tmpProbe = new HdrLatencyProbe(false);
+        LatencyProbe tmpProbe = new HdrLatencyProbe("foo", false);
         assertFalse(tmpProbe.includeInThroughput());
     }
 
@@ -73,6 +73,33 @@ public class HdrLatencyProbeTest {
     }
 
     @Test
+    public void testNegativeValue() {
+        HdrLatencyProbe probe = new HdrLatencyProbe("foo", false);
+        long value1 = MILLISECONDS.toNanos(-200);
+
+        probe.recordValue(value1);
+
+        assertEquals(1, probe.negativeCount());
+
+        Histogram histogram = probe.getRecorder().getIntervalHistogram();
+        assertHistogramContent(histogram, -value1);
+    }
+
+    @Test
+    public void testLongMinValue() {
+        HdrLatencyProbe probe = new HdrLatencyProbe("foo", false);
+
+        long value1 = MILLISECONDS.toNanos(Long.MIN_VALUE);
+
+        probe.recordValue(value1);
+
+        assertEquals(1, probe.negativeCount());
+
+        Histogram histogram = probe.getRecorder().getIntervalHistogram();
+        assertHistogramContent(histogram, HIGHEST_TRACKABLE_VALUE_NANOS);
+    }
+
+    @Test
     public void testRecord_whenTooLarge() {
         long value = HIGHEST_TRACKABLE_VALUE_NANOS * 2;
         probe.recordValue(value);
@@ -116,4 +143,6 @@ public class HdrLatencyProbeTest {
 
         assertEquals(3, probe.getRecorder().getIntervalHistogram().getTotalCount());
     }
+
+
 }

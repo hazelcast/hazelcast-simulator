@@ -39,7 +39,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillisThrowException;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.FileUtils.locatePythonFile;
@@ -190,15 +189,13 @@ public class Hazelcast4PlusDriver extends Driver<HazelcastInstance> {
         String driver = get("DRIVER");
 
         LOGGER.info("Installing '" + driver + "' version '" + versionSpec + "' on Agents using " + installFile);
-
         new BashCommand(installFile)
                 .addParams(AgentData.toYaml(agents), versionSpec, driver)
                 .addEnvironment(properties)
+                .setDumpOutputOnError(true)
+                .setThrowsExceptionOnError(true)
                 .execute();
-
         LOGGER.info("Successfully installed '" + driver + "'");
-
-        LOGGER.info("Install successful!");
     }
 
     @Override

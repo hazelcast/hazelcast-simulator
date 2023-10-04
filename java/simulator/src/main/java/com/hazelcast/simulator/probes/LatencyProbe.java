@@ -39,4 +39,12 @@ public interface LatencyProbe {
     void recordValue(long latencyNanos);
 
     void reset();
+
+    default long negativeCount(){
+        return 0;
+    }
+
+    default String name(){
+        return "";
+    }
 }

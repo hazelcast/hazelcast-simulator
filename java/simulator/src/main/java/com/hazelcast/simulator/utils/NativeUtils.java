@@ -39,7 +39,7 @@ public final class NativeUtils {
 
     public static String execute(String command, boolean throwException) {
         return new BashCommand(command)
-                .setThrowsException(throwException)
+                .setThrowsExceptionOnError(throwException)
                 .execute();
     }
 

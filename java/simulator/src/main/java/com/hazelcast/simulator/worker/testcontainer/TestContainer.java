@@ -35,6 +35,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -114,7 +115,7 @@ public class TestContainer {
         this.testOperationsTracker = new TestOperationsTracker(this);
     }
 
-    public void stop(){
+    public void stop() {
         testContext.stop();
         runner.stop();
     }
@@ -193,6 +194,19 @@ public class TestContainer {
                 throw e;
             }
         } finally {
+            // after the run phase we check if any negative latencies have
+            // been encountered.
+
+            if (testPhase == RUN) {
+                for (LatencyProbe probe : testContext.getLatencyProbes().values()) {
+                    if (probe.negativeCount() > 0) {
+                        String msg = MessageFormat.format("HdrLatencyProbe [{0}] has encountered {1} negative measurements! "
+                                + "Maybe there is a clock problem.", probe.name(), probe.negativeCount());
+                        System.err.println(msg);
+                        testContext.echoCoordinator(msg);
+                    }
+                }
+            }
             currentPhase.set(null);
         }
     }
