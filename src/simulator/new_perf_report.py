@@ -47,7 +47,7 @@ def to_relative_time(df, time_column_name):
         column.iloc[i] = column.iloc[i] - base
 
 
-def sizeof_fmt(x, pos):
+def sizeof_fmt(x):
     if x < 0:
         return ""
     for x_unit in ['bytes', 'kB', 'MB', 'GB', 'TB']:
@@ -137,7 +137,7 @@ def log_sub_section(text):
     print("-----------------------")
 
 
-def plot_latency_history(report_dir, df):
+def report_latency_history(report_dir, df):
     log_section("Plotting latency history: Start")
     start_sec = time.time()
 
@@ -158,14 +158,34 @@ def plot_latency_history(report_dir, df):
         column_names.append(column_name)
 
     for (worker_id, metric_id, test_id, worker_id), column_name_list in grouped_column_names.items():
-        fig = plt.figure(figsize=(image_width_px / image_dpi, image_height_px / image_dpi), dpi=image_dpi)
+        if worker_id is None:
+            target_dir = f"{report_dir}/latency/"
+        else:
+            target_dir = f"{report_dir}/latency/{worker_id}"
+        mkdir(target_dir)
 
+        if test_id is None:
+            test_str = ""
+        else:
+            test_str = f"-{test_id}"
+
+        filtered_df = None
         for column_name in column_name_list:
             column_desc = ColumnDesc.from_string(column_name)
-            filtered_df = pd.DataFrame({"time": df.index, column_name: df[column_name]})
-            filtered_df.dropna(inplace=True)
+            run_id = column_desc.attributes["run_id"]
+            if filtered_df is None:
+                filtered_df = pd.DataFrame(index=df.index)
 
-            plt.plot(filtered_df.index, filtered_df[column_name], label=column_desc.attributes["run_id"])
+            filtered_df[run_id] = df[column_name].copy()
+
+        filtered_df.dropna(inplace=True)
+        filtered_df.to_csv(f"{target_dir}/{metric_id}{test_str}.csv")
+
+        fig = plt.figure(figsize=(image_width_px / image_dpi, image_height_px / image_dpi), dpi=image_dpi)
+        for column_name in column_name_list:
+            column_desc = ColumnDesc.from_string(column_name)
+            run_id = column_desc.attributes["run_id"]
+            plt.plot(filtered_df.index, filtered_df[run_id], label=run_id)
 
         plt.ticklabel_format(style='plain', axis='y')
         plt.title(metric_id.replace('_', ' '))
@@ -183,18 +203,8 @@ def plot_latency_history(report_dir, df):
         #    plt.title(f"{test_id} {column_name.capitalize()}")
         # else:
 
-        if test_id is None:
-            test_str = ""
-        else:
-            test_str = f"-{test_id}"
-
         plt.grid()
 
-        if worker_id is None:
-            target_dir = f"{report_dir}/latency/"
-        else:
-            target_dir = f"{report_dir}/latency/{worker_id}"
-        mkdir(target_dir)
         path = f"{target_dir}/{metric_id}{test_str}.png"
         print(f"\tGenerating [{path}]")
         plt.savefig(path)
@@ -234,16 +244,13 @@ def analyze_dstat(run_dir, attributes):
             df.rename(columns={column_name: column_desc.to_string()}, inplace=True)
 
         result = merge_dataframes(result, df)
-        # if not absolute_time:
-        #     to_relative_time(df, "epoch")
-        # df['epoch'] = pd.to_datetime(df['epoch'], unit='s')
 
     duration_sec = time.time() - start_sec
     log_section(f"Loading dstat data: Done (duration {duration_sec:.2f} seconds)")
     return result
 
 
-def plot_dstat(report_dir, df):
+def report_dstat(report_dir, df):
     log_section("Plotting dstat data: Start")
     start_sec = time.time()
 
@@ -261,13 +268,27 @@ def plot_dstat(report_dir, df):
         column_names.append(column_name)
 
     for (agent_id, metric_id), column_name_list in grouped_column_names.items():
+        nice_metric_name = metric_id.replace("/", "_").replace(":", "_")
+        target_dir = f"{report_dir}/dstat/{agent_id}"
+        mkdir(target_dir)
+
+        filtered_df = None
+        for column_name in column_name_list:
+            column_desc = ColumnDesc.from_string(column_name)
+            run_id = column_desc.attributes["run_id"]
+            if filtered_df is None:
+                filtered_df = pd.DataFrame(index=df.index)
+
+            filtered_df[run_id] = df[column_name].copy()
+
+        filtered_df.dropna(inplace=True)
+        filtered_df.to_csv(f"{target_dir}/{nice_metric_name}.csv")
+
         fig = plt.figure(figsize=(image_width_px / image_dpi, image_height_px / image_dpi), dpi=image_dpi)
         for column_name in column_name_list:
-            filtered_df = pd.DataFrame({"time": df.index, column_name: df[column_name]})
-            filtered_df.dropna(inplace=True)
-
             column_desc = ColumnDesc.from_string(column_name)
-            plt.plot(filtered_df.index, filtered_df[column_name], label=column_desc.attributes["run_id"])
+            run_id = column_desc.attributes["run_id"]
+            plt.plot(filtered_df.index, filtered_df[run_id], label=run_id)
 
         plt.ticklabel_format(style='plain', axis='y')
         plt.ylabel(metric_id)
@@ -278,11 +299,7 @@ def plot_dstat(report_dir, df):
         plt.title(f"Agent {agent_id} : {metric_id}")
         plt.grid()
 
-        nice_metric_name = metric_id.replace("/", "_").replace(":", "_")
-        target_dir = f"{report_dir}/dstat/{agent_id}"
-        mkdir(target_dir)
         path = f"{target_dir}/{nice_metric_name}.png"
-
         print(f"\tGenerating [{path}]")
         plt.savefig(path)
         plt.close()
@@ -353,8 +370,6 @@ dstat_titles = {"1m": "1 Minute load average",
 #         plt.savefig(f'{result_dir}/latency_histogram.png')
 #         plt.close()
 
-
-absolute_time = True
 warmup_seconds = 5
 cooldown_seconds = 5
 
@@ -775,7 +790,7 @@ class Benchmark:
         return len(self.runs)
 
 
-def plot_operations(report_dir, df):
+def report_operations(report_dir, df):
     log_section("Plotting operations data: Start")
     start_sec = time.time()
 
@@ -794,15 +809,34 @@ def plot_operations(report_dir, df):
         column_names.append(column_name)
 
     for (worker_id, metric_id, test_id, worker_id), column_name_list in grouped_column_names.items():
+        if worker_id is None:
+            target_dir = f"{report_dir}/operations"
+        else:
+            target_dir = f"{report_dir}/operations/{worker_id}"
+        mkdir(target_dir)
+
+        if test_id is None:
+            test_str = ""
+        else:
+            test_str = f"-{test_id}"
+
+        filtered_df = None
+        for column_name in column_name_list:
+            column_desc = ColumnDesc.from_string(column_name)
+            run_id = column_desc.attributes["run_id"]
+            if filtered_df is None:
+                filtered_df = pd.DataFrame(index=df.index)
+
+            filtered_df[run_id] = df[column_name].copy()
+
+        filtered_df.dropna(inplace=True)
+        filtered_df.to_csv(f"{target_dir}/throughput{test_str}.csv")
 
         fig = plt.figure(figsize=(image_width_px / image_dpi, image_height_px / image_dpi), dpi=image_dpi)
-
         for column_name in column_name_list:
-            filtered_df = pd.DataFrame({"time": df.index, column_name: df[column_name]})
-            filtered_df.dropna(inplace=True)
-
             column_desc = ColumnDesc.from_string(column_name)
-            plt.plot(filtered_df.index, filtered_df[column_name], label=column_desc.attributes["run_id"])
+            run_id = column_desc.attributes["run_id"]
+            plt.plot(filtered_df.index, filtered_df[run_id], label=run_id)
 
         plt.ticklabel_format(style='plain', axis='y')
         plt.ylabel("operations/second")
@@ -813,20 +847,9 @@ def plot_operations(report_dir, df):
         #    plt.title(f"{test_id} {column_name.capitalize()}")
         # else:
 
-        if test_id is None:
-            test_str = ""
-        else:
-            test_str = f"-{test_id}"
-
         plt.title(f"Throughput")
         plt.grid()
 
-        if worker_id is None:
-            target_dir = f"{report_dir}/operations"
-        else:
-            target_dir = f"{report_dir}/operations/{worker_id}"
-
-        mkdir(target_dir)
         path = f"{target_dir}/throughput{test_str}.png"
         print(f"\tGenerating [{path}]")
         plt.savefig(path)
@@ -871,9 +894,9 @@ def make_report(df):
     for column_name in df.columns:
         print(column_name)
 
-    plot_operations(report_dir, df)
-    plot_latency_history(report_dir, df)
-    plot_dstat(report_dir, df)
+    report_operations(report_dir, df)
+    report_latency_history(report_dir, df)
+    report_dstat(report_dir, df)
 
 
 start_sec = time.time()
