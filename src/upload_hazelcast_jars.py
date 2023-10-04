@@ -148,6 +148,5 @@ for artifact_id in artifact_ids:
 for artifact_id in artifact_ids:
     print(f"[INFO]Uploading {artifact_id}")
 
-# run_parallel(__upload, [(agent, artifact_ids, version) for agent in agents_yaml])
 run_parallel(__upsync, [(agent, artifact_ids, version) for agent in agents_yaml])
 print(f"[INFO]Uploading Hazelcast jars: done")
