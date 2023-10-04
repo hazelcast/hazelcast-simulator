@@ -51,6 +51,10 @@
             <AppenderRef ref="bash"/>
         </Logger>
 
+         <Logger name="com.hazelcast.simulator.utils.BashCommand" level="warn" additivity="false">
+            <AppenderRef ref="console"/>
+        </Logger>
+
         <!-- if there are SSH problems, put this on info or debug -->
         <Logger name="net.schmizz" level="warn" additivity="false">
             <AppenderRef ref="ssh"/>

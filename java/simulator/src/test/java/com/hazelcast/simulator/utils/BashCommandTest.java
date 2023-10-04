@@ -33,6 +33,6 @@ public class BashCommandTest {
 
     @Test(expected = ScriptException.class)
     public void testExecute_withException() {
-        new BashCommand("pwd && false").setThrowsException(true).execute();
+        new BashCommand("pwd && false").setThrowsExceptionOnError(true).execute();
     }
 }

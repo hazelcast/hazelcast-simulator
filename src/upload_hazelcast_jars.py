@@ -37,11 +37,13 @@ def download(artifact_id, version, repo):
     print(f"[INFO]{cmd}")
     exitcode = shell(cmd)
     if exitcode != 0:
-        print(f"Failed {cmd}, exitcode: {exitcode}")
+        print(f"[ERROR] Failed to download artifact {artifact}")
+        raise Exception(f"Failed to download artifact {artifact}")
+
     path = local_jar_path(artifact_id, version)
     if not os.path.exists(path):
-        print(f"[INFO] Could not find {path} in maven repo.")
-        exit(1)
+        print(f"[ERROR] Could not find {path} in maven repo.")
+        raise Exception(f"Failed to download artifact {artifact}")
 
 
 def artifact_ids(enterprise, version):
