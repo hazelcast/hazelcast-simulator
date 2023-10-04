@@ -21,6 +21,18 @@ def __upload(agent, artifact_ids, version):
 
     print(f"[INFO]     {public_ip(agent)} done")
 
+def __upsync(agent, artifact_ids, version):
+    print(f"[INFO]     {public_ip(agent)} starting")
+    ssh = Ssh(public_ip(agent), ssh_user(agent), ssh_options(agent))
+    ssh.exec("mkdir -p hazelcast-simulator/driver-lib/")
+    dest = f"hazelcast-simulator/driver-lib/maven-{version}"
+    ssh.exec(f"mkdir -p {dest}")
+    for artifact_id in artifact_ids:
+        ssh.rsync_to_remote(f"{local_jar_path(artifact_id, version)}", f"{dest}")
+
+    print(f"[INFO]     {public_ip(agent)} done")
+
+
 
 def local_repo():
     cmd = "mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=settings.localRepository -q -DforceStdout"
@@ -138,5 +150,5 @@ for artifact_id in artifact_ids:
 for artifact_id in artifact_ids:
     print(f"[INFO]Uploading {artifact_id}")
 
-run_parallel(__upload, [(agent, artifact_ids, version) for agent in agents_yaml])
+run_parallel(__upsync, [(agent, artifact_ids, version) for agent in agents_yaml])
 print(f"[INFO]Uploading Hazelcast jars: done")
