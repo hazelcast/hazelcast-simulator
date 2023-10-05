@@ -12,6 +12,11 @@
       apt-get update || true
     become: yes
 
+  - name: Install rsync
+    ansible.builtin.package:
+      name: rsync
+      state: present
+    become: yes
 
   # we want to install either dstat or pcp.
   # pcp is a replacement for dstat. dstat project
