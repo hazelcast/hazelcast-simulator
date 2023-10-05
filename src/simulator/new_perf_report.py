@@ -666,6 +666,7 @@ def process_hdr_file(hdr_file):
     os.rename(f"{hdr_file_dir}/{hdr_file_name_no_ext}",
               f"{hdr_file_dir}/{hdr_file_name_no_ext}.latency-history.csv")
 
+
 def merge_worker_hdr(run_dir):
     dic = {}
     for worker_dir_name in os.listdir(run_dir):
@@ -899,20 +900,98 @@ def make_report(df):
     report_dstat(report_dir, df)
 
 
+def report_hgrm(df):
+    fig = plt.figure(figsize=(image_width_px / image_dpi, image_height_px / image_dpi), dpi=image_dpi)
+
+    plt.plot(df["Percentile"].index, df["Value"])
+
+    plt.ticklabel_format(style='plain', axis='y')
+    plt.ylabel("latency (us)")
+    plt.xlabel("percentile")
+    plt.xscale('log')
+    plt.legend()
+    # if worker_id == '':
+    #    plt.title(f"{test_id} {column_name.capitalize()}")
+    # else:
+
+    plt.title(f"latency distribution")
+    plt.grid()
+
+    path = f"{report_dir}/latency_distribution.png"
+    print(f"\tGenerating [{path}]")
+    plt.savefig(path)
+    plt.close()
+
+def report_hgrm2(df):
+    fig = plt.figure(figsize=(image_width_px / image_dpi, image_height_px / image_dpi), dpi=image_dpi)
+
+    #df['Binned'] = pd.cut(df['Value'], bins=5)
+
+    plt.bar(df["Value"].index, df["Count"])
+
+
+    plt.ticklabel_format(style='plain', axis='y')
+    plt.ylabel("count")
+    plt.xlabel("value")
+    plt.legend()
+    # if worker_id == '':
+    #    plt.title(f"{test_id} {column_name.capitalize()}")
+    # else:
+
+    plt.title(f"latency distribution")
+    plt.grid()
+
+    path = f"{report_dir}/latency_distribution.png"
+    print(f"\tGenerating [{path}]")
+    plt.savefig(path)
+    plt.close()
+
+def load_hgrm(file_path):
+    df = pd.DataFrame()
+    df['Value'] = pd.Series(dtype='float')
+    df['Percentile'] = pd.Series(dtype='float')
+    df['TotalCount'] = pd.Series(dtype='int')
+    df['Count'] = pd.Series(dtype='int')
+    prev_total_count = 0
+    with open(file_path) as f:
+        lines = f.readlines()
+        for line in lines[4:]:
+            if line.startswith("#"):
+                # at the end of the file
+                break
+
+            import re
+            items = re.split(r'\s+', line.strip())
+
+            value = float(items[0])
+            percentile = float(items[1])
+            total_count = int(items[2])
+            count = total_count - prev_total_count
+            row = [value, percentile, total_count, count]
+            df.loc[len(df)] = row
+            prev_total_count = total_count
+    df.to_csv(f"{report_dir}/nonsense.csv")
+    return df
+
+
 start_sec = time.time()
 
 report_dir = "/mnt/home/pveentjer/report/"  # tempfile.mkdtemp()
 mkdir(report_dir)
 print(f"Report directory {report_dir}")
 
-df_1 = analyze_run("/home/pveentjer/tmp/report/runs/valuelength_1000/04-10-2023_06-35-01","valuelength_1000")
-df_2 = analyze_run("/home/pveentjer/tmp/report/runs/valuelength_1/04-10-2023_08-00-07","valuelength_1")
+# df_1 = analyze_run("/home/pveentjer/tmp/report/runs/valuelength_1000/04-10-2023_06-35-01","valuelength_1000")
+# df_2 = analyze_run("/home/pveentjer/tmp/report/runs/valuelength_1/04-10-2023_08-00-07","valuelength_1")
 
 df = None
-df = merge_dataframes(df, shift_to_epoch(df_1))
-df = merge_dataframes(df, shift_to_epoch(df_2))
+# df = merge_dataframes(df, shift_to_epoch(df_1))
+# df = merge_dataframes(df, shift_to_epoch(df_2))
 
-make_report(df)
+# make_report(df)
 
+df = load_hgrm("/home/pveentjer/tmp/report/runs/valuelength_1000/04-10-2023_06-35-01/map.get.hgrm")
+report_hgrm2(df)
+
+print(df)
 duration_sec = time.time() - start_sec
 log(f"Generating report: Done  (duration {duration_sec:.2f} seconds)")
