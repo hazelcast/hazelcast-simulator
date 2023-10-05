@@ -172,11 +172,11 @@ def report_latency_history(report_dir, df):
         filtered_df = None
         for column_name in column_name_list:
             column_desc = ColumnDesc.from_string(column_name)
-            run_id = column_desc.attributes["run_id"]
+            run_label = column_desc.attributes["run_label"]
             if filtered_df is None:
                 filtered_df = pd.DataFrame(index=df.index)
 
-            filtered_df[run_id] = df[column_name].copy()
+            filtered_df[run_label] = df[column_name].copy()
 
         filtered_df.dropna(inplace=True)
         filtered_df.to_csv(f"{target_dir}/{metric_id}{test_str}.csv")
@@ -184,8 +184,8 @@ def report_latency_history(report_dir, df):
         fig = plt.figure(figsize=(image_width_px / image_dpi, image_height_px / image_dpi), dpi=image_dpi)
         for column_name in column_name_list:
             column_desc = ColumnDesc.from_string(column_name)
-            run_id = column_desc.attributes["run_id"]
-            plt.plot(filtered_df.index, filtered_df[run_id], label=run_id)
+            run_label = column_desc.attributes["run_label"]
+            plt.plot(filtered_df.index, filtered_df[run_label], label=run_label)
 
         plt.ticklabel_format(style='plain', axis='y')
         plt.title(metric_id.replace('_', ' '))
@@ -275,11 +275,11 @@ def report_dstat(report_dir, df):
         filtered_df = None
         for column_name in column_name_list:
             column_desc = ColumnDesc.from_string(column_name)
-            run_id = column_desc.attributes["run_id"]
+            run_label = column_desc.attributes["run_label"]
             if filtered_df is None:
                 filtered_df = pd.DataFrame(index=df.index)
 
-            filtered_df[run_id] = df[column_name].copy()
+            filtered_df[run_label] = df[column_name].copy()
 
         filtered_df.dropna(inplace=True)
         filtered_df.to_csv(f"{target_dir}/{nice_metric_name}.csv")
@@ -287,8 +287,8 @@ def report_dstat(report_dir, df):
         fig = plt.figure(figsize=(image_width_px / image_dpi, image_height_px / image_dpi), dpi=image_dpi)
         for column_name in column_name_list:
             column_desc = ColumnDesc.from_string(column_name)
-            run_id = column_desc.attributes["run_id"]
-            plt.plot(filtered_df.index, filtered_df[run_id], label=run_id)
+            run_label = column_desc.attributes["run_label"]
+            plt.plot(filtered_df.index, filtered_df[run_label], label=run_label)
 
         plt.ticklabel_format(style='plain', axis='y')
         plt.ylabel(metric_id)
@@ -583,25 +583,23 @@ def create_aggregated_operations_csv(run_dir):
 
 def analyze_latency_history(run_dir, attributes):
     log_section("Loading latency history data: Start")
+    run_label = attributes["run_label"]
 
     start_sec = time.time()
     result = None
 
     merge_worker_hdr(run_dir)
-    process_hdr(run_dir)
+    process_hdr(run_dir, run_label)
 
     # iterate over the files in the run directory
-    for outer_file_name in os.listdir(run_dir):
-        outer_path = f"{run_dir}/{outer_file_name}"
+    dir = f"{report_dir}/hdr/{run_label}"
+    for outer_file_name in os.listdir(dir):
+        outer_path = f"{dir}/{outer_file_name}"
         if outer_file_name.endswith(".latency-history.csv"):
             csv_df = load_latency_history_csv(outer_path, attributes, None)
             result = merge_dataframes(result, csv_df)
-        else:
-            worker_id = extract_worker_id(outer_path)
-
-            if not worker_id:
-                continue
-
+        elif os.path.isdir(outer_path):
+            worker_id = outer_file_name
             # iterate over the files in the worker directory
             for inner_file_name in os.listdir(outer_path):
                 if not inner_file_name.endswith(".latency-history.csv"):
@@ -616,13 +614,13 @@ def analyze_latency_history(run_dir, attributes):
     return result
 
 
-def process_hdr(run_dir):
+def process_hdr(run_dir, run_label):
     log_sub_section("Processing hdr files: Start")
     start_sec = time.time()
 
     for outer_file_name in os.listdir(run_dir):
         if outer_file_name.endswith(".hdr"):
-            process_hdr_file(f"{run_dir}/{outer_file_name}")
+            process_hdr_file(run_label, None, f"{run_dir}/{outer_file_name}")
             continue
 
         worker_dir = f"{run_dir}/{outer_file_name}"
@@ -635,36 +633,44 @@ def process_hdr(run_dir):
             if not inner_file_name.endswith(".hdr"):
                 continue
             hdr_file = f"{worker_dir}/{inner_file_name}"
-            process_hdr_file(hdr_file)
+            process_hdr_file(run_label, worker_id, hdr_file)
 
     duration_sec = time.time() - start_sec
     log_sub_section(f"Processing hdr files: Done {duration_sec:.2f} seconds)")
     pass
 
 
-def process_hdr_file(hdr_file):
+def process_hdr_file(run_label, worker_id, hdr_file):
     print(f"\t processing hdr file {hdr_file}")
 
     hdr_file_name_no_ext = Path(hdr_file).stem
     hdr_file_dir = Path(hdr_file).parent
-    if os.path.exists(f"{hdr_file_dir}/{hdr_file_name_no_ext}.latency-history.csv"):
-        return
+    # if os.path.exists(f"{hdr_file_dir}/{hdr_file_name_no_ext}.latency-history.csv"):
+    #     return
+
+    if worker_id is None:
+        target_dir = f"{report_dir}/hdr/{run_label}/"
+    else:
+        target_dir = f"{report_dir}/hdr/{run_label}/{worker_id}"
+    mkdir(target_dir)
 
     util.shell(f"""java -cp "{util.simulator_home}/lib/*" \
                           com.hazelcast.simulator.utils.SimulatorHistogramLogProcessor \
                           -i {hdr_file} \
-                          -o {hdr_file_dir}/{hdr_file_name_no_ext} \
+                          -o {target_dir}/{hdr_file_name_no_ext} \
                           -outputValueUnitRatio 1000""")
-    os.rename(f"{hdr_file_dir}/{hdr_file_name_no_ext}.hgrm", f"{hdr_file_dir}/{hdr_file_name_no_ext}.hgrm.bak")
+    os.rename(f"{target_dir}/{hdr_file_name_no_ext}.hgrm",
+              f"{target_dir}/{hdr_file_name_no_ext}.hgrm.bak")
     util.shell(f"""java -cp "{util.simulator_home}/lib/*" \
                              com.hazelcast.simulator.utils.SimulatorHistogramLogProcessor \
                              -csv \
                              -i {hdr_file} \
-                             -o {hdr_file_dir}/{hdr_file_name_no_ext} \
+                             -o {target_dir}/{hdr_file_name_no_ext} \
                              -outputValueUnitRatio 1000""")
-    os.rename(f"{hdr_file_dir}/{hdr_file_name_no_ext}.hgrm.bak", f"{hdr_file_dir}/{hdr_file_name_no_ext}.hgrm")
-    os.rename(f"{hdr_file_dir}/{hdr_file_name_no_ext}",
-              f"{hdr_file_dir}/{hdr_file_name_no_ext}.latency-history.csv")
+    os.rename(f"{target_dir}/{hdr_file_name_no_ext}.hgrm.bak",
+              f"{target_dir}/{hdr_file_name_no_ext}.hgrm")
+    os.rename(f"{target_dir}/{hdr_file_name_no_ext}",
+              f"{target_dir}/{hdr_file_name_no_ext}.latency-history.csv")
 
 
 def merge_worker_hdr(run_dir):
@@ -824,11 +830,11 @@ def report_operations(report_dir, df):
         filtered_df = None
         for column_name in column_name_list:
             column_desc = ColumnDesc.from_string(column_name)
-            run_id = column_desc.attributes["run_id"]
+            run_label = column_desc.attributes["run_label"]
             if filtered_df is None:
                 filtered_df = pd.DataFrame(index=df.index)
 
-            filtered_df[run_id] = df[column_name].copy()
+            filtered_df[run_label] = df[column_name].copy()
 
         filtered_df.dropna(inplace=True)
         filtered_df.to_csv(f"{target_dir}/throughput{test_str}.csv")
@@ -836,8 +842,8 @@ def report_operations(report_dir, df):
         fig = plt.figure(figsize=(image_width_px / image_dpi, image_height_px / image_dpi), dpi=image_dpi)
         for column_name in column_name_list:
             column_desc = ColumnDesc.from_string(column_name)
-            run_id = column_desc.attributes["run_id"]
-            plt.plot(filtered_df.index, filtered_df[run_id], label=run_id)
+            run_label = column_desc.attributes["run_label"]
+            plt.plot(filtered_df.index, filtered_df[run_label], label=run_label)
 
         plt.ticklabel_format(style='plain', axis='y')
         plt.ylabel("operations/second")
@@ -860,24 +866,24 @@ def report_operations(report_dir, df):
     log_section(f"Plotting operations data: Done (duration {duration_sec:.2f} seconds)")
 
 
-def analyze_run(run_dir, run_id=None):
+def analyze_run(run_dir, run_label=None):
     print(f"Analyzing run_path:{run_dir}")
 
-    if run_id is None:
-        run_id = os.path.basename(run_dir)
+    if run_label is None:
+        run_label = os.path.basename(run_dir)
 
-    attributes = {"run_id": run_id}
+    attributes = {"run_label": run_label}
 
     result = None
 
-    df_operations = analyze_operations_data(run_dir, attributes)
-    result = merge_dataframes(result, df_operations)
+    # df_operations = analyze_operations_data(run_dir, attributes)
+    # result = merge_dataframes(result, df_operations)
 
     df_latency_history = analyze_latency_history(run_dir, attributes)
     result = merge_dataframes(result, df_latency_history)
 
-    df_dstat = analyze_dstat(run_dir, attributes)
-    result = merge_dataframes(result, df_dstat)
+    # df_dstat = analyze_dstat(run_dir, attributes)
+    # result = merge_dataframes(result, df_dstat)
 
     print(f"Analyzing run_path:{run_dir}: Done")
 
@@ -900,39 +906,97 @@ def make_report(df):
     report_dstat(report_dir, df)
 
 
-def report_hgrm(df):
+def report_hgrm(runs, hgrm_files):
+    make_hgrm_latency_by_perc_dist_html(runs, hgrm_files)
+    # make_hgrm_histogram_plot(items)
+    make_hgrm_latency_by_perc_dist_plot(runs, hgrm_files)
+
+
+def find_hgrm_files(run_label):
+    result = []
+    dir = f"{report_dir}/hdr/{run_label}"
+    for outer_file_name in os.listdir(dir):
+        print(outer_file_name)
+        if outer_file_name.endswith(".hgrm"):
+            result.append(outer_file_name)
+            continue
+
+        dir_path = f"{dir}/{outer_file_name}"
+        if not os.path.isdir(dir_path):
+            continue
+
+        for inner_file_name in os.listdir(dir_path):
+            if not inner_file_name.endswith(".hgrm"):
+                continue
+            result.append(f"{outer_file_name}/{inner_file_name}")
+    return result
+
+
+def make_hgrm_latency_by_perc_dist_plot(runs, hgrm_files):
+
+    for hgrm_file_name in hgrm_files:
+        plt.figure(figsize=(image_width_px / image_dpi, image_height_px / image_dpi), dpi=image_dpi)
+
+        for run_label, run_path in runs.items():
+            dir = f"{report_dir}/hdr/{run_label}"
+
+            hgrm_file = f"{dir}/{hgrm_file_name}"
+            if not os.path.exists(hgrm_file):
+                continue
+
+            df = load_hgrm(hgrm_file)
+            plt.plot(df['1/(1-Percentile)'], df['Value'], label=run_label)
+
+        plt.xscale('log')
+
+        xlabels = pd.DataFrame()
+        xlabels['label'] = pd.Series(dtype='string')
+        xlabels['tick'] = pd.Series(dtype='float')
+        xlabels.loc[len(xlabels)] = ["0%", 1.0]
+        xlabels.loc[len(xlabels)] = ["90%", 10.0]
+        xlabels.loc[len(xlabels)] = ["99%", 100.0]
+        xlabels.loc[len(xlabels)] = ["99.9%", 1_000.0]
+        xlabels.loc[len(xlabels)] = ["99.99%", 10_000.0]
+        xlabels.loc[len(xlabels)] = ["99.999%", 100_000.0]
+        xlabels.loc[len(xlabels)] = ["99.9999%", 1_000_000.0]
+        xlabels.loc[len(xlabels)] = ["99.99999%", 10_000_000.0]
+        plt.xticks(xlabels['tick'], xlabels['label'])
+
+        plt.ylabel("latency (us)")
+        plt.xlabel("percentile")
+        plt.legend()
+        plt.title(f"latency distribution")
+        plt.grid()
+
+        file_name = hgrm_file_name.rstrip(".hgrm")
+        path = f"{report_dir}/{file_name}.png"
+        mkdir(os.path.dirname(path))
+        print(f"\tGenerating [{path}]")
+        plt.savefig(path)
+        plt.close()
+
+
+def make_hgrm_histogram_plot(items):
     fig = plt.figure(figsize=(image_width_px / image_dpi, image_height_px / image_dpi), dpi=image_dpi)
 
-    plt.plot(df["Percentile"].index, df["Value"])
+    # df['Binned'] = pd.cut(df['Value'], bins=5)
+    total_w = 0.8
+    n = len(items)
+    # x = np.arange(n)
+    w = total_w / n
+
+    i = 0
+    for label, path in items.items():
+        df = load_hgrm(path)
+        print(df)
+        hist = plt.hist(df['Value'], bins=20, weights=df['Count'])
+        # plt.histogram(df["Value"], df["Count"], label=label)
 
     plt.ticklabel_format(style='plain', axis='y')
-    plt.ylabel("latency (us)")
-    plt.xlabel("percentile")
-    plt.xscale('log')
-    plt.legend()
-    # if worker_id == '':
-    #    plt.title(f"{test_id} {column_name.capitalize()}")
-    # else:
-
-    plt.title(f"latency distribution")
-    plt.grid()
-
-    path = f"{report_dir}/latency_distribution.png"
-    print(f"\tGenerating [{path}]")
-    plt.savefig(path)
-    plt.close()
-
-def report_hgrm2(df):
-    fig = plt.figure(figsize=(image_width_px / image_dpi, image_height_px / image_dpi), dpi=image_dpi)
-
-    #df['Binned'] = pd.cut(df['Value'], bins=5)
-
-    plt.bar(df["Value"].index, df["Count"])
-
-
-    plt.ticklabel_format(style='plain', axis='y')
+    # plt.xticks(x + (total_w / n), df["Value"].index)
     plt.ylabel("count")
-    plt.xlabel("value")
+    plt.yscale("log")
+    plt.xlabel("latency (us)")
     plt.legend()
     # if worker_id == '':
     #    plt.title(f"{test_id} {column_name.capitalize()}")
@@ -941,17 +1005,19 @@ def report_hgrm2(df):
     plt.title(f"latency distribution")
     plt.grid()
 
-    path = f"{report_dir}/latency_distribution.png"
+    path = f"{report_dir}/latency_histogram.png"
     print(f"\tGenerating [{path}]")
     plt.savefig(path)
     plt.close()
+
 
 def load_hgrm(file_path):
     df = pd.DataFrame()
     df['Value'] = pd.Series(dtype='float')
     df['Percentile'] = pd.Series(dtype='float')
     df['TotalCount'] = pd.Series(dtype='int')
-    df['Count'] = pd.Series(dtype='int')
+    df['1/(1-Percentile)'] = pd.Series(dtype=int)
+    df['Count'] = pd.Series(dtype='float')
     prev_total_count = 0
     with open(file_path) as f:
         lines = f.readlines()
@@ -966,12 +1032,42 @@ def load_hgrm(file_path):
             value = float(items[0])
             percentile = float(items[1])
             total_count = int(items[2])
+
+            # todo: better name for x. 1/(1-Percentile)
+            if len(items) == 4:
+                x = float(items[3])
+            else:
+                x = float('inf')
             count = total_count - prev_total_count
-            row = [value, percentile, total_count, count]
+
+            row = [value, percentile, total_count, x, count]
             df.loc[len(df)] = row
             prev_total_count = total_count
     df.to_csv(f"{report_dir}/nonsense.csv")
     return df
+
+
+def make_hgrm_latency_by_perc_dist_html(runs, hgrm_files):
+    for hgrm_file_name in hgrm_files:
+        labels = []
+        histos = []
+        for run_label, run_path in runs.items():
+            dir = f"{report_dir}/hdr/{run_label}"
+            hgrm_file_path = f"{dir}/{hgrm_file_name}"
+            if not os.path.exists(hgrm_file_path):
+                continue
+
+            hgrm_text = util.read(hgrm_file_path)
+            histos.append(hgrm_text.strip())
+            labels.append(run_label)
+
+        html_template = util.read(f"{util.simulator_home}/src/simulator/plotFiles.html")
+        html = html_template.replace("{HISTOS}", str(histos))
+        html = html.replace("{NAMES}", str(labels))
+        hgrm_file_name_no_ext = hgrm_file_name.rstrip(".hgrm")
+        target_file_name = f"{report_dir}/latency/{hgrm_file_name_no_ext}.html"
+        mkdir(os.path.dirname(target_file_name))
+        util.write(target_file_name, html)
 
 
 start_sec = time.time()
@@ -980,18 +1076,27 @@ report_dir = "/mnt/home/pveentjer/report/"  # tempfile.mkdtemp()
 mkdir(report_dir)
 print(f"Report directory {report_dir}")
 
-# df_1 = analyze_run("/home/pveentjer/tmp/report/runs/valuelength_1000/04-10-2023_06-35-01","valuelength_1000")
-# df_2 = analyze_run("/home/pveentjer/tmp/report/runs/valuelength_1/04-10-2023_08-00-07","valuelength_1")
+runs = {}
+runs["valuelength_1000"] = "/home/pveentjer/tmp/report/runs/valuelength_1000/04-10-2023_06-35-01"
+runs["valuelength_1"] = "/home/pveentjer/tmp/report/runs/valuelength_1/04-10-2023_08-00-07"
 
 df = None
-# df = merge_dataframes(df, shift_to_epoch(df_1))
-# df = merge_dataframes(df, shift_to_epoch(df_2))
 
-# make_report(df)
+for run_label, run_dir in runs.items():
+    if len(runs) == 1:
+        df = analyze_run(run_dir, run_label)
+    else:
+        tmp_df = analyze_run(run_dir, run_label)
+        df = merge_dataframes(df, shift_to_epoch(tmp_df))
 
-df = load_hgrm("/home/pveentjer/tmp/report/runs/valuelength_1000/04-10-2023_06-35-01/map.get.hgrm")
-report_hgrm2(df)
+make_report(df)
 
-print(df)
+hgrm_files = set()
+for run_label, run_dir in runs.items():
+    hgrm_files.update(find_hgrm_files(run_label))
+print(hgrm_files)
+report_hgrm(runs, hgrm_files)
+
+# print(df)
 duration_sec = time.time() - start_sec
 log(f"Generating report: Done  (duration {duration_sec:.2f} seconds)")
