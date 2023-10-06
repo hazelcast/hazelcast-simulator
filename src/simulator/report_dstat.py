@@ -40,7 +40,7 @@ def analyze_dstat(run_dir, attributes):
     return result
 
 
-def report_dstat(report_config: ReportConfig, df: pd.DataFrame):
+def report_dstat(config: ReportConfig, df: pd.DataFrame):
     log_section("Plotting dstat data: Start")
     start_sec = time.time()
 
@@ -59,9 +59,10 @@ def report_dstat(report_config: ReportConfig, df: pd.DataFrame):
 
     for (agent_id, metric_id), column_name_list in grouped_column_names.items():
         nice_metric_name = metric_id.replace("/", "_").replace(":", "_")
-        target_dir = f"{report_config.report_dir}/dstat/{agent_id}"
+        target_dir = f"{config.report_dir}/dstat/{agent_id}"
         mkdir(target_dir)
 
+        # the df but with nan removed.
         filtered_df = None
         for column_name in column_name_list:
             column_desc = ColumnDesc.from_string(column_name)
@@ -74,7 +75,9 @@ def report_dstat(report_config: ReportConfig, df: pd.DataFrame):
         filtered_df.dropna(inplace=True)
         filtered_df.to_csv(f"{target_dir}/{nice_metric_name}.csv")
 
-        plt.figure(figsize=(image_width_px / image_dpi, image_height_px / image_dpi), dpi=image_dpi)
+        plt.figure(figsize=(config.image_width_px / config.image_dpi,
+                            config.image_height_px / config.image_dpi),
+                   dpi=config.image_dpi)
         for column_name in column_name_list:
             column_desc = ColumnDesc.from_string(column_name)
             run_label = column_desc.attributes["run_label"]

@@ -1,11 +1,6 @@
 import os
 import pandas as pd
 
-# from util import write
-image_dpi = 96
-image_width_px = 1600
-image_height_px = 1200
-
 
 def multiple_by(df, amount, *column_names):
     for column_name in column_names:
@@ -39,6 +34,10 @@ def sizeof_fmt(x):
 
 
 class ReportConfig:
+    image_dpi = 96
+    image_width_px = 1600
+    image_height_px = 1200
+
     def __init__(self, report_dir, runs, warmup_seconds = 0, cooldown_seconds=0, ):
         self.report_dir = report_dir
         self.warmup_seconds = warmup_seconds

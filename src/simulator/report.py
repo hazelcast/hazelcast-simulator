@@ -18,6 +18,25 @@ class Period:
     end: int
 
 
+def prepare(report_config: ReportConfig):
+    shutil.rmtree(report_config.report_dir)
+    mkdir(report_config.report_dir)
+    prepare_operation(report_config)
+    prepare_hdr(report_config)
+
+
+def analyze(report_config: ReportConfig):
+    df = None
+
+    for run_label, run_dir in report_config.runs.items():
+        if len(runs) == 1:
+            df = analyze_run(report_config.report_dir, run_dir, run_label)
+        else:
+            tmp_df = analyze_run(report_config.report_dir, run_dir, run_label)
+            df = merge_dataframes(df, shift_to_epoch(tmp_df))
+    return df
+
+
 def analyze_run(report_dir, run_dir, run_label=None):
     print(f"Analyzing run_path:{run_dir}")
 
@@ -42,19 +61,7 @@ def analyze_run(report_dir, run_dir, run_label=None):
     return result
 
 
-def analyze(report_config: ReportConfig):
-    df = None
-
-    for run_label, run_dir in report_config.runs.items():
-        if len(runs) == 1:
-            df = analyze_run(report_config.report_dir, run_dir, run_label)
-        else:
-            tmp_df = analyze_run(report_config.report_dir, run_dir, run_label)
-            df = merge_dataframes(df, shift_to_epoch(tmp_df))
-    return df
-
-
-def make_report(report_config: ReportConfig, df: pd.DataFrame):
+def report(report_config: ReportConfig, df: pd.DataFrame):
     if df is None:
         return
 
@@ -73,7 +80,6 @@ def make_report(report_config: ReportConfig, df: pd.DataFrame):
 start_sec = time.time()
 
 report_dir = "/mnt/home/pveentjer/report/"  # tempfile.mkdtemp()
-mkdir(report_dir)
 print(f"Report directory {report_dir}")
 
 runs = {}
@@ -82,8 +88,9 @@ runs["valuelength_1"] = "/home/pveentjer/tmp/report/runs/valuelength_1/04-10-202
 
 report_config = ReportConfig(report_dir, runs, warmup_seconds=warmup_seconds, cooldown_seconds=cooldown_seconds)
 
+prepare(report_config)
 df = analyze(report_config)
-make_report(report_config, df)
+report(report_config, df)
 
 duration_sec = time.time() - start_sec
 log(f"Generating report: Done  (duration {duration_sec:.2f} seconds)")

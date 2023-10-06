@@ -6,14 +6,16 @@ from report_shared import *
 import matplotlib.pyplot as plt
 
 
+def prepare_operation(report_config: ReportConfig):
+    for run_dir in report_config.runs.values():
+        # deal with legacy 'performance csv files'
+        __fix_operations_filenames(run_dir)
+        __create_aggregated_operations_csv(run_dir)
+
+
 def analyze_operations(run_dir, attributes):
     log_section("Loading operations data: Start")
     start_sec = time.time()
-
-    # deal with legacy 'performance csv files'
-    __fix_operations_filenames(run_dir)
-
-    __create_aggregated_operations_csv(run_dir)
 
     df_list = []
     df_list.extend(__load_aggregated_operations_csv(run_dir, attributes))
@@ -213,7 +215,7 @@ def __create_aggregated_operations_csv(run_dir):
         aggr_df.to_csv(f"{run_dir}/operations{test_id}.csv")
 
 
-def report_operations(report_config:ReportConfig, df:pd.DataFrame):
+def report_operations(config: ReportConfig, df: pd.DataFrame):
     log_section("Plotting operations data: Start")
     start_sec = time.time()
 
@@ -233,9 +235,9 @@ def report_operations(report_config:ReportConfig, df:pd.DataFrame):
 
     for (worker_id, metric_id, test_id, worker_id), column_name_list in grouped_column_names.items():
         if worker_id is None:
-            target_dir = f"{report_config.report_dir}/operations"
+            target_dir = f"{config.report_dir}/operations"
         else:
-            target_dir = f"{report_config.report_dir}/operations/{worker_id}"
+            target_dir = f"{config.report_dir}/operations/{worker_id}"
         mkdir(target_dir)
 
         if test_id is None:
@@ -255,7 +257,9 @@ def report_operations(report_config:ReportConfig, df:pd.DataFrame):
         filtered_df.dropna(inplace=True)
         filtered_df.to_csv(f"{target_dir}/throughput{test_str}.csv")
 
-        plt.figure(figsize=(image_width_px / image_dpi, image_height_px / image_dpi), dpi=image_dpi)
+        plt.figure(figsize=(config.image_width_px / config.image_dpi,
+                            config.image_height_px / config.image_dpi),
+                   dpi=config.image_dpi)
         for column_name in column_name_list:
             column_desc = ColumnDesc.from_string(column_name)
             run_label = column_desc.attributes["run_label"]
