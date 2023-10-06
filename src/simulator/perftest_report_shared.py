@@ -1,13 +1,13 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 import os
 import pandas as pd
 
 
 def multiple_by(df, amount, *column_names):
     for column_name in column_names:
-        column = df[column_name]
-        values = len(column.values)
-        for i in range(values):
-            column.iloc[i] = amount * column.iloc[i]
+        df[column_name] = df[column_name] * amount
 
 
 def mkdir(path):
@@ -37,12 +37,12 @@ class ReportConfig:
     image_dpi = 96
     image_width_px = 1600
     image_height_px = 1200
+    warmup_seconds = 0
+    cooldown_seconds = 0
 
-    def __init__(self, report_dir, runs, warmup_seconds = 0, cooldown_seconds=0, ):
+    def __init__(self, report_dir):
         self.report_dir = report_dir
-        self.warmup_seconds = warmup_seconds
-        self.cooldown_seconds = cooldown_seconds
-        self.runs = runs
+        self.runs = {}
 
 
 class ColumnDesc:

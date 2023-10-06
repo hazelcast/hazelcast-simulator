@@ -99,6 +99,7 @@ Also contains pointers where to go next.
     - [Python 3.8 or newer](https://www.python.org/downloads/)
     - Python3-pip
     - [Gnuplot](http://www.gnuplot.info/download.html)
+    - python3-gobject
     - rsync
 
 3. Install Python libraries:

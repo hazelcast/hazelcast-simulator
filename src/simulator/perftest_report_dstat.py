@@ -1,6 +1,9 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 import time
 
-from report_shared import *
+from simulator.perftest_report_shared import *
 import matplotlib.pyplot as plt
 
 
@@ -16,6 +19,7 @@ def analyze_dstat(run_dir, attributes):
         csv_path = f"{run_dir}/{csv_filename}"
         print(f"\tLoading {csv_path}")
         df = pd.read_csv(csv_path, skiprows=5)
+
         multiple_by(df, 1000, 'used', 'free', 'buf', 'cach')
 
         df['time'] = pd.to_datetime(df['epoch'], unit='s')

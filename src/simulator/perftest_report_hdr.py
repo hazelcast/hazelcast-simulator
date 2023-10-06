@@ -1,16 +1,18 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 import time
 from pathlib import Path
 
-from report_shared import *
+from simulator.perftest_report_shared import *
 import matplotlib.pyplot as plt
-import util
+from simulator.util import shell, simulator_home, read, write
 
 
-def prepare_hdr(report_config: ReportConfig):
-    for run_label, run_dir in report_config.runs.items():
+def prepare_hdr(config: ReportConfig):
+    for run_label, run_dir in config.runs.items():
         __merge_worker_hdr(run_dir)
-        __process_hdr(report_config.report_dir, run_dir, run_label)
-
+        __process_hdr(config.report_dir, run_dir, run_label)
 
 
 def __process_hdr(report_dir, run_dir, run_label):
@@ -39,8 +41,6 @@ def __process_hdr(report_dir, run_dir, run_label):
     log_sub_section(f"Processing hdr files: Done {duration_sec:.2f} seconds)")
 
 
-
-
 def __process_hdr_file(report_dir, run_label, worker_id, hdr_file):
     print(f"\t processing hdr file {hdr_file}")
 
@@ -52,25 +52,23 @@ def __process_hdr_file(report_dir, run_label, worker_id, hdr_file):
         target_dir = f"{report_dir}/hdr/{run_label}/{worker_id}"
     mkdir(target_dir)
 
-    util.shell(f"""java -cp "{util.simulator_home}/lib/*" \
-                          com.hazelcast.simulator.utils.SimulatorHistogramLogProcessor \
-                          -i {hdr_file} \
-                          -o {target_dir}/{hdr_file_name_no_ext} \
-                          -outputValueUnitRatio 1000""")
+    shell(f"""java -cp "{simulator_home}/lib/*" \
+                    com.hazelcast.simulator.utils.SimulatorHistogramLogProcessor \
+                    -i {hdr_file} \
+                    -o {target_dir}/{hdr_file_name_no_ext} \
+                    -outputValueUnitRatio 1000""")
     os.rename(f"{target_dir}/{hdr_file_name_no_ext}.hgrm",
               f"{target_dir}/{hdr_file_name_no_ext}.hgrm.bak")
-    util.shell(f"""java -cp "{util.simulator_home}/lib/*" \
-                             com.hazelcast.simulator.utils.SimulatorHistogramLogProcessor \
-                             -csv \
-                             -i {hdr_file} \
-                             -o {target_dir}/{hdr_file_name_no_ext} \
-                             -outputValueUnitRatio 1000""")
+    shell(f"""java -cp "{simulator_home}/lib/*" \
+                    com.hazelcast.simulator.utils.SimulatorHistogramLogProcessor \
+                    -csv \
+                    -i {hdr_file} \
+                    -o {target_dir}/{hdr_file_name_no_ext} \
+                    -outputValueUnitRatio 1000""")
     os.rename(f"{target_dir}/{hdr_file_name_no_ext}.hgrm.bak",
               f"{target_dir}/{hdr_file_name_no_ext}.hgrm")
     os.rename(f"{target_dir}/{hdr_file_name_no_ext}",
               f"{target_dir}/{hdr_file_name_no_ext}.latency-history.csv")
-
-
 
 
 def analyze_latency_history(report_dir, run_dir, attributes):
@@ -79,7 +77,6 @@ def analyze_latency_history(report_dir, run_dir, attributes):
 
     start_sec = time.time()
     result = None
-
 
     # iterate over the files in the run directory
     dir = f"{report_dir}/hdr/{run_label}"
@@ -160,7 +157,7 @@ def __merge_worker_hdr(run_dir):
             files.append(hdr_file)
 
     for file_name, hdr_files in dic.items():
-        util.shell(f"""java -cp "{util.simulator_home}/lib/*" \
+        shell(f"""java -cp "{simulator_home}/lib/*" \
                          com.hazelcast.simulator.utils.HistogramLogMerger \
                          {run_dir}/{file_name} {" ".join(hdr_files)} 2>/dev/null""")
 
@@ -171,7 +168,7 @@ def report_hdr(config: ReportConfig, df):
     __make_report_csv(config)
 
 
-def __make_report_csv(config:ReportConfig):
+def __make_report_csv(config: ReportConfig):
     for run_label, run_dir in config.runs.items():
         hdr_dir = f"{config.report_dir}/hdr/{run_label}"
         for file_name in os.listdir(hdr_dir):
@@ -179,11 +176,11 @@ def __make_report_csv(config:ReportConfig):
                 continue
 
             hdr_file_name_no_ext = Path(file_name).stem
-            util.shell(f"""java -cp "{util.simulator_home}/lib/*" \
-                                                  com.hazelcast.simulator.utils.ReportCsv \
-                                                  {hdr_dir}/{hdr_file_name_no_ext}.hgrm \
-                                                  {config.report_dir} \
-                                                  {run_label}""")
+            shell(f"""java -cp "{simulator_home}/lib/*" \
+                           com.hazelcast.simulator.utils.ReportCsv \
+                           {hdr_dir}/{hdr_file_name_no_ext}.hgrm \
+                           {config.report_dir} \
+                           {run_label}""")
 
 
 def __report_latency_history(config: ReportConfig, df):
@@ -232,7 +229,7 @@ def __report_latency_history(config: ReportConfig, df):
 
         plt.figure(figsize=(config.image_width_px / config.image_dpi,
                             config.image_height_px / config.image_dpi),
-                         dpi=config.image_dpi)
+                   dpi=config.image_dpi)
         for column_name in column_name_list:
             column_desc = ColumnDesc.from_string(column_name)
             run_label = column_desc.attributes["run_label"]
@@ -265,16 +262,14 @@ def __report_latency_history(config: ReportConfig, df):
     log_section(f"Plotting latency history: Done (duration {duration_sec:.2f} seconds)")
 
 
-
-
-def __report_hgrm(report_config: ReportConfig):
+def __report_hgrm(config: ReportConfig):
     hgrm_files = set()
-    for run_label, run_dir in report_config.runs.items():
-        hgrm_files.update(__find_hgrm_files(report_config.report_dir, run_label))
+    for run_label, run_dir in config.runs.items():
+        hgrm_files.update(__find_hgrm_files(config.report_dir, run_label))
 
-    __make_hgrm_latency_by_perc_dist_html(report_config, hgrm_files)
+    __make_hgrm_latency_by_perc_dist_html(config, hgrm_files)
     # make_hgrm_histogram_plot(items)
-    __make_latency_by_perc_dist_plot(report_config, hgrm_files)
+    __make_latency_by_perc_dist_plot(config, hgrm_files)
 
 
 def __find_hgrm_files(report_dir, run_label):
@@ -343,8 +338,8 @@ def __make_latency_by_perc_dist_plot(config: ReportConfig, hgrm_files):
 
 def __make_hgrm_histogram_plot(config: ReportConfig, items):
     plt.figure(figsize=(config.image_width_px / config.image_dpi,
-                              config.image_height_px / config.image_dpi),
-                     dpi=config.image_dpi)
+                        config.image_height_px / config.image_dpi),
+               dpi=config.image_dpi)
 
     # df['Binned'] = pd.cut(df['Value'], bins=5)
     total_w = 0.8
@@ -413,24 +408,24 @@ def __load_hgrm(file_path):
     return df
 
 
-def __make_hgrm_latency_by_perc_dist_html(report_config: ReportConfig, hgrm_files):
+def __make_hgrm_latency_by_perc_dist_html(config: ReportConfig, hgrm_files):
     for hgrm_file_name in hgrm_files:
         labels = []
         histos = []
-        for run_label, run_path in report_config.runs.items():
-            dir = f"{report_config.report_dir}/hdr/{run_label}"
+        for run_label, run_path in config.runs.items():
+            dir = f"{config.report_dir}/hdr/{run_label}"
             hgrm_file_path = f"{dir}/{hgrm_file_name}"
             if not os.path.exists(hgrm_file_path):
                 continue
 
-            hgrm_text = util.read(hgrm_file_path)
+            hgrm_text = read(hgrm_file_path)
             histos.append(hgrm_text.strip())
             labels.append(run_label)
 
-        html_template = util.read(f"{util.simulator_home}/src/simulator/plotFiles.html")
+        html_template = read(f"{simulator_home}/src/simulator/plotFiles.html")
         html = html_template.replace("{HISTOS}", str(histos))
         html = html.replace("{NAMES}", str(labels))
         hgrm_file_name_no_ext = hgrm_file_name.rstrip(".hgrm")
-        target_file_name = f"{report_config.report_dir}/latency/{hgrm_file_name_no_ext}.html"
+        target_file_name = f"{config.report_dir}/latency/{hgrm_file_name_no_ext}.html"
         mkdir(os.path.dirname(target_file_name))
-        util.write(target_file_name, html)
+        write(target_file_name, html)

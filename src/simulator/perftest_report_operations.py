@@ -1,13 +1,16 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 import shutil
 import time
 
 import pandas as pd
-from report_shared import *
+from simulator.perftest_report_shared import *
 import matplotlib.pyplot as plt
 
 
-def prepare_operation(report_config: ReportConfig):
-    for run_dir in report_config.runs.values():
+def prepare_operation(config: ReportConfig):
+    for run_dir in config.runs.values():
         # deal with legacy 'performance csv files'
         __fix_operations_filenames(run_dir)
         __create_aggregated_operations_csv(run_dir)
@@ -69,14 +72,10 @@ def __load_worker_operations_csv(run_dir, attributes):
             new_attributes["test_id"] = test_id
             new_attributes["worker_id"] = worker_id
 
-            # print(new_attributes)
             for column_name in df.columns:
-                # print(type(column_name))
                 if column_name == "time":
                     continue
                 column_desc = ColumnDesc("Operations", column_name, new_attributes)
-                # print(column_name)
-                # print(df[column_name])
                 df.rename(columns={column_name: column_desc.to_string()}, inplace=True)
             result.append(df)
 

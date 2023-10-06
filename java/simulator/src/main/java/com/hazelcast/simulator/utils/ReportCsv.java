@@ -101,7 +101,7 @@ public final class ReportCsv {
     }
 
     private static String getHeader() {
-        return "\"session\","
+        return "\"run_label\","
                 + "\"benchmark\","
                 + "\"10%(us)\","
                 + "\"20%(us)\","
