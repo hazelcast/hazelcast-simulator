@@ -1,13 +1,17 @@
-import shutil
 import time
 from pathlib import Path
 
-import pandas as pd
 from report_shared import *
 import matplotlib.pyplot as plt
 import util
 
-def report_latency_history(report_dir, df):
+
+def report_hdr(report_config: ReportConfig, df):
+    __report_latency_history(report_config, df)
+    report_hgrm(report_config)
+
+
+def __report_latency_history(report_config: ReportConfig, df):
     log_section("Plotting latency history: Start")
     start_sec = time.time()
 
@@ -29,9 +33,9 @@ def report_latency_history(report_dir, df):
 
     for (worker_id, metric_id, test_id, worker_id), column_name_list in grouped_column_names.items():
         if worker_id is None:
-            target_dir = f"{report_dir}/latency/"
+            target_dir = f"{report_config.report_dir}/latency/"
         else:
-            target_dir = f"{report_dir}/latency/{worker_id}"
+            target_dir = f"{report_config.report_dir}/latency/{worker_id}"
         mkdir(target_dir)
 
         if test_id is None:
@@ -91,15 +95,15 @@ def analyze_latency_history(report_dir, run_dir, attributes):
     start_sec = time.time()
     result = None
 
-    merge_worker_hdr(run_dir)
-    process_hdr(report_dir, run_dir, run_label)
+    __merge_worker_hdr(run_dir)
+    __process_hdr(report_dir, run_dir, run_label)
 
     # iterate over the files in the run directory
     dir = f"{report_dir}/hdr/{run_label}"
     for outer_file_name in os.listdir(dir):
         outer_path = f"{dir}/{outer_file_name}"
         if outer_file_name.endswith(".latency-history.csv"):
-            csv_df = load_latency_history_csv(outer_path, attributes, None)
+            csv_df = __load_latency_history_csv(outer_path, attributes, None)
             result = merge_dataframes(result, csv_df)
         elif os.path.isdir(outer_path):
             worker_id = outer_file_name
@@ -108,7 +112,7 @@ def analyze_latency_history(report_dir, run_dir, attributes):
                 if not inner_file_name.endswith(".latency-history.csv"):
                     continue
 
-                csv_df = load_latency_history_csv(
+                csv_df = __load_latency_history_csv(
                     f"{outer_path}/{inner_file_name}", attributes, worker_id)
                 result = merge_dataframes(result, csv_df)
 
@@ -117,13 +121,13 @@ def analyze_latency_history(report_dir, run_dir, attributes):
     return result
 
 
-def process_hdr(report_dir, run_dir, run_label):
+def __process_hdr(report_dir, run_dir, run_label):
     log_sub_section("Processing hdr files: Start")
     start_sec = time.time()
 
     for outer_file_name in os.listdir(run_dir):
         if outer_file_name.endswith(".hdr"):
-            process_hdr_file(report_dir, run_label, None, f"{run_dir}/{outer_file_name}")
+            __process_hdr_file(report_dir, run_label, None, f"{run_dir}/{outer_file_name}")
             continue
 
         worker_dir = f"{run_dir}/{outer_file_name}"
@@ -136,14 +140,14 @@ def process_hdr(report_dir, run_dir, run_label):
             if not inner_file_name.endswith(".hdr"):
                 continue
             hdr_file = f"{worker_dir}/{inner_file_name}"
-            process_hdr_file(report_dir, run_label, worker_id, hdr_file)
+            __process_hdr_file(report_dir, run_label, worker_id, hdr_file)
 
     duration_sec = time.time() - start_sec
     log_sub_section(f"Processing hdr files: Done {duration_sec:.2f} seconds)")
     pass
 
 
-def process_hdr_file(report_dir, run_label, worker_id, hdr_file):
+def __process_hdr_file(report_dir, run_label, worker_id, hdr_file):
     print(f"\t processing hdr file {hdr_file}")
 
     hdr_file_name_no_ext = Path(hdr_file).stem
@@ -183,8 +187,7 @@ def process_hdr_file(report_dir, run_label, worker_id, hdr_file):
                                {report_dir} \
                                banana""")
 
-
-def merge_worker_hdr(run_dir):
+def __merge_worker_hdr(run_dir):
     dic = {}
     for worker_dir_name in os.listdir(run_dir):
         dir_path = f"{run_dir}/{worker_dir_name}"
@@ -209,7 +212,7 @@ def merge_worker_hdr(run_dir):
                          {run_dir}/{file_name} {" ".join(hdr_files)} 2>/dev/null""")
 
 
-def load_latency_history_csv(file_path, attributes, worker_id):
+def __load_latency_history_csv(file_path, attributes, worker_id):
     test_id = os.path.basename(file_path).replace(".latency-history.csv", "")
     print(f"\tLoading {file_path}")
     df = pd.read_csv(file_path, skiprows=2)
@@ -245,13 +248,17 @@ def load_latency_history_csv(file_path, attributes, worker_id):
     return df
 
 
-def report_hgrm(report_dir, runs, hgrm_files):
-    make_hgrm_latency_by_perc_dist_html(report_dir, runs, hgrm_files)
+def report_hgrm(report_config: ReportConfig):
+    hgrm_files = set()
+    for run_label, run_dir in report_config.runs.items():
+        hgrm_files.update(__find_hgrm_files(report_config.report_dir, run_label))
+
+    __make_hgrm_latency_by_perc_dist_html(report_config, hgrm_files)
     # make_hgrm_histogram_plot(items)
-    make_hgrm_latency_by_perc_dist_plot(report_dir, runs, hgrm_files)
+    __make_hgrm_latency_by_perc_dist_plot(report_config, hgrm_files)
 
 
-def find_hgrm_files(report_dir, run_label):
+def __find_hgrm_files(report_dir, run_label):
     result = []
     dir = f"{report_dir}/hdr/{run_label}"
     for outer_file_name in os.listdir(dir):
@@ -270,18 +277,18 @@ def find_hgrm_files(report_dir, run_label):
     return result
 
 
-def make_hgrm_latency_by_perc_dist_plot(report_dir, runs, hgrm_files):
+def __make_hgrm_latency_by_perc_dist_plot(report_config: ReportConfig, hgrm_files):
     for hgrm_file_name in hgrm_files:
         plt.figure(figsize=(image_width_px / image_dpi, image_height_px / image_dpi), dpi=image_dpi)
 
-        for run_label, run_path in runs.items():
-            dir = f"{report_dir}/hdr/{run_label}"
+        for run_label, run_path in report_config.runs.items():
+            dir = f"{report_config.report_dir}/hdr/{run_label}"
 
             hgrm_file = f"{dir}/{hgrm_file_name}"
             if not os.path.exists(hgrm_file):
                 continue
 
-            df = load_hgrm(hgrm_file)
+            df = __load_hgrm(hgrm_file)
             plt.plot(df['1/(1-Percentile)'], df['Value'], label=run_label)
 
         plt.xscale('log')
@@ -306,14 +313,14 @@ def make_hgrm_latency_by_perc_dist_plot(report_dir, runs, hgrm_files):
         plt.grid()
 
         hgrm_file_path_no_ext = hgrm_file_name.rstrip(".hgrm")
-        path = f"{report_dir}/latency/{hgrm_file_path_no_ext}.png"
+        path = f"{report_config.report_dir}/latency/{hgrm_file_path_no_ext}.png"
         mkdir(os.path.dirname(path))
         print(f"\tGenerating [{path}]")
         plt.savefig(path)
         plt.close()
 
 
-def make_hgrm_histogram_plot(items):
+def __make_hgrm_histogram_plot(items):
     fig = plt.figure(figsize=(image_width_px / image_dpi, image_height_px / image_dpi), dpi=image_dpi)
 
     # df['Binned'] = pd.cut(df['Value'], bins=5)
@@ -324,7 +331,7 @@ def make_hgrm_histogram_plot(items):
 
     i = 0
     for label, path in items.items():
-        df = load_hgrm(path)
+        df = __load_hgrm(path)
         print(df)
         hist = plt.hist(df['Value'], bins=20, weights=df['Count'])
         # plt.histogram(df["Value"], df["Count"], label=label)
@@ -348,7 +355,7 @@ def make_hgrm_histogram_plot(items):
     plt.close()
 
 
-def load_hgrm(file_path):
+def __load_hgrm(file_path):
     df = pd.DataFrame()
     df['Value'] = pd.Series(dtype='float')
     df['Percentile'] = pd.Series(dtype='float')
@@ -383,12 +390,12 @@ def load_hgrm(file_path):
     return df
 
 
-def make_hgrm_latency_by_perc_dist_html(report_dir, runs, hgrm_files):
+def __make_hgrm_latency_by_perc_dist_html(report_config: ReportConfig, hgrm_files):
     for hgrm_file_name in hgrm_files:
         labels = []
         histos = []
-        for run_label, run_path in runs.items():
-            dir = f"{report_dir}/hdr/{run_label}"
+        for run_label, run_path in report_config.runs.items():
+            dir = f"{report_config.report_dir}/hdr/{run_label}"
             hgrm_file_path = f"{dir}/{hgrm_file_name}"
             if not os.path.exists(hgrm_file_path):
                 continue
@@ -401,6 +408,6 @@ def make_hgrm_latency_by_perc_dist_html(report_dir, runs, hgrm_files):
         html = html_template.replace("{HISTOS}", str(histos))
         html = html.replace("{NAMES}", str(labels))
         hgrm_file_name_no_ext = hgrm_file_name.rstrip(".hgrm")
-        target_file_name = f"{report_dir}/latency/{hgrm_file_name_no_ext}.html"
+        target_file_name = f"{report_config.report_dir}/latency/{hgrm_file_name_no_ext}.html"
         mkdir(os.path.dirname(target_file_name))
         util.write(target_file_name, html)

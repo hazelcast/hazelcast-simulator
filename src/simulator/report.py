@@ -11,6 +11,7 @@ from report_hdr import *
 warmup_seconds = 5
 cooldown_seconds = 5
 
+
 @dataclass
 class Period:
     start: int
@@ -27,7 +28,7 @@ def analyze_run(report_dir, run_dir, run_label=None):
 
     result = None
 
-    df_operations = analyze_operations_data(run_dir, attributes)
+    df_operations = analyze_operations(run_dir, attributes)
     result = merge_dataframes(result, df_operations)
 
     df_latency_history = analyze_latency_history(report_dir, run_dir, attributes)
@@ -41,7 +42,19 @@ def analyze_run(report_dir, run_dir, run_label=None):
     return result
 
 
-def make_report(df):
+def analyze(report_config: ReportConfig):
+    df = None
+
+    for run_label, run_dir in report_config.runs.items():
+        if len(runs) == 1:
+            df = analyze_run(report_config.report_dir, run_dir, run_label)
+        else:
+            tmp_df = analyze_run(report_config.report_dir, run_dir, run_label)
+            df = merge_dataframes(df, shift_to_epoch(tmp_df))
+    return df
+
+
+def make_report(report_config: ReportConfig, df: pd.DataFrame):
     if df is None:
         return
 
@@ -52,9 +65,9 @@ def make_report(df):
     for column_name in df.columns:
         print(column_name)
 
-    report_operations(report_dir, df)
-    report_latency_history(report_dir, df)
-    report_dstat(report_dir, df)
+    report_operations(report_config, df)
+    report_hdr(report_config, df)
+    report_dstat(report_config, df)
 
 
 start_sec = time.time()
@@ -67,21 +80,10 @@ runs = {}
 runs["valuelength_1000"] = "/home/pveentjer/tmp/report/runs/valuelength_1000/04-10-2023_06-35-01"
 runs["valuelength_1"] = "/home/pveentjer/tmp/report/runs/valuelength_1/04-10-2023_08-00-07"
 
-df = None
+report_config = ReportConfig(report_dir, runs, warmup_seconds=warmup_seconds, cooldown_seconds=cooldown_seconds)
 
-for run_label, run_dir in runs.items():
-    if len(runs) == 1:
-        df = analyze_run(report_dir, run_dir, run_label)
-    else:
-        tmp_df = analyze_run(report_dir, run_dir, run_label)
-        df = merge_dataframes(df, shift_to_epoch(tmp_df))
-
-make_report(df)
-
-hgrm_files = set()
-for run_label, run_dir in runs.items():
-    hgrm_files.update(find_hgrm_files(report_dir, run_label))
-report_hgrm(report_dir, runs, hgrm_files)
+df = analyze(report_config)
+make_report(report_config, df)
 
 duration_sec = time.time() - start_sec
 log(f"Generating report: Done  (duration {duration_sec:.2f} seconds)")

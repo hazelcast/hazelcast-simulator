@@ -38,6 +38,14 @@ def sizeof_fmt(x):
         x /= 1024.0
 
 
+class ReportConfig:
+    def __init__(self, report_dir, runs, warmup_seconds = 0, cooldown_seconds=0, ):
+        self.report_dir = report_dir
+        self.warmup_seconds = warmup_seconds
+        self.cooldown_seconds = cooldown_seconds
+        self.runs = runs
+
+
 class ColumnDesc:
     seperator = "::"
     kv_seperator = "=="

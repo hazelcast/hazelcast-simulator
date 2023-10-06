@@ -1,7 +1,5 @@
-import shutil
 import time
 
-import pandas as pd
 from report_shared import *
 import matplotlib.pyplot as plt
 
@@ -42,7 +40,7 @@ def analyze_dstat(run_dir, attributes):
     return result
 
 
-def report_dstat(report_dir, df):
+def report_dstat(report_config: ReportConfig, df: pd.DataFrame):
     log_section("Plotting dstat data: Start")
     start_sec = time.time()
 
@@ -61,7 +59,7 @@ def report_dstat(report_dir, df):
 
     for (agent_id, metric_id), column_name_list in grouped_column_names.items():
         nice_metric_name = metric_id.replace("/", "_").replace(":", "_")
-        target_dir = f"{report_dir}/dstat/{agent_id}"
+        target_dir = f"{report_config.report_dir}/dstat/{agent_id}"
         mkdir(target_dir)
 
         filtered_df = None
@@ -76,7 +74,7 @@ def report_dstat(report_dir, df):
         filtered_df.dropna(inplace=True)
         filtered_df.to_csv(f"{target_dir}/{nice_metric_name}.csv")
 
-        fig = plt.figure(figsize=(image_width_px / image_dpi, image_height_px / image_dpi), dpi=image_dpi)
+        plt.figure(figsize=(image_width_px / image_dpi, image_height_px / image_dpi), dpi=image_dpi)
         for column_name in column_name_list:
             column_desc = ColumnDesc.from_string(column_name)
             run_label = column_desc.attributes["run_label"]

@@ -6,18 +6,18 @@ from report_shared import *
 import matplotlib.pyplot as plt
 
 
-def analyze_operations_data(run_dir, attributes):
+def analyze_operations(run_dir, attributes):
     log_section("Loading operations data: Start")
     start_sec = time.time()
 
     # deal with legacy 'performance csv files'
-    fix_operations_filenames(run_dir)
+    __fix_operations_filenames(run_dir)
 
-    create_aggregated_operations_csv(run_dir)
+    __create_aggregated_operations_csv(run_dir)
 
     df_list = []
-    df_list.extend(load_aggregated_operations_csv(run_dir, attributes))
-    df_list.extend(load_worker_operations_csv(run_dir, attributes))
+    df_list.extend(__load_aggregated_operations_csv(run_dir, attributes))
+    df_list.extend(__load_worker_operations_csv(run_dir, attributes))
 
     result = None
     for df in df_list:
@@ -29,7 +29,7 @@ def analyze_operations_data(run_dir, attributes):
     return result
 
 
-def load_worker_operations_csv(run_dir, attributes):
+def __load_worker_operations_csv(run_dir, attributes):
     result = []
     # load the df of the workers.
     for outer_file in os.listdir(run_dir):
@@ -82,7 +82,7 @@ def load_worker_operations_csv(run_dir, attributes):
 
 
 # Renames the names of old performance csv files
-def fix_operations_filenames(run_dir):
+def __fix_operations_filenames(run_dir):
     for outer_file_name in os.listdir(run_dir):
         outer_dir = f"{run_dir}/{outer_file_name}"
         worker_id = extract_worker_id(outer_dir)
@@ -106,7 +106,7 @@ def fix_operations_filenames(run_dir):
                                 f"{outer_dir}/operations-{test_id}.csv")
 
 
-def load_aggregated_operations_csv(run_dir, attributes):
+def __load_aggregated_operations_csv(run_dir, attributes):
     result = []
     # load the aggregated performance data
     for file_name in os.listdir(run_dir):
@@ -142,7 +142,7 @@ def load_aggregated_operations_csv(run_dir, attributes):
     return result
 
 
-def create_aggregated_operations_csv(run_dir):
+def __create_aggregated_operations_csv(run_dir):
     df_list_map = {}
 
     # load all the operation datafromes for every worker/test
@@ -213,7 +213,7 @@ def create_aggregated_operations_csv(run_dir):
         aggr_df.to_csv(f"{run_dir}/operations{test_id}.csv")
 
 
-def report_operations(report_dir, df):
+def report_operations(report_config:ReportConfig, df:pd.DataFrame):
     log_section("Plotting operations data: Start")
     start_sec = time.time()
 
@@ -233,9 +233,9 @@ def report_operations(report_dir, df):
 
     for (worker_id, metric_id, test_id, worker_id), column_name_list in grouped_column_names.items():
         if worker_id is None:
-            target_dir = f"{report_dir}/operations"
+            target_dir = f"{report_config.report_dir}/operations"
         else:
-            target_dir = f"{report_dir}/operations/{worker_id}"
+            target_dir = f"{report_config.report_dir}/operations/{worker_id}"
         mkdir(target_dir)
 
         if test_id is None:
