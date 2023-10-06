@@ -5,14 +5,14 @@ import argparse
 import csv
 import glob
 import shutil
-import subprocess
 import base64
 
+import simulator.util
 from simulator.log import info, error
 from simulator.perftest_report_dstat import report_dstat, analyze_dstat
 from simulator.perftest_report_hdr import report_hdr, prepare_hdr, analyze_latency_history
 from simulator.perftest_report_operations import report_operations, prepare_operation, analyze_operations
-from simulator.util import mkdir, simulator_home
+from simulator.util import simulator_home, read, write,mkdir
 from simulator.perftest_report_shared import *
 
 
@@ -228,27 +228,24 @@ class Comparison:
 class HTMLReport:
 
     def __init__(self):
-        self.report = ""
         self.images = ""
         self.metrics = []
 
-    def addImage(self, plot):
-        if plot.skipped:
-            return
+    def addImage(self, path):
+        metric_name = path.split('/')[-2]
 
-        metric_name = plot.image_path.split('/')[-2]
-
-        with open(plot.image_path, "rb") as image_file:
+        with open(path, "rb") as image_file:
             encoded_image = str(base64.b64encode(image_file.read()), encoding='utf-8')
 
         encoded_image = "data:image/png;base64,%s" % encoded_image
 
         self.images = self.images + '<div class="image-container ' + metric_name + '">'
         self.images = self.images + '<img src="' + encoded_image + '" onclick="toggleZoom(this);" />'
-        self.images = self.images + '<p class="image-text">' + plot.title + "</p>"
+
+        self.images = self.images + '<p class="image-text">' + path + "</p>"
         self.images = self.images + '</div>'
 
-    def getCSVContents(self):
+    def loadReportCsv(self):
         contents = []
         with open(os.path.join(report_dir + "/report.csv")) as csvfile:
             line = csvfile.readline()
@@ -259,57 +256,26 @@ class HTMLReport:
         return contents
 
     def generate(self):
-        csvContents = self.getCSVContents()
+        report_csv = self.loadReportCsv()
 
-        self.report = self.report + '<!DOCTYPE html>'
-        self.report = self.report + '<html>'
-        self.report = self.report + '<head>'
-        self.report = self.report + '<style>'
-        self.report = self.report + 'body { background-color: #cdcdcd; text-align: center; } img { width: 40vw; } .images-block { display: block; } h1,h2,h3,h4,h5,h6 { width: 100vw; }'
-        self.report = self.report + '.tabs { display: flex; border-bottom: 1px solid black; margin-bottom: 3vh; } .tab { flex: 33.33%; } .tab:hover, .active-tab { background-color: #dedede; }'
-        self.report = self.report + 'img:hover { cursor: zoom-in; } .zoomin { zoom: 2; -moz-transform: scale(2); } .zoomout { zoom: normal; -moz-transform: scale(1); }'
-        self.report = self.report + 'tr,td { border: 1px solid black; } td { padding: 3px; }'
-        self.report = self.report + '</style>'
-        self.report = self.report + '<body>'
-        self.report = self.report + '<h1>Benchmark Report</h1>'
-        self.report = self.report + '<div class="tabs">'
-        self.report = self.report + '<div class="tab" id="csv" style="border-right: 1px solid black;"><p>Summary</p></div>'
-        self.report = self.report + '<div class="tab" id="throughput" style="border-right: 1px solid black;"><p>Throughput</p></div>'
-        self.report = self.report + '<div class="tab" id="latency" style="border-right: 1px solid black;"><p>Latency</p></div>'
-        self.report = self.report + '<div class="tab" id="dstat"><p>dstat</p></div>'
-        self.report = self.report + '</div>'
-        self.report = self.report + '<div class="images-block">' + self.images + '</div>'
-        self.report = self.report + '<table><tbody>'
+        html_template = read(f"{simulator_home}/src/simulator/report.html")
+
+        overview = ""
         try:
-            for i in range(len(csvContents[0].split(','))):
-                self.report = self.report + '<tr>'
-                for j in range(len(csvContents)):
-                    self.report = self.report + '<td>' + csvContents[j].split(',')[i].replace('"', '') + '</td>'
-                self.report = self.report + '</tr>'
+            for i in range(len(report_csv[0].split(','))):
+                overview = overview + '<tr>'
+                for j in range(len(report_csv)):
+                    overview = overview + '<td>' + report_csv[j].split(',')[i].replace('"', '') + '</td>'
+                overview = overview + '</tr>'
         except IndexError:
             # We need on this problem in the future.
             pass
-        self.report = self.report + '</table></tbody>'
-        self.report = self.report + '<script>'
-        self.report = self.report + "var activeTab = 'throughput'; var throughputdom = document.getElementById('throughput'); var latencydom = document.getElementById('latency');  var dstatdom = document.getElementById('dstat'); var csvdom = document.getElementById('csv'); var imageContainer = document.getElementsByClassName('image-container'); var tabledom = document.getElementsByTagName('table')[0]; "
-        self.report = self.report + "function addClass(classname, element){ while(element.classList.contains(classname)) { element.classList.remove(classname); } element.classList.add(classname); } "
-        self.report = self.report + "function removeClass(classname, element){ while(element.classList.contains(classname)) { element.classList.remove(classname); } } "
-        self.report = self.report + "function filter() { tabledom.style.display = 'none'; for(let item of imageContainer){ if(item.classList.contains(activeTab)) item.style.display='block'; else item.style.display = 'none';} } "
-        self.report = self.report + "function showcsv() { for(let item of imageContainer){ item.style.display = 'none'; } tabledom.style.display = 'inline'; }"
-        self.report = self.report + "throughputdom.addEventListener('click', function(e){ e.preventDefault(); addClass('active-tab', throughputdom); removeClass('active-tab', latencydom); removeClass('active-tab', dstatdom); removeClass('active-tab', csvdom); activeTab = 'throughput'; filter(); }); "
-        self.report = self.report + "latencydom.addEventListener('click', function(e){ e.preventDefault(); addClass('active-tab', latencydom); removeClass('active-tab', throughputdom); removeClass('active-tab', dstatdom); removeClass('active-tab', csvdom); activeTab = 'latency'; filter(); }); "
-        self.report = self.report + "dstatdom.addEventListener('click', function(e){ e.preventDefault(); addClass('active-tab', dstatdom); removeClass('active-tab', throughputdom); removeClass('active-tab', latencydom); removeClass('active-tab', csvdom); activeTab = 'dstat'; filter(); }); "
-        self.report = self.report + "csvdom.addEventListener('click', function(e){ e.preventDefault(); addClass('active-tab', csvdom); removeClass('active-tab', throughputdom); removeClass('active-tab', latencydom); removeClass('active-tab', dstatdom); activeTab = 'csv'; showcsv(); }); "
-        self.report = self.report + "csvdom.click(); "
-        self.report = self.report + "function toggleZoom(element){ if(element){ if(element.classList.contains('zoomin')) { removeClass('zoomin', element); addClass('zoomout', element); } else { removeClass('zoomout', element); addClass('zoomin', element); } } } "
-        self.report = self.report + '</script>'
-        self.report = self.report + '</body>'
-        self.report = self.report + '</head>'
-        self.report = self.report + '</html>'
 
+        html = html_template.replace("[overview]", overview)
+        html = html.replace("[images]", self.images)
         file_name = os.path.join(report_dir + "/report.html")
         with open(file_name, 'w') as f:
-            f.write(self.report)
+            f.write(html)
 
         file_url = "file://" + file_name
         info(f"HTML report generated at: {file_url}")
@@ -348,12 +314,12 @@ class PerfTestReportCli:
                             nargs=1,
                             default=[1600],
                             type=int,
-                            help='The width in pixels of the generated images.')
+                            help='The width, in pixels, of the generated images.')
         parser.add_argument('--height',
                             nargs=1,
                             default=[1200],
                             type=int,
-                            help='The height in pixels of the generated images.')
+                            help='The height, in pixels, of the generated images.')
         global args
         args = parser.parse_args(argv)
         global benchmark_args
@@ -386,6 +352,13 @@ class PerfTestReportCli:
         global htmlReport
         htmlReport = HTMLReport()
         comparison = Comparison(config)
+
+        from pathlib import Path
+
+        for path in Path(report_dir).rglob('*.png'):
+            print(path.resolve().as_posix())
+            htmlReport.addImage(path.resolve().as_posix())
+
         htmlReport.generate()
 
         if not args.full and gc_logs_found:

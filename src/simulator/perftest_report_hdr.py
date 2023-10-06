@@ -422,7 +422,7 @@ def __make_hgrm_latency_by_perc_dist_html(config: ReportConfig, hgrm_files):
             histos.append(hgrm_text.strip())
             labels.append(run_label)
 
-        html_template = read(f"{simulator_home}/src/simulator/plotFiles.html")
+        html_template = read(f"{simulator_home}/src/simulator/latency_by_percentile.html")
         html = html_template.replace("{HISTOS}", str(histos))
         html = html.replace("{NAMES}", str(labels))
         hgrm_file_name_no_ext = hgrm_file_name.rstrip(".hgrm")
