@@ -74,7 +74,13 @@ public final class ReportCsv {
     }
 
     private static void addOther(File hgrmFile, StringBuffer outSb) {
+        // todo: Once the new reporting is active, we can always read the .latency-history.csv
+        // and remove the hgrm section.
         File file = new File(hgrmFile.getParent(), stripExtension(hgrmFile.getName()));
+        if (!file.exists()) {
+            file = new File(hgrmFile.getParent(), file.getName() + ".latency-history.csv");
+        }
+
         String[] lines = fileAsText(file).split("\n");
 
         long startMillis = Math.round(Double.parseDouble(lines[4].split(",")[1]) * 1000);

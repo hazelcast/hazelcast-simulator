@@ -93,6 +93,7 @@ do
     fi
 done
 
+# Can be removed as soon as the new reporting system is merged
 # generate the report.csv
 hgrm_files=($(find "${report_dir}/tmp/$hdr_target_dir_name" -maxdepth 1 -name *.hgrm ))
 echo HDR hgrm_files $hgrm_files
