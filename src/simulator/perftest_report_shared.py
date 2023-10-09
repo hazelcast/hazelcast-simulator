@@ -40,6 +40,7 @@ class ReportConfig:
     warmup_seconds = 0
     cooldown_seconds = 0
     worker_reporting = True
+    compare_last = False
 
     def __init__(self, report_dir):
         self.report_dir = report_dir

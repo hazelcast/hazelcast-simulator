@@ -215,7 +215,7 @@ def __report_latency_history(config: ReportConfig, df):
         if test_id is None:
             test_str = ""
         else:
-            test_str = f"-{test_id}"
+            test_str = f"_{test_id}"
 
         filtered_df = None
         for column_name in column_name_list:
