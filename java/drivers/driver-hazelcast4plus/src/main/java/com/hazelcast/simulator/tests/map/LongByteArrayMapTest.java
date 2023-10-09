@@ -26,6 +26,9 @@ import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.StartNanos;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
+import com.hazelcast.simulator.utils.HotSetKeySelector;
+import com.hazelcast.simulator.utils.KeySelector;
+import com.hazelcast.simulator.utils.RandomKeySelector;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 
@@ -48,6 +51,10 @@ public class LongByteArrayMapTest extends HazelcastTest {
     public int pipelineDepth = 10;
     public int pipelineIterations = 100;
     public int getAllSize = 5;
+    public String selector = "random";
+    public int hotSetPercentage = 10;
+    public int hotSetAccessPercentage = 90;
+    private KeySelector keySelector;
 
     private IMap<Long, byte[]> map;
     private byte[][] values;
@@ -57,6 +64,11 @@ public class LongByteArrayMapTest extends HazelcastTest {
     public void setUp() {
         map = targetInstance.getMap(name);
         values = generateByteArrays(valueCount, minValueLength, maxValueLength);
+        if ("hotset".equalsIgnoreCase(selector)) {
+            keySelector = new HotSetKeySelector(0, keyDomain, hotSetAccessPercentage, hotSetPercentage);
+        } else {
+            keySelector = new RandomKeySelector(keyDomain);
+        }
     }
 
     @Prepare(global = true)
@@ -131,7 +143,7 @@ public class LongByteArrayMapTest extends HazelcastTest {
         private int i;
 
         private long randomKey() {
-            return randomLong(keyDomain);
+            return keySelector.nextKey(this::randomLong);
         }
 
         private byte[] randomValue() {
