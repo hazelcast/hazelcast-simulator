@@ -69,7 +69,7 @@
     <div class="tab" id="csv" style="border-right: 1px solid black;">
         <p>Summary</p>
     </div>
-    <div class="tab" id="throughput" style="border-right: 1px solid black;">
+    <div class="tab" id="operations" style="border-right: 1px solid black;">
         <p>Throughput</p>
     </div>
     <div class="tab" id="latency" style="border-right: 1px solid black;">
@@ -86,8 +86,8 @@
     </tbody>
 </table>
 <script>
-    var activeTab = 'throughput';
-    var throughputdom = document.getElementById('throughput');
+    var activeTab = 'operations';
+    var operationsdom = document.getElementById('operations');
     var latencydom = document.getElementById('latency');
     var dstatdom = document.getElementById('dstat');
     var csvdom = document.getElementById('csv');
@@ -121,19 +121,19 @@
       }
       tabledom.style.display = 'inline';
     }
-    throughputdom.addEventListener('click', function(e) {
+    operationsdom.addEventListener('click', function(e) {
       e.preventDefault();
-      addClass('active-tab', throughputdom);
+      addClass('active-tab', operationsdom);
       removeClass('active-tab', latencydom);
       removeClass('active-tab', dstatdom);
       removeClass('active-tab', csvdom);
-      activeTab = 'throughput';
+      activeTab = 'operations';
       filter();
     });
     latencydom.addEventListener('click', function(e) {
       e.preventDefault();
       addClass('active-tab', latencydom);
-      removeClass('active-tab', throughputdom);
+      removeClass('active-tab', operationsdom);
       removeClass('active-tab', dstatdom);
       removeClass('active-tab', csvdom);
       activeTab = 'latency';
@@ -142,7 +142,7 @@
     dstatdom.addEventListener('click', function(e) {
       e.preventDefault();
       addClass('active-tab', dstatdom);
-      removeClass('active-tab', throughputdom);
+      removeClass('active-tab', operationsdom);
       removeClass('active-tab', latencydom);
       removeClass('active-tab', csvdom);
       activeTab = 'dstat';
@@ -151,7 +151,7 @@
     csvdom.addEventListener('click', function(e) {
       e.preventDefault();
       addClass('active-tab', csvdom);
-      removeClass('active-tab', throughputdom);
+      removeClass('active-tab', operationsdom);
       removeClass('active-tab', latencydom);
       removeClass('active-tab', dstatdom);
       activeTab = 'csv';

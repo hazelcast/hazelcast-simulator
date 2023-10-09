@@ -6,13 +6,14 @@ import csv
 import glob
 import shutil
 import base64
+from pathlib import Path
 
 import simulator.util
 from simulator.log import info, error
 from simulator.perftest_report_dstat import report_dstat, analyze_dstat
 from simulator.perftest_report_hdr import report_hdr, prepare_hdr, analyze_latency_history
 from simulator.perftest_report_operations import report_operations, prepare_operation, analyze_operations
-from simulator.util import simulator_home, read, write,mkdir
+from simulator.util import simulator_home, read, write, mkdir
 from simulator.perftest_report_shared import *
 
 
@@ -228,22 +229,11 @@ class Comparison:
 class HTMLReport:
 
     def __init__(self):
-        self.images = ""
+        self.image_list = []
         self.metrics = []
 
-    def addImage(self, path):
-        metric_name = path.split('/')[-2]
-
-        with open(path, "rb") as image_file:
-            encoded_image = str(base64.b64encode(image_file.read()), encoding='utf-8')
-
-        encoded_image = "data:image/png;base64,%s" % encoded_image
-
-        self.images = self.images + '<div class="image-container ' + metric_name + '">'
-        self.images = self.images + '<img src="' + encoded_image + '" onclick="toggleZoom(this);" />'
-
-        self.images = self.images + '<p class="image-text">' + path + "</p>"
-        self.images = self.images + '</div>'
+    def addImage(self, type, path, title):
+        self.image_list.append((type, path, title))
 
     def loadReportCsv(self):
         contents = []
@@ -255,30 +245,65 @@ class HTMLReport:
 
         return contents
 
+    def importImages(self):
+        dstat_dir = f"{report_dir}/dstat"
+        for agent_filename in os.listdir(dstat_dir):
+            agent_dir = f"{dstat_dir}/{agent_filename}"
+            for image_filename in os.listdir(agent_dir):
+                if not image_filename.endswith(".png"):
+                    continue
+                base_image_filename = Path(image_filename).stem
+                self.addImage("dstat",
+                              f"{agent_dir}/{image_filename}",
+                              f"{agent_filename} {base_image_filename}")
+
+        for path in Path(f"{report_dir}/latency").rglob('*.png'):
+            htmlReport.addImage("latency", path.resolve().as_posix(), "")
+
+        for path in Path(f"{report_dir}/operations").rglob('*.png'):
+            htmlReport.addImage("operations", path.resolve().as_posix(), "")
+
     def generate(self):
         report_csv = self.loadReportCsv()
 
         html_template = read(f"{simulator_home}/src/simulator/report.html")
+        file_path = os.path.join(report_dir + "/report.html")
+        file_url = "file://" + file_path
+        info(f"Generating HTML report : {file_url}")
 
-        overview = ""
-        try:
-            for i in range(len(report_csv[0].split(','))):
-                overview = overview + '<tr>'
-                for j in range(len(report_csv)):
-                    overview = overview + '<td>' + report_csv[j].split(',')[i].replace('"', '') + '</td>'
-                overview = overview + '</tr>'
-        except IndexError:
-            # We need on this problem in the future.
-            pass
+        images_index = html_template.index("[images]")
+        overview_index = html_template.index("[overview]")
+        with open(file_path, 'w') as f:
+            f.write(html_template[0:images_index])
 
-        html = html_template.replace("[overview]", overview)
-        html = html.replace("[images]", self.images)
-        file_name = os.path.join(report_dir + "/report.html")
-        with open(file_name, 'w') as f:
-            f.write(html)
+            for (type, path, title) in self.image_list:
+                metric_name = path.split('/')[-2]
 
-        file_url = "file://" + file_name
-        info(f"HTML report generated at: {file_url}")
+                with open(path, "rb") as image_file:
+                    encoded_image = str(base64.b64encode(image_file.read()), encoding='utf-8')
+
+                encoded_image = "data:image/png;base64,%s" % encoded_image
+
+                # todo: flatten into multiline string
+                image_html = '<div class="image-container ' + type + '">'
+                image_html = image_html + '<img src="' + encoded_image + '" onclick="toggleZoom(this);" />'
+                image_html = image_html + '<p class="image-text">' + path + "</p>"
+                image_html = image_html + '</div>'
+                f.write(image_html)
+
+            f.write(html_template[images_index + len("[images]"):overview_index])
+            overview = ""
+            try:
+                for i in range(len(report_csv[0].split(','))):
+                    overview = overview + '<tr>'
+                    for j in range(len(report_csv)):
+                        overview = overview + '<td>' + report_csv[j].split(',')[i].replace('"', '') + '</td>'
+                    overview = overview + '</tr>'
+            except IndexError:
+                # We need on this problem in the future.
+                pass
+            f.write(overview)
+            f.write(html_template[overview_index + len("[overview]"):])
 
 
 class PerfTestReportCli:
@@ -352,13 +377,7 @@ class PerfTestReportCli:
         global htmlReport
         htmlReport = HTMLReport()
         comparison = Comparison(config)
-
-        from pathlib import Path
-
-        for path in Path(report_dir).rglob('*.png'):
-            print(path.resolve().as_posix())
-            htmlReport.addImage(path.resolve().as_posix())
-
+        htmlReport.importImages()
         htmlReport.generate()
 
         if not args.full and gc_logs_found:
