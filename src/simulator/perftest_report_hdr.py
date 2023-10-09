@@ -334,7 +334,7 @@ def __make_latency_by_perc_dist_plot(config: ReportConfig, hgrm_files):
         plt.grid()
 
         hgrm_file_path_no_ext = hgrm_file_name.rstrip(".hgrm")
-        path = f"{config.report_dir}/latency/{hgrm_file_path_no_ext}.png"
+        path = f"{config.report_dir}/latency/latency_distribution_{hgrm_file_path_no_ext}.png"
         mkdir(os.path.dirname(path))
         print(f"\tGenerating [{path}]")
         plt.savefig(path)
@@ -400,14 +400,13 @@ def __load_hgrm(file_path):
             percentile = float(items[1])
             total_count = int(items[2])
 
-            # todo: better name for x. 1/(1-Percentile)
             if len(items) == 4:
-                x = float(items[3])
+                flipped_percentile = float(items[3])
             else:
-                x = float('inf')
+                flipped_percentile = float('inf')
             count = total_count - prev_total_count
 
-            row = [value, percentile, total_count, x, count]
+            row = [value, percentile, total_count, flipped_percentile, count]
             df.loc[len(df)] = row
             prev_total_count = total_count
     return df

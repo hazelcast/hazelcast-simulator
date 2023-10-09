@@ -4,14 +4,14 @@
 import shutil
 import time
 
-import pandas as pd
+from matplotlib.dates import DateFormatter
+
 from simulator.perftest_report_shared import *
 import matplotlib.pyplot as plt
 
 
 def prepare_operation(config: ReportConfig):
     for run_dir in config.runs.values():
-        # deal with legacy 'performance csv files'
         __fix_operations_filenames(run_dir)
         __create_aggregated_operations_csv(run_dir)
 
@@ -21,8 +21,8 @@ def analyze_operations(run_dir, attributes):
     start_sec = time.time()
 
     df_list = []
-    df_list.extend(__load_aggregated_operations_csv(run_dir, attributes))
-    df_list.extend(__load_worker_operations_csv(run_dir, attributes))
+    df_list += __load_aggregated_operations_csv(run_dir, attributes)
+    df_list += __load_worker_operations_csv(run_dir, attributes)
 
     result = None
     for df in df_list:
@@ -146,7 +146,7 @@ def __load_aggregated_operations_csv(run_dir, attributes):
 def __create_aggregated_operations_csv(run_dir):
     df_list_map = {}
 
-    # load all the operation datafromes for every worker/test
+    # load all the operation dataframes for every worker/test
     for outer_file_name in os.listdir(run_dir):
         outer_dir = f"{run_dir}/{outer_file_name}"
         worker_id = extract_worker_id(outer_dir)
@@ -175,15 +175,10 @@ def __create_aggregated_operations_csv(run_dir):
     # merge the frames into the
     for test_id, df_list in df_list_map.items():
         aggr_df = df_list[0]
-        # print("*********************************")
-        # for column in aggr_df.columns:
-        #     print(column)
 
         for df_index in range(1, len(df_list)):
             df = df_list[df_index]
             for row_ind in df.index:
-                # print("----")
-                # print(row_ind)
                 row = df.T.get(row_ind)
                 aggr_row = aggr_df.T.get(row_ind)
                 if aggr_row is None:
@@ -191,24 +186,16 @@ def __create_aggregated_operations_csv(run_dir):
                     # so the whole row can be added.
                     aggr_df.loc[row_ind] = row
                 else:
-                    # print("==========================")
-
                     # it is a row with a time that already exist. So a new row is
                     # created whereby every value from the 2 rows are added into
                     # a new row and that is written back to the aggr_df
                     new_aggr_row = []
                     for value_ind in range(len(row)):
-                        # print("----------------------------")
                         value = row.values[value_ind]
                         aggr_value = aggr_row.values[value_ind]
                         new_aggr_value = value + aggr_value
-                        # print(f"type.value={type(value)} type.aggr_value={type(aggr_value)}")
                         new_aggr_row.append(new_aggr_value)
-                    # print(len(row))
-                    # print(len(aggr_df.loc[row_ind]))
-                    # print(len(new_aggr_row))
-                    # if row_ind is None:
-                    #    print("oh shit")
+
                     aggr_df.loc[row_ind] = new_aggr_row
 
         aggr_df.to_csv(f"{run_dir}/operations{test_id}.csv")
@@ -270,11 +257,11 @@ def report_operations(config: ReportConfig, df: pd.DataFrame):
         plt.ylabel("operations/second")
         plt.xlabel("Time")
 
-        plt.legend()
-        # if worker_id == '':
-        #    plt.title(f"{test_id} {column_name.capitalize()}")
-        # else:
+        # fig, ax = plt.subplots()
+        # date_format = DateFormatter('%H--%M--%S')  # Format for hour:minute:second
+        # ax.xaxis.set_major_formatter(date_format)
 
+        plt.legend()
         plt.title(f"Throughput")
         plt.grid()
 

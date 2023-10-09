@@ -5,26 +5,14 @@ import argparse
 import csv
 import glob
 import shutil
-import base64
-from pathlib import Path
 
 from simulator.log import info, error
 from simulator.perftest_report_dstat import report_dstat, analyze_dstat
 from simulator.perftest_report_hdr import report_hdr, prepare_hdr, analyze_latency_history
 from simulator.perftest_report_operations import report_operations, prepare_operation, analyze_operations
-from simulator.util import simulator_home, read, write, mkdir
+from simulator.util import mkdir
 from simulator.perftest_report_shared import *
-
-
-# Returns the name of the agent this worker belongs to
-def agent_for_worker(worker_name):
-    if worker_name.startswith("C_"):
-        # for compatibility with old benchmarks
-        index = worker_name.index("_", 3)
-        return worker_name[0:index]
-    else:
-        index = worker_name.index("_")
-        return worker_name[0:index]
+from simulator.perftest_report_html import HTMLReport
 
 
 def prepare(config: ReportConfig):
@@ -41,9 +29,14 @@ def analyze(config: ReportConfig):
     for run_label, run_dir in config.runs.items():
         if len(config.runs) == 1:
             df = analyze_run(config.report_dir, run_dir, run_label)
+            if not config.preserve_time:
+                df = shift_to_epoch(df)
         else:
             tmp_df = analyze_run(config.report_dir, run_dir, run_label)
-            df = merge_dataframes(df, shift_to_epoch(tmp_df))
+            if not config.preserve_time:
+                tmp_df = shift_to_epoch(tmp_df)
+            df = merge_dataframes(df, tmp_df)
+
     return df
 
 
@@ -86,6 +79,9 @@ def report(config: ReportConfig, df: pd.DataFrame):
     report_hdr(config, df)
     report_dstat(config, df)
 
+    html_report = HTMLReport(config)
+    html_report.generate()
+
 
 class Period:
     def __init__(self, start_time, end_time):
@@ -121,7 +117,6 @@ class Benchmark:
             if not os.path.isdir(worker_dir):
                 continue
 
-            agent_name = agent_for_worker(worker_name)
             operations_csv_file = os.path.join(worker_dir, "operations.csv")
             if not os.path.isfile(operations_csv_file):
                 continue
@@ -155,212 +150,45 @@ class Benchmark:
         return handle.load().items
 
 
-class Comparison:
+def collect_runs(benchmarks, config: ReportConfig):
+    benchmark_dirs = []
+    benchmark_names = {}
+    last_benchmark = None
 
-    def __init__(self, config: ReportConfig):
-        self.config = config
-        benchmark_dirs = []
-        benchmark_names = {}
-        last_benchmark = None
+    # collect all benchmark directories and the names for the benchmarks
+    for benchmark_arg in benchmarks:
+        if benchmark_arg.startswith("[") and benchmark_arg.endswith("]"):
+            if not last_benchmark:
+                info("Benchmark name " + benchmark_arg + " must be preceded with a benchmark directory.")
+                exit()
+            benchmark_names[last_benchmark] = benchmark_arg[1:len(benchmark_arg) - 1]
+            last_benchmark = None
+        elif config.compare_last:
+            benchmark_root = benchmark_arg
+            subdirectories = sorted(filter(os.path.isdir, glob.glob(benchmark_root + "/*")))
 
-        info("Loading benchmarks")
+            benchmark_dir = subdirectories[-1]
+            if not os.path.exists(benchmark_dir):
+                error("benchmark directory '" + benchmark_dir + "' does not exist!")
+                exit(1)
+            last_benchmark = benchmark_arg
+            benchmark_dirs.append(benchmark_dir)
+            benchmark_names[benchmark_dir] = os.path.basename(os.path.normpath(benchmark_root))
+        else:
+            benchmark_dir = benchmark_arg
+            if not os.path.exists(benchmark_dir):
+                error("benchmark directory '" + benchmark_dir + "' does not exist!")
+                exit(1)
+            last_benchmark = benchmark_arg
+            benchmark_dirs.append(benchmark_dir)
+            benchmark_names[benchmark_dir] = os.path.basename(os.path.normpath(benchmark_dir))
 
-        # collect all benchmark directories and the names for the benchmarks
-        for benchmark_arg in benchmark_args:
-            if benchmark_arg.startswith("[") and benchmark_arg.endswith("]"):
-                if not last_benchmark:
-                    info("Benchmark name " + benchmark_arg + " must be preceded with a benchmark directory.")
-                    exit()
-                benchmark_names[last_benchmark] = benchmark_arg[1:len(benchmark_arg) - 1]
-                last_benchmark = None
-            elif config.compare_last:
-                benchmark_root = benchmark_arg
-                subdirectories = sorted(filter(os.path.isdir, glob.glob(benchmark_root + "/*")))
-
-                benchmark_dir = subdirectories[-1]
-                if not os.path.exists(benchmark_dir):
-                    error("benchmark directory '" + benchmark_dir + "' does not exist!")
-                    exit(1)
-                last_benchmark = benchmark_arg
-                benchmark_dirs.append(benchmark_dir)
-                benchmark_names[benchmark_dir] = os.path.basename(os.path.normpath(benchmark_root))
-            else:
-                benchmark_dir = benchmark_arg
-                if not os.path.exists(benchmark_dir):
-                    error("benchmark directory '" + benchmark_dir + "' does not exist!")
-                    exit(1)
-                last_benchmark = benchmark_arg
-                benchmark_dirs.append(benchmark_dir)
-                benchmark_names[benchmark_dir] = os.path.basename(os.path.normpath(benchmark_dir))
-
-        for benchmark_dir in benchmark_dirs:
-            config.runs[benchmark_names[benchmark_dir]] = benchmark_dir
-
-        # Make the benchmarks
-        benchmark_id = 0
-        self.benchmarks = []
-        for benchmark_dir in benchmark_dirs:
-            benchmark_id += 1
-            benchmark = Benchmark(benchmark_dir, benchmark_names[benchmark_dir], benchmark_id, config)
-            benchmark.lookup_period()
-            # benchmark.init_files()
-            # benchmark.load_workers()
-            # self.benchmarks.append(benchmark)
-
-        prepare(config)
-        df = analyze(config)
-        report(config, df)
-
-    def output_dir(self, name):
-        output_dir = os.path.join(self.config.report_dir, name)
-        mkdir(output_dir)
-        return output_dir
-
-    # makes the actual comparison report.
-    def make(self):
-        info("Done writing report [" + self.config.report_dir + "]")
-        for benchmark in self.benchmarks:
-            info(" benchmark [" + benchmark.name + "] benchmark.dir [" + benchmark.src_dir + "]")
-
-
-class HTMLReport:
-
-    def __init__(self, config: ReportConfig):
-        self.metrics = []
-        self.config = config
-
-    def generate(self):
-        image_list = self.__import_images()
-        report_csv = self.__load_report_csv()
-
-        html_template = read(f"{simulator_home}/src/simulator/report.html")
-        file_path = os.path.join(self.config.report_dir + "/report.html")
-        file_url = "file://" + file_path
-        info(f"Generating HTML report : {file_url}")
-
-        images_index = html_template.index("[images]")
-        overview_index = html_template.index("[overview]")
-        with (open(file_path, 'w') as f):
-            f.write(html_template[0:images_index])
-
-            for (type, path, title) in image_list:
-                metric_name = path.split('/')[-2]
-
-                with open(path, "rb") as image_file:
-                    encoded_image = str(base64.b64encode(image_file.read()), encoding='utf-8')
-
-                encoded_image = "data:image/png;base64,%s" % encoded_image
-
-                image_html = f"""
-                    <div class="image-container {type}">
-                        <img src="{encoded_image}" onclick="toggleZoom(this);" />
-                        <p class="image-text">{title}</p>
-                    </div>
-                """
-                f.write(image_html)
-
-            f.write(html_template[images_index + len("[images]"):overview_index])
-            overview = ""
-            try:
-                for i in range(len(report_csv[0].split(','))):
-                    overview = overview + '<tr>'
-                    for j in range(len(report_csv)):
-                        overview = overview + '<td>' + report_csv[j].split(',')[i].replace('"', '') + '</td>'
-                    overview = overview + '</tr>'
-            except IndexError:
-                # We need on this problem in the future.
-                pass
-            f.write(overview)
-            f.write(html_template[overview_index + len("[overview]"):])
-
-    def __load_report_csv(self):
-        contents = []
-        with open(os.path.join(self.config.report_dir + "/report.csv")) as csvfile:
-            line = csvfile.readline()
-            while line != '':
-                contents.append(line)
-                line = csvfile.readline()
-
-        return contents
-
-    def __import_images(self):
-        result = []
-        result += self.__import_images_dstat()
-        result += self.__import_images_operations()
-        result += self.__import_images_latency()
-        return result
-
-    def __import_images_latency(self):
-        result = []
-        dir = f"{self.config.report_dir}/latency"
-
-        for outer_filename in os.listdir(dir):
-            outer_file_path = f"{dir}/{outer_filename}"
-            if not outer_file_path.endswith(".png"):
-                continue
-            title = Path(outer_file_path).stem.replace('_', ' ')
-            result.append(("latency",
-                           f"{outer_file_path}",
-                           f"{title}"))
-
-        for outer_filename in os.listdir(dir):
-            outer_file_path = f"{dir}/{outer_filename}"
-            if not os.path.isdir(outer_file_path):
-                continue
-            for image_filename in os.listdir(outer_file_path):
-                if not image_filename.endswith(".png"):
-                    continue
-                title = Path(image_filename).stem.replace('_', ' ')
-                result.append(("latency",
-                               f"{outer_file_path}/{image_filename}",
-                               f"{outer_filename} {title}"))
-        return result
-
-    def __import_images_operations(self):
-        result = []
-        dir = f"{self.config.report_dir}/operations"
-
-        for outer_filename in os.listdir(dir):
-            outer_file_path = f"{dir}/{outer_filename}"
-            if not outer_file_path.endswith(".png"):
-                continue
-            base_filename = Path(outer_file_path).stem
-            result.append(("operations",
-                           f"{outer_file_path}",
-                           f"{base_filename}"))
-
-        for outer_filename in os.listdir(dir):
-            outer_file_path = f"{dir}/{outer_filename}"
-            if not os.path.isdir(outer_file_path):
-                continue
-            for image_filename in os.listdir(outer_file_path):
-                if not image_filename.endswith(".png"):
-                    continue
-                base_filename = Path(image_filename).stem
-                result.append(("operations",
-                               f"{outer_file_path}/{image_filename}",
-                               f"{outer_filename} {base_filename}"))
-        return result
-
-    def __import_images_dstat(self):
-        result = []
-        # scan for dstat
-        dir = f"{self.config.report_dir}/dstat"
-        for agent_filename in os.listdir(dir):
-            agent_dir = f"{dir}/{agent_filename}"
-
-            if not os.path.isdir(agent_dir):
-                continue
-            for image_filename in os.listdir(agent_dir):
-                if not image_filename.endswith(".png"):
-                    continue
-                base_filename = Path(image_filename).stem
-                result.append(("dstat", f"{agent_dir}/{image_filename}",
-                               f"{agent_filename} {base_filename}"))
-        return result
+    for benchmark_dir in benchmark_dirs:
+        config.runs[benchmark_names[benchmark_dir]] = benchmark_dir
 
 
 class PerfTestReportCli:
+
     def __init__(self, argv):
         parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter,
                                          description='Creating a benchmark report from one or more benchmarks.')
@@ -368,7 +196,9 @@ class PerfTestReportCli:
                             metavar='B',
                             nargs='+',
                             help='a benchmark to be used in the comparison')
-        # parser.add_argument('-r', '--realtime', default='report', help='print the real time of the datapoints.')
+        parser.add_argument('-t', '--time',
+                            help='Preserve the real time',
+                            action="store_true")
         parser.add_argument('-o', '--output',
                             nargs=1,
                             help='The output directory for the report. '
@@ -397,10 +227,7 @@ class PerfTestReportCli:
                             default=[1200],
                             type=int,
                             help='The height, in pixels, of the generated images.')
-        global args
         args = parser.parse_args(argv)
-        global benchmark_args
-        benchmark_args = args.benchmarks
 
         gc_logs_found = False
 
@@ -420,12 +247,15 @@ class PerfTestReportCli:
         config.image_height_px = int(args.height[0])
         config.worker_reporting = args.full
         config.compare_last = args.last
+        config.preserve_time = args.time
 
-        if os.path.isdir('report'):
-            shutil.rmtree('report')
-        htmlReport = HTMLReport(config)
-        comparison = Comparison(config)
-        htmlReport.generate()
+        if os.path.isdir(config.report_dir):
+            shutil.rmtree(config.report_dir)
+
+        collect_runs(args.benchmarks, config)
+        prepare(config)
+        df = analyze(config)
+        report(config, df)
 
         if not args.full and gc_logs_found:
             info("gc.log files have been found. Run with -f option to get these plotted.")
