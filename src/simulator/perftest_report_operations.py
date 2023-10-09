@@ -235,6 +235,8 @@ def report_operations(config: ReportConfig, df: pd.DataFrame):
     for (worker_id, metric_id, test_id, worker_id), column_name_list in grouped_column_names.items():
         if worker_id is None:
             target_dir = f"{config.report_dir}/operations"
+        elif not config.worker_reporting:
+            continue
         else:
             target_dir = f"{config.report_dir}/operations/{worker_id}"
         mkdir(target_dir)

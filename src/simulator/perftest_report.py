@@ -228,16 +228,13 @@ class Comparison:
 
 class HTMLReport:
 
-    def __init__(self):
-        self.image_list = []
+    def __init__(self, config: ReportConfig):
         self.metrics = []
+        self.config = config
 
-    def addImage(self, type, path, title):
-        self.image_list.append((type, path, title))
-
-    def loadReportCsv(self):
+    def __load_report_csv(self):
         contents = []
-        with open(os.path.join(report_dir + "/report.csv")) as csvfile:
+        with open(os.path.join(self.config.report_dir + "/report.csv")) as csvfile:
             line = csvfile.readline()
             while line != '':
                 contents.append(line)
@@ -245,7 +242,8 @@ class HTMLReport:
 
         return contents
 
-    def importImages(self):
+    def __import_images(self):
+        result = []
         dstat_dir = f"{report_dir}/dstat"
         for agent_filename in os.listdir(dstat_dir):
             agent_dir = f"{dstat_dir}/{agent_filename}"
@@ -253,18 +251,20 @@ class HTMLReport:
                 if not image_filename.endswith(".png"):
                     continue
                 base_image_filename = Path(image_filename).stem
-                self.addImage("dstat",
-                              f"{agent_dir}/{image_filename}",
-                              f"{agent_filename} {base_image_filename}")
+                result.append(("dstat", f"{agent_dir}/{image_filename}",
+                               f"{agent_filename} {base_image_filename}"))
 
         for path in Path(f"{report_dir}/latency").rglob('*.png'):
-            htmlReport.addImage("latency", path.resolve().as_posix(), "")
+            result.append(("latency", path.resolve().as_posix(), ""))
 
         for path in Path(f"{report_dir}/operations").rglob('*.png'):
-            htmlReport.addImage("operations", path.resolve().as_posix(), "")
+            result.append(("operations", path.resolve().as_posix(), ""))
+
+        return result
 
     def generate(self):
-        report_csv = self.loadReportCsv()
+        image_list = self.__import_images()
+        report_csv = self.__load_report_csv()
 
         html_template = read(f"{simulator_home}/src/simulator/report.html")
         file_path = os.path.join(report_dir + "/report.html")
@@ -276,7 +276,7 @@ class HTMLReport:
         with (open(file_path, 'w') as f):
             f.write(html_template[0:images_index])
 
-            for (type, path, title) in self.image_list:
+            for (type, path, title) in image_list:
                 metric_name = path.split('/')[-2]
 
                 with open(path, "rb") as image_file:
@@ -284,7 +284,7 @@ class HTMLReport:
 
                 encoded_image = "data:image/png;base64,%s" % encoded_image
 
-                image_html =f"""
+                image_html = f"""
                     <div class="image-container {type}">
                         <img src="{encoded_image}" onclick="toggleZoom(this);" />
                         <p class="image-text">{path}"</p>
@@ -367,7 +367,8 @@ class PerfTestReportCli:
         config.cooldown_seconds = int(args.cooldown[0])
         config.image_width_px = int(args.width[0])
         config.image_height_px = int(args.height[0])
-
+        config.worker_reporting = args.full
+        print(f"full {config.worker_reporting}")
         global compare_last
         compare_last = args.last
 
@@ -376,9 +377,8 @@ class PerfTestReportCli:
         if os.path.isdir('report'):
             shutil.rmtree('report')
         global htmlReport
-        htmlReport = HTMLReport()
+        htmlReport = HTMLReport(config)
         comparison = Comparison(config)
-        htmlReport.importImages()
         htmlReport.generate()
 
         if not args.full and gc_logs_found:

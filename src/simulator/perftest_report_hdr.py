@@ -206,6 +206,8 @@ def __report_latency_history(config: ReportConfig, df):
     for (worker_id, metric_id, test_id, worker_id), column_name_list in grouped_column_names.items():
         if worker_id is None:
             target_dir = f"{config.report_dir}/latency/"
+        elif not config.worker_reporting:
+            continue
         else:
             target_dir = f"{config.report_dir}/latency/{worker_id}"
         mkdir(target_dir)
@@ -265,16 +267,16 @@ def __report_latency_history(config: ReportConfig, df):
 def __report_hgrm(config: ReportConfig):
     hgrm_files = set()
     for run_label, run_dir in config.runs.items():
-        hgrm_files.update(__find_hgrm_files(config.report_dir, run_label))
+        hgrm_files.update(__find_hgrm_files(config, run_label))
 
     __make_hgrm_latency_by_perc_dist_html(config, hgrm_files)
     # make_hgrm_histogram_plot(items)
     __make_latency_by_perc_dist_plot(config, hgrm_files)
 
 
-def __find_hgrm_files(report_dir, run_label):
+def __find_hgrm_files(config:ReportConfig, run_label):
     result = []
-    dir = f"{report_dir}/hdr/{run_label}"
+    dir = f"{config.report_dir}/hdr/{run_label}"
     for outer_file_name in os.listdir(dir):
         if outer_file_name.endswith(".hgrm"):
             result.append(outer_file_name)
@@ -282,6 +284,9 @@ def __find_hgrm_files(report_dir, run_label):
 
         dir_path = f"{dir}/{outer_file_name}"
         if not os.path.isdir(dir_path):
+            continue
+
+        if not config.worker_reporting:
             continue
 
         for inner_file_name in os.listdir(dir_path):

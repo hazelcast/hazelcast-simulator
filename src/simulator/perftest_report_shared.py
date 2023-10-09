@@ -39,6 +39,7 @@ class ReportConfig:
     image_height_px = 1200
     warmup_seconds = 0
     cooldown_seconds = 0
+    worker_reporting = True
 
     def __init__(self, report_dir):
         self.report_dir = report_dir
