@@ -273,7 +273,7 @@ class HTMLReport:
 
         images_index = html_template.index("[images]")
         overview_index = html_template.index("[overview]")
-        with open(file_path, 'w') as f:
+        with (open(file_path, 'w') as f):
             f.write(html_template[0:images_index])
 
             for (type, path, title) in self.image_list:
@@ -284,11 +284,12 @@ class HTMLReport:
 
                 encoded_image = "data:image/png;base64,%s" % encoded_image
 
-                # todo: flatten into multiline string
-                image_html = '<div class="image-container ' + type + '">'
-                image_html = image_html + '<img src="' + encoded_image + '" onclick="toggleZoom(this);" />'
-                image_html = image_html + '<p class="image-text">' + path + "</p>"
-                image_html = image_html + '</div>'
+                image_html =f"""
+                    <div class="image-container {type}">
+                        <img src="{encoded_image}" onclick="toggleZoom(this);" />
+                        <p class="image-text">{path}"</p>
+                    </div>
+                """
                 f.write(image_html)
 
             f.write(html_template[images_index + len("[images]"):overview_index])
