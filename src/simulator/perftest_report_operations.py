@@ -6,7 +6,7 @@ import time
 
 from matplotlib.dates import DateFormatter
 
-from simulator.perftest_report_shared import *
+from simulator.perftest_report_common import *
 import matplotlib.pyplot as plt
 
 

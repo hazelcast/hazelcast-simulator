@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 import os
 import base64
 from pathlib import Path
@@ -5,7 +8,7 @@ from pathlib import Path
 import pandas as pd
 
 from simulator.log import info
-from simulator.perftest_report_shared import ReportConfig
+from simulator.perftest_report_common import ReportConfig
 from simulator.util import simulator_home, read
 
 
@@ -15,7 +18,7 @@ class HTMLReport:
         self.metrics = []
         self.config = config
 
-    def generate(self):
+    def make(self):
         image_list = self.__import_images()
         report_df = self.__load_report_csv()
 
@@ -29,6 +32,7 @@ class HTMLReport:
         with (open(file_path, 'w') as f):
             f.write(html_template[0:images_index])
 
+            # Write the images
             for (type, path, title) in image_list:
                 with open(path, "rb") as image_file:
                     encoded_image = str(base64.b64encode(image_file.read()), encoding='utf-8')
@@ -42,19 +46,17 @@ class HTMLReport:
                     </div>
                 """
                 f.write(image_html)
-
             f.write(html_template[images_index + len("[images]"):overview_index])
+
+            # Write the overview.
             overview = ""
-            try:
-                for column in report_df.columns:
-                    overview += '<tr><td>' + column + '</td>'
-                    for value in report_df[column]:
-                        overview += '<td>' + str(value) + '</td>'
-                    overview += '</tr>'
-            except IndexError:
-                # We need on this problem in the future.
-                pass
+            for column in report_df.columns:
+                overview += '<tr><td>' + column + '</td>'
+                for value in report_df[column]:
+                    overview += '<td>' + str(value) + '</td>'
+                overview += '</tr>'
             f.write(overview)
+
             f.write(html_template[overview_index + len("[overview]"):])
 
     def __load_report_csv(self):

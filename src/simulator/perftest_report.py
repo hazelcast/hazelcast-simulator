@@ -11,7 +11,7 @@ from simulator.perftest_report_dstat import report_dstat, analyze_dstat
 from simulator.perftest_report_hdr import report_hdr, prepare_hdr, analyze_latency_history
 from simulator.perftest_report_operations import report_operations, prepare_operation, analyze_operations
 from simulator.util import mkdir
-from simulator.perftest_report_shared import *
+from simulator.perftest_report_common import *
 from simulator.perftest_report_html import HTMLReport
 
 
@@ -80,7 +80,7 @@ def report(config: ReportConfig, df: pd.DataFrame):
     report_dstat(config, df)
 
     html_report = HTMLReport(config)
-    html_report.generate()
+    html_report.make()
 
 
 class Period:

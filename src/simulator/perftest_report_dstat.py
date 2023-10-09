@@ -3,7 +3,7 @@
 
 import time
 
-from simulator.perftest_report_shared import *
+from simulator.perftest_report_common import *
 import matplotlib.pyplot as plt
 
 

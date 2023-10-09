@@ -4,7 +4,7 @@
 import time
 from pathlib import Path
 
-from simulator.perftest_report_shared import *
+from simulator.perftest_report_common import *
 import matplotlib.pyplot as plt
 from simulator.util import shell, simulator_home, read, write
 
