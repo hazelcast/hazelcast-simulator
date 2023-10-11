@@ -21,4 +21,11 @@ public class RandomKeySelector implements KeySelector {
     public long nextKey(IntToLongFunction randomFn) {
         return randomFn.applyAsLong(keyDomain);
     }
+
+    @Override
+    public String toString() {
+        return "RandomKeySelector{" +
+                "keyDomain=" + keyDomain +
+                '}';
+    }
 }

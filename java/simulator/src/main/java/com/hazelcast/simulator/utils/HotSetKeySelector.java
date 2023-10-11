@@ -32,7 +32,7 @@ public class HotSetKeySelector implements KeySelector {
         this.min = min;
         this.max = max;
         this.hotSetAccessPercentage = hotSetAccessPercentage;
-        this.hotSetThreshold = max - (int) (((max - min) * (float) hotSetPercentage / 100));
+        this.hotSetThreshold = max - (int) ((max - min) * (float) hotSetPercentage / 100);
     }
 
     public int getHotSetThreshold() {
@@ -48,5 +48,15 @@ public class HotSetKeySelector implements KeySelector {
         } else {
             return randomFn.applyAsLong(max + 1 - hotSetThreshold) + hotSetThreshold;
         }
+    }
+
+    @Override
+    public String toString() {
+        return "HotSetKeySelector{"
+                + "min=" + min
+                + ", max=" + max
+                + ", hotSetAccessPercentage=" + hotSetAccessPercentage
+                + ", hotSetThreshold=" + hotSetThreshold
+                + '}';
     }
 }
