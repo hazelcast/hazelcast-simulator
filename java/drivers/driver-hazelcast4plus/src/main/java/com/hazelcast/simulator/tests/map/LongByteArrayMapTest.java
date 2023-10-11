@@ -38,6 +38,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicLongArray;
 
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateByteArrays;
 
@@ -59,6 +60,8 @@ public class LongByteArrayMapTest extends HazelcastTest {
     private IMap<Long, byte[]> map;
     private byte[][] values;
     private final Executor callerRuns = Runnable::run;
+
+    private final AtomicLongArray buckets = new AtomicLongArray(100);
 
     @Setup
     public void setUp() {
@@ -144,7 +147,12 @@ public class LongByteArrayMapTest extends HazelcastTest {
         private int i;
 
         private long randomKey() {
-            return keySelector.nextKey(this::randomLong);
+            long rndKey = keySelector.nextKey(this::randomLong);
+
+            int bucketIdx = (int) ((double) rndKey / keyDomain * 100);
+            buckets.incrementAndGet(bucketIdx);
+
+            return rndKey;
         }
 
         private byte[] randomValue() {
@@ -155,5 +163,16 @@ public class LongByteArrayMapTest extends HazelcastTest {
     @Teardown
     public void tearDown() {
         map.destroy();
+        logger.info("Key bucket hits:");
+        long allHits = 0;
+        for (int i = 0; i < buckets.length(); i++) {
+            allHits += buckets.get(i);
+        }
+
+        for (int i = 0; i < buckets.length(); i++) {
+            long bucketHits = buckets.get(i);
+            double bucketHitPercentage = (double) bucketHits / allHits * 100;
+            logger.info(String.format("\tBucket %2d = %.2f%%", i, bucketHitPercentage));
+        }
     }
 }
