@@ -68,7 +68,7 @@ public class LongByteArrayMapTest extends HazelcastTest {
         map = targetInstance.getMap(name);
         values = generateByteArrays(valueCount, minValueLength, maxValueLength);
         if ("hotset".equalsIgnoreCase(selector)) {
-            keySelector = new HotSetKeySelector(0, keyDomain, hotSetAccessPercentage, hotSetPercentage);
+            keySelector = new HotSetKeySelector(0, keyDomain - 1, hotSetAccessPercentage, hotSetPercentage);
         } else {
             keySelector = new RandomKeySelector(keyDomain);
         }

@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.utils;
 
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.IntToLongFunction;
 
 /**
@@ -58,5 +59,31 @@ public class HotSetKeySelector implements KeySelector {
                 + ", hotSetAccessPercentage=" + hotSetAccessPercentage
                 + ", hotSetThreshold=" + hotSetThreshold
                 + '}';
+    }
+
+    public static void main(String[] args) {
+        int keyDomain = 1000;
+        HotSetKeySelector selector = new HotSetKeySelector(0, keyDomain - 1, 95, 10);
+        ThreadLocalRandom rnd = ThreadLocalRandom.current();
+        long[] buckets = new long[100];
+        for (int i = 0; i < 1000_000; i++) {
+            long l = selector.nextKey(x -> (long) (rnd.nextDouble() * x));
+            int bucketIdx = (int) ((double) l / keyDomain * 100);
+            buckets[bucketIdx]++;
+//            System.out.println(bucketIdx);
+//            System.out.println(l);
+        }
+
+        long allHits = 0;
+        for (int i = 0; i < buckets.length; i++) {
+            allHits += buckets[i];
+        }
+
+        for (int i = 0; i < buckets.length; i++) {
+            long bucketHits = buckets[i];
+            double bucketHitPercentage = (double) bucketHits / allHits * 100;
+            System.out.println(String.format("Bucket %2d = %.2f%%", i, bucketHitPercentage));
+        }
+
     }
 }
