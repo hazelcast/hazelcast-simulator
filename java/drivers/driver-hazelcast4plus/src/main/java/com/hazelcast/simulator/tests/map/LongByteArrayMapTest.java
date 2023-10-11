@@ -69,6 +69,7 @@ public class LongByteArrayMapTest extends HazelcastTest {
         } else {
             keySelector = new RandomKeySelector(keyDomain);
         }
+        logger.info("Using " + keySelector.getClass().getSimpleName() + " key selector");
     }
 
     @Prepare(global = true)
