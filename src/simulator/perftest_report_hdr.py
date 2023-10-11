@@ -4,6 +4,10 @@
 import time
 from pathlib import Path
 
+from matplotlib.dates import DateFormatter
+import plotly.express as px
+import plotly.offline as pyo
+import plotly.tools as tls
 from simulator.perftest_report_common import *
 import matplotlib.pyplot as plt
 from simulator.util import shell, simulator_home, read, write
@@ -42,7 +46,7 @@ def __process_hdr(report_dir, run_dir, run_label):
 
 
 def __process_hdr_file(report_dir, run_label, worker_id, hdr_file):
-    print(f"\t processing hdr file {hdr_file}")
+    info(f"\t processing hdr file {hdr_file}")
 
     hdr_file_name_no_ext = Path(hdr_file).stem
 
@@ -103,7 +107,7 @@ def analyze_latency_history(report_dir, run_dir, attributes):
 
 def __load_latency_history_csv(file_path, attributes, worker_id):
     test_id = os.path.basename(file_path).replace(".latency-history.csv", "")
-    print(f"\tLoading {file_path}")
+    info(f"\tLoading {file_path}")
     df = pd.read_csv(file_path, skiprows=2)
 
     for column_name in df.columns:
@@ -229,16 +233,23 @@ def __report_latency_history(config: ReportConfig, df):
         filtered_df.dropna(inplace=True)
         filtered_df.to_csv(f"{target_dir}/{metric_id}{test_str}.csv")
 
-        plt.figure(figsize=(config.image_width_px / config.image_dpi,
-                            config.image_height_px / config.image_dpi),
-                   dpi=config.image_dpi)
+        fig, ax = plt.subplots(figsize=(config.image_width_px / config.image_dpi,
+                                        config.image_height_px / config.image_dpi),
+                               dpi=config.image_dpi)
         for column_name in column_name_list:
             column_desc = ColumnDesc.from_string(column_name)
             run_label = column_desc.attributes["run_label"]
-            plt.plot(filtered_df.index, filtered_df[run_label], label=run_label)
+            ax.plot(filtered_df.index, filtered_df[run_label], label=run_label)
 
         plt.ticklabel_format(style='plain', axis='y')
         plt.title(metric_id.replace('_', ' '))
+
+        # trim wasted space on both sides of the plot
+        plt.xlim(left=0, right=df.index[-1])
+
+        if config.y_start_from_zero:
+            plt.ylim(bottom=0)
+
         if metric_id == "Int_Throughput" or metric_id == "Total_Throughput":
             plt.ylabel("operations/second")
         elif metric_id == "Inc_Count" or metric_id == "Total_Count":
@@ -246,8 +257,12 @@ def __report_latency_history(config: ReportConfig, df):
         else:
             plt.ylabel("microseconds")
 
-        plt.xlabel("Time")
-        # plt.gca.xaxis.set_major_formatter(mdates.DateFormatter('%m-%S'))
+        if config.preserve_time:
+            plt.xlabel("Time")
+            ax.xaxis.set_major_formatter(DateFormatter('%Y-%m-%d %H:%M:%S'))
+        else:
+            plt.xlabel("Time minutes:seconds")
+            ax.xaxis.set_major_formatter(DateFormatter('%M:%S'))
         plt.legend()
         # if worker_id == '':
         #    plt.title(f"{test_id} {column_name.capitalize()}")
@@ -256,8 +271,20 @@ def __report_latency_history(config: ReportConfig, df):
         plt.grid()
 
         path = f"{target_dir}/{metric_id}{test_str}.png"
-        print(f"\tGenerating [{path}]")
+        info(f"\tGenerating [{path}]")
         plt.savefig(path)
+
+        if config.svg:
+            path = f"{target_dir}/{metric_id}{test_str}.svg"
+            info(f"\tGenerating [{path}]")
+            plt.savefig(path)
+
+        if config.interactive:
+            path = f"{target_dir}/{metric_id}{test_str}.html"
+            info(f"\tGenerating [{path}]")
+            plotly_fig = tls.mpl_to_plotly(plt.gcf())
+            plotly_fig.write_html(path)
+
         plt.close()
 
     duration_sec = time.time() - start_sec
@@ -274,7 +301,7 @@ def __report_hgrm(config: ReportConfig):
     __make_latency_by_perc_dist_plot(config, hgrm_files)
 
 
-def __find_hgrm_files(config:ReportConfig, run_label):
+def __find_hgrm_files(config: ReportConfig, run_label):
     result = []
     dir = f"{config.report_dir}/hdr/{run_label}"
     for outer_file_name in os.listdir(dir):
@@ -299,8 +326,8 @@ def __find_hgrm_files(config:ReportConfig, run_label):
 def __make_latency_by_perc_dist_plot(config: ReportConfig, hgrm_files):
     for hgrm_file_name in hgrm_files:
         plt.figure(figsize=(config.image_width_px / config.image_dpi,
-                            config.image_height_px / config.image_dpi),
-                   dpi=config.image_dpi)
+                                  config.image_height_px / config.image_dpi),
+                         dpi=config.image_dpi)
 
         for run_label, run_path in config.runs.items():
             dir = f"{config.report_dir}/hdr/{run_label}"
@@ -336,8 +363,20 @@ def __make_latency_by_perc_dist_plot(config: ReportConfig, hgrm_files):
         hgrm_file_path_no_ext = hgrm_file_name.rstrip(".hgrm")
         path = f"{config.report_dir}/latency/latency_distribution_{hgrm_file_path_no_ext}.png"
         mkdir(os.path.dirname(path))
-        print(f"\tGenerating [{path}]")
+        info(f"\tGenerating [{path}]")
         plt.savefig(path)
+
+        if config.svg:
+            path = f"{config.report_dir}/latency/latency_distribution_{hgrm_file_path_no_ext}.svg"
+            info(f"\tGenerating [{path}]")
+            plt.savefig(path)
+
+        if config.interactive:
+            path = f"{config.report_dir}/latency/latency_distribution_{hgrm_file_path_no_ext}.html"
+            info(f"\tGenerating [{path}]")
+            plotly_fig = tls.mpl_to_plotly(plt.gcf())
+            plotly_fig.write_html(path)
+
         plt.close()
 
 
@@ -355,7 +394,6 @@ def __make_hgrm_histogram_plot(config: ReportConfig, items):
     i = 0
     for label, path in items.items():
         df = __load_hgrm(path)
-        print(df)
         hist = plt.hist(df['Value'], bins=20, weights=df['Count'])
         # plt.histogram(df["Value"], df["Count"], label=label)
 
@@ -373,7 +411,7 @@ def __make_hgrm_histogram_plot(config: ReportConfig, items):
     plt.grid()
 
     path = f"{config.report_dir}/latency_histogram.png"
-    print(f"\tGenerating [{path}]")
+    info(f"\tGenerating [{path}]")
     plt.savefig(path)
     plt.close()
 

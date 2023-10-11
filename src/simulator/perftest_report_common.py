@@ -2,7 +2,12 @@
 # -*- coding: utf-8 -*-
 
 import os
+from datetime import datetime, UTC
+
+import numpy as np
 import pandas as pd
+
+from simulator.log import info
 
 
 def multiple_by(df, amount, *column_names):
@@ -13,15 +18,6 @@ def multiple_by(df, amount, *column_names):
 def mkdir(path):
     from pathlib import Path
     Path(path).mkdir(parents=True, exist_ok=True)
-
-
-def to_relative_time(df, time_column_name):
-    column = df[time_column_name]
-    base = None
-    for i in range(len(column.values)):
-        if not base:
-            base = column.iloc[i]
-        column.iloc[i] = column.iloc[i] - base
 
 
 def sizeof_fmt(x):
@@ -42,10 +38,14 @@ class ReportConfig:
     worker_reporting = True
     compare_last = False
     preserve_time = False
+    y_start_from_zero = False
+    svg = False
+    #interactive = True
 
     def __init__(self, report_dir):
         self.report_dir = report_dir
         self.runs = {}
+        self.periods = {}
 
 
 class ColumnDesc:
@@ -95,15 +95,31 @@ def merge_dataframes(*dfs):
 
 # Shifts the vales in the time index to the beginning (epoch). This is needed
 # to be able to compare benchmarks that have run at different times.
-def shift_to_epoch(df):
+# Any data points that end up with a negative time, will be removed.
+def df_shift_time(df: pd.DataFrame, amount_seconds=None):
     if df is None or len(df.index) == 0:
         return df
 
-    epoch_time = -df.index[0].timestamp()
-    print(epoch_time)
-    shifted_df = df.shift(periods=epoch_time, freq='S')
-    return shifted_df
+    if amount_seconds is None:
+        amount_seconds = -df.index[0].timestamp()
 
+    df = df.shift(periods=amount_seconds, freq='S')
+    # filter out rows with a negative time.
+    epoch = datetime(1970, 1, 1, 0, 0, 0)
+    df = df[df.index >= epoch]
+
+    return df
+
+
+def df_trim_time(df: pd.DataFrame, start_time_seconds, end_time_seconds):
+    if df is None:
+        return df
+
+    end = np.datetime64(datetime.fromtimestamp(end_time_seconds, UTC))
+    start = np.datetime64(datetime.fromtimestamp(start_time_seconds, UTC))
+    df = df[df.index >= start]
+    df = df[df.index <= end]
+    return df
 
 def extract_worker_id(path):
     if not os.path.isdir(path):
@@ -117,13 +133,25 @@ def extract_worker_id(path):
     return basename[:index]
 
 
+class Period:
+    def __init__(self, start_time, end_time):
+        self.start_time = start_time
+        self.end_time = end_time
+
+    def start_millis(self):
+        return int(round(float(self.start_time) * 1000))
+
+    def end_millis(self):
+        return int(round(float(self.end_time) * 1000))
+
+
 def log_section(text):
-    print("---------------------------------------------------")
-    print(text)
-    print("---------------------------------------------------")
+    info("---------------------------------------------------")
+    info(text)
+    info("---------------------------------------------------")
 
 
 def log_sub_section(text):
-    print("-----------------------")
-    print(text)
-    print("-----------------------")
+    info("-----------------------")
+    info(text)
+    info("-----------------------")

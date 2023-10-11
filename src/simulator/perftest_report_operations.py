@@ -8,6 +8,9 @@ from matplotlib.dates import DateFormatter
 
 from simulator.perftest_report_common import *
 import matplotlib.pyplot as plt
+import plotly.express as px
+import plotly.offline as pyo
+import plotly.tools as tls
 
 
 def prepare_operation(config: ReportConfig):
@@ -54,7 +57,7 @@ def __load_worker_operations_csv(run_dir, attributes):
                 test_id = None
 
             csv_path = f"{worker_dir}/{inner_file_name}"
-            print(f"\tLoading {csv_path}")
+            info(f"\tLoading {csv_path}")
             df = pd.read_csv(csv_path)
             if len(df.index) == 0:
                 continue
@@ -118,7 +121,7 @@ def __load_aggregated_operations_csv(run_dir, attributes):
         else:
             test_id = None
         csv_path = f"{run_dir}/{file_name}"
-        print(f"\tLoading {csv_path}")
+        info(f"\tLoading {csv_path}")
         df = pd.read_csv(csv_path)
         if len(df.index) == 0:
             continue
@@ -162,7 +165,7 @@ def __create_aggregated_operations_csv(run_dir):
                 df_list = []
                 df_list_map[test_id] = df_list
             csv_path = f"{outer_dir}/{inner_file_name}"
-            print(f"\tLoading {csv_path}")
+            info(f"\tLoading {csv_path}")
             df = pd.read_csv(csv_path)
             if len(df.index) == 0:
                 continue
@@ -245,29 +248,50 @@ def report_operations(config: ReportConfig, df: pd.DataFrame):
         filtered_df.dropna(inplace=True)
         filtered_df.to_csv(f"{target_dir}/throughput{test_str}.csv")
 
-        plt.figure(figsize=(config.image_width_px / config.image_dpi,
-                            config.image_height_px / config.image_dpi),
-                   dpi=config.image_dpi)
+        fig, ax = plt.subplots(figsize=(config.image_width_px / config.image_dpi,
+                                        config.image_height_px / config.image_dpi),
+                               dpi=config.image_dpi)
+
         for column_name in column_name_list:
             column_desc = ColumnDesc.from_string(column_name)
             run_label = column_desc.attributes["run_label"]
-            plt.plot(filtered_df.index, filtered_df[run_label], label=run_label)
+            ax.plot(filtered_df.index, filtered_df[run_label], label=run_label)
 
         plt.ticklabel_format(style='plain', axis='y')
         plt.ylabel("operations/second")
-        plt.xlabel("Time")
 
-        # fig, ax = plt.subplots()
-        # date_format = DateFormatter('%H--%M--%S')  # Format for hour:minute:second
-        # ax.xaxis.set_major_formatter(date_format)
+        # trim wasted space on both sides of the plot
+        plt.xlim(left=0, right=df.index[-1])
+
+        if config.y_start_from_zero:
+            plt.ylim(bottom = 0)
+
+        if config.preserve_time:
+            plt.xlabel("Time")
+            ax.xaxis.set_major_formatter(DateFormatter('%Y-%m-%d %H:%M:%S'))
+        else:
+            plt.xlabel("Time minutes:seconds")
+            ax.xaxis.set_major_formatter(DateFormatter('%M:%S'))
 
         plt.legend()
         plt.title(f"Throughput")
         plt.grid()
 
         path = f"{target_dir}/throughput{test_str}.png"
-        print(f"\tGenerating [{path}]")
+        info(f"\tGenerating [{path}]")
         plt.savefig(path)
+
+        if config.svg:
+            path = f"{target_dir}/throughput{test_str}.svg"
+            info(f"\tGenerating [{path}]")
+            plt.savefig(path)
+
+        # if config.interactive:
+        #     path = f"{target_dir}/throughput{test_str}.html"
+        #     info(f"\tGenerating [{path}]")
+        #     plotly_fig = tls.mpl_to_plotly(plt.gcf())
+        #     plotly_fig.write_html(path)
+
         plt.close()
 
     duration_sec = time.time() - start_sec

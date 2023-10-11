@@ -10,7 +10,7 @@ from simulator.log import info, error
 from simulator.perftest_report_dstat import report_dstat, analyze_dstat
 from simulator.perftest_report_hdr import report_hdr, prepare_hdr, analyze_latency_history
 from simulator.perftest_report_operations import report_operations, prepare_operation, analyze_operations
-from simulator.util import mkdir
+from simulator.util import mkdir, exit_with_error
 from simulator.perftest_report_common import *
 from simulator.perftest_report_html import HTMLReport
 
@@ -24,24 +24,30 @@ def prepare(config: ReportConfig):
 
 
 def analyze(config: ReportConfig):
-    df = None
+    result = None
 
     for run_label, run_dir in config.runs.items():
-        if len(config.runs) == 1:
-            df = analyze_run(config.report_dir, run_dir, run_label)
-            if not config.preserve_time:
-                df = shift_to_epoch(df)
-        else:
-            tmp_df = analyze_run(config.report_dir, run_dir, run_label)
-            if not config.preserve_time:
-                tmp_df = shift_to_epoch(tmp_df)
-            df = merge_dataframes(df, tmp_df)
+        tmp_df = analyze_run(config, run_dir, run_label)
+        if tmp_df is None:
+            continue
 
-    return df
+        if not config.preserve_time:
+            period = config.periods[run_label]
+            start_time_sec = round(period.start_time)
+            if config.warmup_seconds is not None:
+                start_time_sec = start_time_sec + config.warmup_seconds
+            end_time_sec = round(period.end_time)
+            if config.cooldown_seconds is not None:
+                end_time_sec = end_time_sec - config.cooldown_seconds
+            tmp_df = df_trim_time(tmp_df, start_time_sec, end_time_sec)
+            tmp_df = df_shift_time(tmp_df, -start_time_sec)
+        result = merge_dataframes(result, tmp_df)
+
+    return result
 
 
-def analyze_run(report_dir, run_dir, run_label=None):
-    print(f"Analyzing run_path:{run_dir}")
+def analyze_run(config: ReportConfig, run_dir, run_label):
+    info(f"Analyzing run_path:{run_dir}")
 
     if run_label is None:
         run_label = os.path.basename(run_dir)
@@ -53,14 +59,13 @@ def analyze_run(report_dir, run_dir, run_label=None):
     df_operations = analyze_operations(run_dir, attributes)
     result = merge_dataframes(result, df_operations)
 
-    df_latency_history = analyze_latency_history(report_dir, run_dir, attributes)
+    df_latency_history = analyze_latency_history(config.report_dir, run_dir, attributes)
     result = merge_dataframes(result, df_latency_history)
 
     df_dstat = analyze_dstat(run_dir, attributes)
     result = merge_dataframes(result, df_dstat)
 
-    print(f"Analyzing run_path:{run_dir}: Done")
-
+    info(f"Analyzing run_path:{run_dir}: Done")
     return result
 
 
@@ -69,7 +74,7 @@ def report(config: ReportConfig, df: pd.DataFrame):
         return
 
     path_csv = f"{config.report_dir}/data.csv"
-    print(f"path csv: {path_csv}")
+    info(f"path csv: {path_csv}")
     df.to_csv(path_csv)
 
     # for column_name in df.columns:
@@ -83,59 +88,39 @@ def report(config: ReportConfig, df: pd.DataFrame):
     html_report.make()
 
 
-class Period:
-    def __init__(self, start_time, end_time):
-        self.start_time = start_time
-        self.end_time = end_time
+def lookup_periods(config):
+    if config.preserve_time:
+        return
 
-    def start_millis(self):
-        return int(round(float(self.start_time) * 1000))
-
-    def end_millis(self):
-        return int(round(float(self.end_time) * 1000))
-
-
-class Benchmark:
-    # the directory where the original files can be found
-    src_dir = ""
-    workers = None
-    name = ""
-    period = None
-
-    def __init__(self, src_dir, name, id, config: ReportConfig):
-        self.src_dir = src_dir
-        self.name = name
-        self.handles = []
-        self.id = id
-        self.config = config
-
-    def lookup_period(self):
-        for worker_name in os.listdir(self.src_dir):
-            if not worker_name.startswith("A"):
-                continue
-            worker_dir = os.path.join(self.src_dir, worker_name)
-            if not os.path.isdir(worker_dir):
+    for run_label, run_dir in config.runs.items():
+        for worker_name in os.listdir(run_dir):
+            worker_dir = f"{run_dir}/{worker_name}"
+            worker_id = extract_worker_id(worker_dir)
+            if worker_id is None:
                 continue
 
             operations_csv_file = os.path.join(worker_dir, "operations.csv")
             if not os.path.isfile(operations_csv_file):
                 continue
 
+            period = None
             with open(operations_csv_file) as csv_file:
                 csv_reader = csv.reader(csv_file, delimiter=',', quotechar='|')
                 # skip first line
                 next(csv_reader)
                 first_time = float(next(csv_reader)[0])
-                start_time = str(first_time + self.config.warmup_seconds)
-                end_time = str(first_time - self.config.cooldown_seconds)
+                start_time = first_time + config.warmup_seconds
+                end_time = first_time - config.cooldown_seconds
 
                 for row in csv_reader:
                     v = float(row[0])
-                    end_time = str(v - self.config.cooldown_seconds)
+                    end_time = v - config.cooldown_seconds
 
-                if self.period is None:
+                # todo: deal with zero valid data points
+
+                if period is None:
                     # first iteration where the period is not set yet
-                    self.period = Period(start_time, end_time)
+                    period = Period(start_time, end_time)
                 else:
                     # We need to pick the earliest time from all series for the start.
                     # and the latest for the end.
@@ -143,16 +128,13 @@ class Benchmark:
                     # interval is 1 second, see WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS property) causing
                     # misalignment of the series by one data point in the chart resulting in ugly vertical drop
                     # at the end of the throughput charts
-                    self.period = Period(min(self.period.start_time, start_time), max(self.period.end_time, end_time))
-
-    # todo: better name
-    def x(self, handle):
-        return handle.load().items
+                    period = Period(min(period.start_time, start_time), max(period.end_time, end_time))
+                config.periods[run_label] = period
 
 
 def collect_runs(benchmarks, config: ReportConfig):
     benchmark_dirs = []
-    benchmark_names = {}
+    run_names = {}
     last_benchmark = None
 
     # collect all benchmark directories and the names for the benchmarks
@@ -161,30 +143,39 @@ def collect_runs(benchmarks, config: ReportConfig):
             if not last_benchmark:
                 info("Benchmark name " + benchmark_arg + " must be preceded with a benchmark directory.")
                 exit()
-            benchmark_names[last_benchmark] = benchmark_arg[1:len(benchmark_arg) - 1]
+            run_names[last_benchmark] = benchmark_arg[1:len(benchmark_arg) - 1]
             last_benchmark = None
         elif config.compare_last:
             benchmark_root = benchmark_arg
             subdirectories = sorted(filter(os.path.isdir, glob.glob(benchmark_root + "/*")))
 
-            benchmark_dir = subdirectories[-1]
-            if not os.path.exists(benchmark_dir):
-                error("benchmark directory '" + benchmark_dir + "' does not exist!")
+            run_dir = subdirectories[-1]
+            if not os.path.exists(run_dir):
+                error("benchmark directory '" + run_dir + "' does not exist!")
                 exit(1)
             last_benchmark = benchmark_arg
-            benchmark_dirs.append(benchmark_dir)
-            benchmark_names[benchmark_dir] = os.path.basename(os.path.normpath(benchmark_root))
+            benchmark_dirs.append(run_dir)
+            run_names[run_dir] = os.path.basename(os.path.normpath(benchmark_root))
         else:
-            benchmark_dir = benchmark_arg
-            if not os.path.exists(benchmark_dir):
-                error("benchmark directory '" + benchmark_dir + "' does not exist!")
+            run_dir = benchmark_arg
+            if not os.path.exists(run_dir):
+                error("benchmark directory '" + run_dir + "' does not exist!")
                 exit(1)
             last_benchmark = benchmark_arg
-            benchmark_dirs.append(benchmark_dir)
-            benchmark_names[benchmark_dir] = os.path.basename(os.path.normpath(benchmark_dir))
+            benchmark_dirs.append(run_dir)
+            run_names[run_dir] = os.path.basename(os.path.normpath(run_dir))
 
-    for benchmark_dir in benchmark_dirs:
-        config.runs[benchmark_names[benchmark_dir]] = benchmark_dir
+    if len(run_names) == 0:
+        exit_with_error("No runs were found")
+    elif len(run_names) == 1:
+        info("Using the following run:")
+    else:
+        info("Using the following set of runs:")
+
+    for run_dir in benchmark_dirs:
+        run_label = run_names[run_dir]
+        info(f"       {run_label} {run_dir}")
+        config.runs[run_label] = run_dir
 
 
 class PerfTestReportCli:
@@ -198,6 +189,12 @@ class PerfTestReportCli:
                             help='a benchmark to be used in the comparison')
         parser.add_argument('-t', '--time',
                             help='Preserve the real time',
+                            action="store_true")
+        parser.add_argument('-z', '--zero',
+                            help='Let the y-axis start from zero',
+                            action="store_true")
+        parser.add_argument('--svg',
+                            help='Also create svg images',
                             action="store_true")
         parser.add_argument('-o', '--output',
                             nargs=1,
@@ -248,11 +245,14 @@ class PerfTestReportCli:
         config.worker_reporting = args.full
         config.compare_last = args.last
         config.preserve_time = args.time
+        config.y_start_from_zero = args.zero
+        config.svg = args.svg
 
         if os.path.isdir(config.report_dir):
             shutil.rmtree(config.report_dir)
 
         collect_runs(args.benchmarks, config)
+        lookup_periods(config)
         prepare(config)
         df = analyze(config)
         report(config, df)

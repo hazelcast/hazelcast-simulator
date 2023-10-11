@@ -3,9 +3,13 @@
 
 import time
 
+from matplotlib.dates import DateFormatter
+
 from simulator.perftest_report_common import *
 import matplotlib.pyplot as plt
-
+import plotly.express as px
+import plotly.offline as pyo
+import plotly.tools as tls
 
 def analyze_dstat(run_dir, attributes):
     log_section("Loading dstat data: Start")
@@ -17,7 +21,7 @@ def analyze_dstat(run_dir, attributes):
             continue
         agent_id = csv_filename[:csv_filename.index("_")]
         csv_path = f"{run_dir}/{csv_filename}"
-        print(f"\tLoading {csv_path}")
+        info(f"\tLoading {csv_path}")
         df = pd.read_csv(csv_path, skiprows=5)
 
         multiple_by(df, 1000, 'used', 'free', 'buf', 'cach')
@@ -79,26 +83,49 @@ def report_dstat(config: ReportConfig, df: pd.DataFrame):
         filtered_df.dropna(inplace=True)
         filtered_df.to_csv(f"{target_dir}/{nice_metric_name}.csv")
 
-        plt.figure(figsize=(config.image_width_px / config.image_dpi,
-                            config.image_height_px / config.image_dpi),
-                   dpi=config.image_dpi)
+        fig, ax = plt.subplots(figsize=(config.image_width_px / config.image_dpi,
+                                        config.image_height_px / config.image_dpi),
+                               dpi=config.image_dpi)
         for column_name in column_name_list:
             column_desc = ColumnDesc.from_string(column_name)
             run_label = column_desc.attributes["run_label"]
-            plt.plot(filtered_df.index, filtered_df[run_label], label=run_label)
+            ax.plot(filtered_df.index, filtered_df[run_label], label=run_label)
 
         plt.ticklabel_format(style='plain', axis='y')
         plt.ylabel(metric_id)
-        plt.xlabel("Time")
-        # plt.gca.xaxis.set_major_formatter(mdates.DateFormatter('%m-%S'))
+
+        # trim wasted space on both sides of the plot
+        plt.xlim(left=0, right=df.index[-1])
+
+        if config.y_start_from_zero:
+            plt.ylim(bottom = 0)
+
+        if config.preserve_time:
+            plt.xlabel("Time")
+            ax.xaxis.set_major_formatter(DateFormatter('%Y-%m-%d %H:%M:%S'))
+        else:
+            plt.xlabel("Time minutes:seconds")
+            ax.xaxis.set_major_formatter(DateFormatter('%M:%S'))
         plt.legend()
 
         plt.title(f"Agent {agent_id} : {metric_id}")
         plt.grid()
 
         path = f"{target_dir}/{nice_metric_name}.png"
-        print(f"\tGenerating [{path}]")
+        info(f"\tGenerating [{path}]")
         plt.savefig(path)
+
+        if config.svg:
+            path = f"{target_dir}/{nice_metric_name}.svg"
+            info(f"\tGenerating [{path}]")
+            plt.savefig(path)
+
+        if config.interactive:
+            path = f"{target_dir}/{nice_metric_name}.html"
+            info(f"\tGenerating [{path}]")
+            plotly_fig = tls.mpl_to_plotly(plt.gcf())
+            plotly_fig.write_html(path)
+
         plt.close()
 
     duration_sec = time.time() - start_sec

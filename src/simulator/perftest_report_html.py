@@ -28,7 +28,7 @@ class HTMLReport:
         info(f"Generating HTML report : {file_url}")
 
         images_index = html_template.index("[images]")
-        overview_index = html_template.index("[overview]")
+        overview_index = html_template.index("[summary]")
         with (open(file_path, 'w') as f):
             f.write(html_template[0:images_index])
 
@@ -48,20 +48,28 @@ class HTMLReport:
                 f.write(image_html)
             f.write(html_template[images_index + len("[images]"):overview_index])
 
-            # Write the overview.
-            overview = ""
+            # Write the summary.
+            summary = ""
             for column in report_df.columns:
-                overview += '<tr><td>' + column + '</td>'
+                summary += '<tr><td>' + column + '</td>'
                 for value in report_df[column]:
-                    overview += '<td>' + str(value) + '</td>'
-                overview += '</tr>'
-            f.write(overview)
+                    if column == 'throughput':
+                        value_string = '{:,.2f}'.format(float(value))
+                    elif column == 'duration' or column == 'operations':
+                        value_string = '{:,}'.format(int(value))
+                    elif column.endswith("(us)"):
+                        value_string = '{:,.2f}'.format(float(value))
+                    else:
+                        value_string = value
+                    summary += f'<td>{value_string}</td>'
+                summary += '</tr>'
+            f.write(summary)
 
-            f.write(html_template[overview_index + len("[overview]"):])
+            f.write(html_template[overview_index + len("[summary]"):])
 
     def __load_report_csv(self):
         path = self.config.report_dir + "/report.csv"
-        print(f"\tLoading {path}")
+        info(f"\tLoading {path}")
         return pd.read_csv(path)
 
     def __import_images(self):
