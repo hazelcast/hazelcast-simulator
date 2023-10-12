@@ -42,7 +42,7 @@ abstract class AbstractKeySelector implements KeySelector {
         for (int bucket = 0; bucket < buckets.length(); bucket++) {
             long bucketHits = buckets.get(bucket);
             double bucketHitPercentage = (double) bucketHits / allHits * 100;
-            FileUtils.appendText(String.format("%s,%d,%d,%.4f", testId, bucket, bucketHits, bucketHitPercentage),
+            FileUtils.appendText(String.format("%s,%d,%d,%.4f\n", testId, bucket, bucketHits, bucketHitPercentage),
                     bucketsCsv);
         }
 
