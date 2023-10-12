@@ -7,6 +7,8 @@ import java.util.function.IntToLongFunction;
  * the next long key the test to operate with.
  */
 public interface KeySelector {
+    void prepareKeyDistributionFile();
+
     /**
      * Retrieves the next long key with the provided random function
      * used to randomize the next keys.
@@ -15,4 +17,6 @@ public interface KeySelector {
      * @return the next long key to operate with
      */
     long nextKey(IntToLongFunction randomFn);
+
+    void dumpKeyDistribution(String testId);
 }

@@ -15,7 +15,7 @@ import java.util.function.IntToLongFunction;
  * uniformly distributed by using the random function provided
  * to the {@link #nextKey(IntToLongFunction)}.
  */
-public class HotSetKeySelector implements KeySelector {
+public class HotSetKeySelector extends AbstractKeySelector {
     private final int hotSetThreshold;
     private final int hotSetAccessPercentage;
     private final int min;
@@ -30,6 +30,7 @@ public class HotSetKeySelector implements KeySelector {
      *                               records in the interval
      */
     public HotSetKeySelector(int min, int max, int hotSetAccessPercentage, int hotSetPercentage) {
+        super(max + 1 - min);
         this.min = min;
         this.max = max;
         this.hotSetAccessPercentage = hotSetAccessPercentage;
@@ -41,7 +42,7 @@ public class HotSetKeySelector implements KeySelector {
     }
 
     @Override
-    public long nextKey(IntToLongFunction randomFn) {
+    protected long nextKey0(IntToLongFunction randomFn) {
         long clazz = randomFn.applyAsLong(100);
         boolean hotSet = clazz >= hotSetAccessPercentage;
         if (hotSet) {

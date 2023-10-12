@@ -7,7 +7,7 @@ import java.util.function.IntToLongFunction;
  * {@link KeySelector} implementation to make the IMap records
  * randomly accessed.
  */
-public class RandomKeySelector implements KeySelector {
+public class RandomKeySelector extends AbstractKeySelector {
 
     private final int keyDomain;
 
@@ -15,11 +15,12 @@ public class RandomKeySelector implements KeySelector {
      * @param keyDomain The key domain of the test.
      */
     public RandomKeySelector(int keyDomain) {
+        super(keyDomain);
         this.keyDomain = keyDomain;
     }
 
     @Override
-    public long nextKey(IntToLongFunction randomFn) {
+    protected long nextKey0(IntToLongFunction randomFn) {
         return randomFn.applyAsLong(keyDomain);
     }
 

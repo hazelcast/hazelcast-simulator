@@ -73,6 +73,7 @@ public class LongByteArrayMapTest extends HazelcastTest {
             keySelector = new RandomKeySelector(keyDomain);
         }
         logger.info("Using " + keySelector);
+        keySelector.prepareKeyDistributionFile();
     }
 
     @Prepare(global = true)
@@ -163,16 +164,7 @@ public class LongByteArrayMapTest extends HazelcastTest {
     @Teardown
     public void tearDown() {
         map.destroy();
-        logger.info("Key bucket hits:");
-        long allHits = 0;
-        for (int i = 0; i < buckets.length(); i++) {
-            allHits += buckets.get(i);
-        }
 
-        for (int i = 0; i < buckets.length(); i++) {
-            long bucketHits = buckets.get(i);
-            double bucketHitPercentage = (double) bucketHits / allHits * 100;
-            logger.info(String.format("\tBucket %2d = %.2f%%", i, bucketHitPercentage));
-        }
+        keySelector.dumpKeyDistribution(testContext.getTestId());
     }
 }
