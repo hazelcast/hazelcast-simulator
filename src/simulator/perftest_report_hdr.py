@@ -8,6 +8,8 @@ from matplotlib.dates import DateFormatter
 import plotly.express as px
 import plotly.offline as pyo
 import plotly.tools as tls
+from pandas.errors import EmptyDataError
+
 from simulator.perftest_report_common import *
 import matplotlib.pyplot as plt
 from simulator.util import shell, simulator_home, read, write
@@ -16,17 +18,41 @@ from simulator.util import shell, simulator_home, read, write
 def prepare_hdr(config: ReportConfig):
     for run_label, run_dir in config.runs.items():
         __merge_worker_hdr(run_dir)
-        __process_hdr(config.report_dir, run_dir, run_label)
+        __process_hdr(config, run_dir, run_label)
 
 
-def __process_hdr(report_dir, run_dir, run_label):
+def __merge_worker_hdr(run_dir):
+    dic = {}
+    for worker_dir_name in os.listdir(run_dir):
+        worker_dir = f"{run_dir}/{worker_dir_name}"
+        worker_id = extract_worker_id(worker_dir)
+        if not worker_id:
+            continue
+
+        for file_name in os.listdir(worker_dir):
+            if not file_name.endswith(".hdr"):
+                continue
+
+            hdr_file = f"{run_dir}/{worker_dir_name}/{file_name}"
+            files = dic.get(file_name)
+            if not files:
+                files = []
+                dic[file_name] = files
+            files.append(hdr_file)
+
+    for file_name, hdr_files in dic.items():
+        shell(f"""java -cp "{simulator_home}/lib/*" \
+                         com.hazelcast.simulator.utils.HistogramLogMerger \
+                         {run_dir}/{file_name} {" ".join(hdr_files)} 2>/dev/null""")
+
+
+def __process_hdr(config: ReportConfig, run_dir, run_label):
     log_sub_section("Processing hdr files: Start")
     start_sec = time.time()
 
     for outer_file_name in os.listdir(run_dir):
         if outer_file_name.endswith(".hdr"):
-            __process_hdr_file(report_dir, run_label, None, f"{run_dir}/{outer_file_name}")
-
+            __process_hdr_file(config, run_label, None, f"{run_dir}/{outer_file_name}")
             continue
 
         worker_dir = f"{run_dir}/{outer_file_name}"
@@ -39,32 +65,44 @@ def __process_hdr(report_dir, run_dir, run_label):
             if not inner_file_name.endswith(".hdr"):
                 continue
             hdr_file = f"{worker_dir}/{inner_file_name}"
-            __process_hdr_file(report_dir, run_label, worker_id, hdr_file)
+            __process_hdr_file(config, run_label, worker_id, hdr_file)
 
     duration_sec = time.time() - start_sec
     log_sub_section(f"Processing hdr files: Done {duration_sec:.2f} seconds)")
 
 
-def __process_hdr_file(report_dir, run_label, worker_id, hdr_file):
+def __process_hdr_file(config: ReportConfig, run_label, worker_id, hdr_file):
     info(f"\t processing hdr file {hdr_file}")
 
     hdr_file_name_no_ext = Path(hdr_file).stem
 
     if worker_id is None:
-        target_dir = f"{report_dir}/hdr/{run_label}/"
+        target_dir = f"{config.report_dir}/hdr/{run_label}/"
     else:
-        target_dir = f"{report_dir}/hdr/{run_label}/{worker_id}"
+        target_dir = f"{config.report_dir}/hdr/{run_label}/{worker_id}"
     mkdir(target_dir)
 
+    # we need to apply the start/end so that the aggregated hdr dats for the whole run is correct.
+    # otherwise it will contain the data during the warmup/cooldown and isn't correct.
+    start_end = ""
+    period = config.periods[run_label]
+    if config.warmup_seconds > 0:
+        start_end = f" -start {config.warmup_seconds} "
+
+    if config.cooldown_seconds > 0:
+        duration = period.end_time - period.start_time
+        end = duration - config.cooldown_seconds
+        start_end += f" -end {end} "
+
     shell(f"""java -cp "{simulator_home}/lib/*" \
-                    com.hazelcast.simulator.utils.SimulatorHistogramLogProcessor \
+                    com.hazelcast.simulator.utils.SimulatorHistogramLogProcessor {start_end} \
                     -i {hdr_file} \
                     -o {target_dir}/{hdr_file_name_no_ext} \
                     -outputValueUnitRatio 1000""")
     os.rename(f"{target_dir}/{hdr_file_name_no_ext}.hgrm",
               f"{target_dir}/{hdr_file_name_no_ext}.hgrm.bak")
     shell(f"""java -cp "{simulator_home}/lib/*" \
-                    com.hazelcast.simulator.utils.SimulatorHistogramLogProcessor \
+                    com.hazelcast.simulator.utils.SimulatorHistogramLogProcessor {start_end} \
                     -csv \
                     -i {hdr_file} \
                     -o {target_dir}/{hdr_file_name_no_ext} \
@@ -108,7 +146,11 @@ def analyze_latency_history(report_dir, run_dir, attributes):
 def __load_latency_history_csv(file_path, attributes, worker_id):
     test_id = os.path.basename(file_path).replace(".latency-history.csv", "")
     info(f"\tLoading {file_path}")
-    df = pd.read_csv(file_path, skiprows=2)
+    try:
+        df = pd.read_csv(file_path, skiprows=2)
+    except EmptyDataError:
+        # in case of an empty csv
+        return pd.DataFrame()
 
     for column_name in df.columns:
         if column_name.startswith("Unnamed"):
@@ -139,31 +181,6 @@ def __load_latency_history_csv(file_path, attributes, worker_id):
         column_desc = ColumnDesc("Latency", metric, new_attributes)
         df.rename(columns={column_name: column_desc.to_string()}, inplace=True)
     return df
-
-
-def __merge_worker_hdr(run_dir):
-    dic = {}
-    for worker_dir_name in os.listdir(run_dir):
-        dir_path = f"{run_dir}/{worker_dir_name}"
-        worker_name = extract_worker_id(dir_path)
-        if not worker_name:
-            continue
-
-        for file_name in os.listdir(dir_path):
-            if not file_name.endswith(".hdr"):
-                continue
-
-            hdr_file = f"{run_dir}/{worker_dir_name}/{file_name}"
-            files = dic.get(file_name)
-            if not files:
-                files = []
-                dic[file_name] = files
-            files.append(hdr_file)
-
-    for file_name, hdr_files in dic.items():
-        shell(f"""java -cp "{simulator_home}/lib/*" \
-                         com.hazelcast.simulator.utils.HistogramLogMerger \
-                         {run_dir}/{file_name} {" ".join(hdr_files)} 2>/dev/null""")
 
 
 def report_hdr(config: ReportConfig, df):
@@ -279,11 +296,11 @@ def __report_latency_history(config: ReportConfig, df):
             info(f"\tGenerating [{path}]")
             plt.savefig(path)
 
-        if config.interactive:
-            path = f"{target_dir}/{metric_id}{test_str}.html"
-            info(f"\tGenerating [{path}]")
-            plotly_fig = tls.mpl_to_plotly(plt.gcf())
-            plotly_fig.write_html(path)
+        # if config.interactive:
+        #     path = f"{target_dir}/{metric_id}{test_str}.html"
+        #     info(f"\tGenerating [{path}]")
+        #     plotly_fig = tls.mpl_to_plotly(plt.gcf())
+        #     plotly_fig.write_html(path)
 
         plt.close()
 
@@ -326,8 +343,8 @@ def __find_hgrm_files(config: ReportConfig, run_label):
 def __make_latency_by_perc_dist_plot(config: ReportConfig, hgrm_files):
     for hgrm_file_name in hgrm_files:
         plt.figure(figsize=(config.image_width_px / config.image_dpi,
-                                  config.image_height_px / config.image_dpi),
-                         dpi=config.image_dpi)
+                            config.image_height_px / config.image_dpi),
+                   dpi=config.image_dpi)
 
         for run_label, run_path in config.runs.items():
             dir = f"{config.report_dir}/hdr/{run_label}"
@@ -371,11 +388,11 @@ def __make_latency_by_perc_dist_plot(config: ReportConfig, hgrm_files):
             info(f"\tGenerating [{path}]")
             plt.savefig(path)
 
-        if config.interactive:
-            path = f"{config.report_dir}/latency/latency_distribution_{hgrm_file_path_no_ext}.html"
-            info(f"\tGenerating [{path}]")
-            plotly_fig = tls.mpl_to_plotly(plt.gcf())
-            plotly_fig.write_html(path)
+        # if config.interactive:
+        #     path = f"{config.report_dir}/latency/latency_distribution_{hgrm_file_path_no_ext}.html"
+        #     info(f"\tGenerating [{path}]")
+        #     plotly_fig = tls.mpl_to_plotly(plt.gcf())
+        #     plotly_fig.write_html(path)
 
         plt.close()
 

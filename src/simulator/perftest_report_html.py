@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
+import math
 import os
 import base64
 from pathlib import Path
@@ -54,11 +54,20 @@ class HTMLReport:
                 summary += '<tr><td>' + column + '</td>'
                 for value in report_df[column]:
                     if column == 'throughput':
-                        value_string = '{:,.2f}'.format(float(value))
+                        if math.isnan(value):
+                            value_string = value
+                        else:
+                            value_string = '{:,.2f}'.format(float(value))
                     elif column == 'duration' or column == 'operations':
-                        value_string = '{:,}'.format(int(value))
+                        if math.isnan(value):
+                            value_string = value
+                        else:
+                            value_string = '{:,}'.format(int(value))
                     elif column.endswith("(us)"):
-                        value_string = '{:,.2f}'.format(float(value))
+                        if math.isnan(value):
+                            value_string = value
+                        else:
+                            value_string = '{:,.2f}'.format(float(value))
                     else:
                         value_string = value
                     summary += f'<td>{value_string}</td>'

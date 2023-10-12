@@ -83,6 +83,10 @@ public final class ReportCsv {
 
         String[] lines = fileAsText(file).split("\n");
 
+        if (lines.length < 3) {
+            // dealing with incomplete files
+            return;
+        }
         long startMillis = Math.round(Double.parseDouble(lines[4].split(",")[1]) * 1000);
 
         String lastLine = lines[lines.length - 1];

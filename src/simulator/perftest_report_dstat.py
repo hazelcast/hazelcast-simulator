@@ -120,11 +120,11 @@ def report_dstat(config: ReportConfig, df: pd.DataFrame):
             info(f"\tGenerating [{path}]")
             plt.savefig(path)
 
-        if config.interactive:
-            path = f"{target_dir}/{nice_metric_name}.html"
-            info(f"\tGenerating [{path}]")
-            plotly_fig = tls.mpl_to_plotly(plt.gcf())
-            plotly_fig.write_html(path)
+        # if config.interactive:
+        #     path = f"{target_dir}/{nice_metric_name}.html"
+        #     info(f"\tGenerating [{path}]")
+        #     plotly_fig = tls.mpl_to_plotly(plt.gcf())
+        #     plotly_fig.write_html(path)
 
         plt.close()
 

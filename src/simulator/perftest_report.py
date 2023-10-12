@@ -109,12 +109,11 @@ def lookup_periods(config):
                 # skip first line
                 next(csv_reader)
                 first_time = float(next(csv_reader)[0])
-                start_time = first_time + config.warmup_seconds
-                end_time = first_time - config.cooldown_seconds
+                start_time = first_time
+                end_time = first_time
 
                 for row in csv_reader:
-                    v = float(row[0])
-                    end_time = v - config.cooldown_seconds
+                    end_time = float(row[0])
 
                 # todo: deal with zero valid data points
 
