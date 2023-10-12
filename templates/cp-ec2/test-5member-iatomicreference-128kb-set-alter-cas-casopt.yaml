@@ -1,0 +1,98 @@
+- name: set128kb
+  repetitions: 1
+  duration: 120s
+  clients: 1
+  members: 5
+  loadgenerator_hosts: loadgenerators
+  node_hosts: nodes
+  driver: hazelcast5
+  version: maven=5.3.2
+  client_args: >
+    -Xms8g
+    -Xmx8g
+  member_args: >
+    -Xms24g
+    -Xmx24g
+  performance_monitor_interval_seconds: 1
+  verify_enabled: True
+  warmup_seconds: 0
+  cooldown_seconds: 0
+  test:
+    - class: com.hazelcast.simulator.tests.cp.IAtomicReferenceTest
+      keyValueSizeKb: 128
+      threadCount: 40
+- name: alter128kb
+  repetitions: 1
+  duration: 120s
+  clients: 1
+  members: 5
+  loadgenerator_hosts: loadgenerators
+  node_hosts: nodes
+  driver: hazelcast5
+  version: maven=5.3.2
+  client_args: >
+    -Xms8g
+    -Xmx8g
+  member_args: >
+    -Xms24g
+    -Xmx24g
+  performance_monitor_interval_seconds: 1
+  verify_enabled: True
+  warmup_seconds: 0
+  cooldown_seconds: 0
+  test:
+    - class: com.hazelcast.simulator.tests.cp.IAtomicReferenceTest
+      keyValueSizeKb: 128
+      threadCount: 40
+      setProb: 0
+      alterProb: 1
+- name: cas128kb
+  repetitions: 1
+  duration: 120s
+  clients: 1
+  members: 5
+  loadgenerator_hosts: loadgenerators
+  node_hosts: nodes
+  driver: hazelcast5
+  version: maven=5.3.2
+  client_args: >
+    -Xms8g
+    -Xmx8g
+  member_args: >
+    -Xms24g
+    -Xmx24g
+  performance_monitor_interval_seconds: 1
+  verify_enabled: True
+  warmup_seconds: 0
+  cooldown_seconds: 0
+  test:
+    - class: com.hazelcast.simulator.tests.cp.IAtomicReferenceTest
+      keyValueSizeKb: 128
+      threadCount: 40
+      setProb: 0
+      casProb: 1
+- name: casopt128kb
+  repetitions: 1
+  duration: 120s
+  clients: 1
+  members: 5
+  loadgenerator_hosts: loadgenerators
+  node_hosts: nodes
+  driver: hazelcast5
+  version: maven=5.3.2
+  client_args: >
+    -Xms8g
+    -Xmx8g
+  member_args: >
+    -Xms24g
+    -Xmx24g
+  performance_monitor_interval_seconds: 1
+  verify_enabled: True
+  warmup_seconds: 0
+  cooldown_seconds: 0
+  test:
+    - class: com.hazelcast.simulator.tests.cp.IAtomicReferenceTest
+      keyValueSizeKb: 128
+      threadCount: 40
+      setProb: 0
+      casOptimisticConcurrencyControlProb: 1

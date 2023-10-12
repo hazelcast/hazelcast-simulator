@@ -122,7 +122,16 @@ class Ssh:
         cmd = f'scp {self.options} -r -q {src} {self.user}@{self.ip}:{dst}'
         self.__scp(cmd)
 
+    def rsync_to_remote(self, src, dst):
+        cmd = f'rsync -P -e "ssh {self.options}" {src} {self.user}@{self.ip}:{dst}'
+        self.__rsync(cmd)
+
     def __scp(self, cmd):
+        self.connect()
+        exitcode = subprocess.call(cmd, shell=True)
+        # raise Exception(f"Failed to execute {cmd} after {self.max_attempts} attempts")
+
+    def __rsync(self, cmd):
         self.connect()
         exitcode = subprocess.call(cmd, shell=True)
         # raise Exception(f"Failed to execute {cmd} after {self.max_attempts} attempts")

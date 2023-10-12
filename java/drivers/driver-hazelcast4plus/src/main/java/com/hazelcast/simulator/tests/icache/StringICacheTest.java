@@ -115,3 +115,4 @@ public class StringICacheTest extends HazelcastTest {
         cache.close();
     }
 }
+

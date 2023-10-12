@@ -1,7 +1,7 @@
 package com.hazelcast.simulator.worker.testcontainer;
 
 import com.hazelcast.simulator.common.TestPhase;
-import com.hazelcast.simulator.probes.Probe;
+import com.hazelcast.simulator.probes.LatencyProbe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.Setup;
 import org.junit.Test;
@@ -55,7 +55,7 @@ public class TestContainer_SetupTest extends TestContainer_AbstractTest {
     private static class SetupWithInvalidArgument extends BaseTest {
 
         @Setup
-        public void setUp(Probe probe) {
+        public void setUp(LatencyProbe probe) {
         }
     }
 

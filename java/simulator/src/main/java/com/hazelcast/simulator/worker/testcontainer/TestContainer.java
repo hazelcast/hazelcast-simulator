@@ -17,7 +17,7 @@ package com.hazelcast.simulator.worker.testcontainer;
 
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestPhase;
-import com.hazelcast.simulator.probes.Probe;
+import com.hazelcast.simulator.probes.LatencyProbe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Run;
@@ -35,6 +35,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -96,7 +97,7 @@ public class TestContainer {
                 .setTestContext(testContext);
 
         propertyBinding.bind(this);
-
+        testContext.setLatencyProbeClass(propertyBinding.getProbeClass());
         if (givenTestInstance == null) {
             this.testInstance = newTestInstance();
         } else {
@@ -114,7 +115,7 @@ public class TestContainer {
         this.testPerformanceTracker = new TestPerformanceTracker(this);
     }
 
-    public void stop(){
+    public void stop() {
         testContext.stop();
         runner.stop();
     }
@@ -151,7 +152,7 @@ public class TestContainer {
         return testInstance;
     }
 
-    public TestContext getTestContext() {
+    public TestContextImpl getTestContext() {
         return testContext;
     }
 
@@ -169,10 +170,6 @@ public class TestContainer {
 
     public long iteration() {
         return runner == null ? 0 : runner.iterations();
-    }
-
-    public Map<String, Probe> getProbeMap() {
-        return propertyBinding.getProbeMap();
     }
 
     public void invoke(TestPhase testPhase) throws Exception {
@@ -197,6 +194,19 @@ public class TestContainer {
                 throw e;
             }
         } finally {
+            // after the run phase we check if any negative latencies have
+            // been encountered.
+
+            if (testPhase == RUN) {
+                for (LatencyProbe probe : testContext.getLatencyProbes().values()) {
+                    if (probe.negativeCount() > 0) {
+                        String msg = MessageFormat.format("HdrLatencyProbe [{0}] has encountered {1} negative measurements! "
+                                + "Maybe there is a clock problem.", probe.name(), probe.negativeCount());
+                        System.err.println(msg);
+                        testContext.echoCoordinator(msg);
+                    }
+                }
+            }
             currentPhase.set(null);
         }
     }
@@ -210,7 +220,7 @@ public class TestContainer {
 
             taskPerPhaseMap.put(RUN, () -> {
                 if (propertyBinding.recordJitter) {
-                    Probe probe = propertyBinding.getOrCreateProbe("jitter", false);
+                    LatencyProbe probe = testContext.getLatencyProbe("jitter", false);
                     new JitterThread(testContext, probe, propertyBinding.recordJitterThresholdNs).start();
                 }
                 runner.run();

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hazelcast xmlns="http://www.hazelcast.com/schema/config"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://www.hazelcast.com/schema/config
+           http://www.hazelcast.com/schema/config/hazelcast-config-5.0.xsd">
+
+    <cluster-name>workers</cluster-name>
+
+<cp-subsystem>
+<cp-member-count>3</cp-member-count>
+</cp-subsystem>
+
+    <!--LITE_MEMBER_CONFIG-->
+
+    <network>
+        <port port-count="200">5701</port>
+
+        <join>
+            <multicast enabled="false"/>
+            <tcp-ip enabled="true">
+                <!--MEMBERS-->
+            </tcp-ip>
+        </join>
+    </network>
+
+    <properties>
+        <property name="hazelcast.phone.home.enabled">false</property>
+        <property name="hazelcast.logging.type">log4j2</property>
+    </properties>
+
+    <!--LICENSE-KEY-->
+
+    <cache name="*">
+    </cache>
+</hazelcast>
+

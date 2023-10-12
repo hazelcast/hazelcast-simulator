@@ -1,0 +1,225 @@
+- name: alter1kb
+  repetitions: 1
+  duration: 120s
+  clients: 1
+  members: 3
+  loadgenerator_hosts: loadgenerators
+  node_hosts: nodes
+  driver: hazelcast5
+  version: maven=5.3.2
+  client_args: >
+    -Xms8g
+    -Xmx8g
+  member_args: >
+    -Xms24g
+    -Xmx24g
+  performance_monitor_interval_seconds: 1
+  verify_enabled: True
+  warmup_seconds: 0
+  cooldown_seconds: 0
+  test:
+    - class: com.hazelcast.simulator.tests.cp.IAtomicReferenceTest
+      keyValueSizeKb: 1
+      threadCount: 40
+      setProb: 0
+      alterProb: 1
+- name: alter2kb
+  repetitions: 1
+  duration: 120s
+  clients: 1
+  members: 3
+  loadgenerator_hosts: loadgenerators
+  node_hosts: nodes
+  driver: hazelcast5
+  version: maven=5.3.2
+  client_args: >
+    -Xms8g
+    -Xmx8g
+  member_args: >
+    -Xms24g
+    -Xmx24g
+  performance_monitor_interval_seconds: 1
+  verify_enabled: True
+  warmup_seconds: 0
+  cooldown_seconds: 0
+  test:
+    - class: com.hazelcast.simulator.tests.cp.IAtomicReferenceTest
+      keyValueSizeKb: 2
+      threadCount: 40
+      setProb: 0
+      alterProb: 1
+- name: alter4kb
+  repetitions: 1
+  duration: 120s
+  clients: 1
+  members: 3
+  loadgenerator_hosts: loadgenerators
+  node_hosts: nodes
+  driver: hazelcast5
+  version: maven=5.3.2
+  client_args: >
+    -Xms8g
+    -Xmx8g
+  member_args: >
+    -Xms24g
+    -Xmx24g
+  performance_monitor_interval_seconds: 1
+  verify_enabled: True
+  warmup_seconds: 0
+  cooldown_seconds: 0
+  test:
+    - class: com.hazelcast.simulator.tests.cp.IAtomicReferenceTest
+      keyValueSizeKb: 4
+      threadCount: 40
+      setProb: 0
+      alterProb: 1
+- name: alter8kb
+  repetitions: 1
+  duration: 120s
+  clients: 1
+  members: 3
+  loadgenerator_hosts: loadgenerators
+  node_hosts: nodes
+  driver: hazelcast5
+  version: maven=5.3.2
+  client_args: >
+    -Xms8g
+    -Xmx8g
+  member_args: >
+    -Xms24g
+    -Xmx24g
+  performance_monitor_interval_seconds: 1
+  verify_enabled: True
+  warmup_seconds: 0
+  cooldown_seconds: 0
+  test:
+    - class: com.hazelcast.simulator.tests.cp.IAtomicReferenceTest
+      keyValueSizeKb: 8
+      threadCount: 40
+      setProb: 0
+      alterProb: 1
+- name: alter16kb
+  repetitions: 1
+  duration: 120s
+  clients: 1
+  members: 3
+  loadgenerator_hosts: loadgenerators
+  node_hosts: nodes
+  driver: hazelcast5
+  version: maven=5.3.2
+  client_args: >
+    -Xms8g
+    -Xmx8g
+  member_args: >
+    -Xms24g
+    -Xmx24g
+  performance_monitor_interval_seconds: 1
+  verify_enabled: True
+  warmup_seconds: 0
+  cooldown_seconds: 0
+  test:
+    - class: com.hazelcast.simulator.tests.cp.IAtomicReferenceTest
+      keyValueSizeKb: 16
+      threadCount: 40
+      setProb: 0
+      alterProb: 1
+- name: alter32kb
+  repetitions: 1
+  duration: 120s
+  clients: 1
+  members: 3
+  loadgenerator_hosts: loadgenerators
+  node_hosts: nodes
+  driver: hazelcast5
+  version: maven=5.3.2
+  client_args: >
+    -Xms8g
+    -Xmx8g
+  member_args: >
+    -Xms24g
+    -Xmx24g
+  performance_monitor_interval_seconds: 1
+  verify_enabled: True
+  warmup_seconds: 0
+  cooldown_seconds: 0
+  test:
+    - class: com.hazelcast.simulator.tests.cp.IAtomicReferenceTest
+      keyValueSizeKb: 32
+      threadCount: 40
+      setProb: 0
+      alterProb: 1
+- name: alter64kb
+  repetitions: 1
+  duration: 120s
+  clients: 1
+  members: 3
+  loadgenerator_hosts: loadgenerators
+  node_hosts: nodes
+  driver: hazelcast5
+  version: maven=5.3.2
+  client_args: >
+    -Xms8g
+    -Xmx8g
+  member_args: >
+    -Xms24g
+    -Xmx24g
+  performance_monitor_interval_seconds: 1
+  verify_enabled: True
+  warmup_seconds: 0
+  cooldown_seconds: 0
+  test:
+    - class: com.hazelcast.simulator.tests.cp.IAtomicReferenceTest
+      keyValueSizeKb: 64
+      threadCount: 40
+      setProb: 0
+      alterProb: 1
+- name: alter128kb
+  repetitions: 1
+  duration: 120s
+  clients: 1
+  members: 3
+  loadgenerator_hosts: loadgenerators
+  node_hosts: nodes
+  driver: hazelcast5
+  version: maven=5.3.2
+  client_args: >
+    -Xms8g
+    -Xmx8g
+  member_args: >
+    -Xms24g
+    -Xmx24g
+  performance_monitor_interval_seconds: 1
+  verify_enabled: True
+  warmup_seconds: 0
+  cooldown_seconds: 0
+  test:
+    - class: com.hazelcast.simulator.tests.cp.IAtomicReferenceTest
+      keyValueSizeKb: 128
+      threadCount: 40
+      setProb: 0
+      alterProb: 1
+- name: alter256kb
+  repetitions: 1
+  duration: 120s
+  clients: 1
+  members: 3
+  loadgenerator_hosts: loadgenerators
+  node_hosts: nodes
+  driver: hazelcast5
+  version: maven=5.3.2
+  client_args: >
+    -Xms8g
+    -Xmx8g
+  member_args: >
+    -Xms24g
+    -Xmx24g
+  performance_monitor_interval_seconds: 1
+  verify_enabled: True
+  warmup_seconds: 0
+  cooldown_seconds: 0
+  test:
+    - class: com.hazelcast.simulator.tests.cp.IAtomicReferenceTest
+      keyValueSizeKb: 256
+      threadCount: 40
+      setProb: 0
+      alterProb: 1

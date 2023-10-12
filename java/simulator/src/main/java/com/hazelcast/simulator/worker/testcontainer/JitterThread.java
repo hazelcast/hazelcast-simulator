@@ -15,7 +15,7 @@
  */
 package com.hazelcast.simulator.worker.testcontainer;
 
-import com.hazelcast.simulator.probes.Probe;
+import com.hazelcast.simulator.probes.LatencyProbe;
 import com.hazelcast.simulator.test.TestContext;
 
 /**
@@ -26,9 +26,9 @@ public class JitterThread extends Thread {
 
     private int recordJitterThresholdNs;
     private final TestContext textContext;
-    private final Probe probe;
+    private final LatencyProbe probe;
 
-    public JitterThread(TestContext testContext, Probe probe, int recordJitterThresholdNs) {
+    public JitterThread(TestContext testContext, LatencyProbe probe, int recordJitterThresholdNs) {
         super("JitterThread");
         this.textContext = testContext;
         this.probe = probe;

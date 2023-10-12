@@ -1,9 +1,9 @@
 package com.hazelcast.simulator.worker.testcontainer;
 
 import com.hazelcast.simulator.common.TestCase;
-import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.probes.impl.EmptyProbe;
-import com.hazelcast.simulator.probes.impl.HdrProbe;
+import com.hazelcast.simulator.probes.LatencyProbe;
+import com.hazelcast.simulator.probes.impl.NoopLatencyProbe;
+import com.hazelcast.simulator.probes.impl.HdrLatencyProbe;
 import com.hazelcast.simulator.protocol.Server;
 import com.hazelcast.simulator.test.StopException;
 import com.hazelcast.simulator.test.annotations.StartNanos;
@@ -47,7 +47,7 @@ public class TestContainer_TimeStep_ProbeInjectionTest extends TestContainer_Abs
         });
 
         assertCompletesEventually(f);
-        assertInstanceOf(HdrProbe.class, testInstance.probe);
+        assertInstanceOf(HdrLatencyProbe.class, testInstance.probe);
     }
 
     @Test
@@ -72,14 +72,14 @@ public class TestContainer_TimeStep_ProbeInjectionTest extends TestContainer_Abs
         });
 
         assertCompletesEventually(f);
-        assertInstanceOf(EmptyProbe.class, testInstance.probe);
+        assertInstanceOf(NoopLatencyProbe.class, testInstance.probe);
     }
 
     public static class TestClass {
-        volatile Probe probe;
+        volatile LatencyProbe probe;
 
         @TimeStep
-        public void test(Probe probe, @StartNanos long startNanos) {
+        public void test(LatencyProbe probe, @StartNanos long startNanos) {
             this.probe = probe;
             throw new StopException();
         }

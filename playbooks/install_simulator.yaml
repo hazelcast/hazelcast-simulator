@@ -12,12 +12,32 @@
       apt-get update || true
     become: yes
 
-  # needed for pcp dstat.
+
+  # we want to install either dstat or pcp.
+  # pcp is a replacement for dstat. dstat project
+  # is a very bad state and very iffy if it will work.
+  # under ubuntu for example, dstat is broken for our needs.
   - name: Install pcp
     ansible.builtin.package:
       name: pcp
       state: present
     become: yes
+    ignore_errors: yes
+
+  # check if pcp managed to instal dstat.
+  - name: Check if dstat already exists
+    stat:
+      path: /usr/bin/dstat
+    register: executable_dstat
+
+  # Try to install dstat if pcp wasn't installed
+  - name: Install dstat
+    ansible.builtin.package:
+      name: dstat
+      state: present
+    become: yes
+    ignore_errors: yes
+    when: not executable_dstat.stat.exists
 
   - name: Delete simulator directory
     file:

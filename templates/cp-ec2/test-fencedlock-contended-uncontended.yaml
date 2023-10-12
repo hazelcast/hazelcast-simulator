@@ -1,0 +1,144 @@
+- name: acqrel-uncontended-1client3member
+  repetitions: 1
+  duration: 120s
+  clients: 1
+  members: 3
+  loadgenerator_hosts: loadgenerators
+  node_hosts: nodes
+  driver: hazelcast5
+  version: maven=5.3.2
+  client_args: >
+    -Xms8g
+    -Xmx8g
+  member_args: >
+    -Xms24g
+    -Xmx24g
+  performance_monitor_interval_seconds: 1
+  verify_enabled: True
+  warmup_seconds: 0
+  cooldown_seconds: 0
+  test:
+    - class: com.hazelcast.simulator.tests.cp.FencedLockTest
+      acquireReleaseUncontendedProb: 1.0
+      acquireReleaseContendedProb: 0.0
+      threadCount: 1
+- name: acqrel-uncontended-2client3member
+  repetitions: 1
+  duration: 120s
+  clients: 2
+  members: 3
+  loadgenerator_hosts: loadgenerators
+  node_hosts: nodes
+  driver: hazelcast5
+  version: maven=5.3.2
+  client_args: >
+    -Xms8g
+    -Xmx8g
+  member_args: >
+    -Xms24g
+    -Xmx24g
+  performance_monitor_interval_seconds: 1
+  verify_enabled: True
+  warmup_seconds: 0
+  cooldown_seconds: 0
+  test:
+    - class: com.hazelcast.simulator.tests.cp.FencedLockTest
+      acquireReleaseUncontendedProb: 1.0
+      acquireReleaseContendedProb: 0.0
+      threadCount: 1
+- name: acqrel-uncontended-3client3member
+  repetitions: 1
+  duration: 120s
+  clients: 3
+  members: 3
+  loadgenerator_hosts: loadgenerators
+  node_hosts: nodes
+  driver: hazelcast5
+  version: maven=5.3.2
+  client_args: >
+    -Xms8g
+    -Xmx8g
+  member_args: >
+    -Xms24g
+    -Xmx24g
+  performance_monitor_interval_seconds: 1
+  verify_enabled: True
+  warmup_seconds: 0
+  cooldown_seconds: 0
+  test:
+    - class: com.hazelcast.simulator.tests.cp.FencedLockTest
+      acquireReleaseUncontendedProb: 1.0
+      acquireReleaseContendedProb: 0.0
+      threadCount: 1
+- name: acqrel-uncontended-and-contended-1client3member
+  repetitions: 1
+  duration: 120s
+  clients: 1
+  members: 3
+  loadgenerator_hosts: loadgenerators
+  node_hosts: nodes
+  driver: hazelcast5
+  version: maven=5.3.2
+  client_args: >
+    -Xms8g
+    -Xmx8g
+  member_args: >
+    -Xms24g
+    -Xmx24g
+  performance_monitor_interval_seconds: 1
+  verify_enabled: True
+  warmup_seconds: 0
+  cooldown_seconds: 0
+  test:
+    - class: com.hazelcast.simulator.tests.cp.FencedLockTest
+      acquireReleaseUncontendedProb: 0.95
+      acquireReleaseContendedProb: 0.05
+      threadCount: 1
+- name: acqrel-uncontended-and-contended-2client3member
+  repetitions: 1
+  duration: 120s
+  clients: 2
+  members: 3
+  loadgenerator_hosts: loadgenerators
+  node_hosts: nodes
+  driver: hazelcast5
+  version: maven=5.3.2
+  client_args: >
+    -Xms8g
+    -Xmx8g
+  member_args: >
+    -Xms24g
+    -Xmx24g
+  performance_monitor_interval_seconds: 1
+  verify_enabled: True
+  warmup_seconds: 0
+  cooldown_seconds: 0
+  test:
+    - class: com.hazelcast.simulator.tests.cp.FencedLockTest
+      acquireReleaseUncontendedProb: 0.95
+      acquireReleaseContendedProb: 0.05
+      threadCount: 1
+- name: acqrel-uncontended-and-contended-3client3member
+  repetitions: 1
+  duration: 120s
+  clients: 3
+  members: 3
+  loadgenerator_hosts: loadgenerators
+  node_hosts: nodes
+  driver: hazelcast5
+  version: maven=5.3.2
+  client_args: >
+    -Xms8g
+    -Xmx8g
+  member_args: >
+    -Xms24g
+    -Xmx24g
+  performance_monitor_interval_seconds: 1
+  verify_enabled: True
+  warmup_seconds: 0
+  cooldown_seconds: 0
+  test:
+    - class: com.hazelcast.simulator.tests.cp.FencedLockTest
+      acquireReleaseUncontendedProb: 0.95
+      acquireReleaseContendedProb: 0.05
+      threadCount: 1

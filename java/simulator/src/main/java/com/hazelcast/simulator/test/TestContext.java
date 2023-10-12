@@ -15,10 +15,43 @@
  */
 package com.hazelcast.simulator.test;
 
+import com.hazelcast.simulator.probes.LatencyProbe;
+
 /**
- * The TestContext is they way for a test to get access to test related information. Most importantly if a test is running.
+ * The TestContext is they way for a test to get access to test related
+ * information. Most importantly if a test is running.
  */
 public interface TestContext {
+
+    /**
+     * Gets a {@link LatencyProbe} with the given name.
+     * <p/>
+     * This method is threadsafe.
+     *
+     * @param name the name of the probe
+     * @return the Probe
+     * @throws NullPointerException if name is null.
+     */
+    default LatencyProbe getLatencyProbe(String name) {
+        return getLatencyProbe(name, true);
+    }
+
+    /**
+     * Gets a {@link LatencyProbe} with the given name.
+     * <p/>
+     * This method is threadsafe.
+     *
+     * @param name             the name of the probe
+     * @param includeInThroughput if the measurements of this probe are part of the
+     *                         throughput. Within timestep methods, the throughput
+     *                         is already accounted for by tracking it in a counter.
+     *                         So in that case probes need to be created where
+     *                         the throughput is ignored; otherwise it would lead
+     *                         to double counting.
+     * @return the Probe
+     * @throws NullPointerException if name is null.
+     */
+    LatencyProbe getLatencyProbe(String name, boolean includeInThroughput);
 
     /**
      * Returns the id of the current test.
@@ -28,40 +61,45 @@ public interface TestContext {
     String getTestId();
 
     /**
-     * Returns the public ip address of the machine the test runs on. In some environments like ec2, there are public and private
-     * ip addresses.
+     * Returns the public ip address of the machine the test runs on. In some
+     * environments like ec2, there are public and private ip addresses.
      *
      * @return the public ip address.
      */
     String getPublicIpAddress();
 
     /**
-     * Checks if the run phase or warmup phase has stopped. In most cases this method doesn't need to be called since the
-     * {@link com.hazelcast.simulator.test.annotations.TimeStep} approach will take care of stopping. But in certain cases
-     * like using the {@link com.hazelcast.simulator.test.annotations.Run}; one needs to check explicitly.
+     * Checks if the run phase or warmup phase has stopped. In most cases this
+     * method doesn't need to be called since the
+     * {@link com.hazelcast.simulator.test.annotations.TimeStep} approach will
+     * take care of stopping. But in certain cases like using the
+     * {@link com.hazelcast.simulator.test.annotations.Run}; one needs to check
+     * explicitly.
      *
      * @return true if stopped, false otherwise.
      */
     boolean isStopped();
 
     /**
-     * Stops the run or warmup phase. In most cases an outside duration is passed and the test will run as long as needed or
-     * until an exception is thrown. But in certain condition the implementer of a test wants to stop the run/warmup phase
-     * directly.
-     *
-     * Once stopped, the test moves on to the next phase. If the warmup is stopped, the test will eventually move on to the
-     * run phase.
+     * Stops the run or warmup phase. In most cases an outside duration is passed
+     * and the test will run as long as needed or until an exception is thrown.
+     * But in certain condition the implementer of a test wants to stop the
+     * run/warmup phase directly.
+     * <p/>
+     * Once stopped, the test moves on to the next phase. If the warmup is stopped,
+     * the test will eventually move on to the run phase.
      */
     void stop();
 
     /**
      * Echoes a message to coordinator.
+     * <p/>
+     * Be very careful sending huge quantities of messages to the coordinator
+     * because it cause stability issues. Messages are written async, so you
+     * could easily kill the by flooding it or causing other problems. So don't
+     * use this as a debug logging alternative.
      *
-     * Be very careful sending huge quantities of messages to the coordinator because it cause stability issues. Messages are
-     * written async, so you could easily kill the by flooding it or causing other problems. So don't use this as a debug logging
-     * alternative.
-     *
-     * @param msg the message to send
+     * @param msg  the message to send
      * @param args the arguments
      */
     void echoCoordinator(String msg, Object... args);
