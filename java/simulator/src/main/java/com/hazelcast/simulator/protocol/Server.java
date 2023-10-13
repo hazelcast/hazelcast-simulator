@@ -16,9 +16,9 @@
 package com.hazelcast.simulator.protocol;
 
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.operation.OperationCodec;
-import com.hazelcast.simulator.protocol.operation.OperationType;
-import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
+import com.hazelcast.simulator.protocol.message.SimulatorMessageCodec;
+import com.hazelcast.simulator.protocol.message.MessageType;
+import com.hazelcast.simulator.protocol.message.SimulatorMessage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -34,7 +34,7 @@ import javax.jms.Topic;
 import java.io.Closeable;
 
 import static com.hazelcast.simulator.common.SimulatorProperties.DEFAULT_AGENT_PORT;
-import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
+import static com.hazelcast.simulator.protocol.message.MessageType.getMessageType;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 import static com.hazelcast.simulator.utils.SimulatorUtils.localIp;
@@ -58,7 +58,7 @@ public class Server implements Closeable {
     private final ConnectionFactory connectionFactory = new ConnectionFactory();
     private final ServerThread serverThread = new ServerThread();
     private SimulatorAddress selfAddress;
-    private OperationProcessor processor;
+    private MessageHandler processor;
     private MessageConsumer consumer;
     private Session session;
     private Topic destination;
@@ -97,12 +97,12 @@ public class Server implements Closeable {
     }
 
     /**
-     * Set the {@link OperationProcessor} responsible for handling operations.
+     * Set the {@link MessageHandler} responsible for handling operations.
      *
      * @param processor the OperationProcessor.
      * @return this;
      */
-    public Server setProcessor(OperationProcessor processor) {
+    public Server setProcessor(MessageHandler processor) {
         this.processor = processor;
         return this;
     }
@@ -156,10 +156,10 @@ public class Server implements Closeable {
         LOGGER.info("Server Stopped");
     }
 
-    public void sendCoordinator(SimulatorOperation op) {
+    public void sendCoordinator(SimulatorMessage msg) {
         try {
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("sending [" + op + "]");
+                LOGGER.debug("sending [" + msg + "]");
             }
 
             Destination topic = session.createTopic("coordinator");
@@ -169,8 +169,8 @@ public class Server implements Closeable {
 
             Message message = session.createMessage();
             message.setStringProperty("source", selfAddressString);
-            message.setStringProperty("payload", OperationCodec.toJson(op));
-            message.setIntProperty("operationType", getOperationType(op).toInt());
+            message.setStringProperty("payload", SimulatorMessageCodec.toJson(msg));
+            message.setIntProperty("msgType", getMessageType(msg).toInt());
 
             producer.send(message);
         } catch (JMSException e) {
@@ -181,7 +181,7 @@ public class Server implements Closeable {
     private class PromiseImpl implements Promise {
         private Destination replyTo;
         private String correlationId;
-        private SimulatorOperation op;
+        private SimulatorMessage msg;
 
         @Override
         public void answer(Object o) {
@@ -190,7 +190,7 @@ public class Server implements Closeable {
             }
 
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(format("Sending reply [%s] for [%s] to %s", o, op, replyTo));
+                LOGGER.debug(format("Sending reply [%s] for [%s] to %s", o, msg, replyTo));
             }
 
             try {
@@ -238,21 +238,21 @@ public class Server implements Closeable {
         private void handle() throws Exception {
             Message message = consumer.receive();
 
-            OperationType operationType = OperationType.fromInt(message.getIntProperty("operationType"));
-            String operationData = message.getStringProperty("payload");
-            SimulatorOperation op = OperationCodec.fromJson(operationData, operationType.getClassType());
+            MessageType msgType = MessageType.fromInt(message.getIntProperty("msgType"));
+            String msgData = message.getStringProperty("payload");
+            SimulatorMessage msg = SimulatorMessageCodec.fromJson(msgData, msgType.getClassType());
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Received operation:" + op);
+                LOGGER.debug("Received msg:" + msg);
             }
             PromiseImpl promise = new PromiseImpl();
             promise.replyTo = message.getJMSReplyTo();
             promise.correlationId = message.getJMSCorrelationID();
-            promise.op = op;
+            promise.msg = msg;
 
             SimulatorAddress source = SimulatorAddress.fromString(message.getStringProperty("source"));
 
             try {
-                processor.process(op, source, promise);
+                processor.process(msg, source, promise);
             } catch (Exception e) {
                 if (stop) {
                     throw e;

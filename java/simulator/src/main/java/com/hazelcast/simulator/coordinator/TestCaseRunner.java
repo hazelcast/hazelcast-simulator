@@ -22,10 +22,10 @@ import com.hazelcast.simulator.coordinator.registry.TestData;
 import com.hazelcast.simulator.coordinator.registry.WorkerData;
 import com.hazelcast.simulator.protocol.CoordinatorClient;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
-import com.hazelcast.simulator.worker.operations.CreateTestOperation;
-import com.hazelcast.simulator.worker.operations.StartPhaseOperation;
-import com.hazelcast.simulator.worker.operations.StopRunOperation;
+import com.hazelcast.simulator.protocol.message.SimulatorMessage;
+import com.hazelcast.simulator.worker.messages.CreateTestMessage;
+import com.hazelcast.simulator.worker.messages.StartPhaseMessage;
+import com.hazelcast.simulator.worker.messages.StopRunMessage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -170,24 +170,24 @@ public final class TestCaseRunner {
 
     private void createTest() {
         log("Starting Test initialization");
-        invokeOnTargets(new CreateTestOperation(testCase));
+        invokeOnTargets(new CreateTestMessage(testCase));
         log("Completed Test initialization");
     }
 
-    private void invokeOnTargets(SimulatorOperation op) {
-        Map<WorkerData, Future> futures = submitToTargets(false, op);
+    private void invokeOnTargets(SimulatorMessage msg) {
+        Map<WorkerData, Future> futures = submitToTargets(false, msg);
         awaitCompletion(futures);
     }
 
-    private Map<WorkerData, Future> submitToTargets(boolean singleTarget, SimulatorOperation op) {
+    private Map<WorkerData, Future> submitToTargets(boolean singleTarget, SimulatorMessage msg) {
         Map<WorkerData, Future> futures = new HashMap<>();
 
         if (singleTarget) {
-            Future f = client.submit(globalTarget.getAddress(), op);
+            Future f = client.submit(globalTarget.getAddress(), msg);
             futures.put(globalTarget, f);
         } else {
             for (WorkerData worker : targets) {
-                Future f = client.submit(worker.getAddress(), op);
+                Future f = client.submit(worker.getAddress(), msg);
                 futures.put(worker, f);
             }
         }
@@ -217,7 +217,7 @@ public final class TestCaseRunner {
         test.setTestPhase(phase);
 
         Map<WorkerData, Future> futures = submitToTargets(
-                phase.isGlobal(), new StartPhaseOperation(phase, testCase.getId()));
+                phase.isGlobal(), new StartPhaseMessage(phase, testCase.getId()));
 
         waitForPhaseCompletion(phase, futures);
         log("Completed Test " + phase.desc());
@@ -316,13 +316,13 @@ public final class TestCaseRunner {
     private Map<WorkerData, Future> startRun() {
         log(format("Starting run on %s workers", targetType.toString(targetCount)));
         log(format("Test run using workers %s", WorkerData.toAddressString(targets)));
-        return submitToTargets(false, new StartPhaseOperation(RUN, testCase.getId()));
+        return submitToTargets(false, new StartPhaseMessage(RUN, testCase.getId()));
     }
 
     private void stopRun() {
         log("Stopping test");
 
-        Map<WorkerData, Future> futures = submitToTargets(false, new StopRunOperation(testCase.getId()));
+        Map<WorkerData, Future> futures = submitToTargets(false, new StopRunMessage(testCase.getId()));
 
         try {
             waitForPhaseCompletion(RUN, futures);

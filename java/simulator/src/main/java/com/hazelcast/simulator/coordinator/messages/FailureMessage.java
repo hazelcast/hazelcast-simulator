@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.coordinator.operations;
+package com.hazelcast.simulator.coordinator.messages;
 
 import com.hazelcast.simulator.common.FailureType;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
+import com.hazelcast.simulator.protocol.message.SimulatorMessage;
 
 import static com.hazelcast.simulator.utils.CommonUtils.throwableToString;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
@@ -26,7 +26,7 @@ import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 /**
  * Reports a Simulator Worker failure.
  */
-public class FailureOperation implements SimulatorOperation {
+public class FailureMessage implements SimulatorMessage {
 
     private final long timestamp = System.currentTimeMillis();
 
@@ -40,17 +40,17 @@ public class FailureOperation implements SimulatorOperation {
     private String cause;
     private long durationMs;
 
-    public FailureOperation(String message) {
+    public FailureMessage(String message) {
         this.message = message;
     }
 
-    public FailureOperation(String message, FailureType type, SimulatorAddress workerAddress, String agentAddress,
-                            Throwable cause) {
+    public FailureMessage(String message, FailureType type, SimulatorAddress workerAddress, String agentAddress,
+                          Throwable cause) {
         this(message, type, workerAddress, agentAddress, null, null, cause == null ? "" : throwableToString(cause));
     }
 
-    public FailureOperation(String message, FailureType type, SimulatorAddress workerAddress, String agentAddress,
-                            String workerId, String testId, String cause) {
+    public FailureMessage(String message, FailureType type, SimulatorAddress workerAddress, String agentAddress,
+                          String workerId, String testId, String cause) {
         this.message = message;
         this.type = type.name();
         this.workerAddress = workerAddress == null ? null : workerAddress.toString();
@@ -60,37 +60,37 @@ public class FailureOperation implements SimulatorOperation {
         this.cause = cause;
     }
 
-    public FailureOperation setType(FailureType type) {
+    public FailureMessage setType(FailureType type) {
         this.type = type.name();
         return this;
     }
 
-    public FailureOperation setWorkerAddress(SimulatorAddress workerAddress) {
+    public FailureMessage setWorkerAddress(SimulatorAddress workerAddress) {
         this.workerAddress = workerAddress.toString();
         return this;
     }
 
-    public FailureOperation setAgentAddress(SimulatorAddress agentAddress) {
+    public FailureMessage setAgentAddress(SimulatorAddress agentAddress) {
         this.agentAddress = agentAddress.toString();
         return this;
     }
 
-    public FailureOperation setWorkerId(String workerId) {
+    public FailureMessage setWorkerId(String workerId) {
         this.workerId = workerId;
         return this;
     }
 
-    public FailureOperation setTestId(String testId) {
+    public FailureMessage setTestId(String testId) {
         this.testId = testId;
         return this;
     }
 
-    public FailureOperation setCause(Throwable cause) {
+    public FailureMessage setCause(Throwable cause) {
         this.cause = throwableToString(cause);
         return this;
     }
 
-    public FailureOperation setDurationMs(long durationMs) {
+    public FailureMessage setDurationMs(long durationMs) {
         this.durationMs = durationMs;
         return this;
     }
@@ -99,7 +99,7 @@ public class FailureOperation implements SimulatorOperation {
         this.durationMs = durationMs;
     }
 
-    public FailureOperation setTestCase(TestCase testCase) {
+    public FailureMessage setTestCase(TestCase testCase) {
         this.testCase = testCase;
         return this;
     }

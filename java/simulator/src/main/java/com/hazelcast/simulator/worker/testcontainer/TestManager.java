@@ -21,9 +21,9 @@ import com.hazelcast.simulator.protocol.Promise;
 import com.hazelcast.simulator.protocol.Server;
 import com.hazelcast.simulator.utils.ExceptionReporter;
 import com.hazelcast.simulator.drivers.Driver;
-import com.hazelcast.simulator.worker.operations.CreateTestOperation;
-import com.hazelcast.simulator.worker.operations.StartPhaseOperation;
-import com.hazelcast.simulator.worker.operations.StopRunOperation;
+import com.hazelcast.simulator.worker.messages.CreateTestMessage;
+import com.hazelcast.simulator.worker.messages.StartPhaseMessage;
+import com.hazelcast.simulator.worker.messages.StopRunMessage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -58,8 +58,8 @@ public class TestManager {
         return new ArrayList<>(tests.values());
     }
 
-    public void createTest(CreateTestOperation operation) {
-        TestCase testCase = operation.getTestCase();
+    public void createTest(CreateTestMessage msg) {
+        TestCase testCase = msg.getTestCase();
 
         String testId = testCase.getId();
 
@@ -67,7 +67,7 @@ public class TestManager {
 
         if (testContainer != null) {
             throw new IllegalStateException(format("Can't init TestCase: %s, another test with testId %s already exists",
-                    operation, testId));
+                    msg, testId));
         }
 
         LOGGER.info(format("%s Initializing test %s %s%n%s", DASHES, testId, DASHES, testCase));
@@ -79,8 +79,8 @@ public class TestManager {
         tests.put(testId, testContainer);
     }
 
-    public void stopRun(StopRunOperation op) {
-        String testId = op.getTestId();
+    public void stopRun(StopRunMessage msg) {
+        String testId = msg.getTestId();
 
         LOGGER.info(format("%s Stopping %s %s", DASHES, testId, DASHES));
 
@@ -93,13 +93,14 @@ public class TestManager {
         testContainer.stop();
     }
 
-    public void startTestPhase(StartPhaseOperation op, Promise promise) throws Exception {
-        TestPhase testPhase = op.getTestPhase();
+    public void startTestPhase(StartPhaseMessage msg, Promise promise) throws Exception {
+        TestPhase testPhase = msg.getTestPhase();
 
-        String testId = op.getTestId();
+        String testId = msg.getTestId();
         TestContainer testContainer = tests.get(testId);
         if (testContainer == null) {
-            throw new IllegalArgumentException(format("Could not start phase [%s] , test [%s] is not found.", testPhase, testId));
+            throw new IllegalArgumentException(format("Could not start phase [%s] , "
+                    + "test [%s] is not found.", testPhase, testId));
         }
 
         new TestPhaseThread(testContainer, testPhase, testId, promise).start();

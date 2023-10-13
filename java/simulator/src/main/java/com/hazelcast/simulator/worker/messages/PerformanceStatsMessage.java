@@ -13,23 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.worker.operations;
+package com.hazelcast.simulator.worker.messages;
 
 import com.google.gson.annotations.SerializedName;
-import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
+import com.hazelcast.simulator.protocol.message.SimulatorMessage;
 import com.hazelcast.simulator.worker.performance.PerformanceStats;
 
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Sends a {@link PerformanceStats} per running Simulator Test to the Coordinator, which contains the last snapshot of performance
- * numbers from that test.
- *
- * This Operation is 'mandatory' to implement. The consequence of not implementing it is no performance information is
- * available on the coordinator for logging purposes.
+ * Sends a {@link PerformanceStats} per running Simulator Test to the Coordinator,
+ * which contains the last snapshot of performance numbers from that test.
+ * <p/>
+ * This Message is 'mandatory' to handke. The consequence of not implementing
+ * it is no performance information is available on the coordinator for logging
+ * purposes.
  */
-public class PerformanceStatsOperation implements SimulatorOperation {
+public class PerformanceStatsMessage implements SimulatorMessage {
 
     /**
      * Map of {@link PerformanceStats} per Simulator Test.

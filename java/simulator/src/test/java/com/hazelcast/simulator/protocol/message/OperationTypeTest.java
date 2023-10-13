@@ -1,4 +1,4 @@
-package com.hazelcast.simulator.protocol.operation;
+package com.hazelcast.simulator.protocol.message;
 
 public class OperationTypeTest {
 

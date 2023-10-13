@@ -1,4 +1,4 @@
-package com.hazelcast.simulator.coordinator.operations;
+package com.hazelcast.simulator.coordinator.messages;
 
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
@@ -24,15 +24,15 @@ public class FailureOperationTest {
     private TestException cause;
     private TestCase testCase;
 
-    private FailureOperation operation;
-    private FailureOperation fullOperation;
+    private FailureMessage operation;
+    private FailureMessage fullOperation;
 
     @Before
     public void before() {
         testCase = new TestCase(TEST_ID);
         cause = new TestException("expected exception");
-        operation = new FailureOperation("FailureOperationTest", WORKER_EXCEPTION, workerAddress, null, cause);
-        fullOperation = new FailureOperation("FailureOperationTest", WORKER_EXCEPTION, workerAddress, null,
+        operation = new FailureMessage("FailureOperationTest", WORKER_EXCEPTION, workerAddress, null, cause);
+        fullOperation = new FailureMessage("FailureOperationTest", WORKER_EXCEPTION, workerAddress, null,
                 "A1_W1-member", TEST_ID, null).setTestCase(testCase);
     }
 
@@ -48,7 +48,7 @@ public class FailureOperationTest {
 
     @Test
     public void testGetWorkerAddress_whenWorkerAddressIsNull() {
-        operation = new FailureOperation("FailureOperationTest", WORKER_EXCEPTION, null, null, cause);
+        operation = new FailureMessage("FailureOperationTest", WORKER_EXCEPTION, null, null, cause);
 
         assertNull(operation.getWorkerAddress());
     }
@@ -77,7 +77,7 @@ public class FailureOperationTest {
 
     @Test
     public void testGetLogMessage_whenWorkerAddressIsNull() throws Exception {
-        operation = new FailureOperation("FailureOperationTest", WORKER_EXCEPTION, null, agentAddress.toString(), cause);
+        operation = new FailureMessage("FailureOperationTest", WORKER_EXCEPTION, null, agentAddress.toString(), cause);
 
         String log = operation.getLogMessage(5);
 

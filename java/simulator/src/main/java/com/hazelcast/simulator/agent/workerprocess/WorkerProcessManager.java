@@ -15,12 +15,12 @@
  */
 package com.hazelcast.simulator.agent.workerprocess;
 
-import com.hazelcast.simulator.agent.operations.CreateWorkerOperation;
-import com.hazelcast.simulator.coordinator.operations.FailureOperation;
+import com.hazelcast.simulator.agent.messages.CreateWorkerMessage;
+import com.hazelcast.simulator.coordinator.messages.FailureMessage;
 import com.hazelcast.simulator.protocol.Promise;
 import com.hazelcast.simulator.protocol.Server;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.operation.LogOperation;
+import com.hazelcast.simulator.protocol.message.LogMessage;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -67,15 +67,15 @@ public class WorkerProcessManager {
     }
 
     // launching is done asynchronous so we don't block the calling thread (messaging thread)
-    public void launch(CreateWorkerOperation op, Promise promise) {
-        WorkerParameters workerParameters = op.getWorkerParameters();
+    public void launch(CreateWorkerMessage msg, Promise promise) {
+        WorkerParameters workerParameters = msg.getWorkerParameters();
 
         // we add the pid to the worker-parameters so the worker can check if the agent is still alive.
         workerParameters.set("agent.pid", getPID());
 
         WorkerProcessLauncher launcher = new WorkerProcessLauncher(WorkerProcessManager.this, workerParameters);
         LaunchSingleWorkerTask task = new LaunchSingleWorkerTask(launcher, workerParameters, promise);
-        executorService.schedule(task, op.getDelayMs(), MILLISECONDS);
+        executorService.schedule(task, msg.getDelayMs(), MILLISECONDS);
     }
 
     public void add(SimulatorAddress workerAddress, WorkerProcess workerProcess) {
@@ -155,7 +155,7 @@ public class WorkerProcessManager {
                 SimulatorAddress workerAddress
                         = workerAddress(agentAddress.getAddressIndex(), parameters.intGet("WORKER_INDEX"));
 
-                server.sendCoordinator(new FailureOperation("Failed to start worker [" + workerAddress + "]",
+                server.sendCoordinator(new FailureMessage("Failed to start worker [" + workerAddress + "]",
                         WORKER_CREATE_ERROR, workerAddress, agentAddress.toString(), e));
 
                 promise.answer(e.getMessage());
@@ -173,7 +173,7 @@ public class WorkerProcessManager {
             String workerType = parameters.getWorkerType();
             SimulatorAddress workerAddress = workerAddress(agentAddress.getAgentIndex(), workerIndex);
 
-            LogOperation logOperation = new LogOperation(
+            LogMessage logOperation = new LogMessage(
                     format("Created %s Worker %s", workerType, workerAddress), Level.DEBUG);
 
             server.sendCoordinator(logOperation);

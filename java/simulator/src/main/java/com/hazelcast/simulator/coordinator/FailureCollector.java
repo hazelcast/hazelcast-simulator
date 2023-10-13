@@ -15,7 +15,7 @@
  */
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.simulator.coordinator.operations.FailureOperation;
+import com.hazelcast.simulator.coordinator.messages.FailureMessage;
 import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.coordinator.registry.TestData;
 import com.hazelcast.simulator.coordinator.registry.WorkerData;
@@ -62,7 +62,7 @@ public class FailureCollector {
         listenerMap.put(listener, false);
     }
 
-    public void notify(FailureOperation failure) {
+    public void notify(FailureMessage failure) {
         failure = enrich(failure);
 
         SimulatorAddress workerAddress = failure.getWorkerAddress();
@@ -101,7 +101,7 @@ public class FailureCollector {
         }
     }
 
-    private FailureOperation enrich(FailureOperation failure) {
+    private FailureMessage enrich(FailureMessage failure) {
         String testId = failure.getTestId();
         if (testId != null) {
             TestData test = registry.getTest(testId);
@@ -113,7 +113,7 @@ public class FailureCollector {
         return failure;
     }
 
-    private void logFailure(FailureOperation failure, long failureCount) {
+    private void logFailure(FailureMessage failure, long failureCount) {
         if (failure.getType() == WORKER_CREATE_ERROR) {
             // create error we don't need to log; they will be logged by the CreateWorkersTask
             return;

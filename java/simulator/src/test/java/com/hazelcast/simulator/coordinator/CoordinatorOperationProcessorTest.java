@@ -1,11 +1,11 @@
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.simulator.agent.operations.CreateWorkerOperation;
-import com.hazelcast.simulator.coordinator.operations.FailureOperation;
+import com.hazelcast.simulator.agent.messages.CreateWorkerMessage;
+import com.hazelcast.simulator.coordinator.messages.FailureMessage;
 import com.hazelcast.simulator.protocol.Promise;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.exception.ProcessException;
-import com.hazelcast.simulator.worker.operations.PerformanceStatsOperation;
+import com.hazelcast.simulator.protocol.exception.HandleException;
+import com.hazelcast.simulator.worker.messages.PerformanceStatsMessage;
 import com.hazelcast.simulator.worker.performance.PerformanceStats;
 import org.junit.Before;
 import org.junit.Test;
@@ -18,7 +18,7 @@ import static org.mockito.Mockito.when;
 
 public class CoordinatorOperationProcessorTest {
 
-    private CoordinatorOperationProcessor processor;
+    private CoordinatorMessageHandler processor;
     private FailureCollector failureCollector;
     private PerformanceStatsCollector performanceStatsCollector;
     private SimulatorAddress address;
@@ -28,14 +28,14 @@ public class CoordinatorOperationProcessorTest {
     public void before() {
         failureCollector = mock(FailureCollector.class);
         performanceStatsCollector = mock(PerformanceStatsCollector.class);
-        processor = new CoordinatorOperationProcessor(failureCollector, performanceStatsCollector);
+        processor = new CoordinatorMessageHandler(failureCollector, performanceStatsCollector);
         address = SimulatorAddress.fromString("A1");
         promise = mock(Promise.class);
     }
 
     @Test
     public void test_whenFailureOperation() throws Exception {
-        FailureOperation op = mock(FailureOperation.class);
+        FailureMessage op = mock(FailureMessage.class);
 
         processor.process(op, address, promise);
 
@@ -44,7 +44,7 @@ public class CoordinatorOperationProcessorTest {
 
     @Test
     public void test_whenPerformanceStatsOperation() throws Exception {
-        PerformanceStatsOperation op = mock(PerformanceStatsOperation.class);
+        PerformanceStatsMessage op = mock(PerformanceStatsMessage.class);
         Map<String, PerformanceStats> performanceStats = mock(Map.class);
         when(op.getPerformanceStats()).thenReturn(performanceStats);
 
@@ -53,9 +53,9 @@ public class CoordinatorOperationProcessorTest {
         verify(performanceStatsCollector).update(address, performanceStats);
     }
 
-    @Test(expected = ProcessException.class)
+    @Test(expected = HandleException.class)
     public void test_whenUnknownOperation() throws Exception {
-        CreateWorkerOperation op = mock(CreateWorkerOperation.class);
+        CreateWorkerMessage op = mock(CreateWorkerMessage.class);
 
         processor.process(op, address, promise);
     }

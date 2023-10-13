@@ -13,21 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.worker.operations;
+package com.hazelcast.simulator.worker.messages;
 
 import com.google.gson.annotations.SerializedName;
 import com.hazelcast.simulator.common.TestCase;
-import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
+import com.hazelcast.simulator.protocol.message.SimulatorMessage;
 
 import java.util.Map;
 
 /**
  * Creates a Simulator Test.
- *
- * In case of the java worker, a TestContainer is made, a Test-instance (e.g. AtomicLongTest) is made and the properties
- * are are bound.
+ * <p/>
+ * In case of the java worker, a TestContainer is made, a Test-instance
+ * (e.g. AtomicLongTest) is made and the properties are are bound.
  */
-public class CreateTestOperation implements SimulatorOperation {
+public class CreateTestMessage implements SimulatorMessage {
 
      /**
      * Test id for for {@link TestCase}.
@@ -37,13 +37,13 @@ public class CreateTestOperation implements SimulatorOperation {
 
     /**
      * Test parameters which are injected to public variables of the same name.
-     *
+     * <p/>
      * This is the content of the testCase.
      */
     @SerializedName("properties")
     private final Map<String, String> properties;
 
-    public CreateTestOperation(TestCase testCase) {
+    public CreateTestMessage(TestCase testCase) {
         this.testId = testCase.getId();
         this.properties = testCase.getProperties();
     }
@@ -54,6 +54,6 @@ public class CreateTestOperation implements SimulatorOperation {
 
     @Override
     public String toString() {
-        return "CreateTestOperation{testId='" + testId + "'}";
+        return "CreateTestMessage{testId='" + testId + "'}";
     }
 }

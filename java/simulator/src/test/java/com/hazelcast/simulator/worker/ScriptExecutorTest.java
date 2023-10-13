@@ -2,7 +2,7 @@ package com.hazelcast.simulator.worker;
 
 import com.hazelcast.simulator.protocol.StubPromise;
 import com.hazelcast.simulator.drivers.Driver;
-import com.hazelcast.simulator.worker.operations.ExecuteScriptOperation;
+import com.hazelcast.simulator.worker.messages.ExecuteScriptMessage;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -22,7 +22,7 @@ public class ScriptExecutorTest {
 
     @Test
     public void bash() {
-        ExecuteScriptOperation scriptOperation = new ExecuteScriptOperation("bash:ls", false);
+        ExecuteScriptMessage scriptOperation = new ExecuteScriptMessage("bash:ls", false);
         StubPromise promise = new StubPromise();
         scriptExecutor.execute(scriptOperation, promise);
 
@@ -32,7 +32,7 @@ public class ScriptExecutorTest {
 
     @Test
     public void javascript() {
-        ExecuteScriptOperation scriptOperation = new ExecuteScriptOperation("js:java.lang.System.out.println();", false);
+        ExecuteScriptMessage scriptOperation = new ExecuteScriptMessage("js:java.lang.System.out.println();", false);
         StubPromise promise = new StubPromise();
 
         scriptExecutor.execute(scriptOperation, promise);
@@ -43,7 +43,7 @@ public class ScriptExecutorTest {
 
     @Test
     public void whenFireSndForget_thenErrorNotNoticed() {
-        ExecuteScriptOperation scriptOperation = new ExecuteScriptOperation("bash:foobar", true);
+        ExecuteScriptMessage scriptOperation = new ExecuteScriptMessage("bash:foobar", true);
 
         StubPromise promise = new StubPromise();
 

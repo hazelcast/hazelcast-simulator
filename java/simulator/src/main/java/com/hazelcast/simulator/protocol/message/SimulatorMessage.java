@@ -13,11 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.protocol.exception;
+package com.hazelcast.simulator.protocol.message;
 
-public class ProcessException extends RuntimeException {
+import com.hazelcast.simulator.protocol.MessageHandler;
 
-    public ProcessException(String msg) {
-        super(msg);
-    }
+import java.io.Serializable;
+
+/**
+ * Marker interface for all Simulator messages that are send to the Agent/Worker.
+ * <p/>
+ * Is processed by {@link SimulatorMessageCodec} with a given {@link MessageHandler}.
+ */
+public interface SimulatorMessage extends Serializable {
 }

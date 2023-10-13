@@ -73,7 +73,7 @@ public class Agent implements Closeable {
                 new WorkerProcessFailureHandler(publicAddress, server),
                 processManager, workerLastSeenTimeoutSeconds);
 
-        server.setProcessor(new AgentOperationProcessor(processManager, workerProcessFailureMonitor));
+        server.setProcessor(new AgentMessageHandler(processManager, workerProcessFailureMonitor));
 
         Runtime.getRuntime().addShutdownHook(new AgentShutdownThread(true));
     }

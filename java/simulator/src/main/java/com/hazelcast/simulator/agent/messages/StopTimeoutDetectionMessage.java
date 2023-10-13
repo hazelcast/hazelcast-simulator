@@ -13,12 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.agent.operations;
+package com.hazelcast.simulator.agent.messages;
 
-import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
+import com.hazelcast.simulator.protocol.message.SimulatorMessage;
 
 /**
- * Starts the timeout detection for {@link com.hazelcast.simulator.agent.workerprocess.WorkerProcess} on the Simulator Agent.
+ * Stops the timeout detection for
+ * {@link com.hazelcast.simulator.agent.workerprocess.WorkerProcess} on the
+ * Simulator Agent.
  */
-public class StartTimeoutDetectionOperation implements SimulatorOperation {
+public class StopTimeoutDetectionMessage implements SimulatorMessage {
 }

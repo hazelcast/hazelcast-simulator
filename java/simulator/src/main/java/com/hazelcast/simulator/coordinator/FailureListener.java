@@ -15,9 +15,9 @@
  */
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.simulator.coordinator.operations.FailureOperation;
+import com.hazelcast.simulator.coordinator.messages.FailureMessage;
 
 public interface FailureListener {
 
-    void onFailure(FailureOperation failure, boolean isFinishedFailure, boolean isCritical);
+    void onFailure(FailureMessage failure, boolean isFinishedFailure, boolean isCritical);
 }

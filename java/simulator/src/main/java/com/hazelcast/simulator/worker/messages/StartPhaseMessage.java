@@ -13,20 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.worker.operations;
+package com.hazelcast.simulator.worker.messages;
 
 import com.google.gson.annotations.SerializedName;
 import com.hazelcast.simulator.common.TestPhase;
-import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
+import com.hazelcast.simulator.protocol.message.SimulatorMessage;
 
 /**
- * Starts a {@link TestPhase} of a Simulator test. Each test has phases to go through like setup, run, verify, teardown etc.
- * This operation triggers those phases.
- *
- * This Operation should only complete, when the phase has completed. If it takes e.g. 30minutes for the run phase to complete,
- * then only after 30 minutes a response is send.
+ * Starts a {@link TestPhase} of a Simulator test. Each test has phases to go
+ * through like setup, run, verify, teardown etc. This message triggers those
+ * phases.
+ * <p/>
+ * This message should only complete, when the phase has completed. If it
+ * takes e.g. 30minutes for the run phase to complete, then only after 30 minutes
+ * a response is send.
  */
-public class StartPhaseOperation implements SimulatorOperation {
+public class StartPhaseMessage implements SimulatorMessage {
 
     /**
      * The {@link TestPhase} which should be started.
@@ -40,7 +42,7 @@ public class StartPhaseOperation implements SimulatorOperation {
     @SerializedName("testId")
     private final String testId;
 
-    public StartPhaseOperation(TestPhase testPhase, String testId) {
+    public StartPhaseMessage(TestPhase testPhase, String testId) {
         this.testPhase = testPhase.name();
         this.testId = testId;
     }
@@ -55,6 +57,7 @@ public class StartPhaseOperation implements SimulatorOperation {
 
     @Override
     public String toString() {
-        return "StartPhaseOperation{testPhase='" + testPhase + "', testId='" + testId + "'}";
+        return "StartPhaseMessage{testPhase='" + testPhase
+                + "', testId='" + testId + "'}";
     }
 }

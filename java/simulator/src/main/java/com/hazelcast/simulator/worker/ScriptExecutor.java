@@ -20,7 +20,7 @@ import com.hazelcast.simulator.utils.BashCommand;
 import com.hazelcast.simulator.utils.EmbeddedScriptCommand;
 import com.hazelcast.simulator.utils.NativeUtils;
 import com.hazelcast.simulator.drivers.Driver;
-import com.hazelcast.simulator.worker.operations.ExecuteScriptOperation;
+import com.hazelcast.simulator.worker.messages.ExecuteScriptMessage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -40,12 +40,12 @@ public class ScriptExecutor {
         this.driver = driver;
     }
 
-    public void execute(final ExecuteScriptOperation operation, final Promise promise) {
-        if (operation.isFireAndForget()) {
+    public void execute(final ExecuteScriptMessage msg, final Promise promise) {
+        if (msg.isFireAndForget()) {
             promise.answer("ok");
         }
 
-        String fullCommand = operation.getCommand();
+        String fullCommand = msg.getCommand();
         int indexColon = fullCommand.indexOf(":");
         String extension = fullCommand.substring(0, indexColon);
         final String command = fullCommand.substring(indexColon + 1);

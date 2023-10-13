@@ -13,16 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.worker.operations;
+package com.hazelcast.simulator.worker.messages;
 
 import com.google.gson.annotations.SerializedName;
-import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
+import com.hazelcast.simulator.protocol.message.SimulatorMessage;
 
 /**
- * Execute a script, e.g. bash or javascript on a worker. This is useful to e.g. obtain some state, or cause problems like
+ * Execute a script, e.g. bash or javascript on a worker. This is useful to e.g.
+ * obtain some state, or cause problems like
  * OOME.
  */
-public class ExecuteScriptOperation implements SimulatorOperation {
+public class ExecuteScriptMessage implements SimulatorMessage {
 
     /**
      * The script to execute.
@@ -32,14 +33,15 @@ public class ExecuteScriptOperation implements SimulatorOperation {
 
     /**
      * If the script is a fire and forget (so no response being send) or not.
-     *
-     * Fire and forget is useful for e.g. causing problems on a member/client and observe the consequences
-     * of it in the test. E.g. allocate fake memory till 90% of the heap gets filled and see what happens.
+     * <p/>
+     * Fire and forget is useful for e.g. causing problems on a member/client
+     * and observe the consequences of it in the test. E.g. allocate fake memory
+     * till 90% of the heap gets filled and see what happens.
      */
     @SerializedName("fireAndForget")
     private boolean fireAndForget;
 
-    public ExecuteScriptOperation(String command, boolean fireAndForget) {
+    public ExecuteScriptMessage(String command, boolean fireAndForget) {
         this.command = command;
         this.fireAndForget = fireAndForget;
     }

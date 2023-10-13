@@ -13,25 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.worker.operations;
+package com.hazelcast.simulator.worker.messages;
 
 import com.google.gson.annotations.SerializedName;
-import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
+import com.hazelcast.simulator.protocol.message.SimulatorMessage;
 
 /**
  * Initiates the shutdown process of the Worker.
  */
-public class TerminateWorkerOperation implements SimulatorOperation {
+public class TerminateWorkerMessage implements SimulatorMessage {
 
     /**
-     * If the worker should do a real shutdown or just fake it. This is needed for integration testing the code.
-     *
-     * If you are implementing a non java client? Just ignore this property and terminate your client.
+     * If the worker should do a real shutdown or just fake it. This is needed
+     * for integration testing the code.
+     * <p/>
+     * If you are implementing a non java client? Just ignore this property and
+     * terminate your client.
      */
     @SerializedName("realShutdown")
     private final boolean realShutdown;
 
-    public TerminateWorkerOperation(boolean realShutdown) {
+    public TerminateWorkerMessage(boolean realShutdown) {
         this.realShutdown = realShutdown;
     }
 

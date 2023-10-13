@@ -15,8 +15,8 @@
  */
 package com.hazelcast.simulator.coordinator.tasks;
 
-import com.hazelcast.simulator.agent.operations.CreateWorkerOperation;
-import com.hazelcast.simulator.agent.operations.StartTimeoutDetectionOperation;
+import com.hazelcast.simulator.agent.messages.CreateWorkerMessage;
+import com.hazelcast.simulator.agent.messages.StartTimeoutDetectionMessage;
 import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.coordinator.registry.AgentData;
 import com.hazelcast.simulator.coordinator.registry.Registry;
@@ -86,7 +86,7 @@ public class StartWorkersTask {
         // then create all clients
         startWorkers(clientDeploymentPlan);
 
-        client.invokeOnAllAgents(new StartTimeoutDetectionOperation(), MINUTES.toMillis(1));
+        client.invokeOnAllAgents(new StartTimeoutDetectionMessage(), MINUTES.toMillis(1));
 
         echoStartComplete();
         return result;
@@ -169,8 +169,8 @@ public class StartWorkersTask {
 
         @Override
         public void run() {
-            CreateWorkerOperation operation = new CreateWorkerOperation(workerParameters, startupDelayMs);
-            Future<String> f = client.submit(agent.getAddress(), operation);
+            CreateWorkerMessage msg = new CreateWorkerMessage(workerParameters, startupDelayMs);
+            Future<String> f = client.submit(agent.getAddress(), msg);
             String r;
             try {
                 r = f.get();

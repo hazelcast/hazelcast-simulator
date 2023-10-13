@@ -1,7 +1,7 @@
 package com.hazelcast.simulator.agent.workerprocess;
 
 import com.hazelcast.simulator.common.FailureType;
-import com.hazelcast.simulator.coordinator.operations.FailureOperation;
+import com.hazelcast.simulator.coordinator.messages.FailureMessage;
 import com.hazelcast.simulator.protocol.Server;
 import org.junit.Before;
 import org.junit.Test;
@@ -28,7 +28,7 @@ public class WorkerProcessFailureHandlerTest {
         WorkerProcess process = mock(WorkerProcess.class);
         handler.handle("foo", FailureType.WORKER_EXCEPTION, process, "1", "someerror");
 
-        verify(server).sendCoordinator(any(FailureOperation.class));
+        verify(server).sendCoordinator(any(FailureMessage.class));
     }
 
     @Test
@@ -36,6 +36,6 @@ public class WorkerProcessFailureHandlerTest {
         WorkerProcess process = mock(WorkerProcess.class);
         handler.handle("foo", FailureType.WORKER_NORMAL_EXIT, process, "1", "someerror");
 
-        verify(server).sendCoordinator(any(FailureOperation.class));
+        verify(server).sendCoordinator(any(FailureMessage.class));
     }
 }

@@ -2,7 +2,7 @@ package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.common.TestCase;
-import com.hazelcast.simulator.coordinator.operations.FailureOperation;
+import com.hazelcast.simulator.coordinator.messages.FailureMessage;
 import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.coordinator.registry.WorkerData;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
@@ -32,10 +32,10 @@ public class FailureCollectorTest {
 
     private FailureCollector failureCollector;
 
-    private FailureOperation exceptionFailure;
-    private FailureOperation oomeFailure;
-    private FailureOperation normalExitFailure;
-    private FailureOperation abnormalExitFailure;
+    private FailureMessage exceptionFailure;
+    private FailureMessage oomeFailure;
+    private FailureMessage normalExitFailure;
+    private FailureMessage abnormalExitFailure;
     private File outputDirectory;
     private Registry registry;
     private SimulatorAddress agentAddress;
@@ -56,16 +56,16 @@ public class FailureCollectorTest {
 
         registry.addWorkers(singletonList(workerParameters));
 
-        exceptionFailure = new FailureOperation("exception", WORKER_EXCEPTION, workerAddress, agentAddress.toString(),
+        exceptionFailure = new FailureMessage("exception", WORKER_EXCEPTION, workerAddress, agentAddress.toString(),
                 "workerId", "testId", null);
 
-        abnormalExitFailure = new FailureOperation("exception", WORKER_ABNORMAL_EXIT, workerAddress, agentAddress.toString(),
+        abnormalExitFailure = new FailureMessage("exception", WORKER_ABNORMAL_EXIT, workerAddress, agentAddress.toString(),
                 "workerId", "testId", null);
 
-        oomeFailure = new FailureOperation("oom", WORKER_OOME, workerAddress, agentAddress.toString(),
+        oomeFailure = new FailureMessage("oom", WORKER_OOME, workerAddress, agentAddress.toString(),
                "workerId", "testId", null);
 
-        normalExitFailure = new FailureOperation("finished", WORKER_NORMAL_EXIT, workerAddress, agentAddress.toString(),
+        normalExitFailure = new FailureMessage("finished", WORKER_NORMAL_EXIT, workerAddress, agentAddress.toString(),
                "workerId", "testId", null);
     }
 
@@ -77,7 +77,7 @@ public class FailureCollectorTest {
     @Test
     public void notify_whenNonExistingWorker_thenIgnore() {
         SimulatorAddress nonExistingWorkerAddress = workerAddress(agentAddress.getAgentIndex(), 100);
-        FailureOperation failure = new FailureOperation("exception", WORKER_EXCEPTION, nonExistingWorkerAddress, agentAddress.toString(),
+        FailureMessage failure = new FailureMessage("exception", WORKER_EXCEPTION, nonExistingWorkerAddress, agentAddress.toString(),
                 "workerId", "testId", null);
 
         failureCollector.notify(failure);
@@ -105,7 +105,7 @@ public class FailureCollectorTest {
         notify_whenWorkerIgnoresFailure(exceptionFailure, false);
     }
 
-    private void notify_whenWorkerIgnoresFailure(FailureOperation failure, boolean workerDeleted) {
+    private void notify_whenWorkerIgnoresFailure(FailureMessage failure, boolean workerDeleted) {
         WorkerData worker = registry.getWorker(workerAddress);
         worker.setIgnoreFailures(true);
 
@@ -124,14 +124,14 @@ public class FailureCollectorTest {
         registry.addTests(suite1);
         registry.addTests(suite2);
 
-        FailureOperation failure = new FailureOperation("exception", WORKER_EXCEPTION, workerAddress, agentAddress.toString(),
+        FailureMessage failure = new FailureMessage("exception", WORKER_EXCEPTION, workerAddress, agentAddress.toString(),
                 "workerId", testCase.getId(), null);
 
         FailureListener listener = mock(FailureListener.class);
         failureCollector.addListener(listener);
         failureCollector.notify(failure);
 
-        ArgumentCaptor<FailureOperation> failureCaptor = ArgumentCaptor.forClass(FailureOperation.class);
+        ArgumentCaptor<FailureMessage> failureCaptor = ArgumentCaptor.forClass(FailureMessage.class);
         verify(listener).onFailure(failureCaptor.capture(), eq(false), eq(true));
 
         assertSame(suite1.getTestCaseList().get(0), failureCaptor.getValue().getTestCase());

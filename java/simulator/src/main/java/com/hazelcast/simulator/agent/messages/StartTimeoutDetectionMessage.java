@@ -13,25 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.protocol.operation;
+package com.hazelcast.simulator.agent.messages;
 
-import com.google.gson.Gson;
+import com.hazelcast.simulator.protocol.message.SimulatorMessage;
 
 /**
- * Encodes and decodes a {@link SimulatorOperation}.
+ * Starts the timeout detection for
+ * {@link com.hazelcast.simulator.agent.workerprocess.WorkerProcess} on the
+ * Simulator Agent.
  */
-public final class OperationCodec {
-
-    private static final Gson GSON = new Gson();
-
-    private OperationCodec() {
-    }
-
-    public static String toJson(SimulatorOperation op) {
-        return GSON.toJson(op);
-    }
-
-    public static SimulatorOperation fromJson(String json, Class<? extends SimulatorOperation> classType) {
-        return GSON.fromJson(json, classType);
-    }
+public class StartTimeoutDetectionMessage implements SimulatorMessage {
 }

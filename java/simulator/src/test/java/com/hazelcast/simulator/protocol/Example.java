@@ -16,8 +16,8 @@
 package com.hazelcast.simulator.protocol;
 
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.operation.LogOperation;
-import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
+import com.hazelcast.simulator.protocol.message.LogMessage;
+import com.hazelcast.simulator.protocol.message.SimulatorMessage;
 
 import java.net.Inet4Address;
 import java.util.concurrent.Future;
@@ -40,9 +40,9 @@ public class Example {
                 .start();
 
         Server agentServer = new Server("agents")
-                .setProcessor(new OperationProcessor() {
+                .setProcessor(new MessageHandler() {
                     @Override
-                    public void process(SimulatorOperation op, SimulatorAddress source, Promise promise) throws Exception {
+                    public void process(SimulatorMessage msg, SimulatorAddress source, Promise promise) throws Exception {
                     }
                 })
                 .setSelfAddress(SimulatorAddress.fromString("A1"))
@@ -50,10 +50,10 @@ public class Example {
                 .start();
 
         Server workerServer = new Server("workers")
-                .setProcessor(new OperationProcessor() {
+                .setProcessor(new MessageHandler() {
                     @Override
-                    public void process(SimulatorOperation op, SimulatorAddress source, Promise promise) throws Exception {
-                        System.out.println("worker:" + op);
+                    public void process(SimulatorMessage msg, SimulatorAddress source, Promise promise) throws Exception {
+                        System.out.println("worker:" + msg);
                     }
                 })
                 .setSelfAddress(SimulatorAddress.fromString("A1_W1"))
@@ -63,7 +63,7 @@ public class Example {
 
         SimulatorAddress address = SimulatorAddress.fromString("A1_W1");
 
-        Future f = coordinatorClient.submit(address, new LogOperation("foo"));
+        Future f = coordinatorClient.submit(address, new LogMessage("foo"));
         System.out.println(f.get());
 
 

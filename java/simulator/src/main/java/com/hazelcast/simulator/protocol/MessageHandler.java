@@ -16,15 +16,15 @@
 package com.hazelcast.simulator.protocol;
 
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
+import com.hazelcast.simulator.protocol.message.SimulatorMessage;
 
 /**
- * Handles a SimulatorOperation.
- *
- * The idea is that OperationHandlers should remain very thin. They receive the operation and dispatch it to the
- * right service to do the actual work.
+ * Handles a {@link SimulatorMessage}.
+ * <p/>
+ * The idea is that MessageHandler should remain very thin. They receive the
+ * message and dispatch it to the right service to do the actual work.
  */
-public interface OperationProcessor {
+public interface MessageHandler {
 
-    void process(SimulatorOperation op, SimulatorAddress source, Promise promise) throws Exception;
+    void process(SimulatorMessage msg, SimulatorAddress source, Promise promise) throws Exception;
 }

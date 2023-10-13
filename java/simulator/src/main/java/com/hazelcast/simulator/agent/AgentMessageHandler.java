@@ -15,40 +15,40 @@
  */
 package com.hazelcast.simulator.agent;
 
-import com.hazelcast.simulator.agent.operations.CreateWorkerOperation;
-import com.hazelcast.simulator.agent.operations.StartTimeoutDetectionOperation;
-import com.hazelcast.simulator.agent.operations.StopTimeoutDetectionOperation;
+import com.hazelcast.simulator.agent.messages.CreateWorkerMessage;
+import com.hazelcast.simulator.agent.messages.StartTimeoutDetectionMessage;
+import com.hazelcast.simulator.agent.messages.StopTimeoutDetectionMessage;
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessFailureMonitor;
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessManager;
-import com.hazelcast.simulator.protocol.OperationProcessor;
+import com.hazelcast.simulator.protocol.MessageHandler;
 import com.hazelcast.simulator.protocol.Promise;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.exception.ProcessException;
-import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
+import com.hazelcast.simulator.protocol.exception.HandleException;
+import com.hazelcast.simulator.protocol.message.SimulatorMessage;
 
-class AgentOperationProcessor implements OperationProcessor {
+class AgentMessageHandler implements MessageHandler {
 
     private final WorkerProcessManager processManager;
     private final WorkerProcessFailureMonitor failureMonitor;
 
-    AgentOperationProcessor(WorkerProcessManager processManager,
-                            WorkerProcessFailureMonitor failureMonitor) {
+    AgentMessageHandler(WorkerProcessManager processManager,
+                        WorkerProcessFailureMonitor failureMonitor) {
         this.processManager = processManager;
         this.failureMonitor = failureMonitor;
     }
 
     @Override
-    public void process(SimulatorOperation op, SimulatorAddress source, Promise promise) throws Exception {
-        if (op instanceof CreateWorkerOperation) {
-            processManager.launch((CreateWorkerOperation) op, promise);
-        } else if (op instanceof StartTimeoutDetectionOperation) {
+    public void process(SimulatorMessage msg, SimulatorAddress source, Promise promise) throws Exception {
+        if (msg instanceof CreateWorkerMessage) {
+            processManager.launch((CreateWorkerMessage) msg, promise);
+        } else if (msg instanceof StartTimeoutDetectionMessage) {
             failureMonitor.startTimeoutDetection();
             promise.answer("ok");
-        } else if (op instanceof StopTimeoutDetectionOperation) {
+        } else if (msg instanceof StopTimeoutDetectionMessage) {
             failureMonitor.stopTimeoutDetection();
             promise.answer("ok");
         } else {
-            throw new ProcessException("Unknown operation:" + op);
+            throw new HandleException("Unknown message:" + msg);
         }
     }
 }

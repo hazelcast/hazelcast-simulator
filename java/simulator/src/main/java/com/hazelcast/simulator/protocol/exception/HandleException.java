@@ -13,12 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.agent.operations;
+package com.hazelcast.simulator.protocol.exception;
 
-import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
+public class HandleException extends RuntimeException {
 
-/**
- * Stops the timeout detection for {@link com.hazelcast.simulator.agent.workerprocess.WorkerProcess} on the Simulator Agent.
- */
-public class StopTimeoutDetectionOperation implements SimulatorOperation {
+    public HandleException(String msg) {
+        super(msg);
+    }
 }

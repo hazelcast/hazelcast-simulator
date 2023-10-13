@@ -13,9 +13,9 @@ import com.hazelcast.simulator.utils.AssertTask;
 import com.hazelcast.simulator.utils.ExceptionReporter;
 import com.hazelcast.simulator.fake.FakeInstance;
 import com.hazelcast.simulator.drivers.Driver;
-import com.hazelcast.simulator.worker.operations.CreateTestOperation;
-import com.hazelcast.simulator.worker.operations.StartPhaseOperation;
-import com.hazelcast.simulator.worker.operations.StopRunOperation;
+import com.hazelcast.simulator.worker.messages.CreateTestMessage;
+import com.hazelcast.simulator.worker.messages.StartPhaseMessage;
+import com.hazelcast.simulator.worker.messages.StopRunMessage;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -62,7 +62,7 @@ public class TestManagerTest {
     public void test_createTest() {
         TestCase testCase = new TestCase("foo")
                 .setProperty("class", SuccessTest.class);
-        CreateTestOperation op = new CreateTestOperation(testCase);
+        CreateTestMessage op = new CreateTestMessage(testCase);
 
         manager.createTest(op);
 
@@ -74,7 +74,7 @@ public class TestManagerTest {
     public void test_createTest_whenTestExist() {
         TestCase testCase = new TestCase("foo")
                 .setProperty("class", SuccessTest.class);
-        CreateTestOperation op = new CreateTestOperation(testCase);
+        CreateTestMessage op = new CreateTestMessage(testCase);
 
         manager.createTest(op);
 
@@ -88,10 +88,10 @@ public class TestManagerTest {
                 .setProperty("threadCount", 1)
                 .setProperty("class", StoppingTest.class);
 
-        manager.createTest(new CreateTestOperation(testCase));
+        manager.createTest(new CreateTestMessage(testCase));
 
         StubPromise promise = new StubPromise();
-        manager.startTestPhase(new StartPhaseOperation(RUN, "foo"), promise);
+        manager.startTestPhase(new StartPhaseMessage(RUN, "foo"), promise);
 
         promise.assertCompletesEventually();
     }
@@ -102,21 +102,21 @@ public class TestManagerTest {
                 .setProperty("threadCount", 1)
                 .setProperty("class", SuccessTest.class);
 
-        manager.createTest(new CreateTestOperation(testCase));
+        manager.createTest(new CreateTestMessage(testCase));
         final TestContainer container = manager.getContainers().iterator().next();
 
         // do the setup first (needed)
         StubPromise setupPromise = new StubPromise();
-        manager.startTestPhase(new StartPhaseOperation(SETUP, "foo"), setupPromise);
+        manager.startTestPhase(new StartPhaseMessage(SETUP, "foo"), setupPromise);
         setupPromise.assertCompletesEventually();
 
         // then start with the run phase
-        manager.startTestPhase(new StartPhaseOperation(RUN, "foo"), mock(Promise.class));
+        manager.startTestPhase(new StartPhaseMessage(RUN, "foo"), mock(Promise.class));
         awaitRunning(container);
 
         // and while the run phase is running, we'll try to do a tear down
         StubPromise promise = new StubPromise();
-        manager.startTestPhase(new StartPhaseOperation(LOCAL_TEARDOWN, "foo"), promise);
+        manager.startTestPhase(new StartPhaseMessage(LOCAL_TEARDOWN, "foo"), promise);
         promise.assertCompletesEventually();
         assertTrue(promise.getAnswer() instanceof IllegalStateException);
     }
@@ -137,22 +137,22 @@ public class TestManagerTest {
                 .setProperty("threadCount", 1)
                 .setProperty("class", SuccessTest.class);
 
-        manager.createTest(new CreateTestOperation(testCase));
+        manager.createTest(new CreateTestMessage(testCase));
         final TestContainer container = manager.getContainers().iterator().next();
 
         // we need to call setup so the test is initialized correctly
         StubPromise setupPromise = new StubPromise();
-        manager.startTestPhase(new StartPhaseOperation(SETUP, "foo"), setupPromise);
+        manager.startTestPhase(new StartPhaseMessage(SETUP, "foo"), setupPromise);
         setupPromise.assertCompletesEventually();
 
         // then we call start; this call will not block
         StubPromise runPromise = new StubPromise();
-        manager.startTestPhase(new StartPhaseOperation(RUN, "foo"), runPromise);
+        manager.startTestPhase(new StartPhaseMessage(RUN, "foo"), runPromise);
 
         awaitRunning(container);
 
         // then we eventually call stop
-        manager.stopRun(new StopRunOperation("foo"));
+        manager.stopRun(new StopRunMessage("foo"));
 
         // and now the test should complete.
         runPromise.assertCompletesEventually();
@@ -160,7 +160,7 @@ public class TestManagerTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void test_stopRun_whenNotExistingTest() {
-        manager.stopRun(new StopRunOperation("foo"));
+        manager.stopRun(new StopRunMessage("foo"));
     }
 
     @Test
@@ -169,11 +169,11 @@ public class TestManagerTest {
                 .setProperty("threadCount", 1)
                 .setProperty("class", TestWithSlowSetup.class);
 
-        manager.createTest(new CreateTestOperation(testCase));
+        manager.createTest(new CreateTestMessage(testCase));
 
         // then we call start; this call will not block
         StubPromise promise = new StubPromise();
-        manager.startTestPhase(new StartPhaseOperation(SETUP, "foo"), promise);
+        manager.startTestPhase(new StartPhaseMessage(SETUP, "foo"), promise);
 
         // give the test some time to enter the setup phase
         SECONDS.sleep(1);
@@ -190,14 +190,14 @@ public class TestManagerTest {
                 .setProperty("threadCount", 1)
                 .setProperty("class", FailingTest.class);
 
-        manager.createTest(new CreateTestOperation(testCase));
+        manager.createTest(new CreateTestMessage(testCase));
 
         StubPromise setupPromise = new StubPromise();
-        manager.startTestPhase(new StartPhaseOperation(SETUP, "foo"), setupPromise);
+        manager.startTestPhase(new StartPhaseMessage(SETUP, "foo"), setupPromise);
         setupPromise.assertCompletesEventually();
 
         StubPromise runPromise = new StubPromise();
-        manager.startTestPhase(new StartPhaseOperation(RUN, "foo"), runPromise);
+        manager.startTestPhase(new StartPhaseMessage(RUN, "foo"), runPromise);
 
         runPromise.assertCompletesEventually();
         System.out.println(runPromise.getAnswer());
@@ -210,12 +210,12 @@ public class TestManagerTest {
                 .setProperty("threadCount", 1)
                 .setProperty("class", TestWithSlowSetup.class);
 
-        manager.createTest(new CreateTestOperation(testCase));
+        manager.createTest(new CreateTestMessage(testCase));
 
         // then we call start; this call will not block
         StubPromise promise = new StubPromise();
 
-        manager.startTestPhase(new StartPhaseOperation(TestPhase.LOCAL_TEARDOWN, "foo"), promise);
+        manager.startTestPhase(new StartPhaseMessage(TestPhase.LOCAL_TEARDOWN, "foo"), promise);
         // but eventually the promise will complete.
         promise.assertCompletesEventually();
 
@@ -229,6 +229,6 @@ public class TestManagerTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void test_startTestPhase_whenNonExistingTest() throws Exception {
-        manager.startTestPhase(new StartPhaseOperation(SETUP, "foo"), mock(Promise.class));
+        manager.startTestPhase(new StartPhaseMessage(SETUP, "foo"), mock(Promise.class));
     }
 }

@@ -19,7 +19,7 @@ import com.hazelcast.simulator.probes.LatencyProbe;
 import com.hazelcast.simulator.probes.impl.NoopLatencyProbe;
 import com.hazelcast.simulator.probes.impl.HdrLatencyProbe;
 import com.hazelcast.simulator.protocol.Server;
-import com.hazelcast.simulator.protocol.operation.LogOperation;
+import com.hazelcast.simulator.protocol.message.LogMessage;
 import com.hazelcast.simulator.test.TestContext;
 
 import java.util.Map;
@@ -96,6 +96,6 @@ public class TestContextImpl implements TestContext {
     @Override
     public void echoCoordinator(String msg, Object... args) {
         String message = format(msg, args);
-        server.sendCoordinator(new LogOperation(message));
+        server.sendCoordinator(new LogMessage(message));
     }
 }

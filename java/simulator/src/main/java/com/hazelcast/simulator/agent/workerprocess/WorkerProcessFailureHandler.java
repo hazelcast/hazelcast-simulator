@@ -16,7 +16,7 @@
 package com.hazelcast.simulator.agent.workerprocess;
 
 import com.hazelcast.simulator.common.FailureType;
-import com.hazelcast.simulator.coordinator.operations.FailureOperation;
+import com.hazelcast.simulator.coordinator.messages.FailureMessage;
 import com.hazelcast.simulator.protocol.Server;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import org.apache.logging.log4j.LogManager;
@@ -41,7 +41,7 @@ public class WorkerProcessFailureHandler {
         SimulatorAddress workerAddress = workerProcess.getAddress();
         String workerId = workerProcess.getId();
 
-        FailureOperation failure = new FailureOperation(
+        FailureMessage failure = new FailureMessage(
                 message,
                 type,
                 workerAddress,
