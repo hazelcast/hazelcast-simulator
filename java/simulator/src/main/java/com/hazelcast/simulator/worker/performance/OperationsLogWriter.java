@@ -27,14 +27,14 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 /**
  * Responsible for writing to performance stats to disk in csv format.
  */
-final class PerformanceLogWriter {
+final class OperationsLogWriter {
 
     private final StringBuffer sb = new StringBuffer();
     private final DecimalFormat format = new DecimalFormat("#.###", new DecimalFormatSymbols(Locale.ENGLISH));
     private final File file;
     private boolean headerWritten;
 
-    PerformanceLogWriter(File file) {
+    OperationsLogWriter(File file) {
         this.file = checkNotNull(file, "file can't be null");
     }
 

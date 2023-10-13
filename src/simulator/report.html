@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+          background-color: #cdcdcd;
+          text-align: center;
+        }
+
+        img {
+          width: 40vw;
+        }
+
+        .images-block {
+          display: block;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+          width: 100vw;
+        }
+
+        .tabs {
+          display: flex;
+          border-bottom: 1px solid black;
+          margin-bottom: 3vh;
+        }
+
+        .tab {
+          flex: 33.33%;
+        }
+
+        .tab:hover,
+        .active-tab {
+          background-color: #dedede;
+        }
+
+        img:hover {
+          cursor: zoom-in;
+        }
+
+        .zoomin {
+          zoom: 2;
+          -moz-transform: scale(2);
+        }
+
+        .zoomout {
+          zoom: normal;
+          -moz-transform: scale(1);
+        }
+
+        tr,
+        td {
+          border: 1px solid black;
+        }
+
+        td {
+          padding: 3px;
+        }
+    </style>
+</head>
+<body>
+<h1>Benchmark Report</h1>
+<div class="tabs">
+    <div class="tab" id="csv" style="border-right: 1px solid black;">
+        <p>Summary</p>
+    </div>
+    <div class="tab" id="operations" style="border-right: 1px solid black;">
+        <p>Throughput</p>
+    </div>
+    <div class="tab" id="latency" style="border-right: 1px solid black;">
+        <p>Latency</p>
+    </div>
+    <div class="tab" id="dstat">
+        <p>dstat</p>
+    </div>
+</div>
+<div class="images-block">[images]</div>
+<table>
+    <tbody>
+        [summary]
+    </tbody>
+</table>
+<script>
+    var activeTab = 'operations';
+    var operationsdom = document.getElementById('operations');
+    var latencydom = document.getElementById('latency');
+    var dstatdom = document.getElementById('dstat');
+    var csvdom = document.getElementById('csv');
+    var imageContainer = document.getElementsByClassName('image-container');
+    var tabledom = document.getElementsByTagName('table')[0];
+
+    function addClass(classname, element) {
+      while (element.classList.contains(classname)) {
+        element.classList.remove(classname);
+      }
+      element.classList.add(classname);
+    }
+
+    function removeClass(classname, element) {
+      while (element.classList.contains(classname)) {
+        element.classList.remove(classname);
+      }
+    }
+
+    function filter() {
+      tabledom.style.display = 'none';
+      for (let item of imageContainer) {
+        if (item.classList.contains(activeTab)) item.style.display = 'block';
+        else item.style.display = 'none';
+      }
+    }
+
+    function showcsv() {
+      for (let item of imageContainer) {
+        item.style.display = 'none';
+      }
+      tabledom.style.display = 'inline';
+    }
+    operationsdom.addEventListener('click', function(e) {
+      e.preventDefault();
+      addClass('active-tab', operationsdom);
+      removeClass('active-tab', latencydom);
+      removeClass('active-tab', dstatdom);
+      removeClass('active-tab', csvdom);
+      activeTab = 'operations';
+      filter();
+    });
+    latencydom.addEventListener('click', function(e) {
+      e.preventDefault();
+      addClass('active-tab', latencydom);
+      removeClass('active-tab', operationsdom);
+      removeClass('active-tab', dstatdom);
+      removeClass('active-tab', csvdom);
+      activeTab = 'latency';
+      filter();
+    });
+    dstatdom.addEventListener('click', function(e) {
+      e.preventDefault();
+      addClass('active-tab', dstatdom);
+      removeClass('active-tab', operationsdom);
+      removeClass('active-tab', latencydom);
+      removeClass('active-tab', csvdom);
+      activeTab = 'dstat';
+      filter();
+    });
+    csvdom.addEventListener('click', function(e) {
+      e.preventDefault();
+      addClass('active-tab', csvdom);
+      removeClass('active-tab', operationsdom);
+      removeClass('active-tab', latencydom);
+      removeClass('active-tab', dstatdom);
+      activeTab = 'csv';
+      showcsv();
+    });
+    csvdom.click();
+
+    function toggleZoom(element) {
+      if (element) {
+        if (element.classList.contains('zoomin')) {
+          removeClass('zoomin', element);
+          addClass('zoomout', element);
+        } else {
+          removeClass('zoomout', element);
+          addClass('zoomin', element);
+        }
+      }
+    }
+</script>
+</body>
+</html>

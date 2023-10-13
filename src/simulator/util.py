@@ -158,8 +158,8 @@ def shell(cmd, shell=True, use_print=False, log_file_path=None):
             return read_loop(process, selector, use_print, file=f)
     else:
         return read_loop(process, selector, use_print)
-    
-def read_loop(process, selector, use_print, file=None): 
+
+def read_loop(process, selector, use_print, file=None):
     while True:
         for key, _ in selector.select():
             data = key.fileobj.read1().decode()
