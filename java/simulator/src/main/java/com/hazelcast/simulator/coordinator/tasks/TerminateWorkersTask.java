@@ -15,12 +15,12 @@
  */
 package com.hazelcast.simulator.coordinator.tasks;
 
-import com.hazelcast.simulator.agent.operations.StopTimeoutDetectionOperation;
+import com.hazelcast.simulator.agent.messages.StopTimeoutDetectionMessage;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.coordinator.registry.WorkerData;
 import com.hazelcast.simulator.protocol.CoordinatorClient;
-import com.hazelcast.simulator.worker.operations.TerminateWorkerOperation;
+import com.hazelcast.simulator.worker.messages.TerminateWorkerMessage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -75,7 +75,7 @@ public class TerminateWorkersTask {
 
         LOGGER.info(format("Terminating %d Workers...", currentWorkerCount));
 
-        client.invokeOnAllAgents(new StopTimeoutDetectionOperation(), MINUTES.toMillis(1));
+        client.invokeOnAllAgents(new StopTimeoutDetectionMessage(), MINUTES.toMillis(1));
 
         // prevent any failures from being printed due to killing the members.
         Set<WorkerData> clients = new HashSet<>();
@@ -91,7 +91,7 @@ public class TerminateWorkersTask {
 
         // first shut down all clients
         for (WorkerData worker : clients) {
-            client.send(worker.getAddress(), new TerminateWorkerOperation(true));
+            client.send(worker.getAddress(), new TerminateWorkerMessage(true));
         }
 
         // wait some if there were any clients
@@ -101,7 +101,7 @@ public class TerminateWorkersTask {
 
         // and then terminate all members
         for (WorkerData worker : members) {
-            client.send(worker.getAddress(), new TerminateWorkerOperation(true));
+            client.send(worker.getAddress(), new TerminateWorkerMessage(true));
         }
 
         // now we wait for the workers to die

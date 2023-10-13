@@ -17,11 +17,11 @@ package com.hazelcast.simulator.protocol;
 
 import com.hazelcast.simulator.common.FailureType;
 import com.hazelcast.simulator.coordinator.FailureCollector;
-import com.hazelcast.simulator.coordinator.operations.FailureOperation;
+import com.hazelcast.simulator.coordinator.messages.FailureMessage;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.operation.OperationCodec;
-import com.hazelcast.simulator.protocol.operation.OperationType;
-import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
+import com.hazelcast.simulator.protocol.message.SimulatorMessageCodec;
+import com.hazelcast.simulator.protocol.message.MessageType;
+import com.hazelcast.simulator.protocol.message.SimulatorMessage;
 import com.hazelcast.simulator.utils.SimulatorUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -50,7 +50,7 @@ import java.util.concurrent.TimeoutException;
 
 import static com.hazelcast.simulator.common.SimulatorProperties.DEFAULT_AGENT_PORT;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.coordinatorAddress;
-import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
+import static com.hazelcast.simulator.protocol.message.MessageType.getMessageType;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.UuidUtil.newUnsecureUuidString;
 import static java.lang.String.format;
@@ -73,7 +73,7 @@ public class CoordinatorClient implements Closeable {
     private final SendThread sendThread;
     private final ConnectionFactory connectionFactory = new ConnectionFactory();
     private ResponseHandlerThread responseHandlerThread;
-    private OperationProcessor processor;
+    private MessageHandler processor;
     private int remoteBrokerPort = DEFAULT_AGENT_PORT;
     private FailureCollector failureCollector;
     private volatile boolean stop;
@@ -105,7 +105,7 @@ public class CoordinatorClient implements Closeable {
         return this;
     }
 
-    public CoordinatorClient setProcessor(OperationProcessor processor) {
+    public CoordinatorClient setProcessor(MessageHandler processor) {
         this.processor = processor;
         return this;
     }
@@ -116,16 +116,16 @@ public class CoordinatorClient implements Closeable {
         return this;
     }
 
-    public void send(SimulatorAddress target, SimulatorOperation op) {
+    public void send(SimulatorAddress target, SimulatorMessage msg) {
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("sending " + op + " to " + target);
+            LOGGER.debug("sending " + msg + " to " + target);
         }
-        taskQueue.add(new SendTask(target, getRemoteBroker(target), op, null));
+        taskQueue.add(new SendTask(target, getRemoteBroker(target), msg, null));
     }
 
-    public Future<String> submit(SimulatorAddress target, SimulatorOperation op) {
+    public Future<String> submit(SimulatorAddress target, SimulatorMessage msg) {
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("sending " + op + " to " + target);
+            LOGGER.debug("sending " + msg + " to " + target);
         }
 
         RemoteBroker remoteBroker = getRemoteBroker(target);
@@ -133,17 +133,17 @@ public class CoordinatorClient implements Closeable {
         FutureImpl future = new FutureImpl(remoteBroker);
         futures.put(future.messageId, future);
 
-        taskQueue.add(new SendTask(target, remoteBroker, op, future.messageId));
+        taskQueue.add(new SendTask(target, remoteBroker, msg, future.messageId));
 
         return future;
     }
 
-    public List<String> invokeOnAllAgents(SimulatorOperation op, long timeoutMillis)
+    public List<String> invokeOnAllAgents(SimulatorMessage msg, long timeoutMillis)
             throws TimeoutException, InterruptedException, ExecutionException {
         Map<SimulatorAddress, Future<String>> futures = new HashMap<>();
         for (RemoteBroker broker : remoteBrokers.values()) {
             SimulatorAddress agent = broker.agentAddress;
-            futures.put(agent, submit(agent, op));
+            futures.put(agent, submit(agent, msg));
         }
 
         List<String> responses = new ArrayList<>();
@@ -258,14 +258,15 @@ public class CoordinatorClient implements Closeable {
     class SendTask {
 
         private final RemoteBroker remoteBroker;
-        private final SimulatorOperation op;
+        private final SimulatorMessage msg;
         private final String requestId;
         private final SimulatorAddress target;
 
-        SendTask(SimulatorAddress target, RemoteBroker remoteBroker, SimulatorOperation op, String requestId) {
+        SendTask(SimulatorAddress target, RemoteBroker remoteBroker,
+                 SimulatorMessage msg, String requestId) {
             this.target = target;
             this.remoteBroker = remoteBroker;
-            this.op = op;
+            this.msg = msg;
             this.requestId = requestId;
         }
 
@@ -279,8 +280,8 @@ public class CoordinatorClient implements Closeable {
 
             message.setStringProperty("source", coordinatorAddress().toString());
             message.setStringProperty("target", target.toString());
-            message.setStringProperty("payload", OperationCodec.toJson(op));
-            message.setIntProperty("operationType", getOperationType(op).toInt());
+            message.setStringProperty("payload", SimulatorMessageCodec.toJson(msg));
+            message.setIntProperty("msgType", getMessageType(msg).toInt());
 
             switch (target.getAddressLevel()) {
                 case AGENT:
@@ -357,7 +358,7 @@ public class CoordinatorClient implements Closeable {
 
             remoteBrokers.remove(agentAddress.getAgentIndex());
 
-            FailureOperation failureOperation = new FailureOperation(
+            FailureMessage failureOperation = new FailureMessage(
                     "Lost connection to " + agentAddress,
                     FailureType.MESSAGING_EXCEPTION,
                     null,
@@ -432,17 +433,17 @@ public class CoordinatorClient implements Closeable {
                     return false;
                 }
 
-                OperationType operationType = OperationType.fromInt(message.getIntProperty("operationType"));
-                String operationData = message.getStringProperty("payload");
+                MessageType msgType = MessageType.fromInt(message.getIntProperty("msgType"));
+                String msgData = message.getStringProperty("payload");
 
-                SimulatorOperation op = OperationCodec.fromJson(operationData, operationType.getClassType());
+                SimulatorMessage msg = SimulatorMessageCodec.fromJson(msgData, msgType.getClassType());
                 if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("Received " + op);
+                    LOGGER.debug("Received " + msg);
                 }
 
                 SimulatorAddress source = SimulatorAddress.fromString(message.getStringProperty("source"));
 
-                processor.process(op, source, EmptyPromise.INSTANCE);
+                processor.process(msg, source, EmptyPromise.INSTANCE);
                 return true;
             } catch (Exception e) {
                 if (!stop) {

@@ -98,7 +98,6 @@ Also contains pointers where to go next.
     - [Terraform](https://developer.hashicorp.com/terraform/downloads)
     - [Python 3.8 or newer](https://www.python.org/downloads/)
     - Python3-pip
-    - [Gnuplot](http://www.gnuplot.info/download.html)
     - python3-gobject
     - rsync
 

@@ -13,16 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.protocol.operation;
+package com.hazelcast.simulator.protocol.message;
 
-import com.hazelcast.simulator.protocol.OperationProcessor;
-
-import java.io.Serializable;
+import com.google.gson.Gson;
 
 /**
- * Marker interface for all Simulator operations.
- *
- * Is processed by {@link OperationCodec} with a given {@link OperationProcessor}.
+ * Encodes and decodes a {@link SimulatorMessage}.
  */
-public interface SimulatorOperation extends Serializable {
+public final class SimulatorMessageCodec {
+
+    private static final Gson GSON = new Gson();
+
+    private SimulatorMessageCodec() {
+    }
+
+    public static String toJson(SimulatorMessage msg) {
+        return GSON.toJson(msg);
+    }
+
+    public static SimulatorMessage fromJson(String json, Class<? extends SimulatorMessage> classType) {
+        return GSON.fromJson(json, classType);
+    }
 }

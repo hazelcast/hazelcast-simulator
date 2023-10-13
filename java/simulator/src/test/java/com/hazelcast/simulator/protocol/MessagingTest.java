@@ -1,8 +1,8 @@
 package com.hazelcast.simulator.protocol;
 
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.operation.LogOperation;
-import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
+import com.hazelcast.simulator.protocol.message.LogMessage;
+import com.hazelcast.simulator.protocol.message.SimulatorMessage;
 import com.hazelcast.simulator.utils.AssertTask;
 import org.apache.logging.log4j.Level;
 import org.junit.After;
@@ -51,21 +51,21 @@ public class MessagingTest {
         agentServer = new Server("agents")
                 .setBrokerURL(broker.getBrokerURL())
                 .setSelfAddress(agentAddress)
-                .setProcessor(new OperationProcessor() {
+                .setProcessor(new MessageHandler() {
                     @Override
-                    public void process(SimulatorOperation op, SimulatorAddress source, Promise promise) throws Exception {
-                        System.out.println(op);
+                    public void process(SimulatorMessage msg, SimulatorAddress source, Promise promise) throws Exception {
+                        System.out.println(msg);
                         promise.answer("OK");
                     }
                 })
                 .start();
 
         client = new CoordinatorClient()
-                .setProcessor(mock(OperationProcessor.class))
+                .setProcessor(mock(MessageHandler.class))
                 .start()
                 .connectToAgentBroker(agentAddress, localIp());
 
-        final Future f = client.submit(agentAddress, new LogOperation("", Level.DEBUG));
+        final Future f = client.submit(agentAddress, new LogMessage("", Level.DEBUG));
         assertTrueEventually(
                 new AssertTask() {
                     @Override
@@ -83,9 +83,9 @@ public class MessagingTest {
         agentServer = new Server("agents")
                 .setBrokerURL(broker.getBrokerURL())
                 .setSelfAddress(agentAddress)
-                .setProcessor(new OperationProcessor() {
+                .setProcessor(new MessageHandler() {
                     @Override
-                    public void process(SimulatorOperation op, SimulatorAddress source, Promise promise) throws Exception {
+                    public void process(SimulatorMessage msg, SimulatorAddress source, Promise promise) throws Exception {
                         // we don't do anything to let the future wait
                         received.countDown();
                     }
@@ -93,11 +93,11 @@ public class MessagingTest {
                 .start();
 
         client = new CoordinatorClient()
-                .setProcessor(mock(OperationProcessor.class));
+                .setProcessor(mock(MessageHandler.class));
         client.getConnectionFactory().setMaxReconnectAttempts(1);
         client.start().connectToAgentBroker(agentAddress, localIp());
 
-        final Future f = client.submit(agentAddress, new LogOperation("", Level.DEBUG));
+        final Future f = client.submit(agentAddress, new LogMessage("", Level.DEBUG));
 
         received.await();
         broker.close();
@@ -116,25 +116,25 @@ public class MessagingTest {
         agentServer = new Server("agents")
                 .setBrokerURL(broker.getBrokerURL())
                 .setSelfAddress(agentAddress)
-                .setProcessor(new OperationProcessor() {
+                .setProcessor(new MessageHandler() {
                     @Override
-                    public void process(SimulatorOperation op, SimulatorAddress source, Promise promise) throws Exception {
+                    public void process(SimulatorMessage msg, SimulatorAddress source, Promise promise) throws Exception {
                     }
                 })
                 .start();
 
-        final OperationProcessor clientOperationProcessor = mock(OperationProcessor.class);
+        final MessageHandler clientOperationProcessor = mock(MessageHandler.class);
         client = new CoordinatorClient()
                 .setProcessor(clientOperationProcessor);
         client.getConnectionFactory().setMaxReconnectAttempts(1);
         client.start().connectToAgentBroker(agentAddress, localIp());
 
-        agentServer.sendCoordinator(new LogOperation("Foo"));
+        agentServer.sendCoordinator(new LogMessage("Foo"));
 
         assertTrueEventually(new AssertTask() {
             @Override
             public void run() throws Exception {
-                verify(clientOperationProcessor).process(any(LogOperation.class), eq(agentAddress), any(Promise.class));
+                verify(clientOperationProcessor).process(any(LogMessage.class), eq(agentAddress), any(Promise.class));
             }
         });
     }

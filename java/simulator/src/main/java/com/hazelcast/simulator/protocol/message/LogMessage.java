@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.protocol.operation;
+package com.hazelcast.simulator.protocol.message;
 
 
 import org.apache.logging.log4j.Level;
@@ -21,7 +21,7 @@ import org.apache.logging.log4j.Level;
 /**
  * Writes the message with the requested log level to the local logging framework.
  */
-public class LogOperation implements SimulatorOperation {
+public class LogMessage implements SimulatorMessage {
 
     /**
      * Defines the message which should be logged.
@@ -33,11 +33,11 @@ public class LogOperation implements SimulatorOperation {
      */
     private final String level;
 
-    public LogOperation(String message) {
+    public LogMessage(String message) {
         this(message, Level.INFO);
     }
 
-    public LogOperation(String message, Level level) {
+    public LogMessage(String message, Level level) {
         this.message = message;
         this.level = level.toString();
     }
@@ -52,7 +52,7 @@ public class LogOperation implements SimulatorOperation {
 
     @Override
     public String toString() {
-        return "LogOperation{"
+        return "LogMessage{"
                 + "message='" + message + '\''
                 + ", level='" + level + '\''
                 + '}';

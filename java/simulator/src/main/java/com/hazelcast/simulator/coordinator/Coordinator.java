@@ -71,7 +71,7 @@ public class Coordinator implements Closeable {
 
         this.client = new CoordinatorClient()
                 .setAgentBrokerPort(properties.getAgentPort())
-                .setProcessor(new CoordinatorOperationProcessor(failureCollector, performanceStatsCollector))
+                .setProcessor(new CoordinatorMessageHandler(failureCollector, performanceStatsCollector))
                 .setFailureCollector(failureCollector);
     }
 

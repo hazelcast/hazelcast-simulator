@@ -1,6 +1,6 @@
 package com.hazelcast.simulator.coordinator.tasks;
 
-import com.hazelcast.simulator.agent.operations.CreateWorkerOperation;
+import com.hazelcast.simulator.agent.messages.CreateWorkerMessage;
 import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.coordinator.DeploymentPlan;
 import com.hazelcast.simulator.coordinator.registry.AgentData;
@@ -55,9 +55,9 @@ public class StartWorkersTaskTest {
 
         Future f = mock(Future.class);
         when(f.get()).thenReturn("SUCCESS");
-        when(client.submit(eq(agent1.getAddress()), any(CreateWorkerOperation.class))).thenReturn(f);
-        when(client.submit(eq(agent2.getAddress()), any(CreateWorkerOperation.class))).thenReturn(f);
-        when(client.submit(eq(agent3.getAddress()), any(CreateWorkerOperation.class))).thenReturn(f);
+        when(client.submit(eq(agent1.getAddress()), any(CreateWorkerMessage.class))).thenReturn(f);
+        when(client.submit(eq(agent2.getAddress()), any(CreateWorkerMessage.class))).thenReturn(f);
+        when(client.submit(eq(agent3.getAddress()), any(CreateWorkerMessage.class))).thenReturn(f);
 
         new StartWorkersTask(deploymentPlan, Collections.<String, String>emptyMap(), client, registry, 0).run();
 
@@ -70,9 +70,9 @@ public class StartWorkersTaskTest {
 
         Future f = mock(Future.class);
         when(f.get()).thenReturn("SUCCESS");
-        when(client.submit(eq(agent1.getAddress()), any(CreateWorkerOperation.class))).thenReturn(f);
-        when(client.submit(eq(agent2.getAddress()), any(CreateWorkerOperation.class))).thenReturn(f);
-        when(client.submit(eq(agent3.getAddress()), any(CreateWorkerOperation.class))).thenReturn(f);
+        when(client.submit(eq(agent1.getAddress()), any(CreateWorkerMessage.class))).thenReturn(f);
+        when(client.submit(eq(agent2.getAddress()), any(CreateWorkerMessage.class))).thenReturn(f);
+        when(client.submit(eq(agent3.getAddress()), any(CreateWorkerMessage.class))).thenReturn(f);
 
         new StartWorkersTask(deploymentPlan, Collections.<String, String>emptyMap(), client, registry, 0).run();
 
@@ -85,7 +85,7 @@ public class StartWorkersTaskTest {
 
         Future f = mock(Future.class);
         when(f.get()).thenThrow(new ExecutionException(null));
-        when(client.submit(eq(agent1.getAddress()), any(CreateWorkerOperation.class))).thenReturn(f);
+        when(client.submit(eq(agent1.getAddress()), any(CreateWorkerMessage.class))).thenReturn(f);
 
         new StartWorkersTask(deploymentPlan, Collections.<String, String>emptyMap(), client, registry, 0).run();
     }

@@ -7,7 +7,7 @@ import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.tests.DummyTest;
 import com.hazelcast.simulator.tests.SuccessTest;
 import com.hazelcast.simulator.utils.AssertTask;
-import com.hazelcast.simulator.worker.operations.PerformanceStatsOperation;
+import com.hazelcast.simulator.worker.messages.PerformanceStatsMessage;
 import com.hazelcast.simulator.worker.testcontainer.TestContainer;
 import com.hazelcast.simulator.worker.testcontainer.TestContextImpl;
 import com.hazelcast.simulator.worker.testcontainer.TestManager;
@@ -134,7 +134,7 @@ public class PerformanceMonitorTest {
     }
 
     private void assertPerfStatsSend() {
-        verify(server, atLeastOnce()).sendCoordinator(any(PerformanceStatsOperation.class));
+        verify(server, atLeastOnce()).sendCoordinator(any(PerformanceStatsMessage.class));
         verifyNoMoreInteractions(server);
     }
 

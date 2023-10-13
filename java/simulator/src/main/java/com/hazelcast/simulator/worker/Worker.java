@@ -19,11 +19,10 @@ import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.common.ProcessSuicideThread;
 import com.hazelcast.simulator.common.ShutdownThread;
 import com.hazelcast.simulator.drivers.Driver;
-import com.hazelcast.simulator.probes.impl.HdrLatencyProbe;
 import com.hazelcast.simulator.protocol.Server;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.utils.ExceptionReporter;
-import com.hazelcast.simulator.worker.operations.TerminateWorkerOperation;
+import com.hazelcast.simulator.worker.messages.TerminateWorkerMessage;
 import com.hazelcast.simulator.worker.performance.OperationsMonitor;
 import com.hazelcast.simulator.worker.testcontainer.TestManager;
 import org.apache.logging.log4j.LogManager;
@@ -76,7 +75,7 @@ public class Worker {
         this.testManager = new TestManager(server, driver);
 
         ScriptExecutor scriptExecutor = new ScriptExecutor(driver);
-        server.setProcessor(new WorkerOperationProcessor(this, testManager, scriptExecutor));
+        server.setProcessor(new WorkerMessageHandler(this, testManager, scriptExecutor));
 
         Runtime.getRuntime().addShutdownHook(new WorkerShutdownThread(true));
 
@@ -100,10 +99,10 @@ public class Worker {
         logHeader("Successfully started Worker #" + workerAddress);
     }
 
-    public void shutdown(TerminateWorkerOperation op) {
+    public void shutdown(TerminateWorkerMessage msg) {
         LOGGER.warn("Terminating worker");
         closeQuietly(server);
-        shutdownThread = new WorkerShutdownThread(op.isRealShutdown());
+        shutdownThread = new WorkerShutdownThread(msg.isRealShutdown());
         shutdownThread.start();
     }
 

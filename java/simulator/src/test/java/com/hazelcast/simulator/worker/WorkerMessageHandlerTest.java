@@ -3,16 +3,16 @@ package com.hazelcast.simulator.worker;
 
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestPhase;
-import com.hazelcast.simulator.coordinator.operations.FailureOperation;
+import com.hazelcast.simulator.coordinator.messages.FailureMessage;
 import com.hazelcast.simulator.protocol.StubPromise;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.exception.ProcessException;
+import com.hazelcast.simulator.protocol.exception.HandleException;
 import com.hazelcast.simulator.utils.ExceptionReporter;
-import com.hazelcast.simulator.worker.operations.CreateTestOperation;
-import com.hazelcast.simulator.worker.operations.ExecuteScriptOperation;
-import com.hazelcast.simulator.worker.operations.StartPhaseOperation;
-import com.hazelcast.simulator.worker.operations.StopRunOperation;
-import com.hazelcast.simulator.worker.operations.TerminateWorkerOperation;
+import com.hazelcast.simulator.worker.messages.CreateTestMessage;
+import com.hazelcast.simulator.worker.messages.ExecuteScriptMessage;
+import com.hazelcast.simulator.worker.messages.StartPhaseMessage;
+import com.hazelcast.simulator.worker.messages.StopRunMessage;
+import com.hazelcast.simulator.worker.messages.TerminateWorkerMessage;
 import com.hazelcast.simulator.worker.testcontainer.TestManager;
 import org.junit.After;
 import org.junit.Before;
@@ -31,9 +31,9 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
-public class WorkerOperationProcessorTest {
+public class WorkerMessageHandlerTest {
 
-    private WorkerOperationProcessor processor;
+    private WorkerMessageHandler processor;
     private TestManager testManager;
     private Worker worker;
     private SimulatorAddress sourceAddress = SimulatorAddress.coordinatorAddress();
@@ -47,7 +47,7 @@ public class WorkerOperationProcessorTest {
         testManager = mock(TestManager.class);
         worker = mock(Worker.class);
         scriptExecutor = mock(ScriptExecutor.class);
-        processor = new WorkerOperationProcessor(worker, testManager, scriptExecutor);
+        processor = new WorkerMessageHandler(worker, testManager, scriptExecutor);
         promise = new StubPromise();
     }
 
@@ -59,7 +59,7 @@ public class WorkerOperationProcessorTest {
 
     @Test
     public void test_TerminateWorkerOperation() throws Exception {
-        TerminateWorkerOperation op = new TerminateWorkerOperation(true);
+        TerminateWorkerMessage op = new TerminateWorkerMessage(true);
 
         processor.process(op, sourceAddress, promise);
 
@@ -69,7 +69,7 @@ public class WorkerOperationProcessorTest {
 
     @Test
     public void test_CreateTestOperation() throws Exception {
-        CreateTestOperation op = new CreateTestOperation(new TestCase("foo"));
+        CreateTestMessage op = new CreateTestMessage(new TestCase("foo"));
 
         processor.process(op, sourceAddress, promise);
 
@@ -79,7 +79,7 @@ public class WorkerOperationProcessorTest {
 
     @Test
     public void test_ExecuteScriptOperation() throws Exception {
-        ExecuteScriptOperation op = new ExecuteScriptOperation("bash:ls", true);
+        ExecuteScriptMessage op = new ExecuteScriptMessage("bash:ls", true);
 
         processor.process(op, sourceAddress, promise);
 
@@ -88,7 +88,7 @@ public class WorkerOperationProcessorTest {
 
     @Test
     public void test_StartTestPhaseOperation() throws Exception {
-        StartPhaseOperation op = new StartPhaseOperation(TestPhase.GLOBAL_PREPARE, "foo");
+        StartPhaseMessage op = new StartPhaseMessage(TestPhase.GLOBAL_PREPARE, "foo");
 
         processor.process(op, sourceAddress, promise);
 
@@ -97,7 +97,7 @@ public class WorkerOperationProcessorTest {
 
     @Test
     public void test_StopRunOperation() throws Exception {
-        StopRunOperation op = new StopRunOperation("foo");
+        StopRunMessage op = new StopRunMessage("foo");
 
         processor.process(op, sourceAddress, promise);
 
@@ -108,7 +108,7 @@ public class WorkerOperationProcessorTest {
     // make sure that unhandled exceptions are trapped.
     @Test
     public void test_unhandledException() throws Exception {
-        StopRunOperation op = new StopRunOperation("foo");
+        StopRunMessage op = new StopRunMessage("foo");
         Exception e = new IndexOutOfBoundsException("");
         doThrow(e).when(testManager).stopRun(op);
 
@@ -123,7 +123,7 @@ public class WorkerOperationProcessorTest {
 
     @Test
     public void testUnhandledOperation() throws Exception {
-        processor.process(mock(FailureOperation.class), sourceAddress, promise);
-        assertTrue(promise.getAnswer() instanceof ProcessException);
+        processor.process(mock(FailureMessage.class), sourceAddress, promise);
+        assertTrue(promise.getAnswer() instanceof HandleException);
     }
 }

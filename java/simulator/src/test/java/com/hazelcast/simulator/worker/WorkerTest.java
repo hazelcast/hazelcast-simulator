@@ -9,7 +9,7 @@ import com.hazelcast.simulator.fake.FakeDriver;
 import com.hazelcast.simulator.protocol.Broker;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.utils.FileUtils;
-import com.hazelcast.simulator.worker.operations.TerminateWorkerOperation;
+import com.hazelcast.simulator.worker.messages.TerminateWorkerMessage;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -83,7 +83,7 @@ public class WorkerTest {
     @After
     public void after() throws Exception {
         if (worker != null) {
-            worker.shutdown(new TerminateWorkerOperation(false));
+            worker.shutdown(new TerminateWorkerMessage(false));
             worker.awaitShutdown();
         }
 

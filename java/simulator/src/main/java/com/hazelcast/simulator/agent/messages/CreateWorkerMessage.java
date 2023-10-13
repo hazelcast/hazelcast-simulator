@@ -13,21 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.agent.operations;
+package com.hazelcast.simulator.agent.messages;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
-import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
+import com.hazelcast.simulator.protocol.message.SimulatorMessage;
 
 /**
  * Creates one or more Simulator Workers, based on a list of {@link WorkerParameters}.
  */
-public class CreateWorkerOperation implements SimulatorOperation {
+public class CreateWorkerMessage implements SimulatorMessage {
 
-    // a list containing WorkerParameters. Each item in the list represent a single worker to be created.
+    // a list containing WorkerParameters. Each item in the list represent a
+    // single worker to be created.
     private final WorkerParameters workerParameters;
     private int delayMs;
 
-    public CreateWorkerOperation(WorkerParameters workerParameters, int delayMs) {
+    public CreateWorkerMessage(WorkerParameters workerParameters, int delayMs) {
         this.workerParameters = workerParameters;
         this.delayMs = delayMs;
     }
