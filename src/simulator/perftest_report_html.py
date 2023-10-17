@@ -92,6 +92,9 @@ class HTMLReport:
         result = []
         dir = f"{self.config.report_dir}/latency"
 
+        if not os.path.isdir(dir):
+            return result
+
         for outer_filename in os.listdir(dir):
             outer_file_path = f"{dir}/{outer_filename}"
             if not outer_file_path.endswith(".png"):
@@ -117,6 +120,9 @@ class HTMLReport:
     def __import_images_operations(self):
         result = []
         dir = f"{self.config.report_dir}/operations"
+
+        if not os.path.isdir(dir):
+            return result
 
         for outer_filename in os.listdir(dir):
             outer_file_path = f"{dir}/{outer_filename}"
@@ -144,6 +150,10 @@ class HTMLReport:
         result = []
         # scan for dstat
         dir = f"{self.config.report_dir}/dstat"
+
+        if not os.path.isdir(dir):
+            return result
+
         for agent_filename in os.listdir(dir):
             agent_dir = f"{dir}/{agent_filename}"
 
