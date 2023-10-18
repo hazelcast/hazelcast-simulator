@@ -1,6 +1,7 @@
 import argparse
 import datetime
 import getpass
+import re
 import shutil
 import random
 import string
@@ -198,8 +199,20 @@ class PerfTest:
                 exit_with_error(f"Failed run coordinator, exitcode={self.exitcode}")
             return self.exitcode
 
-    def run(self, tests, tags, skip_report=False):
+    def run(self, tests, tags, skip_report, pattern):
+
         for test in tests:
+            if pattern is not None:
+                regex = re.compile(pattern)
+                test_name = test.get("name")
+                if test_name is None:
+                    continue
+
+                match = regex.search(test_name)
+                if not match:
+                    print(f"Skipping test {test_name}")
+                    continue
+
             repetitions = test.get('repetitions')
             if repetitions < 0:
                 continue
@@ -442,6 +455,12 @@ class PerftestRunCli:
         parser.add_argument('-k', '--kill_java', nargs=1, default=[True], type=bool,
                             help='If all the Java processes should be killed before running using hosts all:!mc')
         parser.add_argument('-t', '--tag', metavar="KEY=VALUE", nargs=1, action='append')
+
+        parser.add_argument('-p', '--pattern',
+                            nargs=1,
+                            default=[None],
+                            help="The pattern (regex) of the tests to run within the test yaml file.")
+
         # parser.add_argument('--runPath',
         #                     nargs=1,
         #                     help="The path where the result of the run need to be stored.")
@@ -452,13 +471,14 @@ class PerftestRunCli:
 
         args = parser.parse_args(argv)
         tags = parse_tags(args.tag)
+        pattern = args.pattern[0]
         # kill_java = args.kill_java
         # run_path = args.runPath
 
         tests = load_yaml_file(args.file)
         perftest = PerfTest()
 
-        perftest.run(tests, tags, args.skip_report)
+        perftest.run(tests, tags, args.skip_report, pattern)
 
 
 class PerftestExecCli:
