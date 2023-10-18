@@ -9,17 +9,21 @@ INTERVAL="1"  # update interval in seconds
 
 if [ -z "$1" ]; then
         echo
-        echo usage: $0 [network-interface]
+        echo usage: $0 network-interface [times]
         echo
-        echo e.g. $0 eth0
+        echo Examples:
+        echo     $0 eth0
+        echo     $0 eth0 10
         echo
-        echo shows packets-per-second
+        echo shows packets-per-second of a given interface a specified number of times or indefinitely
         exit
 fi
 
 IF=$1
+times=0
+times=$2
 
-while true
+for ((n=0;n<times||times==0;n++));
 do
         R1=`cat /sys/class/net/$1/statistics/rx_packets`
         T1=`cat /sys/class/net/$1/statistics/tx_packets`

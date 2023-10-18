@@ -376,7 +376,7 @@ public class Registry {
             return agents;
         }
 
-        String out = new BashCommand(locatePythonFile("load_hosts.py"))
+        String out = new BashCommand(locatePythonFile("inventory.py"))
                 .addParams(nodeHosts)
                 .execute();
 

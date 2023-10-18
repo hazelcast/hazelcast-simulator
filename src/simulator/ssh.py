@@ -110,7 +110,6 @@ class Ssh:
                         else:
                             return exitcode
                     return exitcode
-                print(data)
                 log_host(self.ip, data,  Level.info if key.fileobj is process.stdout else Level.warn)
 
     def scp_from_remote(self, src, dst_dir):

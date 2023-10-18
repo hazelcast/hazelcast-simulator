@@ -53,3 +53,8 @@ def load_inventory(host_pattern="all"):
                 if private_key:
                     new_host['ssh_options'] = f"-i {private_key} -o StrictHostKeyChecking=no -o ConnectTimeout=60"
     return result
+
+
+if __name__ == '__main__':
+    inventory = load_inventory(sys.argv[1])
+    print(dump(inventory))
