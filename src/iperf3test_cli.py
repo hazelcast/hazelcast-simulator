@@ -81,7 +81,7 @@ class IPerf3Test:
         client_args = f"--parallel 128 --time {run_duration} --set-mss 89"
         server_args = ""
 
-        print(f"Testing pps for {self.client['public_ip']} > {self.server['public_ip']}")
+        print(f"Testing RX PPS for {self.server['public_ip']} < {self.client['public_ip']}")
 
         server_thread = threading.Thread(target=start_server, args=(self.server, server_args, True))
         server_thread.start()
@@ -96,7 +96,7 @@ class IPerf3Test:
         client_thread.join()
         server_pps_thread.join()
 
-        print(f"Testing pps for {self.client['public_ip']} < {self.server['public_ip']}")
+        print(f"Testing TX PPS for {self.server['public_ip']} > {self.client['public_ip']}")
 
         server_thread = threading.Thread(target=start_server, args=(self.client, server_args, True))
         server_thread.start()
