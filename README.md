@@ -104,7 +104,7 @@ Also contains pointers where to go next.
 3. Install Python libraries:
 
     ```shell
-    pip3 install -U ansible pyyaml matplotlib signal-processing-algorithms
+    pip3 install -U -r requirements.txt
     ```
 
    `signal-processing-algorithms` is only needed when you are going to do performance regression testing. The library is

@@ -1,0 +1,4 @@
+ansible
+pyyaml
+matplotlib
+signal-processing-algorithms
