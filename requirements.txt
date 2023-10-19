@@ -1,4 +1,44 @@
-ansible
-pyyaml
-matplotlib
-signal-processing-algorithms
+ansible==8.5.0
+ansible-core==2.15.5
+certifi @ file:///private/tmp/python-certifi-20231008-5803-12332sz/certifi-2023.7.22
+cffi @ file:///private/tmp/cffi-20231015-5890-1t5aans/cffi-1.16.0
+charset-normalizer==3.3.0
+contourpy==1.1.1
+cryptography @ file:///private/tmp/python-cryptography-20230919-7082-1dsrlii/cryptography-41.0.4
+cycler==0.12.1
+docopt==0.6.2
+fonttools==4.43.1
+gevent==23.9.1
+greenlet==3.0.0
+idna==3.4
+Jinja2==3.1.2
+kiwisolver==1.4.5
+lxml @ file:///private/tmp/python-lxml-20231006-5806-157025d/lxml-4.9.3
+MarkupSafe @ file:///private/tmp/python-markupsafe-20231006-5803-a70bfk/MarkupSafe-2.1.3
+matplotlib==3.8.0
+more-itertools==8.14.0
+numpy==1.26.1
+packaging @ file:///private/tmp/python-packaging-20231006-6078-35579m/packaging-23.2
+pandas==2.1.1
+Pillow==10.1.0
+pipreqs==0.4.13
+plotly==5.17.0
+pycparser @ file:///private/tmp/pycparser-20231013-5647-12y5m5s/pycparser-2.21
+pyparsing==3.1.1
+python-dateutil==2.8.2
+pytz @ file:///private/tmp/python-pytz-20231006-5768-mc0j2s/pytz-2023.3.post1
+PyYAML @ file:///private/tmp/pyyaml-20231006-6075-1uawavd/PyYAML-6.0.1
+requests==2.31.0
+resolvelib==1.0.1
+scipy==1.11.3
+signal-processing-algorithms==2.1.2
+six==1.16.0
+structlog==19.2.0
+tenacity==8.2.3
+typed-ast==1.5.5
+typing_extensions==4.8.0
+tzdata==2023.3
+urllib3==2.0.7
+yarg==0.1.9
+zope.event==5.0
+zope.interface==6.1
