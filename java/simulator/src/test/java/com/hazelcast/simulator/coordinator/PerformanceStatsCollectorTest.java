@@ -69,7 +69,7 @@ public class PerformanceStatsCollectorTest {
     }
 
     @Test
-    public void testFormatPerformanceNumbers_avgLatencyOverMicrosThreshold() throws Exception {
+    public void testFormatPerformanceNumbers_avgLatencyOverMicrosThreshold() {
         SimulatorAddress worker = workerAddress(3, 1);
 
         Map<String, PerformanceStats> performanceStats = new HashMap<String, PerformanceStats>();
@@ -78,9 +78,8 @@ public class PerformanceStatsCollectorTest {
 
         performanceStatsCollector.update(worker, performanceStats);
 
-        String performance = performanceStatsCollector.formatIntervalPerformanceNumbers(TEST_CASE_ID_1);
-        assertTrue(performance.contains("ms"));
-        assertFalse(performance.contains("µs"));
+        String s = performanceStatsCollector.formatIntervalPerformanceNumbers(TEST_CASE_ID_1);
+        assertEquals("           800 ops       100.00 ops/s      3,000 ms (avg)      2,400 µs (99.9th)      2,500 µs (max)", s);
     }
 
     private void update(SimulatorAddress address, String testId, PerformanceStats performanceStats) {
