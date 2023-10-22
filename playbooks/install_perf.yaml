@@ -50,6 +50,17 @@
       - kernel.perf_event_paranoid: 1
     become: true
 
+  - name: Update kernel parameters
+    sysctl:
+      name: "{{ item.key }}"
+      value: "{{ item.value }}"
+      state: present
+      sysctl_set: yes
+      reload: yes
+    with_dict:
+      - kernel.perf_event_paranoid: 1
+    become: true
+
   - name: Add FLAMEGRAPH_DIR to PATH
     lineinfile:
       dest: ~{{ console_user | default(ansible_user) }}/.bashrc
