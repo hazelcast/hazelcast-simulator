@@ -71,28 +71,46 @@ public class PerformanceStatsCollector {
             return "";
         }
 
-        String latencyUnit = "µs";
-        long latencyAvg = NANOSECONDS.toMicros(round(latest.getIntervalLatencyAvgNanos()));
-        long latency999Percentile = NANOSECONDS.toMicros(latest.getIntervalLatency999PercentileNanos());
-        long latencyMax = NANOSECONDS.toMicros(latest.getIntervalLatencyMaxNanos());
-
-        if (latencyAvg > DISPLAY_LATENCY_AS_MICROS_MAX_VALUE) {
-            latencyUnit = "ms";
-            latencyAvg = MICROSECONDS.toMillis(latencyAvg);
-            latency999Percentile = MICROSECONDS.toMillis(latency999Percentile);
-            latencyMax = MICROSECONDS.toMillis(latencyMax);
-        }
+        double latencyAvgNs = latest.getIntervalLatencyAvgNanos();
+        double latency999PercentileNs = latest.getIntervalLatency999PercentileNanos();
+        double latencyMaxNs = latest.getIntervalLatencyMaxNanos();
 
         return format("%s ops %s ops/s %s %s (avg) %s %s (%sth) %s %s (max)",
                 formatLong(latest.getOperationCount(), OPERATION_COUNT_FORMAT_LENGTH),
                 formatDouble(latest.getIntervalThroughput(), THROUGHPUT_FORMAT_LENGTH),
-                formatLong(latencyAvg, LATENCY_FORMAT_LENGTH),
-                latencyUnit,
-                formatLong(latency999Percentile, LATENCY_FORMAT_LENGTH),
-                latencyUnit,
+                formatLong(toPrettyValue(latencyAvgNs), LATENCY_FORMAT_LENGTH),
+                toPrettyUnit(latencyAvgNs),
+                formatLong(toPrettyValue(latency999PercentileNs), LATENCY_FORMAT_LENGTH),
+                toPrettyUnit(latency999PercentileNs),
                 INTERVAL_LATENCY_PERCENTILE,
-                formatLong(latencyMax, LATENCY_FORMAT_LENGTH),
-                latencyUnit);
+                formatLong(toPrettyValue(latencyMaxNs), LATENCY_FORMAT_LENGTH),
+                toPrettyUnit(latencyMaxNs));
+    }
+
+    /**
+     * If the valueNs is less than or equal to DISPLAY_LATENCY_AS_MICROS_MAX_VALUE,
+     * it will return the time in microseconds and otherwise in nanoseconds.
+     */
+    private static long toPrettyValue(double valueNs) {
+        long v = NANOSECONDS.toMicros(round(valueNs));
+        if (v > DISPLAY_LATENCY_AS_MICROS_MAX_VALUE) {
+            return MICROSECONDS.toMillis(v);
+        } else {
+            return v;
+        }
+    }
+
+    /**
+     * If the valueNs is less than or equal to DISPLAY_LATENCY_AS_MICROS_MAX_VALUE,
+     * it will return "µs" and otherwise "ms".
+     */
+    private static String toPrettyUnit(double valueNs) {
+        long value = NANOSECONDS.toMicros(round(valueNs));
+        if (value > DISPLAY_LATENCY_AS_MICROS_MAX_VALUE) {
+            return "ms";
+        } else {
+            return "µs";
+        }
     }
 
     PerformanceStats get(String testCaseId, boolean aggregated) {
