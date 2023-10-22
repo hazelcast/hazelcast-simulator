@@ -18,9 +18,19 @@ Make sure you have added following JVM settings:
 -XX:+DebugNonSafepoints
 ```
 
-And to run, execute the following (s
+And to run, execute the following if you want a jfr file which can be analyzed with the Java Mission Control:
 ```
 profiler.sh collect -d 60 --jfrsync  ${JAVA_HOME}/lib/jfr/default.jfc  -f profile.jfr Worker
+```
+
+Use the following for more accurate profiling:
+```
+profiler.sh collect -d 60 --jfrsync  ${JAVA_HOME}/lib/jfr/default.jfc  -e cycles --cstack lbr  -f profile.jfr Worker
+```
+
+Or use the following if you do not care for a jfr file but want a flamegraph directly:
+```
+profiler.sh collect -d 60 -f flamegraph.html Worker
 ```
 
 -------------------------------------------------------------
