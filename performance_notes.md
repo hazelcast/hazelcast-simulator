@@ -1,10 +1,8 @@
--------------------------------------------------------------
-                A selection of performance notes.
--------------------------------------------------------------
+# A selection of performance notes.
 
--------------------------------------------------------------
-                Async-Profiler
--------------------------------------------------------------
+This document contains some useful performance notes.
+
+# Async-Profiler
 
 Install async profiler;
 
@@ -33,9 +31,7 @@ Or use the following if you do not care for a jfr file but want a flamegraph dir
 profiler.sh collect -d 60 -f flamegraph.html Worker
 ```
 
--------------------------------------------------------------
-                Perf
--------------------------------------------------------------
+# Perf
 
 Make sure you have added following JVM settings:
 ```
@@ -51,9 +47,7 @@ jcmd <pid> Compiler.perfmap
 
 https://www.doof.me.uk/2021/02/28/generating-perf-maps-with-openjdk-17/
 
--------------------------------------------------------------
-                JFR
--------------------------------------------------------------
+# JFR
 
 
 ```
@@ -64,9 +58,8 @@ https://www.doof.me.uk/2021/02/28/generating-perf-maps-with-openjdk-17/
 -XX:StartFlightRecording=duration=3600s,filename=recording.jfr
 ```
 
--------------------------------------------------------------
-                Page Cache
--------------------------------------------------------------
+
+# Page Cache
 
 Clear PageCache only.
 
