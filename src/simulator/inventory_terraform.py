@@ -85,6 +85,10 @@ def __destroy(terraform_plan, force):
 
     __ensure_plan_exists(terraform_plan)
 
+    terraform_dir = f"{terraform_plan}/.terraform"
+    if not os.path.exists(terraform_dir):
+        return
+
     cmd = f'terraform -chdir={terraform_plan} destroy -auto-approve'
     if force:
         cmd = f"{cmd} -lock=false"
