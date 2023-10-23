@@ -6,6 +6,7 @@ import csv
 import glob
 import shutil
 
+from simulator import util
 from simulator.log import info, error
 from simulator.perftest_report_dstat import report_dstat, analyze_dstat
 from simulator.perftest_report_hdr import report_hdr, prepare_hdr, analyze_latency_history
@@ -146,23 +147,26 @@ def collect_runs(benchmarks, config: ReportConfig):
             last_benchmark = None
         elif config.compare_last:
             benchmark_root = benchmark_arg
+            if not os.path.exists(benchmark_root):
+                exit_with_error("Directory '" + benchmark_root + "' does not exist!")
             subdirectories = sorted(filter(os.path.isdir, glob.glob(benchmark_root + "/*")))
 
             run_dir = subdirectories[-1]
             if not os.path.exists(run_dir):
-                error("benchmark directory '" + run_dir + "' does not exist!")
-                exit(1)
+                exit_with_error("benchmark directory '" + run_dir + "' does not exist!")
+
             last_benchmark = benchmark_arg
             benchmark_dirs.append(run_dir)
             run_names[run_dir] = os.path.basename(os.path.normpath(benchmark_root))
         else:
             run_dir = benchmark_arg
             if not os.path.exists(run_dir):
-                error("benchmark directory '" + run_dir + "' does not exist!")
-                exit(1)
+                exit_with_error("benchmark directory '" + run_dir + "' does not exist!")
+
             last_benchmark = benchmark_arg
             benchmark_dirs.append(run_dir)
             run_names[run_dir] = os.path.basename(os.path.normpath(run_dir))
+
 
     if len(run_names) == 0:
         exit_with_error("No runs were found")
@@ -175,7 +179,6 @@ def collect_runs(benchmarks, config: ReportConfig):
         run_label = run_names[run_dir]
         info(f"       {run_label} {run_dir}")
         config.runs[run_label] = run_dir
-
 
 class PerfTestReportCli:
 
