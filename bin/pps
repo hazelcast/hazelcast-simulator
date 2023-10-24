@@ -34,7 +34,7 @@ times=$2
 
 MEASURE_PPS_ALLOWANCE_EXCEEDED=FALSE
 if hash ethtool 2>/dev/null ; then
-    if ethtool -S ens5 | grep -q pps_allowance_exceeded ; then
+    if ethtool -S $1 | grep -q pps_allowance_exceeded ; then
         MEASURE_PPS_ALLOWANCE_EXCEEDED=TRUE
     fi
 fi
@@ -44,19 +44,19 @@ do
         R1=`cat /sys/class/net/$1/statistics/rx_packets`
         T1=`cat /sys/class/net/$1/statistics/tx_packets`
         if [[ $MEASURE_PPS_ALLOWANCE_EXCEEDED ]]; then
-            PPS_EXCEEDED1=`ethtool -S ens5 | grep pps_allowance_exceeded | awk -F'pps_allowance_exceeded: ' '{print $2}'`
+            PPS_EXCEEDED1=`ethtool -S $1 | grep pps_allowance_exceeded | awk -F'pps_allowance_exceeded: ' '{print $2}'`
         fi
         sleep $INTERVAL
         R2=`cat /sys/class/net/$1/statistics/rx_packets`
         T2=`cat /sys/class/net/$1/statistics/tx_packets`
         if [[ $MEASURE_PPS_ALLOWANCE_EXCEEDED ]]; then
-            PPS_EXCEEDED2=`ethtool -S ens5 | grep pps_allowance_exceeded | awk -F'pps_allowance_exceeded: ' '{print $2}'`
+            PPS_EXCEEDED2=`ethtool -S $1 | grep pps_allowance_exceeded | awk -F'pps_allowance_exceeded: ' '{print $2}'`
         fi
         TXPPS=`expr $T2 - $T1`
         RXPPS=`expr $R2 - $R1`
         if [[ $MEASURE_PPS_ALLOWANCE_EXCEEDED ]]; then
             PPS_EXCEEDED_INC=`expr $PPS_EXCEEDED2 - $PPS_EXCEEDED1`
-            echo "TX $1: $TXPPS pkts/s RX $1: $RXPPS pkts/s pps_allowance_exceeded events/s $1: $PPS_EXCEEDED_INC"
+            echo "$1: TX: $TXPPS pkts/s RX: $RXPPS pkts/s pps_exceed: ${PPS_EXCEEDED_INC}/s"
         else
            echo "TX $1: $TXPPS pkts/s RX $1: $RXPPS pkts/s"
         fi

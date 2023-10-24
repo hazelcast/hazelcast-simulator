@@ -69,7 +69,7 @@ class IPerf3Test:
             exit_with_error(f"Could not find server [{server_public_ip} in the inventory]")
 
     def run_bandwidth_test(self, args_list):
-        client_args = " ".join(["--parallel 1 --time 20 "] + args_list)
+        client_args = " ".join(["--parallel 1 --time 20"] + args_list)
         server_args = ""
 
         server_thread = threading.Thread(target=start_server, args=(self.server, server_args))
@@ -80,7 +80,7 @@ class IPerf3Test:
 
     def run_packet_count_test(self, args_list):
         run_duration = 20
-        client_args = " ".join([f"--parallel 128 --time {run_duration} --set-mss 89 "] + args_list)
+        client_args = " ".join([f"--parallel 128 --time {run_duration} --set-mss 89"] + args_list)
         server_args = ""
 
         print(f"Testing RX PPS for {self.server['public_ip']} < {self.client['public_ip']}")
