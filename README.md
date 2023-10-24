@@ -1652,6 +1652,51 @@ do a scalability test is to pick some performance test like a throughput test an
 
 After completion, increase members and run it again. Make sure that sufficient node machines are available.
 
+
+## Network constraints
+
+When testing the throughput, results are constrained by factors including CPU, memory, network, and/or a combination of those.
+Therefore, it's crucial to know these constraints and analyse the test results in their context.
+
+Cloud providers specify the availability of CPU and memory for different instance types,
+howeveer  they are much less verbose on network-related limits.
+
+There are two main limitations in play related to network resources: bandwidth (bits/s) and packet count (packets/s).
+Hazelcast-simulator contains a tool that allows measuring the limits of bandwidth and packet count, based on `iperf3`.
+
+In order to use the tool, you first need to install the simulator and iperf3 on the machines.
+
+```shell
+inventory install simulator
+inventory install iperf3
+```
+
+Finally, you can run the pps benchmark:
+
+```shell
+iperf3test pps <server> <client>
+```
+
+where `<server>` and `<client>` are public IP addresses of the instances between which you want to measure max PPS.
+
+The test generates high-PPS traffic from server to client and from client to server.
+The actual PPS stats are recorded on the server side and reported in the terminal output.
+
+When running the tool on AWS instances, the output also includes
+the information about the number of `pps_allowance_exceeded` events recorded every second.
+High number of `pps_allowance_exceeded` events strongly suggests that the test has in fact run into the pps limit.
+
+In case the two instances have a different PPS limit,
+the PPS of the connection between them is generally constrained by the smaller one.
+If you're running the test with the instance with bigger limit as the server,
+the actual PPS might be limited by the client-side limits.
+In such case, the test might run into the PPS limit of the connection,
+but on the server side `pps_allowance_exceeded` might show 0 events/s.
+
+For any pair of instances A and B, it is advised to run the PPS test for both A and B as the server.
+This ensure a clear picture of all the PPS limits across instances.
+
+
 # Get Help
 
 You can use the following channels for getting help with Hazelcast:
