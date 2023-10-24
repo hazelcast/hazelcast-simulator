@@ -10,7 +10,14 @@ from simulator.util import exit_with_error
 inventory_path = 'inventory.yaml'
 
 
-def load_hosts(host_pattern = "all"):
+def find_host_with_public_ip(inventory, public_ip):
+    for host in inventory:
+        if host["public_ip"] == public_ip:
+            return host
+    return
+
+
+def load_inventory(host_pattern="all"):
     if not os.path.exists(inventory_path):
         exit_with_error(f"Could not find [{inventory_path}]")
 
@@ -49,5 +56,5 @@ def load_hosts(host_pattern = "all"):
 
 
 if __name__ == '__main__':
-    inventory = load_hosts(sys.argv[1])
+    inventory = load_inventory(sys.argv[1])
     print(dump(inventory))

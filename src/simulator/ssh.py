@@ -55,7 +55,8 @@ class Ssh:
             if attempt <= self.silent_seconds:
                 exitcode = subprocess.call(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             else:
-                log_host(self.ip, f'Trying to connect, attempt [{attempt}/{max_attempts}], command [{cmd}]')
+                if self.log_enabled:
+                    log_host(self.ip, f'Trying to connect, attempt [{attempt}/{max_attempts}], command [{cmd}]')
                 result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
                 log_host(self.ip, result.stdout, level=Level.info)
                 log_host(self.ip, result.stderr, level=Level.warn)
@@ -74,7 +75,7 @@ class Ssh:
     def __is_connected(self):
         return self.control_socket_file and os.path.exists(self.control_socket_file)
 
-    def exec(self, command, silent=False, check=True):
+    def exec(self, command, silent=False, fail_on_error=True):
         self.connect()
 
         cmd_list = ["ssh"]
@@ -104,7 +105,7 @@ class Ssh:
                     exitcode = process.wait()
 
                     if exitcode != 0:
-                        if check:
+                        if fail_on_error:
                             raise Exception(f"Failed to execute [{cmd_list}], exitcode={exitcode}")
                         else:
                             return exitcode

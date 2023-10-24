@@ -14,7 +14,7 @@ from os import path
 
 import csv
 
-from load_hosts import load_hosts
+from inventory import load_inventory
 from simulator.hosts import public_ip, ssh_user, ssh_options
 from simulator.ssh import Ssh, new_key
 from simulator.util import read, write, shell, run_parallel, exit_with_error, simulator_home, shell_logged, remove, \
@@ -63,7 +63,7 @@ class PerfTest:
             return
 
         info(f"Host verification [{host_pattern}]: starting")
-        hosts = load_hosts(host_pattern)
+        hosts = load_inventory(host_pattern)
         error_counter = AtomicLong()
         run_parallel(self.__verify, [(host, error_counter) for host in hosts])
 
@@ -79,7 +79,7 @@ class PerfTest:
 
     def kill_java(self, host_pattern):
         log_header(f"perftest kill_java [{host_pattern}]: started")
-        hosts = load_hosts(host_pattern)
+        hosts = load_inventory(host_pattern)
         run_parallel(self.__kill_java, [(host,) for host in hosts])
         log_header(f"perftest kill_java [{host_pattern}]: done")
 
