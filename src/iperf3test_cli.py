@@ -89,12 +89,12 @@ class IPerf3Test:
         client_thread = threading.Thread(target=start_client, args=(self.client, self.server, client_args, True))
         client_thread.start()
 
-        server_pps_thread = threading.Thread(target=start_pps, args=(self.server, run_duration))
-        server_pps_thread.start()
+        # server_pps_thread = threading.Thread(target=start_pps, args=(self.server, run_duration))
+        # server_pps_thread.start()
 
         server_thread.join()
         client_thread.join()
-        server_pps_thread.join()
+        # server_pps_thread.join()
 
         print(f"Testing TX PPS for {self.server['public_ip']} > {self.client['public_ip']}")
 
@@ -104,8 +104,8 @@ class IPerf3Test:
         client_thread = threading.Thread(target=start_client, args=(self.server, self.client, client_args, True))
         client_thread.start()
 
-        server_pps_thread = threading.Thread(target=start_pps, args=(self.server, run_duration))
-        server_pps_thread.start()
+        # server_pps_thread = threading.Thread(target=start_pps, args=(self.server, run_duration))
+        # server_pps_thread.start()
 
 
 def start_client(client, server, args, silent=False):
@@ -145,16 +145,17 @@ def start_server(server, args, silent=False):
         """, silent)
 
 
-def start_pps(server, time):
-    ssh_server = Ssh(
-        server["public_ip"],
-        server["ssh_user"],
-        server["ssh_options"],
-        log_enabled=False,
-        use_control_socket=False)
-    ssh_server.connect()
-    cmd = f"hazelcast-simulator/bin/pps ens5 {time}"
-    ssh_server.exec(cmd)
+# def start_pps(server, time):
+#     ssh_server = Ssh(
+#         server["public_ip"],
+#         server["ssh_user"],
+#         server["ssh_options"],
+#         log_enabled=False,
+#         use_control_socket=False)
+#     ssh_server.connect()
+# TODO: resolve the network interface name and use it here instead of hardcoding
+#     cmd = f"hazelcast-simulator/bin/pps ens5 {time}"
+#     ssh_server.exec(cmd)
 
 
 if __name__ == '__main__':
