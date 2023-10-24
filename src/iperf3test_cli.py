@@ -30,27 +30,29 @@ class IPerf3TestCli:
 
         getattr(self, args.command)()
 
-    def pps(self):
-        parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-                                         description='Tests max packet count between two machines.',
-                                         usage='''iperf3test pps <ip1> <ip2>''')
-        parser.add_argument("client", help="The client IP address.")
-        parser.add_argument("server", help="The server IP address.")
-        args = parser.parse_args(sys.argv[2:])
-
-        test = IPerf3Test(args.server, args.client)
-        test.run_packet_count_test()
-
     def bandwidth(self):
         parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter,
                                          description='Tests max bandwidth between two machines.',
                                          usage='''iperf3test bandwidth <ip1> <ip2>''')
         parser.add_argument("client", help="The client IP address.")
         parser.add_argument("server", help="The server IP address.")
+        parser.add_argument("args", nargs=argparse.REMAINDER, default="", help="Additional iperf3 client args")
         args = parser.parse_args(sys.argv[2:])
 
         test = IPerf3Test(args.server, args.client)
-        test.run_bandwidth_test()
+        test.run_bandwidth_test(args.args)
+
+    def pps(self):
+        parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+                                         description='Tests max packet count between two machines.',
+                                         usage='''iperf3test pps <ip1> <ip2>''')
+        parser.add_argument("client", help="The client IP address.")
+        parser.add_argument("server", help="The server IP address.")
+        parser.add_argument("args", nargs=argparse.REMAINDER, default="", help="Additional iperf3 client args")
+        args = parser.parse_args(sys.argv[2:])
+
+        test = IPerf3Test(args.server, args.client)
+        test.run_packet_count_test(args.args)
 
 
 class IPerf3Test:
@@ -66,8 +68,8 @@ class IPerf3Test:
         if self.server is None:
             exit_with_error(f"Could not find server [{server_public_ip} in the inventory]")
 
-    def run_bandwidth_test(self):
-        client_args = "--parallel 1 --time 20"
+    def run_bandwidth_test(self, args_list):
+        client_args = " ".join(["--parallel 1 --time 20 "] + args_list)
         server_args = ""
 
         server_thread = threading.Thread(target=start_server, args=(self.server, server_args))
@@ -76,9 +78,9 @@ class IPerf3Test:
         client_thread = threading.Thread(target=start_client, args=(self.client, self.server, client_args))
         client_thread.start()
 
-    def run_packet_count_test(self):
+    def run_packet_count_test(self, args_list):
         run_duration = 20
-        client_args = f"--parallel 128 --time {run_duration} --set-mss 89"
+        client_args = " ".join([f"--parallel 128 --time {run_duration} --set-mss 89 "] + args_list)
         server_args = ""
 
         print(f"Testing RX PPS for {self.server['public_ip']} < {self.client['public_ip']}")
@@ -153,7 +155,7 @@ def start_server(server, args, silent=False):
 #         log_enabled=False,
 #         use_control_socket=False)
 #     ssh_server.connect()
-# TODO: resolve the network interface name and use it here instead of hardcoding
+#     #TODO: resolve the network interface name and use it here instead of hardcoding
 #     cmd = f"hazelcast-simulator/bin/pps ens5 {time}"
 #     ssh_server.exec(cmd)
 
