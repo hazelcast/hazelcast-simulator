@@ -8,6 +8,7 @@ from matplotlib.dates import DateFormatter
 import plotly.express as px
 import plotly.offline as pyo
 import plotly.tools as tls
+from matplotlib.ticker import FuncFormatter
 from pandas.errors import EmptyDataError
 
 from simulator.perftest_report_common import *
@@ -371,11 +372,12 @@ def __make_latency_by_perc_dist_plot(config: ReportConfig, hgrm_files):
         xlabels.loc[len(xlabels)] = ["99.99999%", 10_000_000.0]
         plt.xticks(xlabels['tick'], xlabels['label'])
 
-        plt.ylabel("latency (us)")
-        plt.xlabel("percentile")
+        plt.ylabel("Latency")
+        plt.xlabel("Percentile")
         plt.legend()
-        plt.title(f"latency distribution")
+        plt.title(f"Latency distribution")
         plt.grid()
+        plt.gca().yaxis.set_major_formatter(FuncFormatter(format_us_time_ticks))
 
         hgrm_file_path_no_ext = hgrm_file_name.rstrip(".hgrm")
         path = f"{config.report_dir}/latency/latency_distribution_{hgrm_file_path_no_ext}.png"
