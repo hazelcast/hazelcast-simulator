@@ -200,8 +200,9 @@ class PerfTestReportCli:
                             action="store_true")
         parser.add_argument('-o', '--output',
                             nargs=1,
+                            default=["report"],
                             help='The output directory for the report. '
-                                 'By default a report directory in the working directory is created.')
+                                 "By default a 'report' directory in the working directory is created.")
         parser.add_argument('-w', '--warmup',
                             nargs=1, default=[0],
                             type=int,
@@ -232,11 +233,7 @@ class PerfTestReportCli:
 
         os.environ['LC_CTYPE'] = "en_US.UTF-8"
 
-        if not args.output:
-            report_dir = "report"
-        else:
-            report_dir = args.output[0]
-        report_dir = os.path.abspath(report_dir)
+        report_dir = os.path.abspath(args.output[0])
         info("Report directory '" + report_dir + "'")
 
         config = ReportConfig(report_dir)
