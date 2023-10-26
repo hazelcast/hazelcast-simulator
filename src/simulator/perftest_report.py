@@ -90,9 +90,6 @@ def report(config: ReportConfig, df: pd.DataFrame):
 
 
 def lookup_periods(config):
-    if config.preserve_time:
-        return
-
     for run_label, run_dir in config.runs.items():
         for worker_name in os.listdir(run_dir):
             worker_dir = f"{run_dir}/{worker_name}"
@@ -130,7 +127,6 @@ def lookup_periods(config):
                     # at the end of the throughput charts
                     period = Period(min(period.start_time, start_time), max(period.end_time, end_time))
                 config.periods[run_label] = period
-
 
 def collect_runs(benchmarks, config: ReportConfig):
     benchmark_dirs = []
