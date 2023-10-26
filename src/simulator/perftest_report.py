@@ -6,8 +6,6 @@ import csv
 import glob
 import shutil
 
-from simulator import util
-from simulator.log import info, error
 from simulator.perftest_report_dstat import report_dstat, analyze_dstat
 from simulator.perftest_report_hdr import report_hdr, prepare_hdr, analyze_latency_history
 from simulator.perftest_report_operations import report_operations, prepare_operation, analyze_operations
@@ -17,9 +15,14 @@ from simulator.perftest_report_html import HTMLReport
 
 
 def prepare(config: ReportConfig):
-    if os.path.exists(config.report_dir):
+    report_dir = config.report_dir
+    if os.path.exists(report_dir):
+        basename = os.path.basename(report_dir)
+        # protection against accidental deletion of a directory that isn't a report directory
+        if "report" not in basename.lower():
+            exit_with_error(f"Simulator will not delete '{report_dir}', because it doesn't contain the word 'report'.")
         shutil.rmtree(config.report_dir)
-    mkdir(config.report_dir)
+    mkdir(report_dir)
     prepare_operation(config)
     prepare_hdr(config)
 
@@ -167,7 +170,6 @@ def collect_runs(benchmarks, config: ReportConfig):
             benchmark_dirs.append(run_dir)
             run_names[run_dir] = os.path.basename(os.path.normpath(run_dir))
 
-
     if len(run_names) == 0:
         exit_with_error("No runs were found")
     elif len(run_names) == 1:
@@ -179,6 +181,7 @@ def collect_runs(benchmarks, config: ReportConfig):
         run_label = run_names[run_dir]
         info(f"       {run_label} {run_dir}")
         config.runs[run_label] = run_dir
+
 
 class PerfTestReportCli:
 
@@ -249,9 +252,6 @@ class PerfTestReportCli:
         config.preserve_time = args.time
         config.y_start_from_zero = args.zero
         config.svg = args.svg
-
-        if os.path.isdir(config.report_dir):
-            shutil.rmtree(config.report_dir)
 
         collect_runs(args.benchmarks, config)
         lookup_periods(config)
