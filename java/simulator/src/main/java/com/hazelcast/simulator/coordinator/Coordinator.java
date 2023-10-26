@@ -35,9 +35,14 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.Closeable;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import static com.hazelcast.simulator.coordinator.AgentUtils.startAgents;
 import static com.hazelcast.simulator.coordinator.AgentUtils.stopAgents;
@@ -52,9 +57,9 @@ import static java.lang.String.format;
 public class Coordinator implements Closeable {
 
     private static final Logger LOGGER = LogManager.getLogger(Coordinator.class);
+    private static final int PARALLEL_CONNECT = 16;
 
     private final PerformanceStatsCollector performanceStatsCollector = new PerformanceStatsCollector();
-
     private final Registry registry;
     private final CoordinatorParameters parameters;
     private final FailureCollector failureCollector;
@@ -171,15 +176,31 @@ public class Coordinator implements Closeable {
         LOGGER.info("The following tests failed to complete: " + tests);
     }
 
-    private void startClient() {
-        // todo: should be async to speed things up
+    private void startClient() throws ExecutionException, InterruptedException {
+       ExecutorService executor = Executors.newFixedThreadPool(PARALLEL_CONNECT);
+        List<Future> futures = new ArrayList<>();
         for (AgentData agent : registry.getAgents()) {
+            Future f = executor.submit(() -> {
+                try {
+                    client.connectToAgentBroker(agent.getAddress(), agent.getPublicAddress());
+                } catch (Exception e) {
+                    LOGGER.debug(e.getMessage(), e);
+                    throw new CommandLineExitException("Failed to connect to agent [" + agent.getPublicAddress() + "], "
+                            + "cause [" + e.getMessage() + "]");
+                }
+            });
+            futures.add(f);
+        }
+
+        for (Future future : futures) {
             try {
-                client.connectToAgentBroker(agent.getAddress(), agent.getPublicAddress());
-            } catch (Exception e) {
-                LOGGER.debug(e.getMessage(), e);
-                throw new CommandLineExitException("Failed to connect to agent [" + agent.getPublicAddress() + "], "
-                        + "cause [" + e.getMessage() + "]");
+                future.get();
+            } catch (ExecutionException e) {
+                if (e.getCause() instanceof CommandLineExitException) {
+                    throw new CommandLineExitException(e.getCause());
+                }else{
+                    throw e;
+                }
             }
         }
 
