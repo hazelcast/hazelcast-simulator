@@ -40,7 +40,8 @@ class ReportConfig:
     preserve_time = False
     y_start_from_zero = False
     svg = False
-    #interactive = True
+
+    # interactive = True
 
     def __init__(self, report_dir):
         self.report_dir = report_dir
@@ -132,6 +133,19 @@ def extract_worker_id(path):
 
     index = basename.index("-")
     return basename[:index]
+
+
+def format_us_time_ticks(value_us, _):
+    if value_us >= 1e6:
+        unit = "s"
+        value = value_us / 1e6
+    elif value_us >= 1e3:
+        unit = "ms"
+        value = value_us / 1e3
+    else:
+        unit = "us"
+        value = value_us
+    return f"{value:.2f} {unit}"
 
 
 class Period:
