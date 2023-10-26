@@ -1383,7 +1383,11 @@ are downloaded. The JFR files can be opened using the Java Mission Control comma
 By adding the following options to member/client args, the benchmark generator will do a gc comparison:
 
 ```
+Java 8:
 -Xloggc:gc.log -XX:+PrintGC -XX:+PrintGCDetails -XX:+PrintGCTimeStamps  -XX:+PrintGCDateStamps
+
+Java 9+:
+-Xlog:gc:file=gc.log:utctime,pid,tags:filecount=32,filesize=64m
 ```
 
 ## Reducing Fluctuations
