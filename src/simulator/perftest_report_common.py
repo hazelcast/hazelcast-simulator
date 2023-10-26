@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import os
-from datetime import datetime, UTC
+from datetime import datetime, timezone
 
 import numpy as np
 import pandas as pd
@@ -115,11 +115,12 @@ def df_trim_time(df: pd.DataFrame, start_time_seconds, end_time_seconds):
     if df is None:
         return df
 
-    end = np.datetime64(datetime.fromtimestamp(end_time_seconds, UTC))
-    start = np.datetime64(datetime.fromtimestamp(start_time_seconds, UTC))
+    end = np.datetime64(datetime.fromtimestamp(end_time_seconds, timezone.utc))
+    start = np.datetime64(datetime.fromtimestamp(start_time_seconds, timezone.utc))
     df = df[df.index >= start]
     df = df[df.index <= end]
     return df
+
 
 def extract_worker_id(path):
     if not os.path.isdir(path):
