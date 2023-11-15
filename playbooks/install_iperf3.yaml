@@ -7,7 +7,6 @@
         apt-get update || true
       become: yes
 
-    # needed for pcp dstat.
     - name: Install iperf3
       ansible.builtin.package:
         name: iperf3

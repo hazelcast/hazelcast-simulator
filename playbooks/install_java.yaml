@@ -2,8 +2,8 @@
 - hosts: all
 
   vars:
-    - jdk_url:
-    - tar_gz_filename: "{{ jdk_url | basename }}"
+    jdk_url: null
+    tar_gz_filename: "{{ jdk_url | basename }}"
 
   tasks:
 
