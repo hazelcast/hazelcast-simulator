@@ -1,27 +1,28 @@
 import subprocess
 from simulator.log import error, info
+from simulator.util import exit_with_error
 
 
 def is_inside_git_repo():
     try:
-        result = subprocess.run(['git', 'rev-parse', '--is-inside-work-tree'],
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE,
-                                check=True,
-                                text=True)
-        return result.stdout.strip() == 'true'
+        subprocess.run(['git', 'rev-parse', '--is-inside-work-tree'],
+                       stdout=subprocess.PIPE,
+                       stderr=subprocess.PIPE,
+                       check=True,
+                       text=True)
+        return True
     except subprocess.CalledProcessError:
         return False
 
 
 def is_git_installed():
     try:
-        result = subprocess.run(['git', '--version'],
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE,
-                                check=True,
-                                text=True)
-        return 'git version' in result.stdout
+        subprocess.run(['git', '--version'],
+                       stdout=subprocess.PIPE,
+                       stderr=subprocess.PIPE,
+                       check=True,
+                       text=True)
+        return True
     except subprocess.CalledProcessError:
         return False
 
@@ -33,21 +34,18 @@ def get_last_commit_hash():
                                 text=True,
                                 check=True)
         return result.stdout.strip()
-    except subprocess.CalledProcessError as e:
+    except subprocess.CalledProcessError:
         return None
 
 
 def git_init():
     try:
-        result = subprocess.run(['git', 'init', '-q'],
-                                stdout=subprocess.PIPE,
-                                text=True,
-                                check=True)
-        commit_hash = result.stdout.strip()
-        return commit_hash
-    except subprocess.CalledProcessError as e:
-        error(f"Error: {e}")
-        return None
+        subprocess.run(['git', 'init', '-q'],
+                       stdout=subprocess.PIPE,
+                       text=True,
+                       check=True)
+    except subprocess.CalledProcessError:
+        exit_with_error("Failed to create git repo")
 
 
 def are_there_modified_files():
@@ -57,7 +55,6 @@ def are_there_modified_files():
                                 stderr=subprocess.PIPE,
                                 check=True,
                                 text=True)
-
         return bool(result.stdout.strip())
     except subprocess.CalledProcessError:
         return False

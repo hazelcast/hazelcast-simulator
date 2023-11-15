@@ -202,20 +202,21 @@ class PerfTest:
                 exit_with_error(f"Failed run coordinator, exitcode={self.exitcode}")
             return self.exitcode
 
-    def run(self, tests, tags, skip_report, commit, pattern):
-        if commit:
+    def run(self, tests, tags, skip_report, test_commit, test_pattern):
+        if test_commit:
+            info("Automatic test commit enabled.")
             if not is_git_installed():
                 exit_with_error("git is not installed.")
 
             if not is_inside_git_repo():
-                info("no git repo, creating one.")
+                info("No local git repo found, creating one.")
                 git_init()
 
             commit_modified_files(datetime.now().strftime("%m/%d/%Y, %H:%M:%S"))
 
         for test in tests:
-            if pattern is not None:
-                regex = re.compile(pattern)
+            if test_pattern is not None:
+                regex = re.compile(test_pattern)
                 test_name = test.get("name")
                 if test_name is None:
                     continue
@@ -234,8 +235,6 @@ class PerfTest:
 
             for i in range(0, repetitions):
                 exitcode, run_path = self.run_test(test)
-                print(run_path)
-
                 if exitcode == 0 and not skip_report:
                     self.collect(run_path,
                                  tags,
