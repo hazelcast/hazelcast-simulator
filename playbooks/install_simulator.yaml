@@ -2,8 +2,8 @@
 - hosts: all
 
   vars:
-    - simulator_home:
-    - simulator_dir: ~{{ console_user | default(ansible_user) }}/hazelcast-simulator
+    simulator_home: null
+    simulator_dir: ~{{ console_user | default(ansible_user) }}/hazelcast-simulator
   tasks:
 
   - name: yum update/apt-get update
@@ -29,7 +29,7 @@
     become: yes
     ignore_errors: yes
 
-  # check if pcp managed to instal dstat.
+  # check if pcp managed to install dstat.
   - name: Check if dstat already exists
     stat:
       path: /usr/bin/dstat
