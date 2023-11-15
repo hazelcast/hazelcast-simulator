@@ -473,9 +473,10 @@ class PerftestRunCli:
 
         parser.add_argument('-c', '--commit',
                             action='store_true',
-                            help="Automatically commits all modified files to the git repo. "
-                                 "Will create a git repo if it doesn't exist. The commit hash will be added "
-                                 "to the runs so that the exact benchmark configuration can be restored.")
+                            help="Automatically commits all modified files to the Git repo and add "
+                                 "the hash of the last commit to the run directory. "
+                                 "This way the exact configuration for a benchmark can always be restored. "
+                                 "A Git repo will automatically be created if one doesn't exist.")
 
         parser.add_argument('-k', '--kill_java', nargs=1, default=[True], type=bool,
                             help='If all the Java processes should be killed before running using hosts all:!mc')
