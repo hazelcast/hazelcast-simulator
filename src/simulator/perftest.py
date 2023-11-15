@@ -14,7 +14,10 @@ from os import path
 
 import csv
 
+import simulator.util
 from inventory import load_inventory
+from simulator.git import get_last_commit_hash, git_init, is_git_installed, is_inside_git_repo, \
+    commit_modified_files
 from simulator.hosts import public_ip, ssh_user, ssh_options
 from simulator.ssh import Ssh, new_key
 from simulator.util import read, write, shell, run_parallel, exit_with_error, simulator_home, shell_logged, remove, \
@@ -199,11 +202,21 @@ class PerfTest:
                 exit_with_error(f"Failed run coordinator, exitcode={self.exitcode}")
             return self.exitcode
 
-    def run(self, tests, tags, skip_report, pattern):
+    def run(self, tests, tags, skip_report, test_commit, test_pattern):
+        if test_commit:
+            info("Automatic test commit enabled.")
+            if not is_git_installed():
+                exit_with_error("git is not installed.")
+
+            if not is_inside_git_repo():
+                info("No local git repo found, creating one.")
+                git_init()
+
+            commit_modified_files(datetime.now().strftime("%m/%d/%Y, %H:%M:%S"))
 
         for test in tests:
-            if pattern is not None:
-                regex = re.compile(pattern)
+            if test_pattern is not None:
+                regex = re.compile(test_pattern)
                 test_name = test.get("name")
                 if test_name is None:
                     continue
@@ -222,7 +235,6 @@ class PerfTest:
 
             for i in range(0, repetitions):
                 exitcode, run_path = self.run_test(test)
-
                 if exitcode == 0 and not skip_report:
                     self.collect(run_path,
                                  tags,
@@ -285,6 +297,12 @@ class PerfTest:
 
         if not os.path.exists(report_dir):
             self.__shell(f"perftest report  -w {warmup_seconds} -c {cooldown_seconds} -o {report_dir} {dir}")
+
+        if is_inside_git_repo():
+            test_commit_hash = get_last_commit_hash()
+            if test_commit_hash is not None:
+                commit_file = f"{dir}/test_commit"
+                simulator.util.write(commit_file, test_commit_hash)
 
         csv_path = f"{report_dir}/report.csv"
         if not os.path.exists(csv_path):
@@ -452,8 +470,17 @@ class PerftestRunCli:
         parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter,
                                          description='Runs a tests.yaml which is a self contained set of tests')
         parser.add_argument('file', nargs='?', help='The tests file', default=default_tests_path)
+
+        parser.add_argument('-c', '--commit',
+                            action='store_true',
+                            help="Automatically commits all modified files to the Git repo and add "
+                                 "the hash of the last commit to the run directory. "
+                                 "This way the exact configuration for a benchmark can always be restored. "
+                                 "A Git repo will automatically be created if one doesn't exist.")
+
         parser.add_argument('-k', '--kill_java', nargs=1, default=[True], type=bool,
                             help='If all the Java processes should be killed before running using hosts all:!mc')
+
         parser.add_argument('-t', '--tag', metavar="KEY=VALUE", nargs=1, action='append')
 
         parser.add_argument('-p', '--pattern',
@@ -478,7 +505,7 @@ class PerftestRunCli:
         tests = load_yaml_file(args.file)
         perftest = PerfTest()
 
-        perftest.run(tests, tags, args.skip_report, pattern)
+        perftest.run(tests, tags, args.skip_report, args.commit, pattern)
 
 
 class PerftestExecCli:

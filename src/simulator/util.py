@@ -1,6 +1,5 @@
 import os.path
 import shutil
-import subprocess
 import time
 from concurrent.futures import ThreadPoolExecutor
 from os import path
@@ -159,6 +158,7 @@ def shell(cmd, shell=True, use_print=False, log_file_path=None):
     else:
         return read_loop(process, selector, use_print)
 
+
 def read_loop(process, selector, use_print, file=None):
     while True:
         for key, _ in selector.select():
@@ -193,3 +193,4 @@ def parse_tags(items):
             key, value = __parse_tag(item)
             d[key] = value
     return d
+
