@@ -6,6 +6,7 @@
 key.pub
 key
 *.kate-swp
+*.jfr
 venv/
 /.idea/
 /runs/
