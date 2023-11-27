@@ -39,8 +39,7 @@ public class IAtomicReferenceTest extends HazelcastTest {
 
     String createString(int kb) {
         int bytes = kb * 1024;
-        int charsRequired = bytes / 2;
-        return GeneratorUtils.generateAsciiString(charsRequired);
+        return GeneratorUtils.generateAsciiString(bytes);
     }
 
     @TimeStep(prob = 1)
