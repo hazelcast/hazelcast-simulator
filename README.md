@@ -75,7 +75,7 @@ Please refer to the [Quickstart](#quickstart) to start your Simulator journey.
     * [Enabling Diagnostics](#enabling-diagnostics)
     * [Logging](#logging)
     * [Running multiple tests in parallel](#running-multiple-tests-in-parallel)
-    * [Various forms of testing](#various-forms-of-testing)##
+    * [Various forms of testing](#various-forms-of-testing)
 - [Get Help](#get-help)
 
 # Quickstart
