@@ -29,7 +29,7 @@ class HTMLReport:
 
         images_index = html_template.index("[images]")
         overview_index = html_template.index("[summary]")
-        with (open(file_path, 'w') as f):
+        with open(file_path, 'w') as f:
             f.write(html_template[0:images_index])
 
             # Write the images
