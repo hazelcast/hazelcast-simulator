@@ -408,7 +408,7 @@ should be conducted in.
 
 | Property                               | Example value    | Description                                                                                                                                 |
 |----------------------------------------|------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
-| `name`                                 | `read_only`      | The name of the test suite (overriden by test-specific values                                                                               |
+| `name`                                 | `read_only`      | The name of the test suite (overriden by test-specific values)                                                                               |
 | `repititions`                          | `1`              | The number of times this test suite should run (1 or more)                                                                                  |
 | `duration`                             | `300s`           | The amount of time this test suite should run for (45m, 1h, 2d, etc.)                                                                       |
 | `clients`                              | `1`              | The number of Hazelcast Clients to use in this test suite (hosted on `loadgenerator_hosts`                                                  |
