@@ -1,0 +1,38 @@
+- name: read_only
+  duration: 1m
+  repetitions: 1
+  clients: 1
+  members: 3
+  driver: hazelcast5
+  version: maven=5.4.0-SNAPSHOT
+  client_args: >
+    -Xms3g
+    -Xmx3g
+    --add-modules java.se 
+    --add-exports java.base/jdk.internal.ref=ALL-UNNAMED 
+    --add-opens java.base/java.lang=ALL-UNNAMED 
+    --add-opens java.base/sun.nio.ch=ALL-UNNAMED 
+    --add-opens java.management/sun.management=ALL-UNNAMED 
+    --add-opens jdk.management/com.sun.management.internal=ALL-UNNAMED
+  member_args: >
+    -Xms3g
+    -Xmx3g
+    --add-modules java.se 
+    --add-exports java.base/jdk.internal.ref=ALL-UNNAMED 
+    --add-opens java.base/java.lang=ALL-UNNAMED 
+    --add-opens java.base/sun.nio.ch=ALL-UNNAMED 
+    --add-opens java.management/sun.management=ALL-UNNAMED 
+    --add-opens jdk.management/com.sun.management.internal=ALL-UNNAMED
+  loadgenerator_hosts: loadgenerators
+  node_hosts: nodes
+  verify_enabled: False
+  performance_monitor_interval_seconds: 1
+  warmup_seconds: 0
+  cooldown_seconds: 0
+  test:
+    - class: com.hazelcast.simulator.tests.ucd.TestUCDWithIMapEntryProcessor
+      name: default
+      threadCount: 3
+      keyCount: 1000
+      minProcessorDelayMs: 0
+      maxProcessorDelayMs: 0
