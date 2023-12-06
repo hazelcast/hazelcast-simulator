@@ -132,7 +132,7 @@ public class MapPredicateTest extends HazelcastTest {
         double maxSalary = state.randomDouble() * Employee.MAX_SALARY;
         Predicate predicate = Predicates.lessThan("salary", maxSalary);
         SalaryComparator salaryComparator = new SalaryComparator();
-        PagingPredicate pagingPredicate = new PagingPredicateImpl();
+        PagingPredicate pagingPredicate = new PagingPredicateImpl(predicate, salaryComparator, pageSize, null);
 
         Collection<Employee> employees;
         List<Employee> employeeList;
