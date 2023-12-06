@@ -83,7 +83,7 @@ public class ReliableTopicTest extends HazelcastTest {
 
     @BeforeRun
     public void beforeRun(ThreadState state) {
-        for (ITopic topic : topics) {
+        for (ITopic<?> topic : topics) {
             state.counterMap.put(topic, new AtomicLong());
         }
     }
@@ -103,9 +103,8 @@ public class ReliableTopicTest extends HazelcastTest {
     }
 
     public class ThreadState extends BaseThreadState {
-
         private long messagesSend = 0;
-        private final Map<ITopic, AtomicLong> counterMap = new HashMap<>();
+        private final Map<ITopic<?>, AtomicLong> counterMap = new HashMap<>();
         private final String id = newSecureUuidString();
 
         private ITopic<MessageEntity> getRandomTopic() {
@@ -115,7 +114,6 @@ public class ReliableTopicTest extends HazelcastTest {
     }
 
     private static class MessageDataSerializableFactory implements DataSerializableFactory {
-
         public static final int FACTORY_ID = 18;
 
         @Override
@@ -125,7 +123,6 @@ public class ReliableTopicTest extends HazelcastTest {
     }
 
     private static class MessageEntity implements IdentifiedDataSerializable {
-
         private String thread;
         private long value;
 
@@ -147,13 +144,13 @@ public class ReliableTopicTest extends HazelcastTest {
 
         @Override
         public void writeData(ObjectDataOutput out) throws IOException {
-            out.writeUTF(thread);
+            out.writeString(thread);
             out.writeLong(value);
         }
 
         @Override
         public void readData(ObjectDataInput in) throws IOException {
-            thread = in.readUTF();
+            thread = in.readString();
             value = in.readLong();
         }
 
@@ -169,7 +166,6 @@ public class ReliableTopicTest extends HazelcastTest {
     }
 
     private class MessageListenerImpl implements MessageListener<MessageEntity> {
-
         private final Map<String, Long> values = new HashMap<>();
         private final AtomicLong received = new AtomicLong();
 
@@ -182,13 +178,14 @@ public class ReliableTopicTest extends HazelcastTest {
         @Override
         public void onMessage(Message<MessageEntity> message) {
             String threadId = message.getMessageObject().thread;
-            Long previousValue = values.get(threadId);
+            long actualValue = message.getMessageObject().value;
+            Long previousValue = values.put(threadId, actualValue);
             if (previousValue == null) {
                 previousValue = 0L;
             }
 
-            long actualValue = message.getMessageObject().value;
             long expectedValue = previousValue + 1;
+                                    
             if (expectedValue != actualValue) {
                 failures.incrementAndGet();
                 ExceptionReporter.report(testContext.getTestId(), new TestException(format(
@@ -196,10 +193,8 @@ public class ReliableTopicTest extends HazelcastTest {
                         expectedValue, actualValue)));
             }
 
-            values.put(threadId, actualValue);
-
             if (received.getAndIncrement() % 100000 == 0) {
-                logger.info(toString() + " is at " + message.getMessageObject().toString());
+                logger.info("{} is at {}", this, message.getMessageObject());
             }
         }
 
@@ -215,10 +210,7 @@ public class ReliableTopicTest extends HazelcastTest {
     public void verify() {
         final long expectedCount = listenersPerTopic * totalMessagesSend.get();
         assertTrueEventually(() -> {
-            long actualCount = 0;
-            for (MessageListenerImpl topicListener : listeners) {
-                actualCount += topicListener.received.get();
-            }
+            long actualCount = listeners.stream().mapToLong(topicListener -> topicListener.received.get()).sum();
             assertEquals("published messages don't match received messages", expectedCount, actualCount);
         });
         assertEquals("Failures found", 0, failures.get());
