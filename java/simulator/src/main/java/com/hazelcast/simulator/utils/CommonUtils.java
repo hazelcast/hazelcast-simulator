@@ -27,7 +27,6 @@ import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.LockSupport;
-import java.util.jar.JarFile;
 
 import static com.hazelcast.simulator.utils.EmptyStatement.ignore;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
@@ -89,17 +88,6 @@ public final class CommonUtils {
         }
         try {
             closeable.close();
-        } catch (IOException ignore) {
-            ignore(ignore);
-        }
-    }
-
-    public static void closeQuietly(JarFile jarFile) {
-        if (jarFile == null) {
-            return;
-        }
-        try {
-            jarFile.close();
         } catch (IOException ignore) {
             ignore(ignore);
         }
