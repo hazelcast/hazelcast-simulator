@@ -20,10 +20,10 @@ import com.hazelcast.topic.MessageListener;
 
 import java.util.concurrent.CompletableFuture;
 
-public class CompletableMessageListener<T> implements MessageListener<T> {
+public class LocalCompletableMessageListener<T> implements MessageListener<T> {
     private final CompletableFuture<T> future;
 
-    public CompletableMessageListener(CompletableFuture<T> future) {
+    public LocalCompletableMessageListener(CompletableFuture<T> future) {
         this.future = future;
     }
 
