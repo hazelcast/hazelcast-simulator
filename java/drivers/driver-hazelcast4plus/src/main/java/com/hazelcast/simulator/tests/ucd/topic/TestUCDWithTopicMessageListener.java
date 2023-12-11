@@ -13,62 +13,48 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.tests.ucd;
+package com.hazelcast.simulator.tests.ucd.topic;
 
-import com.hazelcast.simulator.hz.HazelcastTest;
-import com.hazelcast.simulator.probes.LatencyProbe;
 import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.BeforeRun;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.TimeStep;
-import com.hazelcast.simulator.tests.helpers.KeyLocality;
-import com.hazelcast.simulator.tests.helpers.KeyUtils;
+import com.hazelcast.simulator.tests.ucd.UCDTest;
 import com.hazelcast.topic.ITopic;
-import com.hazelcast.topic.Message;
 import com.hazelcast.topic.MessageListener;
 
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-public class TestUCDWithTopicMessageListener extends HazelcastTest {
+public class TestUCDWithTopicMessageListener extends UCDTest {
     private ITopic<Object> topic;
 
     private CompletableFuture<Object> future;
     private UUID listenerRegistration;
 
+    @Override
     @Setup
-    public void setUp() {
-        topic = targetInstance.getReliableTopic(KeyUtils.generateStringKey(1, KeyLocality.SHARED, targetInstance));
+    public void setUp() throws ClassNotFoundException {
+        super.setUp();
+        topic = targetInstance.getReliableTopic(name);
     }
 
     @BeforeRun
-    public void beforeRun() {
+    public void beforeRun() throws ReflectiveOperationException {
         future = new CompletableFuture<>();
-        listenerRegistration = topic.addMessageListener(new CompletableMessageListener(future));
+        listenerRegistration = topic.addMessageListener(
+                (MessageListener<Object>) udf.getDeclaredConstructor(future.getClass()).newInstance(future));
     }
 
+    /** Measure how long it takes for a message to be sent & received */
     @TimeStep
-    public void timeStep(LatencyProbe latencyProbe) {
+    public void timeStep() {
         topic.publish(Void.TYPE);
         future.join();
-        latencyProbe.done(System.nanoTime());
     }
 
     @AfterRun
     public void afterRun() {
         topic.removeMessageListener(listenerRegistration);
-    }
-
-    private static class CompletableMessageListener implements MessageListener<Object> {
-        private final CompletableFuture<Object> future;
-
-        public CompletableMessageListener(CompletableFuture<Object> future) {
-            this.future = future;
-        }
-
-        @Override
-        public void onMessage(Message<Object> message) {
-            future.complete(message.getMessageObject());
-        }
     }
 }
