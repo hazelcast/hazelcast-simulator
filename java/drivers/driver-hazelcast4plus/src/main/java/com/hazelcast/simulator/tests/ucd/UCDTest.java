@@ -4,6 +4,8 @@ import com.hazelcast.config.NamespaceConfig;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.annotations.Setup;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 
@@ -66,7 +68,11 @@ public class UCDTest extends HazelcastTest {
         assertNotNull("classDir must be set", classDir);
         assertNotNull("className must be set", className);
         URL url = getClass().getClassLoader().getResource(classDir);
-        this.udf = new URLClassLoader(new URL[]{url}).loadClass(className);
+        try (URLClassLoader classLoader = new URLClassLoader(new URL[] {url})) {
+            udf = classLoader.loadClass(className);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
     /**
