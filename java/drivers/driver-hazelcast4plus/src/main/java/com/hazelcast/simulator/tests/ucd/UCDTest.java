@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.Arrays;
 
 import static org.junit.Assert.assertNotNull;
 
@@ -44,7 +45,7 @@ public class UCDTest extends HazelcastTest {
     The UDF class which is loaded with a URLClassLoader using the given
     classDir and className test properties.
      */
-    protected Class<?> udf;
+    private Class<?> udf;
 
     /**
      * Preloads UDF and configures namespace if required.
@@ -52,7 +53,7 @@ public class UCDTest extends HazelcastTest {
      * @throws ClassNotFoundException if udf not found.
      */
     @Setup
-    public void setUp() throws ClassNotFoundException {
+    public void setUp() throws ReflectiveOperationException {
         loadUDF();
         if (useNamespace) {
             configureNamespace();
@@ -87,5 +88,10 @@ public class UCDTest extends HazelcastTest {
         NamespaceConfig nsc = new NamespaceConfig().setName(namespaceId).addClass(udf);
         targetInstance.getConfig().getNamespacesConfig()
                 .addNamespaceConfig(nsc);
+    }
+
+    protected <T> T getUDFInstance(Object... args) throws ReflectiveOperationException {
+        return (T) udf.getDeclaredConstructor(Arrays.stream(args).map(Object::getClass).toArray(Class<?>[]::new))
+                .newInstance(args);
     }
 }

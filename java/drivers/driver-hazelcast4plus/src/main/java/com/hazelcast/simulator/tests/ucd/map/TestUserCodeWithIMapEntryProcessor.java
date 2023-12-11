@@ -1,6 +1,5 @@
 package com.hazelcast.simulator.tests.ucd.map;
 
-import com.hazelcast.map.EntryProcessor;
 import com.hazelcast.map.IMap;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -17,8 +16,9 @@ public class TestUserCodeWithIMapEntryProcessor extends UCDTest {
     private final int key = 0;
     private final AtomicLong expectedIncrement = new AtomicLong(0);
 
+    @Override
     @Setup
-    public void setUp() throws ClassNotFoundException {
+    public void setUp() throws ReflectiveOperationException {
         super.setUp();
         map = targetInstance.getMap(name);
         //map lazily created, push entry to force creation.
@@ -26,9 +26,8 @@ public class TestUserCodeWithIMapEntryProcessor extends UCDTest {
     }
 
     @TimeStep
-    public void timeStep() throws Exception {
-        map.executeOnKey(key, (EntryProcessor<Integer, Long, Object>)
-                udf.getDeclaredConstructor(long.class).newInstance(key));
+    public void timeStep() throws ReflectiveOperationException  {
+        map.executeOnKey(key, getUDFInstance(key));
 
         expectedIncrement.incrementAndGet();
     }

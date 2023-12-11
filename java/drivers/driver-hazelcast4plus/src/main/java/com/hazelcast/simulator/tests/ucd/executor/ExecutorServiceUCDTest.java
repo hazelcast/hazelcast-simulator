@@ -14,18 +14,19 @@ import java.util.concurrent.TimeUnit;
 public class ExecutorServiceUCDTest extends UCDTest {
     private IExecutorService executor;
 
+    @Override
     @Setup
-    public void setup() throws Exception {
+    public void setUp() throws ReflectiveOperationException  {
         executor = targetInstance.getExecutorService(name);
         super.setUp();
-        executor.submit((Callable) udf.getDeclaredConstructor(long.class)
-                .newInstance(System.nanoTime()));
+        Callable<Long> udf = getUDFInstance(System.nanoTime());
+        executor.submit(udf);
     }
 
     @TimeStep
     public void timeStep(LatencyProbe latencyProbe) throws Exception {
-        Future<Long> future = executor.submit((Callable) udf.getDeclaredConstructor(long.class)
-                .newInstance(System.nanoTime()));
+        Callable<Long> udf = getUDFInstance(System.nanoTime());
+        Future<Long> future = executor.submit(udf);
 
         long start = future.get();
         latencyProbe.done(start);

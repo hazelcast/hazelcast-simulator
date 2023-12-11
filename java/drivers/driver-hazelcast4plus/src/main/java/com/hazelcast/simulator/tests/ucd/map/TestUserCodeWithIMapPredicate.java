@@ -2,7 +2,6 @@ package com.hazelcast.simulator.tests.ucd.map;
 
 import com.hazelcast.collection.IList;
 import com.hazelcast.map.IMap;
-import com.hazelcast.query.Predicate;
 import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -25,8 +24,9 @@ public class TestUserCodeWithIMapPredicate extends UCDTest {
     private IList<Long> resultsPerWorker;
     private final AtomicLong localReturns = new AtomicLong(0);
 
+    @Override
     @Setup
-    public void setUp() throws ClassNotFoundException {
+    public void setUp() throws ReflectiveOperationException {
         super.setUp();
         map = targetInstance.getMap(name);
         resultsPerWorker = targetInstance.getList(name + ":ResultMap");
@@ -40,10 +40,8 @@ public class TestUserCodeWithIMapPredicate extends UCDTest {
     }
 
     @TimeStep
-    public void timeStep() throws Exception {
-        int returnSize =
-                map.values((Predicate<Integer, Integer>) udf.getDeclaredConstructor()
-                        .newInstance()).size();
+    public void timeStep() throws ReflectiveOperationException {
+        int returnSize = map.values(getUDFInstance()).size();
         localReturns.addAndGet(returnSize);
     }
 
