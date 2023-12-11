@@ -6,7 +6,7 @@ target/
 .patch
 .project
 .DS_Store
-*.class
+#*.class
 simulator-git.properties
 logs/
 .attach_pid*

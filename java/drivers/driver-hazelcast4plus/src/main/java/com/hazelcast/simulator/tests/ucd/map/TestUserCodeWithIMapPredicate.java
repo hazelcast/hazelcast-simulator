@@ -42,7 +42,7 @@ public class TestUserCodeWithIMapPredicate extends UCDTest {
     @TimeStep
     public void timeStep() throws Exception {
         int returnSize =
-                map.values((Predicate<Integer, Integer>) udf.getDeclaredConstructor(int.class)
+                map.values((Predicate<Integer, Integer>) udf.getDeclaredConstructor()
                         .newInstance()).size();
         localReturns.addAndGet(returnSize);
     }
