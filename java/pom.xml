@@ -270,7 +270,6 @@
                             <configLocation>${main.basedir}/checkstyle/checkstyle.xml</configLocation>
                             <suppressionsLocation>${main.basedir}/checkstyle/suppressions.xml</suppressionsLocation>
                             <headerLocation>${main.basedir}/checkstyle/ClassHeader.txt</headerLocation>
-                            <enableRSS>false</enableRSS>
                             <linkXRef>true</linkXRef>
                             <consoleOutput>true</consoleOutput>
                             <failsOnError>true</failsOnError>
