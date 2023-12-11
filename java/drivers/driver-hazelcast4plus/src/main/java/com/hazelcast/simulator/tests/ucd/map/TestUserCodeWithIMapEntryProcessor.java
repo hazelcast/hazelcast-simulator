@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.tests.ucd.map;
 
+import com.hazelcast.map.EntryProcessor;
 import com.hazelcast.map.IMap;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -27,7 +28,8 @@ public class TestUserCodeWithIMapEntryProcessor extends UCDTest {
 
     @TimeStep
     public void timeStep() throws ReflectiveOperationException  {
-        map.executeOnKey(key, getUDFInstance(key));
+        map.executeOnKey(key, (EntryProcessor<Integer, Long, Object>)
+                udf.getDeclaredConstructor(long.class).newInstance(key));
 
         expectedIncrement.incrementAndGet();
     }

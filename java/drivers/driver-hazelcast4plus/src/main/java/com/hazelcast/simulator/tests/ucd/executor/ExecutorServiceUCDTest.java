@@ -19,14 +19,14 @@ public class ExecutorServiceUCDTest extends UCDTest {
     public void setUp() throws ReflectiveOperationException  {
         executor = targetInstance.getExecutorService(name);
         super.setUp();
-        Callable<Long> udf = getUDFInstance(System.nanoTime());
-        executor.submit(udf);
+        executor.submit((Callable<Long>) udf.getDeclaredConstructor(long.class)
+                .newInstance(System.nanoTime()));
     }
 
     @TimeStep
     public void timeStep(LatencyProbe latencyProbe) throws Exception {
-        Callable<Long> udf = getUDFInstance(System.nanoTime());
-        Future<Long> future = executor.submit(udf);
+        Future<Long> future = executor.submit((Callable<Long>) udf.getDeclaredConstructor(long.class)
+                .newInstance(System.nanoTime()));
 
         long start = future.get();
         latencyProbe.done(start);

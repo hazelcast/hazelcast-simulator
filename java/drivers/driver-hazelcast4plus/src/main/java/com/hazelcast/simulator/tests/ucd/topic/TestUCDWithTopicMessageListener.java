@@ -21,6 +21,7 @@ import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.tests.ucd.UCDTest;
 import com.hazelcast.topic.ITopic;
+import com.hazelcast.topic.MessageListener;
 
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -41,7 +42,8 @@ public class TestUCDWithTopicMessageListener extends UCDTest {
     @BeforeRun
     public void beforeRun() throws ReflectiveOperationException {
         future = new CompletableFuture<>();
-        listenerRegistration = topic.addMessageListener(getUDFInstance(future));
+        listenerRegistration = topic.addMessageListener(
+                (MessageListener<Object>) udf.getDeclaredConstructor(future.getClass()).newInstance(future));
     }
 
     /** Measure how long it takes for a message to be sent & received */

@@ -2,6 +2,7 @@ package com.hazelcast.simulator.tests.ucd.map;
 
 import com.hazelcast.collection.IList;
 import com.hazelcast.map.IMap;
+import com.hazelcast.query.Predicate;
 import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -41,7 +42,9 @@ public class TestUserCodeWithIMapPredicate extends UCDTest {
 
     @TimeStep
     public void timeStep() throws ReflectiveOperationException {
-        int returnSize = map.values(getUDFInstance()).size();
+        int returnSize =
+                map.values((Predicate<Integer, Integer>) udf.getDeclaredConstructor()
+                        .newInstance()).size();
         localReturns.addAndGet(returnSize);
     }
 
