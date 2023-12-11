@@ -88,3 +88,23 @@
 #      classDir: com/hazelcast/simulator/tests/ucd/executor/classes
 #      className: com.hazelcast.simulator.tests.ucd.executor.classes.LocalExecutorTask
 #      useNamespace: false
+
+
+#      TestUCDWithTopicMessageListener
+
+#      runs the topic test with namespaces enabled, loading CompletableMessageListener off classpath.
+#    - class: com.hazelcast.simulator.tests.ucd.topic.TestUCDWithTopicMessageListener
+#      name: default
+#      threadCount: 1
+#      classDir: class/com/hazelcast/simulator/tests/ucd/
+#      className: CompletableMessageListener
+#      useNamespace: true
+#      namespaceId: ns1
+
+#      runs the topic task without namespaces, using LocalCompletableMessageListener on the classpath.
+#    - class: com.hazelcast.simulator.tests.ucd.topic.TestUCDWithTopicMessageListener
+#      name: default
+#      threadCount: 1
+#      classDir: com/hazelcast/simulator/tests/ucd/topic/classes
+#      className: com.hazelcast.simulator.tests.ucd.topic.classes.LocalCompletableMessageListener
+#      useNamespace: false
