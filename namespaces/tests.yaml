@@ -30,9 +30,9 @@
   warmup_seconds: 180
   cooldown_seconds: 180
   test:
-#      TestUserCodeWithIMapEntryProcessor
+#      # TestUserCodeWithIMapEntryProcessor
 
-#      runs the IMap test with namespaces enabled, loading IncrementEntryProcessor off classpath.
+#      # runs the IMap test with namespaces enabled, loading IncrementEntryProcessor off classpath.
 #    - class: com.hazelcast.simulator.tests.ucd.map.TestUserCodeWithIMapEntryProcessor
 #      name: default
 #      threadCount: 1
@@ -41,7 +41,7 @@
 #      useNamespace: true
 #      namespaceId: ns1
 
-#      runs the IMap test with namespaces disabled, loading IncrementEntryProcessor off classpath.
+#      # runs the IMap test with namespaces disabled, loading IncrementEntryProcessor off classpath.
 #    - class: com.hazelcast.simulator.tests.ucd.map.TestUserCodeWithIMapEntryProcessor
 #      name: default
 #      threadCount: 1
@@ -50,9 +50,9 @@
 #      useNamespace: false
 
 
-#      TestUserCodeWithIMapPredicate
+#     # TestUserCodeWithIMapPredicate
 
-#      runs the IMap test with namespaces enabled, loading OddNumberPredicate off classpath.
+#     # runs the IMap test with namespaces enabled, loading OddNumberPredicate off classpath.
     - class: com.hazelcast.simulator.tests.ucd.map.TestUserCodeWithIMapPredicate
       name: default
       threadCount: 1
@@ -61,7 +61,7 @@
       useNamespace: true
       namespaceId: ns1
 
-#      runs the IMap test with namespaces disabled, loading OddNumberPredicate on classpath.
+#      # runs the IMap test with namespaces disabled, loading OddNumberPredicate on classpath.
 #    - class: com.hazelcast.simulator.tests.ucd.map.TestUserCodeWithIMapPredicate
 #      name: default
 #      threadCount: 1
@@ -70,9 +70,9 @@
 #      useNamespace: false
 
 
-#      ExecutorServiceUCDTest
+#      # ExecutorServiceUCDTest
 
-#      runs the executor test with namespaces enabled, loading ExecutorTask off classpath.
+#      # runs the executor test with namespaces enabled, loading ExecutorTask off classpath.
 #    - class: com.hazelcast.simulator.tests.ucd.executor.ExecutorServiceUCDTest
 #      name: default
 #      threadCount: 1
@@ -81,7 +81,7 @@
 #      useNamespace: true
 #      namespaceId: ns1
 
-#      runs the executor task without namespaces, using LocalExecutorTask on the classpath.
+#      # runs the executor task without namespaces, using LocalExecutorTask on the classpath.
 #    - class: com.hazelcast.simulator.tests.ucd.executor.ExecutorServiceUCDTest
 #      name: default
 #      threadCount: 1
@@ -90,9 +90,9 @@
 #      useNamespace: false
 
 
-#      TestUCDWithTopicMessageListener
+#      # TestUCDWithTopicMessageListener
 
-#      runs the topic test with namespaces enabled, loading CompletableMessageListener off classpath.
+#      # runs the topic test with namespaces enabled, loading CompletableMessageListener off classpath.
 #    - class: com.hazelcast.simulator.tests.ucd.topic.TestUCDWithTopicMessageListener
 #      name: default
 #      threadCount: 1
@@ -101,7 +101,7 @@
 #      useNamespace: true
 #      namespaceId: ns1
 
-#      runs the topic task without namespaces, using LocalCompletableMessageListener on the classpath.
+#      # runs the topic task without namespaces, using LocalCompletableMessageListener on the classpath.
 #    - class: com.hazelcast.simulator.tests.ucd.topic.TestUCDWithTopicMessageListener
 #      name: default
 #      threadCount: 1
