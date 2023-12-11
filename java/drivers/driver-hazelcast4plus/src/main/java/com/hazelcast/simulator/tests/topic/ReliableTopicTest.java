@@ -103,6 +103,7 @@ public class ReliableTopicTest extends HazelcastTest {
     }
 
     public class ThreadState extends BaseThreadState {
+
         private long messagesSend = 0;
         private final Map<ITopic<?>, AtomicLong> counterMap = new HashMap<>();
         private final String id = newSecureUuidString();
@@ -114,6 +115,7 @@ public class ReliableTopicTest extends HazelcastTest {
     }
 
     private static class MessageDataSerializableFactory implements DataSerializableFactory {
+
         public static final int FACTORY_ID = 18;
 
         @Override
@@ -123,6 +125,7 @@ public class ReliableTopicTest extends HazelcastTest {
     }
 
     private static class MessageEntity implements IdentifiedDataSerializable {
+
         private String thread;
         private long value;
 
@@ -166,6 +169,7 @@ public class ReliableTopicTest extends HazelcastTest {
     }
 
     private class MessageListenerImpl implements MessageListener<MessageEntity> {
+
         private final Map<String, Long> values = new HashMap<>();
         private final AtomicLong received = new AtomicLong();
 
@@ -210,7 +214,10 @@ public class ReliableTopicTest extends HazelcastTest {
     public void verify() {
         final long expectedCount = listenersPerTopic * totalMessagesSend.get();
         assertTrueEventually(() -> {
-            long actualCount = listeners.stream().mapToLong(topicListener -> topicListener.received.get()).sum();
+            long actualCount = 0;
+            for (MessageListenerImpl topicListener : listeners) {
+                actualCount += topicListener.received.get();
+            }
             assertEquals("published messages don't match received messages", expectedCount, actualCount);
         });
         assertEquals("Failures found", 0, failures.get());
