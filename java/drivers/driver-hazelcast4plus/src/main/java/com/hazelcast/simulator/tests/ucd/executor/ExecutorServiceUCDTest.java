@@ -32,10 +32,10 @@ public class ExecutorServiceUCDTest extends UCDTest {
     }
 
     @Teardown(global = true)
-    public void teardown() throws Exception {
+    public void teardown() throws InterruptedException {
         executor.shutdownNow();
         if (!executor.awaitTermination(120, TimeUnit.SECONDS)) {
-            logger.fatal("Time out while waiting for shutdown of executor: " + executor.getName());
+            logger.fatal("Time out while waiting for shutdown of executor: {}", executor.getName());
         }
         executor.destroy();
     }
