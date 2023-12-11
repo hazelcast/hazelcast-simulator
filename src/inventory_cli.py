@@ -175,17 +175,21 @@ class InventoryInstallCli:
     def async_profiler(self, argv):
         parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter,
                                          description='Install Async Profiler')
-        parser.add_argument("--version", help="Async profiler version", default="2.9")
-        parser.add_argument("--hosts", help="The target hosts.", default="all:!mc")
+        parser.add_argument("--url",
+                            help="The url to the async profiler binary",
+                            default="https://github.com/jvm-profiling-tools/async-profiler/releases/download/v2.9/async-profiler-2.9-linux-x64.tar.gz")
+        parser.add_argument("--hosts",
+                            help="The target hosts.",
+                            default="all:!mc")
 
         args = parser.parse_args(argv)
 
         hosts = args.hosts
-        version = args.version
+        async_profiler_url = args.url
         log_header("Installing Async Profiler")
         info(f"hosts={hosts}")
-        info(f"version={version}")
-        cmd = f"ansible-playbook --limit {hosts} --inventory inventory.yaml {simulator_home}/playbooks/install_async_profiler.yaml -e version='{version}'"
+        info(f"async_profiler_url={async_profiler_url}")
+        cmd = f"ansible-playbook --limit {hosts} --inventory inventory.yaml {simulator_home}/playbooks/install_async_profiler.yaml -e async_profiler_url='{async_profiler_url}'"
         info(cmd)
         exitcode = shell(cmd)
         if exitcode != 0:

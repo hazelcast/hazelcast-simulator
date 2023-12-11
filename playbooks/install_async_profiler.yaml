@@ -1,14 +1,12 @@
 ---
 - hosts: all
   vars:
-    version: 2.9
-    url: "https://github.com/jvm-profiling-tools/async-profiler/releases/download/v{{ version }}/async-profiler-{{ version }}-linux-x64.tar.gz"
-    tar_gz_filename: "{{ url | basename }}"
+    tar_gz_filename: "{{ async_profiler_url }}"
 
   tasks:
   - name: Downloads the Async Profiler tar.gz
     get_url:
-      url: "{{ url }}"
+      url: "{{ async_profiler_url }}"
       dest: ~{{ console_user | default(ansible_user) }}
 
   - name: Extract the Async Profiler tar.gz
