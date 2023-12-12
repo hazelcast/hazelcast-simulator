@@ -12,10 +12,6 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <prerequisites>
-        <maven>${maven.version}</maven>
-    </prerequisites>
-
     <properties>
         <hazelcast.version>3.12.6</hazelcast.version>
         <main.basedir>${project.parent.basedir}</main.basedir>

@@ -16,10 +16,6 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <prerequisites>
-        <maven>${maven.version}</maven>
-    </prerequisites>
-
     <properties>
         <main.basedir>${project.parent.basedir}</main.basedir>
     </properties>

@@ -10,10 +10,6 @@
     <url>http://github.com/hazelcast/hazelcast-simulator</url>
     <packaging>pom</packaging>
 
-    <prerequisites>
-        <maven>${maven.version}</maven>
-    </prerequisites>
-
     <repositories>
         <repository>
             <id>main-repo</id>
@@ -38,7 +34,6 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <java.version>1.8</java.version>
-        <maven.version>3.0.1</maven.version>
 
         <jsr107.api.version>1.0.0</jsr107.api.version>
 
