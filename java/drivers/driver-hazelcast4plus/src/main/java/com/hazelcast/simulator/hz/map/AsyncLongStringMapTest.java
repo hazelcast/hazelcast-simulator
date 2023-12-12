@@ -18,21 +18,25 @@ package com.hazelcast.simulator.hz.map;
 
 import com.hazelcast.map.IMap;
 import com.hazelcast.simulator.hz.HazelcastTest;
+import com.hazelcast.simulator.probes.LatencyProbe;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.Prepare;
+import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
-import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 
 import java.util.Random;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.CountDownLatch;
 
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateAsciiStrings;
 
-public class LongStringMapTest extends HazelcastTest {
+public class AsyncLongStringMapTest extends HazelcastTest {
 
     // properties
+    public int concurrency = 100;
     public long keyDomain = 10000;
     public int valueCount = 10000;
     public int minValueLength = 10;
@@ -41,7 +45,6 @@ public class LongStringMapTest extends HazelcastTest {
     public boolean destroyOnExit = true;
     private IMap<Long, String> map;
     private String[] values;
-
 
     @Setup
     public void setUp() {
@@ -64,19 +67,45 @@ public class LongStringMapTest extends HazelcastTest {
         streamer.await();
     }
 
-    @TimeStep(prob = -1)
-    public String get(ThreadState state) {
-        return map.get(state.randomKey());
+    @Run
+    public void run() throws InterruptedException {
+        CountDownLatch completionLatch = new CountDownLatch(concurrency);
+        for (int k = 0; k < concurrency; k++) {
+            Task task = new Task(completionLatch);
+            task.run();
+        }
+        completionLatch.await();
     }
 
-    @TimeStep(prob = 0.1)
-    public String put(ThreadState state) {
-        return map.put(state.randomKey(), state.randomValue());
-    }
+    private class Task implements Runnable {
+        private final ThreadState state = new ThreadState();
+        private final LatencyProbe getLatencyProbe = testContext.getLatencyProbe("get");
+        private final CountDownLatch completionLatch;
+        private long startNs;
+        private boolean initializing = true;
 
-    @TimeStep(prob = 0)
-    public void set(ThreadState state) {
-        map.set(state.randomKey(), state.randomValue());
+        private Task(CountDownLatch completionLatch) {
+            this.completionLatch = completionLatch;
+        }
+
+        @Override
+        public void run() {
+            if (initializing) {
+                initializing = false;
+                startNs = System.nanoTime();
+            } else {
+                long nowNs = System.nanoTime();
+                getLatencyProbe.recordValue(nowNs - startNs);
+                startNs = nowNs;
+            }
+
+            if (testContext.isStopped()) {
+                completionLatch.countDown();
+            } else {
+                CompletionStage<String> f = map.getAsync(state.randomKey());
+                f.thenRunAsync(this);
+            }
+        }
     }
 
     public class ThreadState extends BaseThreadState {
@@ -92,7 +121,7 @@ public class LongStringMapTest extends HazelcastTest {
 
     @Teardown
     public void tearDown() {
-        if(destroyOnExit) {
+        if (destroyOnExit) {
             map.destroy();
         }
     }
