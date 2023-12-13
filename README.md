@@ -811,7 +811,7 @@ This is only necessary if the JAR files have been changed. Configuration changes
 Once a benchmark has been executed, if using `perftest run`, an HTML report will automatically be generated for you. You
 can
 disable this behaviour by passing the `--skip_auto_gen_report` flag to `perftest`. You can always generate an HTML
-reprot on
+report on
 demand by using the `perftest report` tool. Report generation requires Gnuplot 4+ and Python 3.x to be installed for
 generating the diagrams.
 
