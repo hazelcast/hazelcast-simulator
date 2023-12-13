@@ -1,13 +1,15 @@
 - name: read_only
-  duration: 15m
-  repetitions: 1
-  clients: 1
+  duration: 10m
+  repetitions: 5
+  clients: 4
   members: 1
   driver: hazelcast5
   version: maven=5.4.0-SNAPSHOT
   client_args: >
     -Xms3g
     -Xmx3g
+    -XX:+UnlockDiagnosticVMOptions
+    -XX:+DebugNonSafepoints
     --add-modules java.se 
     --add-exports java.base/jdk.internal.ref=ALL-UNNAMED 
     --add-opens java.base/java.lang=ALL-UNNAMED 
@@ -17,6 +19,8 @@
   member_args: >
     -Xms8g
     -Xmx8g
+    -XX:+UnlockDiagnosticVMOptions
+    -XX:+DebugNonSafepoints
     --add-modules java.se 
     --add-exports java.base/jdk.internal.ref=ALL-UNNAMED 
     --add-opens java.base/java.lang=ALL-UNNAMED 
@@ -27,35 +31,28 @@
   node_hosts: nodes
   verify_enabled: False
   performance_monitor_interval_seconds: 1
-  warmup_seconds: 180
-  cooldown_seconds: 180
+  warmup_seconds: 0
+  cooldown_seconds: 0
   test:
-#      # TestUserCodeWithIMapEntryProcessor
-
 #      # runs the IMap test with namespaces enabled, loading IncrementEntryProcessor off classpath.
 #    - class: com.hazelcast.simulator.tests.ucd.map.TestUserCodeWithIMapEntryProcessor
 #      name: default
-#      threadCount: 1
+#      threadCount: 40
 #      classDir: class/com/hazelcast/simulator/tests/ucd/
 #      className: IncrementEntryProcessor
 #      useNamespace: true
 #      namespaceId: ns1
-
-#      # runs the IMap test with namespaces disabled, loading IncrementEntryProcessor off classpath.
+#      # runs the IMap test with namespaces disabled, loading IncrementEntryProcessor on classpath.
 #    - class: com.hazelcast.simulator.tests.ucd.map.TestUserCodeWithIMapEntryProcessor
 #      name: default
-#      threadCount: 1
+#      threadCount: 40
 #      classDir: com/hazelcast/simulator/tests/ucd/map/classes
 #      className: com.hazelcast.simulator.tests.ucd.map.classes.LocalIncrementEntryProcessor
 #      useNamespace: false
-
-
-#     # TestUserCodeWithIMapPredicate
-
-#     # runs the IMap test with namespaces enabled, loading OddNumberPredicate off classpath.
+      # runs the IMap test with namespaces enabled, loading OddNumberPredicate off classpath.
     - class: com.hazelcast.simulator.tests.ucd.map.TestUserCodeWithIMapPredicate
-      name: default
-      threadCount: 1
+      name: 5_4_0_ns_enabled_OddNumberPredicate
+      threadCount: 40
       classDir: class/com/hazelcast/simulator/tests/ucd/
       className: com.hazelcast.simulator.tests.ucd.map.classes.LocalOddNumberPredicate
       useNamespace: true
@@ -63,28 +60,23 @@
 
 #      # runs the IMap test with namespaces disabled, loading OddNumberPredicate on classpath.
 #    - class: com.hazelcast.simulator.tests.ucd.map.TestUserCodeWithIMapPredicate
-#      name: default
-#      threadCount: 1
+#      name: 5_4_0_ns_disabled_OddNumberPredicate
+#      threadCount: 40
 #      classDir: com/hazelcast/simulator/tests/ucd/map/classes
 #      className: com.hazelcast.simulator.tests.ucd.map.classes.LocalOddNumberPredicate
 #      useNamespace: false
-
-
-#      # ExecutorServiceUCDTest
-
-#      # runs the executor test with namespaces enabled, loading ExecutorTask off classpath.
-#    - class: com.hazelcast.simulator.tests.ucd.executor.ExecutorServiceUCDTest
-#      name: default
-#      threadCount: 1
-#      classDir: class/com/hazelcast/simulator/tests/ucd/
-#      className: ExecutorTask
-#      useNamespace: true
-#      namespaceId: ns1
-
+      # runs the executor test with namespaces enabled, loading ExecutorTask off classpath.
+    - class: com.hazelcast.simulator.tests.ucd.executor.ExecutorServiceUCDTest
+      name: 5_4_0_ns_enabled_ExecutorTask
+      threadCount: 40
+      classDir: class/com/hazelcast/simulator/tests/ucd/
+      className: ExecutorTask
+      useNamespace: true
+      namespaceId: ns1
 #      # runs the executor task without namespaces, using LocalExecutorTask on the classpath.
 #    - class: com.hazelcast.simulator.tests.ucd.executor.ExecutorServiceUCDTest
-#      name: default
-#      threadCount: 1
+#      name: 5_4_0_ns_disabled_ExecutorTask
+#      threadCount: 40
 #      classDir: com/hazelcast/simulator/tests/ucd/executor/classes
 #      className: com.hazelcast.simulator.tests.ucd.executor.classes.LocalExecutorTask
 #      useNamespace: false

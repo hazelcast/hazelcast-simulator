@@ -1,54 +1,89 @@
 package com.hazelcast.simulator.tests.ucd.map;
 
+import com.hazelcast.collection.IList;
 import com.hazelcast.map.EntryProcessor;
 import com.hazelcast.map.IMap;
+import com.hazelcast.simulator.test.BaseThreadState;
+import com.hazelcast.simulator.test.annotations.AfterRun;
+import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
+import com.hazelcast.simulator.tests.helpers.KeyLocality;
+import com.hazelcast.simulator.tests.helpers.KeyUtils;
 import com.hazelcast.simulator.tests.ucd.UCDTest;
-
-import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.Assert.assertEquals;
 
 public class TestUserCodeWithIMapEntryProcessor extends UCDTest {
     private IMap<Integer, Long> map;
-    private final int key = 0;
-    private final AtomicLong expectedIncrement = new AtomicLong(0);
+    public KeyLocality keyLocality = KeyLocality.SHARED;
+    public int keyCount = 10000;
+    private IList<long[]> resultsPerWorker;
 
-    @Override
+    private int[] keys;
+
     @Setup
     public void setUp() throws ReflectiveOperationException {
         super.setUp();
         map = targetInstance.getMap(name);
-        //map lazily created, push entry to force creation.
-        map.set(key, 0L);
+        keys = KeyUtils.generateIntKeys(keyCount, keyLocality, targetInstance);
+        resultsPerWorker = targetInstance.getList(name + ":ResultMap");
+    }
+
+    @Prepare(global = true)
+    public void prepare() {
+        for (int i = 0; i < keyCount; i++) {
+            map.put(i, 0L);
+        }
     }
 
     @TimeStep
-    public void timeStep() throws ReflectiveOperationException  {
+    public void timeStep(ThreadState state) throws Exception {
+        int key = keys[state.randomInt(keys.length)];
+
+        long increment = state.randomInt(100);
         map.executeOnKey(key, (EntryProcessor<Integer, Long, Object>)
                 udf.getDeclaredConstructor(long.class).newInstance(key));
 
-        expectedIncrement.incrementAndGet();
+        state.localIncrementsAtKey[key] += increment;
+    }
+
+    @AfterRun
+    public void afterRun(ThreadState state) {
+        // sleep to give time for the last EntryProcessor tasks to complete
+        resultsPerWorker.add(state.localIncrementsAtKey);
+    }
+
+    public class ThreadState extends BaseThreadState {
+        private final long[] localIncrementsAtKey = new long[keyCount];
     }
 
     @Verify
     public void verify() {
-        assertEquals((long) map.get(key), expectedIncrement.get());
+        long[] expectedValueForKey = new long[keyCount];
+
+        for (long[] incrementsAtKey : resultsPerWorker) {
+            for (int i = 0; i < incrementsAtKey.length; i++) {
+                expectedValueForKey[i] += incrementsAtKey[i];
+            }
+        }
+
+        int failures = 0;
+        for (int i = 0; i < keyCount; i++) {
+            long expected = expectedValueForKey[i];
+            long found = map.get(i);
+            if (expected != found) {
+                failures++;
+            }
+        }
+
+        assertEquals(0, failures);
     }
 
     @Teardown
     public void tearDown() {
         map.destroy();
     }
-
-    /**
-     * TESTS
-     * 1 (on my list) / UCD - 5.3.6, using the same EntryProcessor (accessed via reflection)  - classpath.
-     * 1 (global) / UCD - 5.4.0, using the same EntryProcessor (accessed via reflection) - classpath.
-     * 2 - number 1, but 5.4.0 (namespaces) w/ namespaces enabled - but no actual namespaces configured. - classpath.
-     * 3 - number 2, but with namespaces configured and the class not on the classpath.
-     */
 }

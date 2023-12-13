@@ -68,11 +68,7 @@ public class UCDTest extends HazelcastTest {
         assertNotNull("classDir must be set", classDir);
         assertNotNull("className must be set", className);
         URL url = getClass().getClassLoader().getResource(classDir);
-        try (URLClassLoader classLoader = new URLClassLoader(new URL[] {url})) {
-            udf = classLoader.loadClass(className);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+        this.udf = new URLClassLoader(new URL[]{url}).loadClass(className);
     }
 
     /**
@@ -84,6 +80,7 @@ public class UCDTest extends HazelcastTest {
      */
     private void configureNamespace() {
         assertNotNull("namespaceId must be set", namespaceId);
+        assertNotNull("udf must be loaded", udf);
         NamespaceConfig nsc = new NamespaceConfig().setName(namespaceId).addClass(udf);
         targetInstance.getConfig().getNamespacesConfig()
                 .addNamespaceConfig(nsc);

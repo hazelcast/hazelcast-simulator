@@ -11,19 +11,16 @@ import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.tests.ucd.UCDTest;
 
-import java.util.concurrent.atomic.AtomicLong;
-
 import static org.junit.Assert.assertEquals;
 
 public class TestUserCodeWithIMapPredicate extends UCDTest {
 
     // properties
-    public int keyCount = 1;
+    public int keyCount = 10000;
     public KeyLocality keyLocality = KeyLocality.SHARED;
 
     private IMap<Integer, Integer> map;
     private IList<Long> resultsPerWorker;
-    private final AtomicLong localReturns = new AtomicLong(0);
 
     @Override
     @Setup
@@ -45,14 +42,14 @@ public class TestUserCodeWithIMapPredicate extends UCDTest {
         int returnSize =
                 map.values((Predicate<Integer, Integer>) udf.getDeclaredConstructor()
                         .newInstance()).size();
-        localReturns.addAndGet(returnSize);
+        resultsPerWorker.add((long) returnSize);
     }
 
     @Verify
     public void verify() {
         int failures = 0;
         for (Long result : resultsPerWorker) {
-            if (result % 500 != 0) {
+            if (result % 5000 != 0) {
                 failures++;
             }
         }
