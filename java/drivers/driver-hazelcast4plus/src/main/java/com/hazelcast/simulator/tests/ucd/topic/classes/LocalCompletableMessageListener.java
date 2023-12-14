@@ -18,17 +18,17 @@ package com.hazelcast.simulator.tests.ucd.topic.classes;
 import com.hazelcast.topic.Message;
 import com.hazelcast.topic.MessageListener;
 
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Phaser;
 
 public class LocalCompletableMessageListener<T> implements MessageListener<T> {
-    private final CompletableFuture<T> future;
+    private final Phaser phaser;
 
-    public LocalCompletableMessageListener(CompletableFuture<T> future) {
-        this.future = future;
+    public LocalCompletableMessageListener(Phaser phaser) {
+        this.phaser = phaser;
     }
 
     @Override
     public void onMessage(Message<T> message) {
-        future.complete(message.getMessageObject());
+        phaser.arriveAndDeregister();
     }
 }

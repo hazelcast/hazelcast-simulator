@@ -15,46 +15,60 @@
  */
 package com.hazelcast.simulator.tests.ucd.topic;
 
-import com.hazelcast.simulator.test.annotations.AfterRun;
-import com.hazelcast.simulator.test.annotations.BeforeRun;
-import com.hazelcast.simulator.test.annotations.Setup;
-import com.hazelcast.simulator.test.annotations.TimeStep;
+import com.hazelcast.simulator.probes.LatencyProbe;
+import com.hazelcast.simulator.test.annotations.Run;
+import com.hazelcast.simulator.tests.helpers.KeyLocality;
+import com.hazelcast.simulator.tests.helpers.KeyUtils;
 import com.hazelcast.simulator.tests.ucd.UCDTest;
+import com.hazelcast.simulator.utils.ThreadSpawner;
 import com.hazelcast.topic.ITopic;
 import com.hazelcast.topic.MessageListener;
 
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Phaser;
 
 public class TestUCDWithTopicMessageListener extends UCDTest {
-    private ITopic<Object> topic;
+    /**
+     * If you push the {@link ITopic} to breaking point, messages are dropped and throughput is no longer properly measurable
+     */
+    int concurrency = 1000;
 
-    private CompletableFuture<Object> future;
-    private UUID listenerRegistration;
+    @Run
+    public void run() throws ReflectiveOperationException {
+        ThreadSpawner spawner = new ThreadSpawner(name);
 
-    @Override
-    @Setup
-    public void setUp() throws ReflectiveOperationException {
-        super.setUp();
-        topic = targetInstance.getReliableTopic(name);
+        for (Object key : KeyUtils.generateIntKeys(concurrency, KeyLocality.LOCAL, targetInstance)) {
+            spawner.spawn(new Task(key));
+        }
+
+        spawner.awaitCompletion();
     }
 
-    @BeforeRun
-    public void beforeRun() throws ReflectiveOperationException {
-        future = new CompletableFuture<>();
-        listenerRegistration = topic.addMessageListener(
-                (MessageListener<Object>) udf.getDeclaredConstructor(future.getClass()).newInstance(future));
-    }
+    private class Task implements Runnable {
+        private final Object key;
+        private final ITopic<Object> topic;
+        private final LatencyProbe probe = testContext.getLatencyProbe("foo");
+        private final Phaser phaser = new Phaser(1);
 
-    /** Measure how long it takes for a message to be sent & received */
-    @TimeStep
-    public void timeStep() {
-        topic.publish(Void.TYPE);
-        future.join();
-    }
+        private Task(Object key) throws ReflectiveOperationException {
+            this.key = key;
+            topic = targetInstance.getTopic(name + key);
 
-    @AfterRun
-    public void afterRun() {
-        topic.removeMessageListener(listenerRegistration);
+            topic.addMessageListener(
+                    (MessageListener<Object>) udf.getDeclaredConstructor(phaser.getClass()).newInstance(phaser));
+        }
+
+        /** Measure how long it takes for a message to be sent & received */
+        @Override
+        public void run() {
+            while (!testContext.isStopped()) {
+                phaser.register();
+                long startNanos = System.nanoTime();
+
+                topic.publish(key);
+                phaser.arriveAndAwaitAdvance();
+
+                probe.recordValue(System.nanoTime() - startNanos);
+            }
+        }
     }
 }
