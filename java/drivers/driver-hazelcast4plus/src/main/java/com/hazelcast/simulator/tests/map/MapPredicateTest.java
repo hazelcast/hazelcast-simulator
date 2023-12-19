@@ -127,32 +127,32 @@ public class MapPredicateTest extends HazelcastTest {
         updateStats(state, startMs);
     }
 
-//    @TimeStep(prob = 0.2)
-//    public void pagePredicate(ThreadState state) {
-//        double maxSalary = state.randomDouble() * Employee.MAX_SALARY;
-//        Predicate predicate = Predicates.lessThan("salary", maxSalary);
-//        SalaryComparator salaryComparator = new SalaryComparator();
-//        PagingPredicate pagingPredicate = new PagingPredicateImpl(predicate, salaryComparator, pageSize, null);
-//
-//        Collection<Employee> employees;
-//        List<Employee> employeeList;
-//        do {
-//            employees = map.values(pagingPredicate);
-//            employeeList = fillListWithQueryResultSet(employees);
-//            Employee nextEmployee;
-//            Employee currentEmployee;
-//            for (int i = 0; i < employeeList.size() - 1; i++) {
-//                currentEmployee = employeeList.get(i);
-//                nextEmployee = employeeList.get(i + 1);
-//                // check the order & max salary
-//                assertTrue(format(baseAssertMessage, currentEmployee.getSalary(), predicate),
-//                        currentEmployee.getSalary() <= nextEmployee.getSalary() && nextEmployee.getSalary() < maxSalary);
-//            }
-//            pagingPredicate.nextPage();
-//        } while (!employees.isEmpty());
-//
-//        state.operationCounter.pagePredicateCount++;
-//    }
+    @TimeStep(prob = 0.2)
+    public void pagePredicate(ThreadState state) {
+        double maxSalary = state.randomDouble() * Employee.MAX_SALARY;
+        Predicate predicate = Predicates.lessThan("salary", maxSalary);
+        SalaryComparator salaryComparator = new SalaryComparator();
+        PagingPredicate pagingPredicate = new PagingPredicateImpl(predicate, salaryComparator, pageSize, null);
+
+        Collection<Employee> employees;
+        List<Employee> employeeList;
+        do {
+            employees = map.values(pagingPredicate);
+            employeeList = fillListWithQueryResultSet(employees);
+            Employee nextEmployee;
+            Employee currentEmployee;
+            for (int i = 0; i < employeeList.size() - 1; i++) {
+                currentEmployee = employeeList.get(i);
+                nextEmployee = employeeList.get(i + 1);
+                // check the order & max salary
+                assertTrue(format(baseAssertMessage, currentEmployee.getSalary(), predicate),
+                        currentEmployee.getSalary() <= nextEmployee.getSalary() && nextEmployee.getSalary() < maxSalary);
+            }
+            pagingPredicate.nextPage();
+        } while (!employees.isEmpty());
+
+        state.operationCounter.pagePredicateCount++;
+    }
 
     private List<Employee> fillListWithQueryResultSet(Iterable<Employee> iterable) {
         List<Employee> list = new ArrayList<>();
