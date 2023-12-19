@@ -1,11 +1,8 @@
 package com.hazelcast.simulator.tests.ucd;
 
-import com.hazelcast.config.NamespaceConfig;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.annotations.Setup;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 
@@ -64,6 +61,7 @@ public class UCDTest extends HazelcastTest {
      *
      * @throws ClassNotFoundException if udf not found.
      */
+    @SuppressWarnings("resource")
     private void loadUDF() throws ClassNotFoundException {
         assertNotNull("classDir must be set", classDir);
         assertNotNull("className must be set", className);
@@ -81,8 +79,9 @@ public class UCDTest extends HazelcastTest {
     private void configureNamespace() {
         assertNotNull("namespaceId must be set", namespaceId);
         assertNotNull("udf must be loaded", udf);
-        NamespaceConfig nsc = new NamespaceConfig().setName(namespaceId).addClass(udf);
-        targetInstance.getConfig().getNamespacesConfig()
-                .addNamespaceConfig(nsc);
+//        NamespaceConfig nsc = new NamespaceConfig().setName(namespaceId).addClass(udf);
+//        targetInstance.getConfig().getNamespacesConfig()
+//                .addNamespaceConfig(nsc);
+        throw new IllegalArgumentException("UCD not supported in this version of Hazelcast!");
     }
 }
