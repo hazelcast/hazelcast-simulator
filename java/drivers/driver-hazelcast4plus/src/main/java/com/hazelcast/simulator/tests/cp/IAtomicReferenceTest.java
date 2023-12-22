@@ -31,6 +31,9 @@ public class IAtomicReferenceTest extends HazelcastTest {
     public int valueSize = 1;
     // the number of IAtomicReferences
     public int referenceCount = 1;
+    // the number of CPGroups. 0 means that the default CPGroup is used.
+    // The AtomicRefs will be placed over the different CPGroups in round robin fashion.
+    public int cpGroupCount = 0;
 
     private IAtomicReference<String>[] references;
     private String value; // this is always the value of [atomicReference]; before + after, irrespective of the op
@@ -43,53 +46,56 @@ public class IAtomicReferenceTest extends HazelcastTest {
 
         references = new IAtomicReference[referenceCount];
         for (int k = 0; k < referenceCount; k++) {
-            references[k] = cpSubsystem.getAtomicReference(value);
+            String cpGroupString = cpGroupCount == 0
+                    ? ""
+                    : "@" + (k % cpGroupCount);
+            references[k] = cpSubsystem.getAtomicReference("ref-"+k + cpGroupString);
         }
     }
 
     @Prepare(global = true)
     public void prepare() {
-        for (IAtomicReference<String> ref : references) {
-            ref.set(value);
+        for (IAtomicReference<String> reference : references) {
+            reference.set(value);
         }
     }
 
     @TimeStep(prob = 0)
     public String get(ThreadState state) {
-        IAtomicReference<String> ref = state.randomRef();
-        return ref.get();
+        IAtomicReference<String> reference = state.randomRef();
+        return reference.get();
     }
 
     @TimeStep(prob = 1)
     public void set(ThreadState state) {
-        IAtomicReference<String> ref = state.randomRef();
-        ref.set(value);
+        IAtomicReference<String> reference = state.randomRef();
+        reference.set(value);
     }
 
     @TimeStep(prob = 0)
     public void alter(ThreadState state) {
-        IAtomicReference<String> ref = state.randomRef();
-        ref.alter(state.identity);
+        IAtomicReference<String> reference = state.randomRef();
+        reference.alter(state.identity);
     }
 
     @TimeStep(prob = 0)
     public boolean cas(ThreadState state) {
-        IAtomicReference<String> ref = state.randomRef();
-        return ref.compareAndSet(value, value);
+        IAtomicReference<String> reference = state.randomRef();
+        return reference.compareAndSet(value, value);
     }
 
     @TimeStep(prob = 0)
     public void casOptimisticConcurrencyControl(ThreadState state) {
-        IAtomicReference<String> ref = state.randomRef();
+        IAtomicReference<String> reference = state.randomRef();
 
         // todo: what is the point of the loop? It will always succeed because there is just a single value.
         // So the performance will be exactly the same as the cas timestep method.
         String observed;
         String newValue;
         do {
-            observed = ref.get(); // because we're modelling the pattern -- we know it's [v]...
+            observed = reference.get(); // because we're modelling the pattern -- we know it's [v]...
             newValue = observed;
-        } while (!ref.compareAndSet(observed, newValue));
+        } while (!reference.compareAndSet(observed, newValue));
     }
 
     public class ThreadState extends BaseThreadState {
