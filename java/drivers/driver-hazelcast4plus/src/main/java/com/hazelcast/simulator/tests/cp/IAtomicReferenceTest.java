@@ -23,28 +23,31 @@ import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.utils.GeneratorUtils;
 
+import java.util.UUID;
+
 public class IAtomicReferenceTest extends HazelcastTest {
-    public int keyValueSizeKb = 1;
+    public int keySizeBytes = 128;
+    public int valueSizeBytes = 1024;
     private IAtomicReference<String> atomicReference;
 
     private String v; // this is always the value of [atomicReference]; before + after, irrespective of the op
 
     @Setup
     public void setup() {
-        String kv = createString(keyValueSizeKb);
-        v = kv;
-        atomicReference = targetInstance.getCPSubsystem().getAtomicReference(kv);
+        String k = GeneratorUtils.generateAsciiString(keySizeBytes);
+        v = GeneratorUtils.generateAsciiString(valueSizeBytes);
+        atomicReference = targetInstance.getCPSubsystem().getAtomicReference(k);
         atomicReference.set(v);
-    }
-
-    String createString(int kb) {
-        int bytes = kb * 1024;
-        return GeneratorUtils.generateAsciiString(bytes);
     }
 
     @TimeStep(prob = 1)
     public void set(ThreadState state) {
-        atomicReference.set(atomicReference.getName());
+        atomicReference.set(v);
+    }
+
+    @TimeStep(prob = 0)
+    public void get(ThreadState state) {
+        atomicReference.get();
     }
 
     @TimeStep(prob = 0)
@@ -65,6 +68,17 @@ public class IAtomicReferenceTest extends HazelcastTest {
             observed = atomicReference.get(); // because we're modelling the pattern -- we know it's [v]...
             newValue = observed;
         } while (!atomicReference.compareAndSet(observed, newValue));
+    }
+
+    @TimeStep(prob = 0)
+    public void createThenDelete(ThreadState state) {
+        // there's no notion of a delete, therefore we destroy -- this test is somewhat polluted by the key generation but so is
+        // the CPMap variant, therefore equally polluted. We create in default CP group as it's already created in the setup.
+        // use uuid because we don't want collision as it will throw
+        String key = UUID.randomUUID().toString();
+        IAtomicReference<String> ar = targetInstance.getCPSubsystem().getAtomicReference(key);
+        ar.set(v);
+        ar.destroy();
     }
 
     public class ThreadState extends BaseThreadState {
