@@ -94,9 +94,16 @@ public class UCDTest extends HazelcastTest {
     private void configureNamespace() {
         assertNotNull("namespaceId must be set", namespaceId);
         assertNotNull("udf must be loaded", udf);
+
+        // TODO Ensure this is configured appropriately for the desired test scenario
+
+        // For <5.4, NamespaceConfig doesn't exist so even unused programmatic configuration would prevent compilation
+        // As such commented out, with exception to assert that testing of this functionality is not being attempted
+        throw new IllegalArgumentException("UCD not supported in this version of Hazelcast!");
+
+        // For >=5.4, this should be uncommented instead to allow the framework to control configuration
 //        NamespaceConfig nsc = new NamespaceConfig().setName(namespaceId).addClass(udf);
 //        targetInstance.getConfig().getNamespacesConfig()
 //                .addNamespaceConfig(nsc);
-        throw new IllegalArgumentException("UCD not supported in this version of Hazelcast!");
     }
 }
