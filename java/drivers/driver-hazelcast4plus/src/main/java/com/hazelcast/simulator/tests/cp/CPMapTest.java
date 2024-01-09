@@ -18,6 +18,7 @@ package com.hazelcast.simulator.tests.cp;
 import com.hazelcast.cp.CPMap;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
+import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.utils.GeneratorUtils;
@@ -28,20 +29,30 @@ import java.util.UUID;
  * Note that these tests are designed to be run in isolation w.r.t. one another.
  */
 public class CPMapTest extends HazelcastTest {
-    public int keySizeBytes = 128;
+    // number of distinct keys to create and use during the tests
+    public int distinctKeys = 1;
+    // size in bytes for each key's value
     public int valueSizeBytes = 1024;
+    private String[] keys;
     private CPMap<String, String> map;
 
-    private String k;
-    private String v; // this is always the value associated with 'k'; exception is remove and delete
+    private String v; // this is always the value associated with any key; exception is remove and delete
 
 
     @Setup
     public void setup() {
-        k = createString(keySizeBytes);
         v = createString(valueSizeBytes);
         map = targetInstance.getCPSubsystem().getMap("map");
-        map.set(k, v);
+        for (int i = 0; i < distinctKeys; i++) {
+            keys[i] = UUID.randomUUID().toString();
+        }
+    }
+
+    @Prepare(global = true)
+    public void prepare() {
+        for (String key : keys) {
+            map.set(key, v);
+        }
     }
 
     String createString(int bytes) {
@@ -51,17 +62,17 @@ public class CPMapTest extends HazelcastTest {
 
     @TimeStep(prob = 1)
     public void set(ThreadState state) {
-        map.set(k, v);
+        map.set(state.randomKey(), v);
     }
 
     @TimeStep(prob = 0)
     public String put(ThreadState state) {
-        return map.put(k, v);
+        return map.put(state.randomKey(), v);
     }
 
     @TimeStep(prob = 0)
     public String get(ThreadState state) {
-        return map.get(k);
+        return map.get(state.randomKey());
     }
 
     // 'remove' and 'delete' other than their first invocation pointless -- we're just timing the logic that underpins the
@@ -69,27 +80,30 @@ public class CPMapTest extends HazelcastTest {
 
     @TimeStep(prob = 0)
     public String remove(ThreadState state) {
-        return map.remove(k);
+        return map.remove(state.randomKey());
     }
 
     @TimeStep(prob = 0)
     public void delete(ThreadState state) {
-        map.delete(k);
+        map.delete(state.randomKey());
     }
 
     @TimeStep(prob = 0)
     public boolean cas(ThreadState state) {
         // 'v' is always associated with 'k'
-        return map.compareAndSet(k, v, v);
+        return map.compareAndSet(state.randomKey(), v, v);
     }
 
     @TimeStep(prob = 0)
     public void createThenDelete(ThreadState state) {
-        String key = UUID.randomUUID().toString();
+        String key = state.randomKey();
         map.set(key, v);
         map.delete(key);
     }
 
     public class ThreadState extends BaseThreadState {
+        public String randomKey() {
+            return keys[randomInt(distinctKeys)];
+        }
     }
 }
