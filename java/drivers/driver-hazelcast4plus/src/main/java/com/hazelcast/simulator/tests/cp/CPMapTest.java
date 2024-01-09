@@ -55,21 +55,21 @@ public class CPMapTest extends HazelcastTest {
     }
 
     @TimeStep(prob = 0)
-    public void put(ThreadState state) {
-        map.put(k, v);
+    public String put(ThreadState state) {
+        return map.put(k, v);
     }
 
     @TimeStep(prob = 0)
-    public void get(ThreadState state) {
-        map.get(k);
+    public String get(ThreadState state) {
+        return map.get(k);
     }
 
     // 'remove' and 'delete' other than their first invocation pointless -- we're just timing the logic that underpins the
     // retrieval of no value.
 
     @TimeStep(prob = 0)
-    public void remove(ThreadState state) {
-        map.remove(k);
+    public String remove(ThreadState state) {
+        return map.remove(k);
     }
 
     @TimeStep(prob = 0)
@@ -78,9 +78,9 @@ public class CPMapTest extends HazelcastTest {
     }
 
     @TimeStep(prob = 0)
-    public void cas(ThreadState state) {
+    public boolean cas(ThreadState state) {
         // 'v' is always associated with 'k'
-        map.compareAndSet(k, v, v);
+        return map.compareAndSet(k, v, v);
     }
 
     @TimeStep(prob = 0)
