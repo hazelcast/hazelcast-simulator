@@ -23,26 +23,47 @@ import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.utils.GeneratorUtils;
 
+import java.util.ArrayList;
 import java.util.UUID;
+import java.util.List;
 
-/**
- * Note that these tests are designed to be run in isolation w.r.t. one another.
- */
 public class CPMapTest extends HazelcastTest {
-    // number of distinct keys to create and use during the tests
+    // number of cp groups to host the created maps; this should be <= distinctMaps. In the case when cpGroups < distinctMaps,
+    // then maps will be allocated iteratively, e.g. 'cpGroups==2 && distinctMaps==3', then one of the cp groups will host two
+    // maps and the other one, or 'cpGroups==1 && distinctMaps==3' will see 3 maps hosted in a single cp group, and so on.
+    public int cpGroups = 1;
+    // number of maps to create and use during the tests
+    public int distinctMaps = 1;
+    // number of distinct keys to create and use per-map
     public int distinctKeys = 1;
     // size in bytes for each key's value
     public int valueSizeBytes = 1024;
     private String[] keys;
-    private CPMap<String, String> map;
+    private List<CPMap<String, String>> maps;
 
     private String v; // this is always the value associated with any key; exception is remove and delete
 
 
     @Setup
     public void setup() {
-        v = createString(valueSizeBytes);
-        map = targetInstance.getCPSubsystem().getMap("map");
+        v = GeneratorUtils.generateAsciiString(valueSizeBytes);
+
+        // (1) create the cp groups names that will host the maps
+        String[] cpGroupNames = new String[cpGroups];
+        for (int i = 0; i < cpGroups; i++) {
+            cpGroupNames[i] = "cpgroup-" + i;
+        }
+
+        // (2) create the map names + associated proxies (maps aren't created until you actually interface with them)
+        maps = new ArrayList<>();
+        for (int i = 0; i < distinctMaps; i++) {
+            String cpGroup = cpGroupNames[i % cpGroups];
+            String mapName = "map" + i + "@" + cpGroup;
+            maps.add(targetInstance.getCPSubsystem().getMap(mapName));
+        }
+
+        // (3) create the keys that each map will entail
+        keys = new String[distinctKeys];
         for (int i = 0; i < distinctKeys; i++) {
             keys[i] = UUID.randomUUID().toString();
         }
@@ -50,29 +71,26 @@ public class CPMapTest extends HazelcastTest {
 
     @Prepare(global = true)
     public void prepare() {
-        for (String key : keys) {
-            map.set(key, v);
+        for (CPMap<String, String> map : maps) {
+            for (String key : keys) {
+                map.set(key, v);
+            }
         }
-    }
-
-    String createString(int bytes) {
-        // as it's ascii
-        return GeneratorUtils.generateAsciiString(bytes);
     }
 
     @TimeStep(prob = 1)
     public void set(ThreadState state) {
-        map.set(state.randomKey(), v);
+        state.randomMap().set(state.randomKey(), v);
     }
 
     @TimeStep(prob = 0)
     public String put(ThreadState state) {
-        return map.put(state.randomKey(), v);
+        return state.randomMap().put(state.randomKey(), v);
     }
 
     @TimeStep(prob = 0)
     public String get(ThreadState state) {
-        return map.get(state.randomKey());
+        return state.randomMap().get(state.randomKey());
     }
 
     // 'remove' and 'delete' other than their first invocation pointless -- we're just timing the logic that underpins the
@@ -80,22 +98,23 @@ public class CPMapTest extends HazelcastTest {
 
     @TimeStep(prob = 0)
     public String remove(ThreadState state) {
-        return map.remove(state.randomKey());
+        return state.randomMap().remove(state.randomKey());
     }
 
     @TimeStep(prob = 0)
     public void delete(ThreadState state) {
-        map.delete(state.randomKey());
+        state.randomMap().delete(state.randomKey());
     }
 
     @TimeStep(prob = 0)
     public boolean cas(ThreadState state) {
         // 'v' is always associated with 'k'
-        return map.compareAndSet(state.randomKey(), v, v);
+        return state.randomMap().compareAndSet(state.randomKey(), v, v);
     }
 
     @TimeStep(prob = 0)
     public void createThenDelete(ThreadState state) {
+        CPMap<String, String> map = state.randomMap();
         String key = state.randomKey();
         map.set(key, v);
         map.delete(key);
@@ -104,6 +123,10 @@ public class CPMapTest extends HazelcastTest {
     public class ThreadState extends BaseThreadState {
         public String randomKey() {
             return keys[randomInt(distinctKeys)];
+        }
+
+        public CPMap<String, String> randomMap() {
+            return maps.get(randomInt(distinctMaps));
         }
     }
 }
