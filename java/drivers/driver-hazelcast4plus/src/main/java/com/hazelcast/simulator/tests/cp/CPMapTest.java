@@ -24,7 +24,6 @@ import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.utils.GeneratorUtils;
 
 import java.util.ArrayList;
-import java.util.UUID;
 import java.util.List;
 
 public class CPMapTest extends HazelcastTest {
@@ -33,12 +32,11 @@ public class CPMapTest extends HazelcastTest {
     public int cpGroups = 1;
     // number of distinct maps to create and use during the tests
     public int maps = 1;
-    // number of distinct keys to create and use per-map; a key is a string rendered UUID
+    // number of distinct keys to create and use per-map; key domain is [0, keys)
     public int keys = 1;
     // size in bytes for each key's associated value
-    public int valueSizeBytes = 1024;
-    private String[] keyReferences;
-    private List<CPMap<String, String>> mapReferences;
+    public int valueSizeBytes = 100;
+    private List<CPMap<Integer, String>> mapReferences;
 
     private String v; // this is always the value associated with any key; exception is remove and delete
 
@@ -60,19 +58,13 @@ public class CPMapTest extends HazelcastTest {
             String mapName = "map" + i + "@" + cpGroup;
             mapReferences.add(targetInstance.getCPSubsystem().getMap(mapName));
         }
-
-        // (3) create the keys that each map will entail
-        keyReferences = new String[keys];
-        for (int i = 0; i < keys; i++) {
-            keyReferences[i] = UUID.randomUUID().toString();
-        }
     }
 
     @Prepare(global = true)
     public void prepare() {
-        for (CPMap<String, String> mapReference : mapReferences) {
-            for (String keyReference : keyReferences) {
-                mapReference.set(keyReference, v);
+        for (CPMap<Integer, String> mapReference : mapReferences) {
+            for (int key = 0; key < keys; key++) {
+                mapReference.set(key, v);
             }
         }
     }
@@ -113,18 +105,18 @@ public class CPMapTest extends HazelcastTest {
 
     @TimeStep(prob = 0)
     public void createThenDelete(ThreadState state) {
-        CPMap<String, String> map = state.randomMap();
-        String key = state.randomKey();
+        CPMap<Integer, String> map = state.randomMap();
+        int key = state.randomKey();
         map.set(key, v);
         map.delete(key);
     }
 
     public class ThreadState extends BaseThreadState {
-        public String randomKey() {
-            return keyReferences[randomInt(keys)];
+        public int randomKey() {
+            return randomInt(keys); // [0, keys)
         }
 
-        public CPMap<String, String> randomMap() {
+        public CPMap<Integer, String> randomMap() {
             return mapReferences.get(randomInt(maps));
         }
     }
