@@ -16,58 +16,94 @@
 package com.hazelcast.simulator.tests.cp;
 
 import com.hazelcast.core.IFunction;
+import com.hazelcast.cp.CPSubsystem;
 import com.hazelcast.cp.IAtomicReference;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
+import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.TimeStep;
-import com.hazelcast.simulator.utils.GeneratorUtils;
+
+import static com.hazelcast.simulator.utils.GeneratorUtils.generateAsciiString;
 
 public class IAtomicReferenceTest extends HazelcastTest {
-    public int keyValueSizeKb = 1;
-    private IAtomicReference<String> atomicReference;
+    //the size of the value in bytes.
+    public int valueSize = 1;
+    // the number of IAtomicReferences
+    public int referenceCount = 1;
+    // the number of CPGroups. 0 means that the default CPGroup is used.
+    // The AtomicRefs will be placed over the different CPGroups in round robin fashion.
+    public int cpGroupCount = 0;
 
-    private String v; // this is always the value of [atomicReference]; before + after, irrespective of the op
+    private IAtomicReference<String>[] references;
+    private String value; // this is always the value of [atomicReference]; before + after, irrespective of the op
 
     @Setup
     public void setup() {
-        String kv = createString(keyValueSizeKb);
-        v = kv;
-        atomicReference = targetInstance.getCPSubsystem().getAtomicReference(kv);
-        atomicReference.set(v);
+        value = generateAsciiString(valueSize);
+
+        CPSubsystem cpSubsystem = targetInstance.getCPSubsystem();
+
+        references = new IAtomicReference[referenceCount];
+        for (int k = 0; k < referenceCount; k++) {
+            String cpGroupString = cpGroupCount == 0
+                    ? ""
+                    : "@" + (k % cpGroupCount);
+            references[k] = cpSubsystem.getAtomicReference("ref-"+k + cpGroupString);
+        }
     }
 
-    String createString(int kb) {
-        int bytes = kb * 1024;
-        return GeneratorUtils.generateAsciiString(bytes);
+    @Prepare(global = true)
+    public void prepare() {
+        for (IAtomicReference<String> reference : references) {
+            reference.set(value);
+        }
+    }
+
+    @TimeStep(prob = 0)
+    public String get(ThreadState state) {
+        IAtomicReference<String> reference = state.randomRef();
+        return reference.get();
     }
 
     @TimeStep(prob = 1)
     public void set(ThreadState state) {
-        atomicReference.set(atomicReference.getName());
+        IAtomicReference<String> reference = state.randomRef();
+        reference.set(value);
     }
 
     @TimeStep(prob = 0)
     public void alter(ThreadState state) {
-        atomicReference.alter(state.identity);
+        IAtomicReference<String> reference = state.randomRef();
+        reference.alter(state.identity);
     }
 
     @TimeStep(prob = 0)
     public boolean cas(ThreadState state) {
-        return atomicReference.compareAndSet(v, v);
+        IAtomicReference<String> reference = state.randomRef();
+        return reference.compareAndSet(value, value);
     }
 
     @TimeStep(prob = 0)
     public void casOptimisticConcurrencyControl(ThreadState state) {
+        IAtomicReference<String> reference = state.randomRef();
+
+        // todo: what is the point of the loop? It will always succeed because there is just a single value.
+        // So the performance will be exactly the same as the cas timestep method.
         String observed;
         String newValue;
         do {
-            observed = atomicReference.get(); // because we're modelling the pattern -- we know it's [v]...
+            observed = reference.get(); // because we're modelling the pattern -- we know it's [v]...
             newValue = observed;
-        } while (!atomicReference.compareAndSet(observed, newValue));
+        } while (!reference.compareAndSet(observed, newValue));
     }
 
     public class ThreadState extends BaseThreadState {
+
+        public IAtomicReference<String> randomRef() {
+            return references[randomInt(referenceCount)];
+        }
+
         final IFunction<String, String> identity = s -> s;
     }
 }
