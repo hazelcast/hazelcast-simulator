@@ -28,18 +28,17 @@ import java.util.UUID;
 import java.util.List;
 
 public class CPMapTest extends HazelcastTest {
-    // number of cp groups to host the created maps; this should be <= distinctMaps. In the case when cpGroups < distinctMaps,
-    // then maps will be allocated iteratively, e.g. 'cpGroups==2 && distinctMaps==3', then one of the cp groups will host two
-    // maps and the other one, or 'cpGroups==1 && distinctMaps==3' will see 3 maps hosted in a single cp group, and so on.
+    // number of cp groups to host the created maps; if (distinctMaps % maps) == 0 then there's a uniform distribution of maps
+    // over cp groups, otherwise maps are allocated per-cp group in a RR-fashion.
     public int cpGroups = 1;
-    // number of maps to create and use during the tests
-    public int distinctMaps = 1;
-    // number of distinct keys to create and use per-map
-    public int distinctKeys = 1;
-    // size in bytes for each key's value
+    // number of distinct maps to create and use during the tests
+    public int maps = 1;
+    // number of distinct keys to create and use per-map; a key is a string rendered UUID
+    public int keys = 1;
+    // size in bytes for each key's associated value
     public int valueSizeBytes = 1024;
-    private String[] keys;
-    private List<CPMap<String, String>> maps;
+    private String[] keyReferences;
+    private List<CPMap<String, String>> mapReferences;
 
     private String v; // this is always the value associated with any key; exception is remove and delete
 
@@ -55,25 +54,25 @@ public class CPMapTest extends HazelcastTest {
         }
 
         // (2) create the map names + associated proxies (maps aren't created until you actually interface with them)
-        maps = new ArrayList<>();
-        for (int i = 0; i < distinctMaps; i++) {
+        mapReferences = new ArrayList<>();
+        for (int i = 0; i < maps; i++) {
             String cpGroup = cpGroupNames[i % cpGroups];
             String mapName = "map" + i + "@" + cpGroup;
-            maps.add(targetInstance.getCPSubsystem().getMap(mapName));
+            mapReferences.add(targetInstance.getCPSubsystem().getMap(mapName));
         }
 
         // (3) create the keys that each map will entail
-        keys = new String[distinctKeys];
-        for (int i = 0; i < distinctKeys; i++) {
-            keys[i] = UUID.randomUUID().toString();
+        keyReferences = new String[keys];
+        for (int i = 0; i < keys; i++) {
+            keyReferences[i] = UUID.randomUUID().toString();
         }
     }
 
     @Prepare(global = true)
     public void prepare() {
-        for (CPMap<String, String> map : maps) {
-            for (String key : keys) {
-                map.set(key, v);
+        for (CPMap<String, String> mapReference : mapReferences) {
+            for (String keyReference : keyReferences) {
+                mapReference.set(keyReference, v);
             }
         }
     }
@@ -122,11 +121,11 @@ public class CPMapTest extends HazelcastTest {
 
     public class ThreadState extends BaseThreadState {
         public String randomKey() {
-            return keys[randomInt(distinctKeys)];
+            return keyReferences[randomInt(keys)];
         }
 
         public CPMap<String, String> randomMap() {
-            return maps.get(randomInt(distinctMaps));
+            return mapReferences.get(randomInt(maps));
         }
     }
 }
