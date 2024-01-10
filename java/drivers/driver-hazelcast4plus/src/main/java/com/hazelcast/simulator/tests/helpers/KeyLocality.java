@@ -46,7 +46,7 @@ public enum KeyLocality {
     /**
      * Generates random generated keys.
      *
-     * Each worker will generate it own random set of keys, so it is very unlikely they are going to be shared. Also becase
+     * Each worker will generate it own random set of keys, so it is very unlikely they are going to be shared. Also because
      * each worker generates its own keys, the total size of key domain is 'load-generating-worker * keycount'.
      *
      * If you want to pound the same keys by all members, use {@link #SHARED}.
