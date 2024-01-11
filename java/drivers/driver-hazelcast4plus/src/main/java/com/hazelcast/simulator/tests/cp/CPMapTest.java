@@ -28,8 +28,9 @@ import java.util.List;
 
 public class CPMapTest extends HazelcastTest {
     // number of cp groups to host the created maps; if (distinctMaps % maps) == 0 then there's a uniform distribution of maps
-    // over cp groups, otherwise maps are allocated per-cp group in a RR-fashion.
-    public int cpGroups = 1;
+    // over cp groups, otherwise maps are allocated per-cp group in a RR-fashion. If cpGroups == 0 then all CPMap instances will
+    // be hosted by the default CPGroup. When cpGroups > 0, we create and host CPMaps across non-default CP Groups.
+    public int cpGroups = 0;
     // number of distinct maps to create and use during the tests
     public int maps = 1;
     // number of distinct keys to create and use per-map; key domain is [0, keys)
@@ -45,19 +46,27 @@ public class CPMapTest extends HazelcastTest {
     public void setup() {
         v = GeneratorUtils.generateAsciiString(valueSizeBytes);
 
-        // (1) create the cp groups names that will host the maps
+        // (1) create the cp group names that will host the maps
+        String[] cpGroupNames = createCpGroupNames();
+        // (2) create the map names + associated proxies (maps aren't created until you actually interface with them)
+        mapReferences = new ArrayList<>();
+        for (int i = 0; i < maps; i++) {
+            String cpGroup = cpGroupNames[i % cpGroupNames.length];
+            String mapName = "map" + i + "@" + cpGroup;
+            mapReferences.add(targetInstance.getCPSubsystem().getMap(mapName));
+        }
+    }
+
+    private String[] createCpGroupNames() {
+        if (cpGroups == 0) {
+            return new String[]{"default"};
+        }
+
         String[] cpGroupNames = new String[cpGroups];
         for (int i = 0; i < cpGroups; i++) {
             cpGroupNames[i] = "cpgroup-" + i;
         }
-
-        // (2) create the map names + associated proxies (maps aren't created until you actually interface with them)
-        mapReferences = new ArrayList<>();
-        for (int i = 0; i < maps; i++) {
-            String cpGroup = cpGroupNames[i % cpGroups];
-            String mapName = "map" + i + "@" + cpGroup;
-            mapReferences.add(targetInstance.getCPSubsystem().getMap(mapName));
-        }
+        return cpGroupNames;
     }
 
     @Prepare(global = true)
@@ -104,7 +113,7 @@ public class CPMapTest extends HazelcastTest {
     }
 
     @TimeStep(prob = 0)
-    public void createThenDelete(ThreadState state) {
+    public void setThenDelete(ThreadState state) {
         CPMap<Integer, String> map = state.randomMap();
         int key = state.randomKey();
         map.set(key, v);
