@@ -47,8 +47,8 @@ public class IAtomicReferenceTest extends HazelcastTest {
         references = new IAtomicReference[referenceCount];
         for (int k = 0; k < referenceCount; k++) {
             String cpGroupString = cpGroupCount == 0
-                                           ? ""
-                                           : "@" + (k % cpGroupCount);
+                    ? ""
+                    : "@" + (k % cpGroupCount);
             references[k] = cpSubsystem.getAtomicReference("ref-"+k + cpGroupString);
         }
     }
