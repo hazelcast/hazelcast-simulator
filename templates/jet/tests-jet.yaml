@@ -1,0 +1,172 @@
+- name: defaultSettings
+  repetitions: -1
+  def: &defaults
+    duration: 120s
+    repetitions: 1
+    clients: 4
+    members: 1
+    driver: hazelcast5
+    version: maven=5.4.0-SNAPSHOT
+#    version: maven=5.3.6
+    client_args: >
+      -Xms3g
+      -Xmx3g
+      --add-modules java.se 
+      --add-exports java.base/jdk.internal.ref=ALL-UNNAMED 
+      --add-opens java.base/java.lang=ALL-UNNAMED 
+      --add-opens java.base/sun.nio.ch=ALL-UNNAMED 
+      --add-opens java.management/sun.management=ALL-UNNAMED 
+      --add-opens jdk.management/com.sun.management.internal=ALL-UNNAMED
+    member_args: >
+      -Xms3g
+      -Xmx3g
+      --add-modules java.se 
+      --add-exports java.base/jdk.internal.ref=ALL-UNNAMED 
+      --add-opens java.base/java.lang=ALL-UNNAMED 
+      --add-opens java.base/sun.nio.ch=ALL-UNNAMED 
+      --add-opens java.management/sun.management=ALL-UNNAMED 
+      --add-opens jdk.management/com.sun.management.internal=ALL-UNNAMED
+      -Dhazelcast.clientengine.query.thread.count=10000
+    loadgenerator_hosts: loadgenerators
+    node_hosts: nodes
+    verify_enabled: False
+    performance_monitor_interval_seconds: 1
+    warmup_seconds: 15
+    cooldown_seconds: 5
+
+#############################
+############### Light jobs
+#############################
+
+# 1. determine max throughput
+- name: light-stress-1m
+  <<: *defaults
+  test:
+    - class: com.hazelcast.simulator.tests.jet.JobOverheadTest
+      lightJobProb: 1
+      normalJobProb: 0
+      threadCount: 40
+      ratePerSecond: 7000
+      rampupSeconds: 100
+
+- name: light-stress-3m
+  <<: *defaults
+  members: 3
+  test:
+    - class: com.hazelcast.simulator.tests.jet.JobOverheadTest
+      lightJobProb: 1
+      normalJobProb: 0
+      threadCount: 40
+      ratePerSecond: 7000
+      rampupSeconds: 100
+
+
+# 2. latency for ~25% throughput
+
+# 5.3.6/1 member: max throughput ~12,900
+# 5.4 after changes/1 member: max throughput ~24600
+# 5.4 after changes/3 members: max throughput ~28000
+
+- name: light-latency-1m
+  <<: *defaults
+  test:
+    - class: com.hazelcast.simulator.tests.jet.JobOverheadTest
+      lightJobProb: 1
+      normalJobProb: 0
+      threadCount: 40
+      ratePerSecond: 1000
+
+- name: light-latency-3m
+  <<: *defaults
+  members: 3
+  test:
+    - class: com.hazelcast.simulator.tests.jet.JobOverheadTest
+      lightJobProb: 1
+      normalJobProb: 0
+      threadCount: 40
+      ratePerSecond: 1000
+
+# 3. throughput using less preferred method
+- name: light-throughput-1m
+  <<: *defaults
+  test:
+    - class: com.hazelcast.simulator.tests.jet.JobOverheadTest
+      lightJobProb: 1
+      normalJobProb: 0
+      threadCount: 40
+
+- name: light-throughput-3m
+  <<: *defaults
+  members: 3
+  test:
+    - class: com.hazelcast.simulator.tests.jet.JobOverheadTest
+      lightJobProb: 1
+      normalJobProb: 0
+      threadCount: 40
+
+#############################
+############### Normal jobs
+#############################
+# 1. determine max throughput
+- name: normal-stress-1m
+  <<: *defaults
+  test:
+    - class: com.hazelcast.simulator.tests.jet.JobOverheadTest
+      lightJobProb: 0
+      normalJobProb: 1
+      threadCount: 40
+      ratePerSecond: 2000
+      rampupSeconds: 100
+
+- name: normal-stress-3m
+  <<: *defaults
+  members: 3
+  test:
+    - class: com.hazelcast.simulator.tests.jet.JobOverheadTest
+      lightJobProb: 0
+      normalJobProb: 1
+      threadCount: 40
+      ratePerSecond: 2000
+      rampupSeconds: 100
+
+# 2. latency for ~25% throughput
+
+# 5.3.6/1 member: max throughput ~4,000
+# 5.3.6/3 member: max throughput ~1,100
+
+- name: normal-latency-1m
+  <<: *defaults
+  test:
+    - class: com.hazelcast.simulator.tests.jet.JobOverheadTest
+      lightJobProb: 0
+      normalJobProb: 1
+      threadCount: 40
+      ratePerSecond: 250
+
+- name: normal-latency-3m
+  <<: *defaults
+  members: 3
+  test:
+    - class: com.hazelcast.simulator.tests.jet.JobOverheadTest
+      lightJobProb: 0
+      normalJobProb: 1
+      threadCount: 40
+      ratePerSecond: 70
+
+# 3. throughput using less preferred method
+- name: normal-throughput-1m
+  <<: *defaults
+  test:
+    - class: com.hazelcast.simulator.tests.jet.JobOverheadTest
+      lightJobProb: 0
+      normalJobProb: 1
+      threadCount: 40
+
+- name: normal-throughput-3m
+  <<: *defaults
+  members: 3
+  test:
+    - class: com.hazelcast.simulator.tests.jet.JobOverheadTest
+      lightJobProb: 0
+      normalJobProb: 1
+      threadCount: 40
