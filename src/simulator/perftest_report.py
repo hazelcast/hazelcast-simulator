@@ -4,6 +4,7 @@
 import argparse
 import csv
 import glob
+import os.path
 import shutil
 
 from simulator.perftest_report_dstat import report_dstat, analyze_dstat
@@ -145,6 +146,8 @@ def collect_runs(benchmarks, config: ReportConfig):
             run_names[last_benchmark] = benchmark_arg[1:len(benchmark_arg) - 1]
             last_benchmark = None
         elif config.compare_last:
+            if config.long_label:
+                exit_with_error("cannot use --last with --longLabel")
             benchmark_root = benchmark_arg
             if not os.path.exists(benchmark_root):
                 exit_with_error("Directory '" + benchmark_root + "' does not exist!")
@@ -164,7 +167,11 @@ def collect_runs(benchmarks, config: ReportConfig):
 
             last_benchmark = benchmark_arg
             benchmark_dirs.append(run_dir)
-            run_names[run_dir] = os.path.basename(os.path.normpath(run_dir))
+            if config.long_label:
+                label_prefix = os.path.basename(os.path.dirname(os.path.normpath(run_dir))) + "@"
+            else:
+                label_prefix = ""
+            run_names[run_dir] = label_prefix + os.path.basename(os.path.normpath(run_dir))
 
     if len(run_names) == 0:
         exit_with_error("No runs were found")
@@ -216,6 +223,9 @@ class PerfTestReportCli:
         parser.add_argument('-l', '--last',
                             help='Compare last results from each benchmark',
                             action='store_true')
+        parser.add_argument('-ll', '--longLabel',
+                            help='Include benchmark name in run label',
+                            action='store_true')
         parser.add_argument('--width',
                             nargs=1,
                             default=[1600],
@@ -242,6 +252,7 @@ class PerfTestReportCli:
         config.image_height_px = int(args.height[0])
         config.worker_reporting = args.full
         config.compare_last = args.last
+        config.long_label = args.longLabel
         config.preserve_time = args.time
         config.y_start_from_zero = args.zero
         config.svg = args.svg
