@@ -534,7 +534,7 @@ class PerftestExecCli:
                             nargs=1,
                             help="The driver to run. Available options hazelcast5,hazelcast-enterprise5,hazelcast4,"
                                  "hazelcast-enterprise4, hazelcast3,hazelcast-enterprise3,ignite2"
-                                 "infinispan11,couchbase,lettuce5,lettucecluster5,jedis3")
+                                 "infinispan11,couchbase,lettuce5,lettucecluster5,jedis3,jedis5")
 
         parser.add_argument('--version',
                             nargs=1,
