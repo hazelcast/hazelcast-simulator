@@ -250,7 +250,7 @@ class PerfTest:
                 run_path = f"runs/{name}/{dt}"
             else:
                 run_path = f"runs/{name}/{run_label}"
-                shutil.rmtree(run_path)
+                remove(run_path)
 
         exitcode = self.exec(
             test['test'],
