@@ -31,5 +31,6 @@
         <module>driver-lettuce6</module>
         <module>driver-lettucecluster6</module>
         <module>driver-jedis3</module>
+        <module>driver-jedis5</module>
     </modules>
 </project>
