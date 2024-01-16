@@ -15,7 +15,7 @@
 
     <properties>
         <main.basedir>${project.parent.basedir}</main.basedir>
-        <ignite.version>2.15.0</ignite.version>
+        <ignite.version>2.16.0</ignite.version>
     </properties>
 
     <build>
