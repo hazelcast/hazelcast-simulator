@@ -62,7 +62,7 @@ public class ScriptExecutor {
                 String result = task.call();
                 promise.answer(result);
             } catch (Exception e) {
-                LOGGER.warn("Failed to execute script: " + command, e);
+                LOGGER.warn("Failed to execute script: {}", command, e);
                 promise.answer(e);
             }
         }).start();
