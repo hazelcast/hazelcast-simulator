@@ -37,6 +37,7 @@ class ReportConfig:
     cooldown_seconds = 0
     worker_reporting = True
     compare_last = False
+    long_label = False
     preserve_time = False
     y_start_from_zero = False
     svg = False

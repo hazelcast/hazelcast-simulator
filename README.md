@@ -849,8 +849,33 @@ By default the `perftest run` creates a directory for each run inside
 you can simply run the `perftest report` with `-l` flag (or `--last`):
 
 ```shell
-perftest report -o my-comparison-report runs/MyTestA runs/MyTestB
+perftest report -l -o my-comparison-report runs/MyTestA runs/MyTestB
 ```
+
+In order to have readable labels in comparison reports you can run the benchmark with `--runLabel <your label>` option
+(note that it will overwrite any previous benchmark results with given label):
+
+```
+perftest run --runLabel ver1
+# do some changes
+perftest run --runLabel ver2
+
+perftest report -o my-comparison-report ver1 ver2
+```
+
+When comparing different benchmarks in the same report you can add `--longLabel` in generate report command to include
+test name in run labels in tables and graphs. This option cannot be used with `--last`.
+
+`--longLabel` also works nicely with `--runLabel` for comparing combinations. 
+For example, if the test suite contains `test1` and `test2` tests, and you issue the following commands:
+
+```
+perftest run --runLabel ver1
+perftest run --runLabel ver2
+perftest report --longLabel -o my-comparison-report runs/*/*
+```
+
+then the report will contain the following run labels: `test1@ver1`, `test1@ver2`, `test2@ver1`, `test2@ver2`.
 
 ## Extensive reports
 

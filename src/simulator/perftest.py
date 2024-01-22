@@ -202,7 +202,7 @@ class PerfTest:
                 exit_with_error(f"Failed run coordinator, exitcode={self.exitcode}")
             return self.exitcode
 
-    def run(self, tests, tags, skip_report, test_commit, test_pattern):
+    def run(self, tests, tags, skip_report, test_commit, test_pattern, run_label):
         if test_commit:
             info("Automatic test commit enabled.")
             if not is_git_installed():
@@ -234,7 +234,7 @@ class PerfTest:
                 repetitions = 1
 
             for i in range(0, repetitions):
-                exitcode, run_path = self.run_test(test)
+                exitcode, run_path = self.run_test(test, run_label=run_label)
                 if exitcode == 0 and not skip_report:
                     self.collect(run_path,
                                  tags,
@@ -242,11 +242,15 @@ class PerfTest:
                                  cooldown_seconds=test.get('cooldown_seconds'))
         return
 
-    def run_test(self, test, run_path=None):
+    def run_test(self, test, *, run_path=None, run_label=None):
         if not run_path:
-            dt = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
             name = test['name']
-            run_path = f"runs/{name}/{dt}"
+            if not run_label:
+                dt = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
+                run_path = f"runs/{name}/{dt}"
+            else:
+                run_path = f"runs/{name}/{run_label}"
+                remove(run_path)
 
         exitcode = self.exec(
             test['test'],
@@ -492,6 +496,11 @@ class PerftestRunCli:
         #                     nargs=1,
         #                     help="The path where the result of the run need to be stored.")
 
+        parser.add_argument('-rl', '--runLabel',
+                            nargs=1,
+                            default=[None],
+                            help="The label of the run to use as run results directory name instead of timestamp.")
+
         parser.add_argument('-agr', '--skipReport',
                             action='store_true', dest='skip_report', default=False,
                             help="When set, this flag stops the automatic generation of reports after test completion.")
@@ -501,11 +510,12 @@ class PerftestRunCli:
         pattern = args.pattern[0]
         # kill_java = args.kill_java
         # run_path = args.runPath
+        run_label = args.runLabel[0]
 
         tests = load_yaml_file(args.file)
         perftest = PerfTest()
 
-        perftest.run(tests, tags, args.skip_report, args.commit, pattern)
+        perftest.run(tests, tags, args.skip_report, args.commit, pattern, run_label)
 
 
 class PerftestExecCli:
