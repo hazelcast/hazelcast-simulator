@@ -177,7 +177,7 @@ class InventoryInstallCli:
                                          description='Install Async Profiler')
         parser.add_argument("--url",
                             help="The url to the async profiler binary",
-                            default="https://github.com/jvm-profiling-tools/async-profiler/releases/download/v2.9/async-profiler-2.9-linux-x64.tar.gz")
+                            default="https://github.com/async-profiler/async-profiler/releases/download/v3.0/async-profiler-3.0-linux-x64.tar.gz")
         parser.add_argument("--hosts",
                             help="The target hosts.",
                             default="all:!mc")
