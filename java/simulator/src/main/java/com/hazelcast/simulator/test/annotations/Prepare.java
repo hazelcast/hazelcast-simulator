@@ -37,14 +37,14 @@ public @interface Prepare {
 
     /**
      * Global indicates that a single member in the cluster is responsible for
-     * the warmup. If not global, then all members in the cluster will do the warmup.
-     * Be careful that not every worker is going to do the exact same warmup.
+     * the preparation. If not global, then all members in the cluster will do the preparation.
+     * Be careful that not every worker is going to do the exact same preparation.
      * <p/>
      * If you have a lot of data you want to put in the system, then probably
      * you don't want to use global = true because all loads will be generated
      * through a single member in the cluster.
      *
-     * @return <tt>true</tt> if global teardown method, <tt>false</tt> otherwise
+     * @return <tt>true</tt> if global prepare method, <tt>false</tt> otherwise
      */
     boolean global() default false;
 }
