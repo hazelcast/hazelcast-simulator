@@ -17,7 +17,7 @@ keypair:
 
 redis:
     node_type: cache.m4.large
-    parameter_group_name: default.redis6.x.cluster.on
+    parameter_group_name: default.redis7.cluster.on
     cluster_id: cluster-example
      # we don't use 6379 to make it less likely to scanned
     port: 7000
