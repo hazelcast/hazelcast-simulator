@@ -26,7 +26,10 @@
       --add-opens java.base/sun.nio.ch=ALL-UNNAMED 
       --add-opens java.management/sun.management=ALL-UNNAMED 
       --add-opens jdk.management/com.sun.management.internal=ALL-UNNAMED
-      -Dhazelcast.clientengine.query.thread.count=10000
+      -XX:+FlightRecorder
+      -XX:StartFlightRecording=duration=10m,filename=recording.jfr
+      -XX:+UnlockDiagnosticVMOptions
+      -XX:+DebugNonSafepoints
     loadgenerator_hosts: loadgenerators
     node_hosts: nodes
     verify_enabled: False

@@ -21,6 +21,11 @@ If you want to get the best performance for your environment
 inventory tune
 ```
 
+Build hazelcast binaries:
+
+```shell
+./mvnw clean install -DskipTests -T4 -Dcheckstyle.skip -Pquick -Denforcer.skip -pl hazelcast,hazelcast-sql,hazelcast-spring -am
+```
 
 Modify the tests by editing the `tests-jet.yaml` file.
 
