@@ -106,7 +106,7 @@ import java.lang.annotation.Target;
  * <p/>
  * <h1>Execution groups</h1>
  * Normally all timestep methods from a test belong to the same execution group;
- * meaning that there is a group of threads will will call each timestep method
+ * meaning that there is a group of threads will call each timestep method
  * using some distribution. But in some cases this is unwanted, e.g. a typical
  * producer/consumer test. In such cases one can make use of execution groups:
  * <pre>
@@ -164,7 +164,7 @@ import java.lang.annotation.Target;
  * </pre>
  * This will run 1M iterations per worker-thread.
  * <p/>
- * Each exception group can be configured independently. So imagine there is a
+ * Each execution group can be configured independently. So imagine there is a
  * producer and consumer execution group, then
  * the producers can be configured using:
  * <pre>
@@ -366,10 +366,10 @@ import java.lang.annotation.Target;
  * is special type of metronome. The first 2 metronomes have a rate per thread;
  * if a thread gets blocked, a bubble of requests will build up that needs
  * to get processed as soon as the thread unblocks. Even though coordinated omission
- * by default is taken care of, the bubble might not what you want because it means
+ * by default is taken care of, the bubble might not be what you want because it means
  * that you will get a dip in system pressure and then a peek, which both can
  * influence the benchmark. With the ConstantCombinedRateMetronome as long as there
- * is a thread available, a requests will be made. THis prevents building up the
+ * is a thread available, a requests will be made. This prevents building up the
  * bubble and will give a more stable request rate.
  * </li>
  * </ol>
