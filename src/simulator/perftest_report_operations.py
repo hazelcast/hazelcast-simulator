@@ -175,20 +175,17 @@ def __create_aggregated_operations_csv(run_dir):
             df = df.loc[~df.index.duplicated(keep='last')]
             df_list.append(df)
 
+    start_time = time.time()
     # merge the frames into the
+    info(f"\tMerging dataframes (can take some time)")
     for test_id, df_list in df_list_map.items():
         aggr_df = df_list[0]
 
         for df_index in range(1, len(df_list)):
             df = df_list[df_index]
-            for row_ind in df.index:
-                row = df.T.get(row_ind)
-                aggr_row = aggr_df.T.get(row_ind)
-                if aggr_row is None:
-                    # it is a row with a time that doesn't exist in the aggregate
-                    # so the whole row can be added.
-                    aggr_df.loc[row_ind] = row
-                else:
+            for row_ind, row in df.iterrows():
+                try:
+                    aggr_row = aggr_df.loc[row_ind]
                     # it is a row with a time that already exist. So a new row is
                     # created whereby every value from the 2 rows are added into
                     # a new row and that is written back to the aggr_df
@@ -200,8 +197,15 @@ def __create_aggregated_operations_csv(run_dir):
                         new_aggr_row.append(new_aggr_value)
 
                     aggr_df.loc[row_ind] = new_aggr_row
+                except KeyError:
+                    # it is a row with a time that doesn't exist in the aggregate
+                    # so the whole row can be added.
+                    aggr_df.loc[row_ind] = row
 
         aggr_df.to_csv(f"{run_dir}/operations{test_id}.csv")
+    end_time = time.time()
+    duration_seconds = end_time - start_time
+    info(f"\tFinished merging dataframes in {duration_seconds} seconds.")
 
 
 def report_operations(config: ReportConfig, df: pd.DataFrame):
