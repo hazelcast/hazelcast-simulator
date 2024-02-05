@@ -41,3 +41,18 @@ os.system(f"cp java/simulator/target/*.jar lib/")
 os.system(f"cp java/extra/* lib/")
 os.system(f"rm drivers/driver-hazelcast4plus/hazelcast-*.jar")
 os.system(f"rm drivers/driver-hazelcast3/hazelcast-*.jar")
+
+os.system(f"cp -r drivers/driver-hazelcast3 drivers/driver-hazelcast-enterprise3")
+
+os.system(f"rm -fr drivers/driver-hazelcast4")
+os.system(f"cp -r drivers/driver-hazelcast4plus drivers/driver-hazelcast4")
+os.system(f"rm -fr drivers/driver-hazelcast-enterprise4")
+os.system(f"cp -r drivers/driver-hazelcast4plus drivers/driver-hazelcast-enterprise4")
+
+os.system(f"rm -fr drivers/driver-hazelcast5")
+os.system(f"cp -r drivers/driver-hazelcast4plus drivers/driver-hazelcast5")
+os.system(f"rm -fr drivers/driver-hazelcast-enterprise5")
+os.system(f"cp -r drivers/driver-hazelcast4plus drivers/driver-hazelcast-enterprise5")
+
+os.system(f"rm -fr drivers/driver-hazelcast4plus")
+
