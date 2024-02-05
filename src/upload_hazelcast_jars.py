@@ -24,8 +24,8 @@ def __upload(agent, artifact_ids, version):
 def __upsync(agent, artifact_ids, version):
     print(f"[INFO]     {public_ip(agent)} starting")
     ssh = Ssh(public_ip(agent), ssh_user(agent), ssh_options(agent))
-    ssh.exec("mkdir -p hazelcast-simulator/driver-lib/")
-    dest = f"hazelcast-simulator/driver-lib/maven-{version}"
+    ssh.exec("mkdir -p hazelcast-simulator/driver-lib/" + driver + "/")
+    dest = f"hazelcast-simulator/driver-lib/{driver}/maven-{version}"
     ssh.exec(f"mkdir -p {dest}")
     for artifact_id in artifact_ids:
         ssh.rsync_to_remote(f"{local_jar_path(artifact_id, version)}", f"{dest}")
