@@ -144,9 +144,10 @@ public class CPMapTest extends HazelcastTest {
     @TimeStep(prob = 0)
     public void cas(ThreadState state) {
         CPMap<Integer, String> randomMap = state.randomMap();
-        String expectedValue = randomMap.get(state.randomKey());
+        Integer key = state.randomKey();
+        String expectedValue = randomMap.get(key);
         if (expectedValue != null) {
-            randomMap.compareAndSet(state.randomKey(), expectedValue, state.randomValue());
+            randomMap.compareAndSet(key, expectedValue, state.randomValue());
             state.operationCounter.casCount.incrementAndGet();
         }
     }
