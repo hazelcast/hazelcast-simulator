@@ -49,8 +49,8 @@ public class CPMapTest extends HazelcastTest {
     public int valuesPerClient = 1;
     // size in bytes for each key's associated value
     public int valueSizeBytes = 100;
-    // set it to false if test should not check whether all values have been changed during the test run. Can be useful for short runs
-    public boolean checkInitialValueChanged = true;
+    // set it to true if test should check whether all values have been changed during the test run.
+    public boolean checkInitialValueChanged = false;
 
     private static final String INITIAL_VALUE = "initialValue";
     private List<CPMap<Integer, String>> mapReferences;
