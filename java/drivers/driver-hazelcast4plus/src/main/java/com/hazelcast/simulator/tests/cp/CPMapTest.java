@@ -121,6 +121,12 @@ public class CPMapTest extends HazelcastTest {
     }
 
     @TimeStep(prob = 0)
+    public void putIfAbsent(ThreadState state) {
+        state.randomMap().putIfAbsent(state.randomKey(), state.randomValue());
+        state.operationCounter.putIfAbsentCount.incrementAndGet();
+    }
+
+    @TimeStep(prob = 0)
     public void get(ThreadState state) {
         state.randomMap().get(state.randomKey());
         state.operationCounter.getCount.incrementAndGet();

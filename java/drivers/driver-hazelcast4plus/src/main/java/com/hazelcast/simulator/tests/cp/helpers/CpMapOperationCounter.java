@@ -25,6 +25,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class CpMapOperationCounter implements DataSerializable {
 
     public AtomicLong putCount = new AtomicLong(0);
+    public AtomicLong putIfAbsentCount = new AtomicLong(0);
     public AtomicLong setCount = new AtomicLong(0);
 
     public AtomicLong casCount = new AtomicLong(0);
@@ -38,13 +39,14 @@ public class CpMapOperationCounter implements DataSerializable {
     }
 
     public long getTotalNoOfOps() {
-        return putCount.get() + setCount.get()
+        return putCount.get() + setCount.get() + putIfAbsentCount.get()
                 + casCount.get() + getCount.get()
                 + removeCount.get() + deleteCount.get();
     }
 
     public void add(CpMapOperationCounter c) {
         putCount.addAndGet(c.putCount.get());
+        putIfAbsentCount.addAndGet(c.putIfAbsentCount.get());
         setCount.addAndGet(c.setCount.get());
 
         casCount.addAndGet(c.casCount.get());
@@ -58,6 +60,7 @@ public class CpMapOperationCounter implements DataSerializable {
     @Override
     public void writeData(ObjectDataOutput out) throws IOException {
         out.writeObject(putCount);
+        out.writeObject(putIfAbsentCount);
         out.writeObject(setCount);
 
         out.writeObject(casCount);
@@ -71,6 +74,7 @@ public class CpMapOperationCounter implements DataSerializable {
     @Override
     public void readData(ObjectDataInput in) throws IOException {
         putCount = in.readObject();
+        putIfAbsentCount = in.readObject();
         setCount = in.readObject();
 
         casCount = in.readObject();
@@ -85,6 +89,7 @@ public class CpMapOperationCounter implements DataSerializable {
     public String toString() {
         return "CPMapOperationCounter{"
                 + "putCount=" + putCount
+                + ", putIfAbsentCount=" + putIfAbsentCount
                 + ", setCount=" + setCount
                 + ", casCount=" + casCount
                 + ", getCount=" + getCount
