@@ -15,74 +15,35 @@
  */
 package com.hazelcast.simulator.tests.cp.helpers;
 
-import com.hazelcast.nio.ObjectDataInput;
-import com.hazelcast.nio.ObjectDataOutput;
-import com.hazelcast.nio.serialization.DataSerializable;
+import java.io.Serializable;
 
-import java.io.IOException;
-import java.util.concurrent.atomic.AtomicLong;
+public class CpMapOperationCounter implements Serializable {
 
-public class CpMapOperationCounter implements DataSerializable {
-
-    public AtomicLong putCount = new AtomicLong(0);
-    public AtomicLong putIfAbsentCount = new AtomicLong(0);
-    public AtomicLong setCount = new AtomicLong(0);
-
-    public AtomicLong casCount = new AtomicLong(0);
-
-    public AtomicLong getCount = new AtomicLong(0);
-
-    public AtomicLong removeCount = new AtomicLong(0);
-    public AtomicLong deleteCount = new AtomicLong(0);
+    public int putCount;
+    public int putIfAbsentCount;
+    public int setCount;
+    public int casCount;
+    public int getCount;
+    public int removeCount;
+    public int deleteCount;
 
     public CpMapOperationCounter() {
     }
 
     public long getTotalNoOfOps() {
-        return putCount.get() + setCount.get() + putIfAbsentCount.get()
-                + casCount.get() + getCount.get()
-                + removeCount.get() + deleteCount.get();
+        return putCount + setCount + putIfAbsentCount
+                + casCount + getCount
+                + removeCount + deleteCount;
     }
 
     public void add(CpMapOperationCounter c) {
-        putCount.addAndGet(c.putCount.get());
-        putIfAbsentCount.addAndGet(c.putIfAbsentCount.get());
-        setCount.addAndGet(c.setCount.get());
-
-        casCount.addAndGet(c.casCount.get());
-
-        getCount.addAndGet(c.getCount.get());
-
-        removeCount.addAndGet(c.removeCount.get());
-        deleteCount.addAndGet(c.deleteCount.get());
-    }
-
-    @Override
-    public void writeData(ObjectDataOutput out) throws IOException {
-        out.writeObject(putCount);
-        out.writeObject(putIfAbsentCount);
-        out.writeObject(setCount);
-
-        out.writeObject(casCount);
-
-        out.writeObject(getCount);
-
-        out.writeObject(removeCount);
-        out.writeObject(deleteCount);
-    }
-
-    @Override
-    public void readData(ObjectDataInput in) throws IOException {
-        putCount = in.readObject();
-        putIfAbsentCount = in.readObject();
-        setCount = in.readObject();
-
-        casCount = in.readObject();
-
-        getCount = in.readObject();
-
-        removeCount = in.readObject();
-        deleteCount = in.readObject();
+        putCount += c.putCount;
+        putIfAbsentCount += c.putIfAbsentCount;
+        setCount += c.setCount;
+        casCount += c.casCount;
+        getCount += c.getCount;
+        removeCount += c.removeCount;
+        deleteCount += c.deleteCount;
     }
 
     @Override

@@ -112,25 +112,25 @@ public class CPMapTest extends HazelcastTest {
     @TimeStep(prob = 1)
     public void set(ThreadState state) {
         state.randomMap().set(state.randomKey(), state.randomValue());
-        state.operationCounter.setCount.incrementAndGet();
+        state.operationCounter.setCount++;
     }
 
     @TimeStep(prob = 0)
     public void put(ThreadState state) {
         state.randomMap().put(state.randomKey(), state.randomValue());
-        state.operationCounter.putCount.incrementAndGet();
+        state.operationCounter.putCount++;
     }
 
     @TimeStep(prob = 0)
     public void putIfAbsent(ThreadState state) {
         state.randomMap().putIfAbsent(state.randomKey(), state.randomValue());
-        state.operationCounter.putIfAbsentCount.incrementAndGet();
+        state.operationCounter.putIfAbsentCount++;
     }
 
     @TimeStep(prob = 0)
     public void get(ThreadState state) {
         state.randomMap().get(state.randomKey());
-        state.operationCounter.getCount.incrementAndGet();
+        state.operationCounter.getCount++;
     }
 
     // 'remove' and 'delete' other than their first invocation pointless -- we're just timing the logic that underpins the
@@ -139,13 +139,13 @@ public class CPMapTest extends HazelcastTest {
     @TimeStep(prob = 0)
     public void remove(ThreadState state) {
         state.randomMap().remove(state.randomKey());
-        state.operationCounter.removeCount.incrementAndGet();
+        state.operationCounter.removeCount++;
     }
 
     @TimeStep(prob = 0)
     public void delete(ThreadState state) {
         state.randomMap().delete(state.randomKey());
-        state.operationCounter.deleteCount.incrementAndGet();
+        state.operationCounter.deleteCount++;
     }
 
     @TimeStep(prob = 0)
@@ -155,7 +155,7 @@ public class CPMapTest extends HazelcastTest {
         String expectedValue = randomMap.get(key);
         if (expectedValue != null) {
             randomMap.compareAndSet(key, expectedValue, state.randomValue());
-            state.operationCounter.casCount.incrementAndGet();
+            state.operationCounter.casCount++;
         }
     }
 
