@@ -20,6 +20,7 @@ import com.hazelcast.collection.ISet;
 import com.hazelcast.cp.CPMap;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
+import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.TimeStep;
@@ -164,6 +165,11 @@ public class CPMapTest extends HazelcastTest {
         int key = state.randomKey();
         map.set(key, state.randomValue());
         map.delete(key);
+    }
+
+    @AfterRun
+    public void afterRun(ThreadState state) {
+        operationCounterList.add(state.operationCounter);
     }
 
     @Verify(global = true)
