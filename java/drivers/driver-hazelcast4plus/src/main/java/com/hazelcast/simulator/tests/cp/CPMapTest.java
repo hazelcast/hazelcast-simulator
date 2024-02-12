@@ -21,7 +21,6 @@ import com.hazelcast.cp.CPMap;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
-import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
@@ -50,22 +49,19 @@ public class CPMapTest extends HazelcastTest {
     public int valuesPerClient = 1;
     // size in bytes for each key's associated value
     public int valueSizeBytes = 100;
-    // set it to true if test should check whether all values have been changed during the test run.
-    public boolean checkInitialValueChanged = false;
 
-    private static final String INITIAL_VALUE = "initialValue";
     private List<CPMap<Integer, String>> mapReferences;
 
-    private String v[]; // this is always the value associated with any key; exception is remove and delete
+    private String loadGeneratorValues[]; // this is always the value associated with any key; exception is remove and delete
 
     private IList<CpMapOperationCounter> operationCounterList;
     private ISet<String> allValues;
 
     @Setup
     public void setup() {
-        v = createValues();
+        loadGeneratorValues = createValues();
         allValues = targetInstance.getSet(name + "AllValues");
-        allValues.addAll(Arrays.asList(v));
+        allValues.addAll(Arrays.asList(loadGeneratorValues));
 
         // (1) create the cp group names that will host the maps
         String[] cpGroupNames = createCpGroupNames();
@@ -98,15 +94,6 @@ public class CPMapTest extends HazelcastTest {
             cpGroupNames[i] = "cpgroup-" + i;
         }
         return cpGroupNames;
-    }
-
-    @Prepare(global = true)
-    public void prepare() {
-        for (CPMap<Integer, String> mapReference : mapReferences) {
-            for (int key = 0; key < keys; key++) {
-                mapReference.set(key, INITIAL_VALUE);
-            }
-        }
     }
 
     @TimeStep(prob = 1)
@@ -182,9 +169,6 @@ public class CPMapTest extends HazelcastTest {
         logger.info(name + ": " + total + " from " + operationCounterList.size() + " worker threads");
 
         // basic verification
-        if (!checkInitialValueChanged) {
-            allValues.add(INITIAL_VALUE);
-        }
         for (CPMap<Integer, String> mapReference : mapReferences) {
             int existedKeys = 0;
             for (int key = 0; key < keys; key++) {
@@ -219,7 +203,7 @@ public class CPMapTest extends HazelcastTest {
         }
 
         public String randomValue() {
-            return v[randomInt(valuesPerClient)]; // [0, values)
+            return loadGeneratorValues[randomInt(valuesPerClient)]; // [0, values)
         }
 
         public CPMap<Integer, String> randomMap() {

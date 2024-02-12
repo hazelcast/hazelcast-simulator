@@ -19,13 +19,13 @@ import java.io.Serializable;
 
 public class CpMapOperationCounter implements Serializable {
 
-    public int putCount;
-    public int putIfAbsentCount;
-    public int setCount;
-    public int casCount;
-    public int getCount;
-    public int removeCount;
-    public int deleteCount;
+    public long putCount;
+    public long putIfAbsentCount;
+    public long setCount;
+    public long casCount;
+    public long getCount;
+    public long removeCount;
+    public long deleteCount;
 
     public CpMapOperationCounter() {
     }
