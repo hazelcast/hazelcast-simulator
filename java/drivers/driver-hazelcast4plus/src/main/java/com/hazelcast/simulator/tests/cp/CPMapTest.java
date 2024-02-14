@@ -16,7 +16,6 @@
 package com.hazelcast.simulator.tests.cp;
 
 import com.hazelcast.collection.IList;
-import com.hazelcast.collection.ISet;
 import com.hazelcast.cp.CPMap;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
@@ -29,7 +28,10 @@ import com.hazelcast.simulator.utils.GeneratorUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
+import java.util.Set;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -45,23 +47,20 @@ public class CPMapTest extends HazelcastTest {
     public int maps = 1;
     // number of distinct keys to create and use per-map; key domain is [0, keys)
     public int keys = 1;
-    // number of distinct value to create on every client (total number of values is valuesPerClient * clients)
-    public int valuesPerClient = 1;
+    // number of possible values
+    public int valuesCount = 100;
     // size in bytes for each key's associated value
     public int valueSizeBytes = 100;
 
-    private List<CPMap<Integer, String>> mapReferences;
+    private List<CPMap<Integer, byte[]>> mapReferences;
 
-    private String loadGeneratorValues[]; // this is always the value associated with any key; exception is remove and delete
+    private byte[][] values;
 
     private IList<CpMapOperationCounter> operationCounterList;
-    private ISet<String> allValues;
 
     @Setup
     public void setup() {
-        loadGeneratorValues = createValues();
-        allValues = targetInstance.getSet(name + "AllValues");
-        allValues.addAll(Arrays.asList(loadGeneratorValues));
+        values = createValues();
 
         // (1) create the cp group names that will host the maps
         String[] cpGroupNames = createCpGroupNames();
@@ -76,10 +75,11 @@ public class CPMapTest extends HazelcastTest {
         operationCounterList = targetInstance.getList(name + "Report");
     }
 
-    private String[] createValues() {
-        String[] valuesArray = new String[this.valuesPerClient];
+    private byte[][] createValues() {
+        byte[][] valuesArray = new byte[valuesCount][valueSizeBytes];
+        Random random = new Random(0);
         for (int i = 0; i < valuesArray.length; i++) {
-            valuesArray[i] = GeneratorUtils.generateAsciiString(valueSizeBytes);
+            valuesArray[i] = GeneratorUtils.generateByteArray(random, valueSizeBytes);
         }
         return valuesArray;
     }
@@ -137,9 +137,9 @@ public class CPMapTest extends HazelcastTest {
 
     @TimeStep(prob = 0)
     public void cas(ThreadState state) {
-        CPMap<Integer, String> randomMap = state.randomMap();
+        CPMap<Integer, byte[]> randomMap = state.randomMap();
         Integer key = state.randomKey();
-        String expectedValue = randomMap.get(key);
+        byte[] expectedValue = randomMap.get(key);
         if (expectedValue != null) {
             randomMap.compareAndSet(key, expectedValue, state.randomValue());
             state.operationCounter.casCount++;
@@ -148,7 +148,7 @@ public class CPMapTest extends HazelcastTest {
 
     @TimeStep(prob = 0)
     public void setThenDelete(ThreadState state) {
-        CPMap<Integer, String> map = state.randomMap();
+        CPMap<Integer, byte[]> map = state.randomMap();
         int key = state.randomKey();
         map.set(key, state.randomValue());
         map.delete(key);
@@ -168,29 +168,21 @@ public class CPMapTest extends HazelcastTest {
         }
         logger.info(name + ": " + total + " from " + operationCounterList.size() + " worker threads");
 
+        Set<byte[]> valuesSet = new HashSet<>(Arrays.asList(values));
+
         // basic verification
-        for (CPMap<Integer, String> mapReference : mapReferences) {
-            int existedKeys = 0;
+        for (CPMap<Integer, byte[]> mapReference : mapReferences) {
+            int entriesCount = 0;
             for (int key = 0; key < keys; key++) {
-                String get = mapReference.get(key);
+                byte[] get = mapReference.get(key);
                 if (get != null) {
-                    existedKeys++;
-                    if (!allValues.contains(get)) {
-                        logger.info(name + ": Expected values: ");
-                        for (String possibleValue : allValues) {
-                            logger.info(name + ": Expected value: " + possibleValue);
-                        }
-                        logger.info(name + ": Real values: ");
-                        for (int i = 0; i < keys; i++) {
-                            logger.info(name + ": Real value: " + mapReference.get(i));
-                        }
-                        assertTrue("Value " + get + " for key " + key + " is unexpected.", allValues.contains(get));
-                    }
+                    entriesCount++;
+                    assertTrue(valuesSet.contains(get));
                 }
             }
             // Just check that CP map after test contains any item.
             // In theory we can deliberately remove all keys but this is not expected way how we want to use this test.
-            assertTrue("CP Map " + mapReference.getName() + " doesn't contain any of expected items.", existedKeys > 0);
+            assertTrue("CP Map " + mapReference.getName() + " doesn't contain any of expected items.", entriesCount > 0);
         }
     }
 
@@ -202,11 +194,11 @@ public class CPMapTest extends HazelcastTest {
             return randomInt(keys); // [0, keys)
         }
 
-        public String randomValue() {
-            return loadGeneratorValues[randomInt(valuesPerClient)]; // [0, values)
+        public byte[] randomValue() {
+            return values[randomInt(valuesCount)]; // [0, values)
         }
 
-        public CPMap<Integer, String> randomMap() {
+        public CPMap<Integer, byte[]> randomMap() {
             return mapReferences.get(randomInt(maps));
         }
     }
