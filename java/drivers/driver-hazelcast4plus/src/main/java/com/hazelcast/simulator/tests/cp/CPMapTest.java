@@ -176,6 +176,7 @@ public class CPMapTest extends HazelcastTest {
             }
             // Just check that CP map after test contains any item.
             // In theory we can deliberately remove all keys but this is not expected way how we want to use this test.
+            logger.info(name + ":  CP Map " + mapReference.getName() + " entries count: " + entriesCount);
             assertTrue("CP Map " + mapReference.getName() + " doesn't contain any of expected items.", entriesCount > 0);
         }
     }
