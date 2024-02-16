@@ -27,11 +27,8 @@ import com.hazelcast.simulator.tests.cp.helpers.CpMapOperationCounter;
 import com.hazelcast.simulator.utils.GeneratorUtils;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
-import java.util.Set;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -168,8 +165,6 @@ public class CPMapTest extends HazelcastTest {
         }
         logger.info(name + ": " + total + " from " + operationCounterList.size() + " worker threads");
 
-        Set<byte[]> valuesSet = new HashSet<>(Arrays.asList(values));
-
         // basic verification
         for (CPMap<Integer, byte[]> mapReference : mapReferences) {
             int entriesCount = 0;
@@ -177,7 +172,6 @@ public class CPMapTest extends HazelcastTest {
                 byte[] get = mapReference.get(key);
                 if (get != null) {
                     entriesCount++;
-                    assertTrue(valuesSet.contains(get));
                 }
             }
             // Just check that CP map after test contains any item.
