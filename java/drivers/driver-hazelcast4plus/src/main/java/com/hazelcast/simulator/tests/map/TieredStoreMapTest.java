@@ -27,8 +27,9 @@ import static com.hazelcast.simulator.utils.GeneratorUtils.generateByteArray;
 public class TieredStoreMapTest extends HazelcastTest {
     // properties
     public int keyCount = 200_000;
-    public int valueByteArrayLength = 512 * 100;
+    public int valueByteArrayLength = 512_100;
     public boolean fillOnPrepare = true;
+    public int fillOnPrepareAwaitBatchSize = 10_000;
     public boolean destroyOnExit = true;
     public KeyLocality keyLocality = SHARED;
 
@@ -72,7 +73,7 @@ public class TieredStoreMapTest extends HazelcastTest {
                 .orElseThrow(() -> new IllegalStateException("GetHlogLengthTask failed - submitToAllMembers returned empty map"));
     }
 
-    @Prepare()
+    @Prepare
     public void prepare() {
         if (!fillOnPrepare) {
             return;
@@ -82,6 +83,10 @@ public class TieredStoreMapTest extends HazelcastTest {
         Streamer<Integer, byte[]> streamer = StreamerFactory.getInstance(map);
         for (int key : keys) {
             streamer.pushEntry(key, generateByteArray(random, valueByteArrayLength));
+            //Await for batches, to prevent OOM on worker side
+            if (key % fillOnPrepareAwaitBatchSize == 0) {
+                streamer.await();
+            }
         }
         streamer.await();
     }
