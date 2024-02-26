@@ -1,6 +1,16 @@
 TODO
 
-- fix No module named 'simulator'
+- hazelcast 3 install fix
+
+- benchmark directory 'runs/read_only/26-02-2024_15-24-36' does not exist!
+
+- com.hazelcast.simulator.utils.CommandLineExitException: Could not locate driver class [com.hazelcast.simulator.hazelcast4plus.Hazelcast4PlusDriver]
+
+- client type
+
+- fail fast
+
+- undesirable driver upload output
 
 - read out nodes driver with defaulting
 
@@ -17,5 +27,17 @@ TODO
 - uploading of the final Hazelcast config files
 
 DONE
+
+- the coordinator is still failing
+
+- installation of the load generators is missing
+
+- does the coordinator driver part still do the install?
+
+- driver properties
+
+- get the Hazelcast 4 install to run
+
+- fix No module named 'simulator'
 
 - driver script executable

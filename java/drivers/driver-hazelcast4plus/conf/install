@@ -3,35 +3,26 @@
 import os.path
 import subprocess
 
-import yaml
 import sys
-from simulator.util import run_parallel, shell
-from simulator.hosts import public_ip, ssh_user, ssh_options
+from simulator.util import run_parallel, shell, load_yaml_file
 from simulator.ssh import Ssh
 
-def __upload(agent, artifact_ids, version):
-    print(f"[INFO]     {public_ip(agent)} starting")
-    ssh = Ssh(public_ip(agent), ssh_user(agent), ssh_options(agent))
-    ssh.exec("mkdir -p hazelcast-simulator/driver-lib/")
-    dest = f"hazelcast-simulator/driver-lib/maven-{version}"
-    ssh.exec(f"rm -fr {dest}")
-    ssh.exec(f"mkdir -p {dest}")
-    for artifact_id in artifact_ids:
-        ssh.scp_to_remote(f"{local_jar_path(artifact_id, version)}", f"{dest}")
+def __upsync(host, agent_yaml, artifact_ids, version):
+    ssh_user = agent_yaml.get('ansible_user')
+    ssh_key =  agent_yaml.get('ansible_ssh_private_key_file')
 
-    print(f"[INFO]     {public_ip(agent)} done")
+    print(f"[INFO]     {host} starting")
+    ssh_options = f"-i {ssh_key} -o StrictHostKeyChecking=no -o ConnectTimeout=60";
+    print(f"[INFO]     ssh_options {ssh_options}")
 
-def __upsync(agent, artifact_ids, version):
-    print(f"[INFO]     {public_ip(agent)} starting")
-    ssh = Ssh(public_ip(agent), ssh_user(agent), ssh_options(agent))
+    ssh = Ssh(host, ssh_user, ssh_options)
     ssh.exec("mkdir -p hazelcast-simulator/driver-lib/" + driver + "/")
     dest = f"hazelcast-simulator/driver-lib/{driver}/maven-{version}"
     ssh.exec(f"mkdir -p {dest}")
     for artifact_id in artifact_ids:
         ssh.rsync_to_remote(f"{local_jar_path(artifact_id, version)}", f"{dest}")
 
-    print(f"[INFO]     {public_ip(agent)} done")
-
+    print(f"[INFO]     {host} done")
 
 
 def local_repo():
@@ -87,9 +78,9 @@ def remote_repo(enteprise):
 
 
 def is_enterprise(driver):
-    if driver in ['hazelcast3', 'hazelcast4', 'hazelcast5']:
+    if driver in ['hazelcast4', 'hazelcast5']:
         return False
-    elif driver in ['hazelcast-enterprise3', 'hazelcast-enterprise4', 'hazelcast-enterprise5']:
+    elif driver in ['hazelcast-enterprise4', 'hazelcast-enterprise5']:
         return True
     else:
         print(f"Unknown driver {driver}")
@@ -125,20 +116,27 @@ def force_download(version_spec):
         return False
     return "true" == force_download.lower()
 
-
 test_name = sys.argv[1]
-test_suite_yaml = yaml.safe_load(sys.argv[2])
-target
-inventory_yaml = yaml.safe_load(sys.argv[3])
+tests_yaml = load_yaml_file(sys.argv[2])
+test_yaml = None
+for t in tests_yaml:
+    if t.get('name') == test_name:
+        test_yaml = t
+        break
 
-version_spec = sys.argv[3]
-driver = sys.argv[4]
+inventory_target = sys.argv[3]
+inventory_yaml = load_yaml_file(sys.argv[4])
+agents_yaml = inventory_yaml.get(inventory_target).get("hosts")
+
+print(f"[INFO]agents_yaml:{agents_yaml}")
+
+version_spec = test_yaml.get('version')
+driver = test_yaml.get('driver')
 enterprise = is_enterprise(driver)
 version = version(version_spec)
 remote_repo = remote_repo(enterprise)
 force_download = force_download(version_spec)
 
-print(f"[INFO]Force download:{force_download}")
 print(f"[INFO]Uploading Hazelcast jars")
 
 local_repo = local_repo()
@@ -155,5 +153,5 @@ for artifact_id in artifact_ids:
 for artifact_id in artifact_ids:
     print(f"[INFO]Uploading {artifact_id}")
 
-run_parallel(__upsync, [(agent, artifact_ids, version) for agent in agents_yaml])
+run_parallel(__upsync, [(host, agent_yaml, artifact_ids, version) for host, agent_yaml in agents_yaml.items()])
 print(f"[INFO]Uploading Hazelcast jars: done")

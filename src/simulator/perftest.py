@@ -86,13 +86,11 @@ class PerfTest:
         run_parallel(self.__kill_java, [(host,) for host in hosts])
         log_header(f"perftest kill_java [{host_pattern}]: done")
 
-    def exec(self, test_yaml, test_file, inventory_file):
+    def exec(self, test_yaml, test_file):
 
         self.clean()
 
-        print(test_yaml['name'])
-
-        args = ""
+        coordinator_args = ""
 
         # exitcode = self.exec(
         #     test['name'],
@@ -119,9 +117,12 @@ class PerfTest:
         #     # member_worker_script=test.get('member_worker_script')
         # )
 
-        driver = test_yaml['driver']
+        driver = test_yaml.get('driver')
+        print(f"[INFO] -------------------Driver {driver}")
         if driver is not None:
-            self.driver_install(driver, "nodes")
+            self.driver_install(driver, test_yaml['name'],test_file, "nodes")
+            self.driver_install(driver, test_yaml['name'], test_file, "loadgenerators")
+            coordinator_args = f"{coordinator_args} --driver {driver}"
 
         # if load_generator_driver is not None:
         #     self.driver_install(load_generator_driver, "load_generators")
@@ -136,11 +137,11 @@ class PerfTest:
 
         parallel = test_yaml.get('parallel')
         if parallel:
-             args = f"{args} --parallel"
+             coordinator_args = f"{coordinator_args} --parallel"
 
-        license_key = test_yaml.get('license_key'),
+        license_key = test_yaml.get('license_key')
         if license_key:
-             args = f"{args} --licenseKey {license_key}"
+            coordinator_args = f"{coordinator_args} --licenseKey {license_key}"
         #
         # if skip_download is not None:
         #     args = f"{args} --skipDownload {skip_download}"
@@ -151,52 +152,54 @@ class PerfTest:
 
         duration = test_yaml.get('duration')
         if duration is not None:
-             args = f"{args} --duration {duration}"
+             coordinator_args = f"{coordinator_args} --duration {duration}"
 
-        performance_monitor_interval_seconds = test_yaml("performance_monitor_interval_seconds")
+        performance_monitor_interval_seconds = test_yaml.get("performance_monitor_interval_seconds")
         if performance_monitor_interval_seconds:
-             args = f"{args} --performanceMonitorInterval {performance_monitor_interval_seconds}"
-        #
-        # if not node_hosts:
-        #     node_hosts = "all|!mc"
-        # args = f"{args} --nodeHosts {node_hosts}"
-        # self.verify_hosts(node_hosts)
-        #
-        # if not loadgenerator_hosts:
-        #     loadgenerator_hosts = "all|!mc"
-        # args = f"{args} --loadGeneratorHosts {loadgenerator_hosts}"
-        # self.verify_hosts(loadgenerator_hosts)
-        #
+             coordinator_args = f"{coordinator_args} --performanceMonitorInterval {performance_monitor_interval_seconds}"
+
+        node_hosts = test_yaml.get('node_hosts')
+        if not node_hosts:
+            node_hosts = "all|!mc"
+        coordinator_args = f"{coordinator_args} --nodeHosts {node_hosts}"
+        self.verify_hosts(node_hosts)
+
+        loadgenerator_hosts = test_yaml.get('loadgenerator_hosts')
+        if not loadgenerator_hosts:
+            loadgenerator_hosts = "all|!mc"
+        coordinator_args = f"{coordinator_args} --loadGeneratorHosts {loadgenerator_hosts}"
+        self.verify_hosts(loadgenerator_hosts)
 
         members = test_yaml.get('members')
         if members is not None:
-             args = f"{args} --members {members}"
+             coordinator_args = f"{coordinator_args} --members {members}"
 
         member_args = test_yaml.get('member_args')
         if member_args:
-             args = f"""{args} --memberArgs "{member_args}" """
+             coordinator_args = f"""{coordinator_args} --memberArgs "{member_args}" """
 
         clients = test_yaml.get('clients')
         if clients is not None:
-            args = f"{args} --clients {clients}"
+            coordinator_args = f"{coordinator_args} --clients {clients}"
 
         client_args = test_yaml.get('client_args')
         if client_args:
-            args = f"""{args} --clientArgs "{client_args}" """
+            coordinator_args = f"""{coordinator_args} --clientArgs "{client_args}" """
 
-        print(args)
         #
         # if client_type:
         #     args = f"{args} --clientType {client_type}"
         #
-        # if version is not None:
-        #     args = f"""{args} --version "{version}"  """
+        version = test_yaml.get('version')
+        if version is not None:
+            coordinator_args = f"""{coordinator_args} --version "{version}"  """
         #
         # if fail_fast is not None:
         #     args = f"{args} --failFast {fail_fast}"
         #
-        # if verify_enabled is not None:
-        #     args = f"{args} --verifyEnabled {verify_enabled}"
+        verify_enabled = test_yaml.get("verify_enabled")
+        if verify_enabled is not None:
+            coordinator_args = f"{coordinator_args} --verifyEnabled {verify_enabled}"
         #
         # if member_worker_script:
         #     args = f"{args} --memberWorkerScript {member_worker_script}"
@@ -204,30 +207,33 @@ class PerfTest:
         # if client_worker_script:
         #     args = f"{args} --clientWorkerScript {client_worker_script}"
         #
-        # with tempfile.NamedTemporaryFile(mode="w", delete=False, prefix="perftest_", suffix=".txt") as tmp:
-        #     if isinstance(test, list):
-        #         for t in test:
-        #             if 'name' in t:
-        #                 test_name = t['name']
-        #             else:
-        #                 test_name = t['class'].split('.')[-1]
-        #             for key, value in t.items():
-        #                 tmp.write(test_name+'@')
-        #                 tmp.write(f"{key}={value}\n")
-        #     else:
-        #         for key, value in test.items():
-        #             tmp.write(f"{key}={value}\n")
-        #
-        #     tmp.flush()
-        #
-        #     self.exitcode = self.__shell(f"{simulator_home}/bin/hidden/coordinator {args} {tmp.name}")
-        #     if self.exitcode != 0 and self.exit_on_error:
-        #         exit_with_error(f"Failed run coordinator, exitcode={self.exitcode}")
-        #     return self.exitcode
+        test_inner = test_yaml['test']
+        with tempfile.NamedTemporaryFile(mode="w", delete=False, prefix="perftest_", suffix=".txt") as tmp:
+            if isinstance(test_inner, list):
+                for t in test_inner:
+                    if 'name' in t:
+                        test_name = t['name']
+                    else:
+                        test_name = t['class'].split('.')[-1]
+                    for key, value in t.items():
+                        tmp.write(test_name+'@')
+                        tmp.write(f"{key}={value}\n")
+            else:
+                for key, value in test_inner.items():
+                    tmp.write(f"{key}={value}\n")
 
-    def driver_install(self, driver, inventory_target):
+            tmp.flush()
 
-        self.exitcode = self.__shell(f"{simulator_home}/drivers/driver-{driver}/conf/install")
+            self.exitcode = self.__shell(f"{simulator_home}/bin/hidden/coordinator {coordinator_args} {tmp.name}")
+            if self.exitcode != 0 and self.exit_on_error:
+                exit_with_error(f"Failed run coordinator, exitcode={self.exitcode}")
+            return self.exitcode
+
+    def driver_install(self, driver, test_name,test_file, inventory_target):
+        self.exitcode = self.__shell(f"""
+            export PYTHONPATH={simulator_home}/src:$PYTHONPATH
+            {simulator_home}/drivers/driver-{driver}/conf/install {test_name} {test_file} {inventory_target} {inventory_path} 
+        """)
 
     def run(self, tests_file, tags, skip_report, test_commit, test_pattern, run_label):
         if test_commit:
@@ -262,7 +268,7 @@ class PerfTest:
                 repetitions = 1
 
             for i in range(0, repetitions):
-                exitcode, run_path = self.run_test(test, run_label=run_label)
+                exitcode, run_path = self.run_test(test, tests_file, run_label=run_label)
                 if exitcode == 0 and not skip_report:
                     self.collect(run_path,
                                  tags,
@@ -282,29 +288,29 @@ class PerfTest:
 
 
         exitcode = self.exec(
-            test['name'],
-            tests,
+            test,
             test_file,
-            run_path=run_path,
-            # duration=test.get('duration'),
-            # performance_monitor_interval_seconds=test.get('performance_monitor_interval_seconds'),
-            # parallel=test.get('parallel'),
-            # node_hosts=test.get('node_hosts'),
-            # loadgenerator_hosts=test.get('loadgenerator_hosts'),
-            # license_key=test.get('license_key'),
-            # client_args=test.get('client_args'),
-            # member_args=test.get('member_args'),
-            # members=test.get('members'),
-            # clients=test.get('clients'),
-            # node_driver=node_driver,
-            # load_generator_driver=load_generator_driver,
-            # version=test.get('version'),
-            # fail_fast=test.get('fail_fast'),
-            # verify_enabled=test.get('verify_enabled'),
-            # client_type=test.get('client_type'),
-            # client_worker_script=test.get('client_worker_script'),
-            # member_worker_script=test.get('member_worker_script')
+            #run_path=run_path,
         )
+
+        # duration=test.get('duration'),
+        # performance_monitor_interval_seconds=test.get('performance_monitor_interval_seconds'),
+        # parallel=test.get('parallel'),
+        # node_hosts=test.get('node_hosts'),
+        # loadgenerator_hosts=test.get('loadgenerator_hosts'),
+        # license_key=test.get('license_key'),
+        # client_args=test.get('client_args'),
+        # member_args=test.get('member_args'),
+        # members=test.get('members'),
+        # clients=test.get('clients'),
+        # node_driver=node_driver,
+        # load_generator_driver=load_generator_driver,
+        # version=test.get('version'),
+        # fail_fast=test.get('fail_fast'),
+        # verify_enabled=test.get('verify_enabled'),
+        # client_type=test.get('client_type'),
+        # client_worker_script=test.get('client_worker_script'),
+        # member_worker_script=test.get('member_worker_script')
 
         return exitcode, run_path
 

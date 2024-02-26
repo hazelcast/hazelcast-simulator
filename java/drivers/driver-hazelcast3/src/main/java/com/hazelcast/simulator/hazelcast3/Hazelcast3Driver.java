@@ -181,26 +181,6 @@ public class Hazelcast3Driver extends Driver<HazelcastInstance> {
     }
 
     @Override
-    public void install() {
-        String versionSpec = get("VERSION_SPEC");
-        LOGGER.info("Installing versionSpec [" + versionSpec + "] on " + agents.size() + " agents...");
-
-        String installFile = locatePythonFile("upload_hazelcast_jars.py");
-        String driver = get("DRIVER");
-
-        LOGGER.info("Installing '" + driver + "' version '" + versionSpec + "' on Agents using " + installFile);
-
-        new BashCommand(installFile)
-                .addParams(AgentData.toYaml(agents), versionSpec, driver)
-                .addEnvironment(properties)
-                .execute();
-
-        LOGGER.info("Successfully installed '" + driver + "'");
-
-        LOGGER.info("Install successful!");
-    }
-
-    @Override
     public void startDriverInstance() throws Exception {
         String workerType = get("WORKER_TYPE");
 

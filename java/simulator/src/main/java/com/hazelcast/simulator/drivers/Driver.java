@@ -75,12 +75,6 @@ public abstract class Driver<V> implements Closeable {
     }
 
     /**
-     * Installs the software on the agent machines. Method is called on the coordinator-side.
-     */
-    public void install() {
-    }
-
-    /**
      * This method closes any active driver instance. Method is called on the worker-side.
      */
     @Override

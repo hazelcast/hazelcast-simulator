@@ -103,8 +103,6 @@ public class Coordinator implements Closeable {
                 new File(getUserDir(), "upload").getAbsoluteFile(),
                 parameters.getRunId()).run();
 
-        installDriver(properties.getVersionSpec());
-
         log("Coordinator started...");
     }
 
@@ -207,14 +205,6 @@ public class Coordinator implements Closeable {
         LOGGER.info("Remote client started successfully!");
     }
 
-    public void download() {
-        new AgentsDownloadTask(registry,
-                properties.asMap(),
-                parameters.getRunPath(),
-                parameters.getRunId()).run();
-
-    }
-
     public void stop() {
         LOGGER.info("Shutting down...");
 
@@ -233,22 +223,6 @@ public class Coordinator implements Closeable {
         }).start();
     }
 
-    public void installDriver(String versionSpec) {
-        new BashCommand(locatePythonFile("agents_upload_driver.py"))
-                .addParams(AgentData.toYaml(registry))
-                .addParams(properties.get("DRIVER"))
-                .execute();
-
-        loadDriver(properties.get("DRIVER"))
-                .setAll(properties.asMap())
-                .set("VERSION_SPEC", versionSpec)
-                .setAgents(registry.getAgents())
-                .install();
-    }
-
-    public String printLayout() {
-        return registry.printLayout();
-    }
 
     StartWorkersTask createStartWorkersTask(Map<SimulatorAddress, List<WorkerParameters>> deploymentPlan,
                                             Map<String, String> workerTags) {

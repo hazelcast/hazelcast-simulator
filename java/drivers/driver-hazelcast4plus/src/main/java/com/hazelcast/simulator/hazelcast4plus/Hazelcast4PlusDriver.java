@@ -181,24 +181,6 @@ public class Hazelcast4PlusDriver extends Driver<HazelcastInstance> {
     }
 
     @Override
-    public void install() {
-        String versionSpec = get("VERSION_SPEC");
-        LOGGER.info("Installing versionSpec [" + versionSpec + "] on " + agents.size() + " agents...");
-
-        String installFile = locatePythonFile("upload_hazelcast_jars.py");
-        String driver = get("DRIVER");
-
-        LOGGER.info("Installing '" + driver + "' version '" + versionSpec + "' on Agents using " + installFile);
-        new BashCommand(installFile)
-                .addParams(AgentData.toYaml(agents), versionSpec, driver)
-                .addEnvironment(properties)
-                .setDumpOutputOnError(true)
-                .setThrowsExceptionOnError(true)
-                .execute();
-        LOGGER.info("Successfully installed '" + driver + "'");
-    }
-
-    @Override
     public void startDriverInstance() throws IOException {
         String workerType = get("WORKER_TYPE");
 
