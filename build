@@ -25,16 +25,21 @@ make_empty_dir("drivers")
 
 # Copy the drivers.
 for driver_dir_name in os.listdir("java/drivers"):
-    driver_dir = f"java/drivers/{driver_dir_name}"
-    if not os.path.isdir(driver_dir):
+    src_driver_dir = f"java/drivers/{driver_dir_name}"
+    target_driver_dir = f"drivers/{driver_dir_name}"
+    if not os.path.isdir(src_driver_dir):
         continue
-    print(driver_dir)
+    print(src_driver_dir)
     os.mkdir(f"drivers/{driver_dir_name}")
-    target_dir = f"{driver_dir}/target"
+    target_dir = f"{src_driver_dir}/target"
     os.system(f"cp {target_dir}/*.jar drivers/{driver_dir_name}")
 
-    if os.path.isdir(f"{driver_dir}/conf"):
-        os.system(f"cp -r {driver_dir}/conf drivers/{driver_dir_name}")
+    if os.path.isdir(f"{src_driver_dir}/conf"):
+        os.system(f"cp -r {src_driver_dir}/conf {target_driver_dir}")
+
+        # Ensure the install script is executable
+        if os.path.exists(f"{target_driver_dir}/conf/install"):
+            os.system(f"chmod +x {target_driver_dir}/conf/install")
 
 make_empty_dir("lib")
 os.system(f"cp java/simulator/target/*.jar lib/")

@@ -102,7 +102,8 @@ class PerfTest:
              member_args=None,
              members=None,
              clients=None,
-             driver=None,
+             node_driver = None,
+             load_generator_driver=None,
              version=None,
              fail_fast=None,
              verify_enabled=None,
@@ -112,7 +113,15 @@ class PerfTest:
 
         self.clean()
 
+        print(test)
+
         args = ""
+
+        if node_driver is not None:
+            self.driver_install(node_driver, "nodes")
+
+        if load_generator_driver is not None:
+            self.driver_install(load_generator_driver, "load_generators")
 
         if worker_vm_startup_delay_ms is not None:
             args = f"{args} --workerVmStartupDelayMs {worker_vm_startup_delay_ms}"
@@ -163,9 +172,6 @@ class PerfTest:
         if client_type:
             args = f"{args} --clientType {client_type}"
 
-        if driver:
-            args = f"{args} --driver {driver}"
-
         if version is not None:
             args = f"""{args} --version "{version}"  """
 
@@ -201,6 +207,10 @@ class PerfTest:
             if self.exitcode != 0 and self.exit_on_error:
                 exit_with_error(f"Failed run coordinator, exitcode={self.exitcode}")
             return self.exitcode
+
+    def driver_install(self, driver, inventory_target):
+
+        self.exitcode = self.__shell(f"{simulator_home}/drivers/driver-{driver}/conf/install")
 
     def run(self, tests, tags, skip_report, test_commit, test_pattern, run_label):
         if test_commit:
@@ -252,6 +262,9 @@ class PerfTest:
                 run_path = f"runs/{name}/{run_label}"
                 remove(run_path)
 
+        node_driver = test.get("driver")
+        load_generator_driver = test.get("driver")
+
         exitcode = self.exec(
             test['test'],
             run_path=run_path,
@@ -265,7 +278,8 @@ class PerfTest:
             member_args=test.get('member_args'),
             members=test.get('members'),
             clients=test.get('clients'),
-            driver=test.get('driver'),
+            node_driver=node_driver,
+            load_generator_driver=load_generator_driver,
             version=test.get('version'),
             fail_fast=test.get('fail_fast'),
             verify_enabled=test.get('verify_enabled'),

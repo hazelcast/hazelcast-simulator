@@ -1,0 +1,21 @@
+TODO
+
+- fix No module named 'simulator'
+
+- read out nodes driver with defaulting
+
+- read out nodes driver version with defaulting
+
+- read out load generators driver version with defaulting
+
+- read out load generators driver version with defaulting
+
+- uploading of the Hazelcast jars through the install script
+
+- creation of the final Hazelcast config files through the install script
+
+- uploading of the final Hazelcast config files
+
+DONE
+
+- driver script executable
