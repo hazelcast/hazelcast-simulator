@@ -37,9 +37,11 @@ for driver_dir_name in os.listdir("java/drivers"):
     if os.path.isdir(f"{src_driver_dir}/conf"):
         os.system(f"cp -r {src_driver_dir}/conf {target_driver_dir}")
 
-        # Ensure the install script is executable
         if os.path.exists(f"{target_driver_dir}/conf/install"):
             os.system(f"chmod +x {target_driver_dir}/conf/install")
+
+        if os.path.exists(f"{target_driver_dir}/conf/configure"):
+            os.system(f"chmod +x {target_driver_dir}/conf/configure")
 
 make_empty_dir("lib")
 os.system(f"cp java/simulator/target/*.jar lib/")

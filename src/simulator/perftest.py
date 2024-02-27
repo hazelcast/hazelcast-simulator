@@ -86,7 +86,7 @@ class PerfTest:
         run_parallel(self.__kill_java, [(host,) for host in hosts])
         log_header(f"perftest kill_java [{host_pattern}]: done")
 
-    def exec(self, test_yaml, test_file):
+    def exec(self, test_yaml, test_file, run_path=None):
 
         self.clean()
 
@@ -117,15 +117,35 @@ class PerfTest:
         #     # member_worker_script=test.get('member_worker_script')
         # )
 
+        worker_params = {}
+
         driver = test_yaml.get('driver')
-        print(f"[INFO] -------------------Driver {driver}")
+        loadgenerator_driver = test_yaml.get('loadgenerator_driver')
+        node_driver = test_yaml.get('node_driver')
+
         if driver is not None:
+            if loadgenerator_driver is not None:
+                exit_with_error(f"test {test_yaml['name']} can't have both the driver and loadgenerator_driver configured.")
+            if node_driver is not None:
+                exit_with_error(f"test {test_yaml['name']} can't have both the driver and node_driver configured.")
+
             self.driver_install(driver, test_yaml['name'],test_file, "nodes")
             self.driver_install(driver, test_yaml['name'], test_file, "loadgenerators")
             coordinator_args = f"{coordinator_args} --driver {driver}"
+            worker_params['$loadgenerator_driver'] = driver
+            worker_params['$node_driver'] = driver
+        else:
+            if node_driver is not None:
+                worker_params['$node_driver'] = node_driver
+                self.driver_install(node_driver, test_yaml['name'], test_file, "nodes")
+                coordinator_args = f"{coordinator_args} --nodeDriver {node_driver}"
 
-        # if load_generator_driver is not None:
-        #     self.driver_install(load_generator_driver, "load_generators")
+            if loadgenerator_driver is None:
+                exit_with_error(f"test {test_yaml['name']} has no driver or loadgenerator_driver configured.")
+            self.driver_install(loadgenerator_driver, test_yaml['name'], test_file, "loadgenerators")
+            coordinator_args = f"{coordinator_args} --loadGeneratorDriver {loadgenerator_driver}"
+            worker_params['$loadgenerator_driver'] = loadgenerator_driver
+
 
         # if worker_vm_startup_delay_ms is not None:
         #     args = f"{args} --workerVmStartupDelayMs {worker_vm_startup_delay_ms}"
@@ -146,9 +166,9 @@ class PerfTest:
         # if skip_download is not None:
         #     args = f"{args} --skipDownload {skip_download}"
         #
-        # if run_path:
-        #     args = f"{args} --runPath {run_path}"
-        #
+
+        if run_path is not None:
+             coordinator_args = f"{coordinator_args} --runPath {run_path}"
 
         duration = test_yaml.get('duration')
         if duration is not None:
@@ -221,6 +241,8 @@ class PerfTest:
             else:
                 for key, value in test_inner.items():
                     tmp.write(f"{key}={value}\n")
+                #for key, value in worker_params.items():
+                #    tmp.write(f"{key}={value}\n")
 
             tmp.flush()
 
@@ -286,11 +308,10 @@ class PerfTest:
                 run_path = f"runs/{name}/{run_label}"
                 remove(run_path)
 
-
         exitcode = self.exec(
             test,
             test_file,
-            #run_path=run_path,
+            run_path = run_path,
         )
 
         # duration=test.get('duration'),

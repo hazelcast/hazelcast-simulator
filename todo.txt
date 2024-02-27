@@ -1,10 +1,14 @@
 TODO
 
+- Could not create member Worker A1_W1, reason: Cannot invoke "String.contains(java.lang.CharSequence)" because "driver" is null
+
+- coordinator can't deal with node driver
+
+- coordinator can't deal with load generator driver
+
 - hazelcast 3 install fix
 
 - benchmark directory 'runs/read_only/26-02-2024_15-24-36' does not exist!
-
-- com.hazelcast.simulator.utils.CommandLineExitException: Could not locate driver class [com.hazelcast.simulator.hazelcast4plus.Hazelcast4PlusDriver]
 
 - client type
 
@@ -27,6 +31,19 @@ TODO
 - uploading of the final Hazelcast config files
 
 DONE
+
+- configure the run path
+    Too many TestSuite files specified: [hazelcast5, /tmp/perftest_mxkg_gvu.txt]
+
+- Could not create member Worker A1_W1, reason: dirname can't be null
+
+- add node driver to coordinator cli
+
+- add load generator driver to coordinator cli
+
+- add logic for the loadgenerator and node driver in the perftest.py
+
+- com.hazelcast.simulator.utils.CommandLineExitException: Could not locate driver class [com.hazelcast.simulator.hazelcast4plus.Hazelcast4PlusDriver]
 
 - the coordinator is still failing
 

@@ -46,15 +46,21 @@ public final class DeploymentPlan {
     private final Map<SimulatorAddress, List<WorkerParameters>> workerDeployment
             = new HashMap<>();
     private final List<WorkersPerAgent> workersPerAgentList = new ArrayList<>();
+    private final Map<String,String> properties = new HashMap<>();
 
-    private final Driver driver;
-
-    public DeploymentPlan(Driver driver, Registry registry) {
-        this(driver, registry.getAgents());
+     public DeploymentPlan(Registry registry) {
+        this(registry.getAgents());
     }
 
-    public DeploymentPlan(Driver driver, List<AgentData> agents) {
-        this.driver = driver;
+    public void addProperty(String key, String value){
+         properties.put(key, value);
+    }
+
+    public void addAllProperty(Map<String,String> map){
+        properties.putAll(map);
+    }
+
+    public DeploymentPlan(List<AgentData> agents) {
 
         if (agents.isEmpty()) {
             throw new CommandLineExitException("You need at least one agent in your cluster!"
@@ -75,7 +81,10 @@ public final class DeploymentPlan {
         for (int i = 0; i < workerCount; i++) {
             WorkersPerAgent workersPerAgent = nextAgent(workerType);
             AgentData agent = workersPerAgent.agent;
-            WorkerParameters workerParameters = driver.loadWorkerParameters(workerType, agent.getAddressIndex());
+            WorkerParameters workerParameters = new WorkerParameters();
+            workerParameters.setAll(properties);
+            workerParameters.set("WORKER_TYPE", workerType);
+
             workersPerAgent.registerWorker(workerParameters);
 
             List<WorkerParameters> workerParametersList = workerDeployment.get(agent.getAddress());

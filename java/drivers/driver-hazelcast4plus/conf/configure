@@ -1,0 +1,31 @@
+#!/usr/bin/env python3
+
+import os.path
+import subprocess
+
+import sys
+from simulator.util import run_parallel, shell, load_yaml_file, read
+from simulator.ssh import Ssh
+
+test_name = sys.argv[1]
+tests_yaml = load_yaml_file(sys.argv[2])
+test_yaml = None
+for t in tests_yaml:
+    if t.get('name') == test_name:
+        test_yaml = t
+        break
+
+inventory_target = sys.argv[3]
+inventory_yaml = load_yaml_file(sys.argv[4])
+agents_yaml = inventory_yaml.get(inventory_target).get("hosts")
+worker_type = sys.argv[5]
+run_id = sys.argv[6]
+
+if worker_type == "member":
+    template =
+elif worker_type == "litemember":
+
+elif worker_type == "client":
+
+else:
+    raise Exception()

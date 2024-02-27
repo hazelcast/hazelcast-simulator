@@ -64,7 +64,6 @@ final class CoordinatorCli {
     Registry registry;
     SimulatorProperties properties;
     DeploymentPlan deploymentPlan;
-    Driver driver;
 
     private final OptionParser parser = new OptionParser();
 
@@ -79,25 +78,22 @@ final class CoordinatorCli {
             .withRequiredArg().ofType(Integer.class).defaultsTo(0);
 
     private final OptionSpec<String> driverSpec = parser.accepts("driver",
-                    "The driver to run. Available options hazelcast5,hazelcast-enterprise4,hazelcast4,hazelcast-enterprise4,"
-                            + "hazelcast3,hazelcast-enterprise3,ignite2,infinispan9,infinispan10,"
-                            + "infinispan11,couchbase,lettuce6,lettucecluster6,jedis3")
-            .withRequiredArg().ofType(String.class).defaultsTo("hazelcast5");
-
-    private final OptionSpec<String> versionSpec = parser.accepts("version",
-                    "The version of the vendor to use. Only hazelcast3/4/5 (and enterprise) will use this version")
+                    "The driver for both the nodes and the load generators")
             .withRequiredArg().ofType(String.class);
+
 
     private final OptionSpec<String> durationSpec = parser.accepts("duration",
                     "Amount of time to execute the RUN phase per test, e.g. 10s, 1m, 2h or 3d. If duration is set to 0, "
                             + "the test will run until the test decides to stop.")
             .withRequiredArg().ofType(String.class).defaultsTo(format("%ds", DEFAULT_DURATION_SECONDS));
 
+    // todo: should be named nodeCountSpec
     private final OptionSpec<Integer> membersSpec = parser.accepts("members",
                     "Number of cluster member Worker JVMs. If no value is specified and no mixed members are specified,"
                             + " then the number of cluster members will be equal to the number of machines in the agents file.")
             .withRequiredArg().ofType(Integer.class).defaultsTo(-1);
 
+    // todo: should be named laodGeneratorCountspec
     private final OptionSpec<Integer> clientsSpec = parser.accepts("clients",
                     "Number of cluster client Worker JVMs.")
             .withRequiredArg().ofType(Integer.class).defaultsTo(0);
@@ -191,13 +187,13 @@ final class CoordinatorCli {
         this.properties = loadSimulatorProperties()
                 .setIfNotNull("LICENCE_KEY", options.valueOf(licenseKeySpec));
 
-        if (!"fake".equals(properties.get("DRIVER"))) {
-            properties.set("DRIVER", options.valueOf(driverSpec));
-        }
-
-        if (options.hasArgument(versionSpec)) {
-            properties.set("VERSION_SPEC", options.valueOf(versionSpec));
-        }
+//        if (!"fake".equals(properties.get("DRIVER"))) {
+//            properties.set("DRIVER", options.valueOf(driverSpec));
+//        }
+//
+//        if (options.hasArgument(versionSpec)) {
+//            properties.set("VERSION_SPEC", options.valueOf(versionSpec));
+//        }
 
         this.registry = newRegistry();
 
@@ -205,13 +201,7 @@ final class CoordinatorCli {
             this.coordinatorParameters = loadCoordinatorParameters();
             this.properties.set("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS", "" + options.valueOf(performanceMonitorInterval));
             this.coordinator = new Coordinator(registry, coordinatorParameters);
-            this.driver = loadDriver(properties.get("DRIVER"))
-                    .setAll(properties.asMap())
-                    .setAgents(registry.getAgents())
-                    .set("CLIENT_ARGS", options.valueOf(clientArgsSpec))
-                    .set("MEMBER_ARGS", options.valueOf(memberArgsSpec))
-                    .set("CLIENT_WORKER_SCRIPT", options.valueOf(clientWorkerScriptSpec))
-                    .set("MEMBER_WORKER_SCRIPT", options.valueOf(memberWorkerScriptSpec));
+
 
             this.testSuite = loadTestSuite();
 
@@ -376,9 +366,11 @@ final class CoordinatorCli {
             throw new CommandLineExitException("No workers have been defined!");
         }
 
-        DeploymentPlan plan = new DeploymentPlan(driver, registry.getAgents())
-                .addToPlan(members, "member")
-                .addToPlan(clients, options.valueOf(clientTypeSpec));
+        DeploymentPlan plan = new DeploymentPlan(registry.getAgents());
+        plan.addProperty("RUN_ID", coordinatorParameters.getRunId());
+        plan.addToPlan(members, "member");
+        plan.addToPlan(clients, options.valueOf(clientTypeSpec));
+
         plan.printLayout();
         return plan;
     }
