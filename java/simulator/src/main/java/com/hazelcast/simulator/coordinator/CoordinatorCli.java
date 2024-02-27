@@ -22,7 +22,6 @@ import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.coordinator.registry.WorkerQuery;
 import com.hazelcast.simulator.coordinator.tasks.AgentsClearTask;
 import com.hazelcast.simulator.coordinator.tasks.AgentsDownloadTask;
-import com.hazelcast.simulator.drivers.Driver;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -38,7 +37,6 @@ import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
 import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
-import static com.hazelcast.simulator.drivers.Driver.loadDriver;
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
@@ -147,10 +145,6 @@ final class CoordinatorCli {
                     "Client Worker JVM options (quotes can be used).")
             .withRequiredArg().ofType(String.class).defaultsTo("-XX:+HeapDumpOnOutOfMemoryError");
 
-    private final OptionSpec<String> licenseKeySpec = parser.accepts("licenseKey",
-                    "Sets the license key for Hazelcast Enterprise Edition.")
-            .withRequiredArg().ofType(String.class);
-
     private final OptionSpec skipDownloadSpec = parser.accepts("skipDownload",
             "Prevents downloading of the created worker artifacts.");
 
@@ -179,13 +173,29 @@ final class CoordinatorCli {
                     "The worker script for clients.")
             .withRequiredArg().ofType(String.class);
 
+    private final OptionSpec<String> propertySpec = parser.accepts("property",
+                    "A key=value property.")
+            .withRequiredArg().ofType(String.class);
+
+
     private final OptionSet options;
 
     CoordinatorCli(String[] args) {
         this.options = initOptionsWithHelp(parser, args);
 
-        this.properties = loadSimulatorProperties()
-                .setIfNotNull("LICENCE_KEY", options.valueOf(licenseKeySpec));
+        this.properties = loadSimulatorProperties();
+
+        List<String> propertyList = propertySpec.values(options);
+        for (String p : propertyList) {
+            int indexOf = p.indexOf("=");
+            if (indexOf == -1) {
+                throw new CommandLineExitException("Invalid property '" + p + "', should have format key=value");
+            }
+            String key = p.substring(0, indexOf);
+            String value = p.substring(indexOf + 1);
+            properties.set(key, value);
+        }
+
 
 //        if (!"fake".equals(properties.get("DRIVER"))) {
 //            properties.set("DRIVER", options.valueOf(driverSpec));
@@ -367,6 +377,7 @@ final class CoordinatorCli {
         }
 
         DeploymentPlan plan = new DeploymentPlan(registry.getAgents());
+        plan.addAllProperty(properties.asMap());
         plan.addProperty("RUN_ID", coordinatorParameters.getRunId());
         plan.addToPlan(members, "member");
         plan.addToPlan(clients, options.valueOf(clientTypeSpec));

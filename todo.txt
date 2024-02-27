@@ -1,14 +1,18 @@
 TODO
 
-- Could not create member Worker A1_W1, reason: Cannot invoke "String.contains(java.lang.CharSequence)" because "driver" is null
+- [Fatal Error] log4j.xml:3:22: The prefix "log4j" for element "log4j:configuration" is not bound.
+ERROR StatusLogger Error parsing /home/ubuntu/hazelcast-simulator/workers/c1f13c7b5d09d041c84f8508ea3a4e843d8aad50/A1_W1-18.185.56.223-member/log4j.xml
+ org.xml.sax.SAXParseException; systemId: file:///home/ubuntu/hazelcast-simulator/workers/c1f13c7b5d09d041c84f8508ea3a4e843d8aad50/A1_W1-18.185.56.223-member/log4j.xml; lineNumber: 3; columnNumber: 22; The prefix "log4j" for element "log4j:configuration" is not bound.
 
-- coordinator can't deal with node driver
 
-- coordinator can't deal with load generator driver
+- com.hazelcast.simulator.utils.CommandLineExitException:
+Could not locate driver class [com.hazelcast.simulator.hazelcast4plus.Hazelcast4PlusDriver]
+
+- properly fix log4j.xml
+
+- properly fix worker.sh
 
 - hazelcast 3 install fix
-
-- benchmark directory 'runs/read_only/26-02-2024_15-24-36' does not exist!
 
 - client type
 
@@ -24,13 +28,45 @@ TODO
 
 - read out load generators driver version with defaulting
 
-- uploading of the Hazelcast jars through the install script
-
 - creation of the final Hazelcast config files through the install script
 
 - uploading of the final Hazelcast config files
 
 DONE
+
+- hack in log4j.xml
+
+- hack in worker.sh
+
+- fix:  cause=com.hazelcast.simulator.agent.workerprocess.CreateWorkerFailedException:
+Startup of Worker A1_W1 on Agent 18.185.56.223 failed,
+check log files in /home/ubuntu/hazelcast-simulator/workers/93b2cef18fe4fc7cd8e9244ada7edeb169d93132/A1_W1-18.185.56.223-member for more information!
+
+- Could not create member Worker A1_W1, reason: Cannot invoke "String.replace(char, char)" because "versionSpec" is null
+
+- benchmark directory 'runs/read_only/26-02-2024_15-24-36' does not exist!
+
+- DRIVER=null
+
+- uploading of the Hazelcast jars through the install script
+
+- todo: fix hardcoded driver in worker
+
+- Could not create member Worker A1_W1, reason: Cannot invoke "String.contains(java.lang.CharSequence)" because "driver" is null
+
+- coordinator can't deal with node driver
+
+- coordinator can't deal with load generator driver
+
+- no explicit walking over the properties in perfrest.py
+
+- coordinator cli: processing of the list of properties and append to the deployment plan
+
+- simulator properties need to be added to plan
+
+- no explicit license key parameter
+
+- adding all the properties to the coordinator cli
 
 - configure the run path
     Too many TestSuite files specified: [hazelcast5, /tmp/perftest_mxkg_gvu.txt]

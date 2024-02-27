@@ -117,7 +117,7 @@ class PerfTest:
         #     # member_worker_script=test.get('member_worker_script')
         # )
 
-        worker_params = {}
+        coordinator_properties = {}
 
         driver = test_yaml.get('driver')
         loadgenerator_driver = test_yaml.get('loadgenerator_driver')
@@ -132,11 +132,11 @@ class PerfTest:
             self.driver_install(driver, test_yaml['name'],test_file, "nodes")
             self.driver_install(driver, test_yaml['name'], test_file, "loadgenerators")
             coordinator_args = f"{coordinator_args} --driver {driver}"
-            worker_params['$loadgenerator_driver'] = driver
-            worker_params['$node_driver'] = driver
+            coordinator_properties['loadgenerator_driver'] = driver
+            coordinator_properties['node_driver'] = driver
         else:
             if node_driver is not None:
-                worker_params['$node_driver'] = node_driver
+                coordinator_properties['$node_driver'] = node_driver
                 self.driver_install(node_driver, test_yaml['name'], test_file, "nodes")
                 coordinator_args = f"{coordinator_args} --nodeDriver {node_driver}"
 
@@ -144,7 +144,7 @@ class PerfTest:
                 exit_with_error(f"test {test_yaml['name']} has no driver or loadgenerator_driver configured.")
             self.driver_install(loadgenerator_driver, test_yaml['name'], test_file, "loadgenerators")
             coordinator_args = f"{coordinator_args} --loadGeneratorDriver {loadgenerator_driver}"
-            worker_params['$loadgenerator_driver'] = loadgenerator_driver
+            coordinator_properties['loadgenerator_driver'] = loadgenerator_driver
 
 
         # if worker_vm_startup_delay_ms is not None:
@@ -160,8 +160,9 @@ class PerfTest:
              coordinator_args = f"{coordinator_args} --parallel"
 
         license_key = test_yaml.get('license_key')
+
         if license_key:
-            coordinator_args = f"{coordinator_args} --licenseKey {license_key}"
+            coordinator_properties["license_key"] = license_key
         #
         # if skip_download is not None:
         #     args = f"{args} --skipDownload {skip_download}"
@@ -212,7 +213,8 @@ class PerfTest:
         #
         version = test_yaml.get('version')
         if version is not None:
-            coordinator_args = f"""{coordinator_args} --version "{version}"  """
+             coordinator_properties['version']=version
+             # coordinator_args = f"""{coordinator_args} --version "{version}"  """
         #
         # if fail_fast is not None:
         #     args = f"{args} --failFast {fail_fast}"
@@ -227,6 +229,10 @@ class PerfTest:
         # if client_worker_script:
         #     args = f"{args} --clientWorkerScript {client_worker_script}"
         #
+
+        for key, value in coordinator_properties.items():
+            coordinator_args = f"{coordinator_args} --property {key}={value}"
+
         test_inner = test_yaml['test']
         with tempfile.NamedTemporaryFile(mode="w", delete=False, prefix="perftest_", suffix=".txt") as tmp:
             if isinstance(test_inner, list):
@@ -241,7 +247,7 @@ class PerfTest:
             else:
                 for key, value in test_inner.items():
                     tmp.write(f"{key}={value}\n")
-                #for key, value in worker_params.items():
+                #for key, value in coordinator_properties.items():
                 #    tmp.write(f"{key}={value}\n")
 
             tmp.flush()

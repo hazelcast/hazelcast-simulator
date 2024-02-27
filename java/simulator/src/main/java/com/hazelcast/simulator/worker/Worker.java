@@ -67,6 +67,7 @@ public class Worker {
         this.parameters = parameters;
         this.publicAddress = parameters.get("PUBLIC_ADDRESS");
         this.workerAddress = SimulatorAddress.fromString(parameters.get("WORKER_ADDRESS"));
+
         this.driver = loadDriver(parameters.get("DRIVER"))
                 .setAll(parameters.asMap());
         this.server = new Server("workers")
