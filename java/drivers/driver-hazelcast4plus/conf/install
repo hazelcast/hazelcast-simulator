@@ -4,6 +4,8 @@ import os.path
 import subprocess
 
 import sys
+
+from agents_upload_driver import upload_driver
 from simulator.util import run_parallel, shell, load_yaml_file
 from simulator.ssh import Ssh
 
@@ -128,14 +130,14 @@ inventory_target = sys.argv[3]
 inventory_yaml = load_yaml_file(sys.argv[4])
 agents_yaml = inventory_yaml.get(inventory_target).get("hosts")
 
-print(f"[INFO]agents_yaml:{agents_yaml}")
-
 version_spec = test_yaml.get('version')
 driver = test_yaml.get('driver')
 enterprise = is_enterprise(driver)
 version = version(version_spec)
 remote_repo = remote_repo(enterprise)
 force_download = force_download(version_spec)
+
+upload_driver(driver, agents_yaml)
 
 print(f"[INFO]Uploading Hazelcast jars")
 

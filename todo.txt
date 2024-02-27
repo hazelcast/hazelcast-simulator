@@ -1,9 +1,5 @@
 TODO
 
-- move agents_upload_driver to src
-
-- driver-hazelcast5 not uploaded: the agents_upload_driver script is not called
-
 - [Fatal Error] log4j.xml:3:22: The prefix "log4j" for element "log4j:configuration" is not bound.
 ERROR StatusLogger Error parsing /home/ubuntu/hazelcast-simulator/workers/c1f13c7b5d09d041c84f8508ea3a4e843d8aad50/A1_W1-18.185.56.223-member/log4j.xml
  org.xml.sax.SAXParseException; systemId: file:///home/ubuntu/hazelcast-simulator/workers/c1f13c7b5d09d041c84f8508ea3a4e843d8aad50/A1_W1-18.185.56.223-member/log4j.xml; lineNumber: 3; columnNumber: 22; The prefix "log4j" for element "log4j:configuration" is not bound.
@@ -33,6 +29,12 @@ ERROR StatusLogger Error parsing /home/ubuntu/hazelcast-simulator/workers/c1f13c
 - uploading of the final Hazelcast config files
 
 DONE
+
+- update agents_upload_driver.py to new format
+
+- driver-hazelcast5 not uploaded: the agents_upload_driver script is not called
+
+- remove upload_hazelcast_jars.py
 
 - hack in log4j.xml
 
