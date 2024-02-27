@@ -10,7 +10,7 @@ import java.io.Serializable;
 import java.util.concurrent.Callable;
 
 /**
- * This task gets map configuration from the member/cluster.
+ * This task gets map configuration from the cluster.
  * It can be used for pre-checks when config is not accessible from the client API.
  **/
 public class GetMapConfigTask implements HazelcastInstanceAware, Callable<MapConfig>, Serializable {

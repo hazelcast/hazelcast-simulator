@@ -6,12 +6,18 @@ import com.hazelcast.map.IMap;
 import com.hazelcast.memory.Capacity;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
-import com.hazelcast.simulator.test.annotations.*;
+import com.hazelcast.simulator.test.annotations.Prepare;
+import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.test.annotations.TimeStep;
+import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
+import com.hazelcast.simulator.tests.map.helpers.tasks.ClearTsDirectoryTask;
 import com.hazelcast.simulator.tests.map.helpers.tasks.GetHybridLogLengthTask;
 import com.hazelcast.simulator.tests.map.helpers.tasks.GetMapConfigTask;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
+import org.apache.commons.lang3.RandomUtils;
 import org.junit.Assert;
 
 import java.util.Random;
@@ -23,14 +29,19 @@ import static com.hazelcast.simulator.tests.helpers.KeyLocality.SHARED;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntKeys;
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateByteArray;
 
-
+/**
+ * This test is running as part of release verification simulator test. Hence every change in this class should be
+ * discussed with QE team since it can affect release verification tests.
+ */
 public class TieredStoreMapTest extends HazelcastTest {
     // properties
-    public int keyCount = 200_000;
-    public int valueByteArrayLength = 512_100;
+    public int keyDomain = 2_000_000;
+    public int minValueByteArrayLength = 1;
+    public int maxValueByteArrayLength = 150_000;
+    public boolean clearTsDirectoryOnPrepare = true;
     public boolean fillOnPrepare = true;
-    public int fillOnPrepareAwaitBatchSize = 10_000;
     public boolean destroyOnExit = true;
+
     public KeyLocality keyLocality = SHARED;
 
     private IMap<Integer, byte[]> map;
@@ -39,56 +50,35 @@ public class TieredStoreMapTest extends HazelcastTest {
 
     @Setup
     public void setUp() throws ReflectiveOperationException {
-        map = targetInstance.getMap(name);
-        keys = generateIntKeys(keyCount, keyLocality, targetInstance);
+        keys = generateIntKeys(keyDomain, keyLocality, targetInstance);
         executor = targetInstance.getExecutorService(name);
-
-        Assert.assertTrue("Disk Tier Config must be enabled for map: " + name, getMapConfig().getTieredStoreConfig().getDiskTierConfig().isEnabled());
-
-        //Estimated total size without overheads and backups - keys + values size
-        Capacity estimatedDatasetSize = Capacity.of(keyCount * 4L + (long) keyCount * valueByteArrayLength, BYTES);
-        logger.info("Estimated total dataset size (without overheads and backups): " + estimatedDatasetSize.toPrettyString());
+        map = targetInstance.getMap(name);
+        Assert.assertTrue("Disk Tier Config must be enabled for map: " + name, isTsEnabledForMap());
     }
 
-    private MapConfig getMapConfig() {
-        try {
-            return executor.submit(new GetMapConfigTask(name)).get();
-        } catch (ExecutionException | InterruptedException e) {
-            throw new RuntimeException("GetMapConfigTask failed", e);
-        }
-    }
-
-    private long getHybridLogLength() {
-        return executor.submitToAllMembers((new GetHybridLogLengthTask()))
-                .entrySet()
-                .stream()
-                .map(memberFutureEntry -> {
-                    try {
-                        return memberFutureEntry.getValue().get();
-                    } catch (InterruptedException | ExecutionException e) {
-                        throw new IllegalStateException("GetHlogLengthTask failed for member" + memberFutureEntry.getKey().getAddress().getHost(), e);
-                    }
-                })
-                .reduce(Long::sum)
-                .orElseThrow(() -> new IllegalStateException("GetHlogLengthTask failed - submitToAllMembers returned empty map"));
-    }
-
-    @Prepare
+    @Prepare(global = true)
     public void prepare() {
-        if (!fillOnPrepare) {
-            return;
+        if (clearTsDirectoryOnPrepare) {
+            clearTsDirectory();
         }
-        Random random = new Random();
+        if (fillOnPrepare) {
+            fillMap();
+        }
+    }
 
-        Streamer<Integer, byte[]> streamer = StreamerFactory.getInstance(map);
-        for (int key : keys) {
-            streamer.pushEntry(key, generateByteArray(random, valueByteArrayLength));
-            //Await for batches, to prevent OOM on worker side
-            if (key % fillOnPrepareAwaitBatchSize == 0) {
-                streamer.await();
-            }
+    @Verify
+    public void verify() {
+        Capacity hybridLogLength = Capacity.of(getHybridLogLengthSum(), BYTES);
+        logger.info("Sum of hybrid log length from all members: " + hybridLogLength.toPrettyString());
+        assertTrue("Hybrid log is equal to 0. Tiered Storage was not used.", hybridLogLength.bytes() > 0);
+    }
+
+    @Teardown(global = true)
+    public void tearDown() {
+        if (destroyOnExit) {
+            map.destroy();
         }
-        streamer.await();
+        executor.shutdown();
     }
 
     @TimeStep(prob = -1)
@@ -127,6 +117,60 @@ public class TieredStoreMapTest extends HazelcastTest {
         map.delete(state.randomKey());
     }
 
+    private boolean isTsEnabledForMap() {
+        return getMapConfig().getTieredStoreConfig().getDiskTierConfig().isEnabled();
+    }
+
+    private MapConfig getMapConfig() {
+        //Get MapConfig from the cluster, default option with client has lack of required fields
+        try {
+            return executor.submit(new GetMapConfigTask(name)).get();
+        } catch (ExecutionException | InterruptedException e) {
+            throw new RuntimeException("GetMapConfigTask failed", e);
+        }
+    }
+
+    private void fillMap() {
+        Random random = new Random();
+        Streamer<Integer, byte[]> streamer = StreamerFactory.getInstance(map);
+        logger.info("Starting new batch");
+        for (int key : keys) {
+            streamer.pushEntry(key, generateByteArray(random, RandomUtils.nextInt(minValueByteArrayLength, maxValueByteArrayLength)));
+            if (key % 1_000 == 0) {
+                logger.info("Added " + key + " of " + keys.length + " keys to Streamer");
+            }
+        }
+        streamer.await();
+    }
+
+    private void clearTsDirectory() {
+        executor.submitToAllMembers(new ClearTsDirectoryTask())
+                .values()
+                .forEach(future -> {
+                    try {
+                        future.get();
+                    } catch (InterruptedException | ExecutionException e) {
+                        throw new IllegalStateException("Error during clearing ts directory task", e);
+                    }
+                });
+    }
+
+    private long getHybridLogLengthSum() {
+        //Aggregate hybrid log length from the members
+        return executor.submitToAllMembers((new GetHybridLogLengthTask()))
+                .entrySet()
+                .stream()
+                .map(memberFutureEntry -> {
+                    try {
+                        return memberFutureEntry.getValue().get();
+                    } catch (InterruptedException | ExecutionException e) {
+                        throw new IllegalStateException("GetHlogLengthTask failed for member" + memberFutureEntry.getKey().getAddress().getHost(), e);
+                    }
+                })
+                .reduce(Long::sum)
+                .orElseThrow(() -> new IllegalStateException("GetHlogLengthTask failed - submitToAllMembers returned empty map"));
+    }
+
     public class ThreadState extends BaseThreadState {
         private byte[] randomByteArray(int length) {
             byte[] result = new byte[length];
@@ -135,26 +179,13 @@ public class TieredStoreMapTest extends HazelcastTest {
         }
 
         private Integer randomKey() {
-            return randomInt(keyCount);
+            return randomInt(keyDomain);
         }
 
         private byte[] randomValue() {
-            return randomByteArray(valueByteArrayLength);
+            return randomByteArray(RandomUtils.nextInt(minValueByteArrayLength, maxValueByteArrayLength));
         }
     }
 
-    @Verify()
-    public void verify() {
-        Capacity hybridLogLength = Capacity.of(getHybridLogLength(), BYTES);
-        logger.info("Sum of hybrid log from all members: " + hybridLogLength.toPrettyString());
-        assertTrue("Hybrid log equal to 0. Tiered Storage was not used.", hybridLogLength.bytes() > 0);
-    }
 
-    @Teardown
-    public void tearDown() {
-        if (destroyOnExit) {
-            map.destroy();
-        }
-        executor.shutdown();
-    }
 }

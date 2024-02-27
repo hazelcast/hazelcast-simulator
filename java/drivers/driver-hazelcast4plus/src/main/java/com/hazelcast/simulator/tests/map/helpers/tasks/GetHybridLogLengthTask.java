@@ -36,8 +36,9 @@ public class GetHybridLogLengthTask implements HazelcastInstanceAware, Callable<
         Method getPerMemberMetrics = metrics.getClass().getMethod("getPerMemberMetrics");
         Object perMemberMetrics = getPerMemberMetrics.invoke(metrics);
 
-        Method getCMethod = perMemberMetrics.getClass().getMethod("getHlogLengthExposer");
-        return (Long) getCMethod.invoke(perMemberMetrics);
+        //Needs to be replaced with getLastSeenHybridLogLength after https://github.com/hazelcast/hazelcast-mono/pull/844/
+        Method getHlogLengthExposer = perMemberMetrics.getClass().getMethod("getHlogLengthExposer");
+        return (Long) getHlogLengthExposer.invoke(perMemberMetrics);
     }
 
 }
