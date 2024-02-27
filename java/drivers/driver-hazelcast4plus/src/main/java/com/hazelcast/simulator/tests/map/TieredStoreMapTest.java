@@ -35,7 +35,7 @@ import static com.hazelcast.simulator.utils.GeneratorUtils.generateByteArray;
  */
 public class TieredStoreMapTest extends HazelcastTest {
     // properties
-    public int keyDomain = 2_000_000;
+    public int keyDomain = 1_500_000;
     public int minValueByteArrayLength = 1;
     public int maxValueByteArrayLength = 150_000;
     public boolean clearTsDirectoryOnPrepare = true;
