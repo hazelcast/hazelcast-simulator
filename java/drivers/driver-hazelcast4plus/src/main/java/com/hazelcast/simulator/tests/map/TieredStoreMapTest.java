@@ -118,7 +118,7 @@ public class TieredStoreMapTest extends HazelcastTest {
     }
 
     private boolean isTsEnabledForMap() {
-        return getMapConfig().getTieredStoreConfig().getDiskTierConfig().isEnabled();
+        return getMapConfig().getTieredStoreConfig().isEnabled();
     }
 
     private MapConfig getMapConfig() {
