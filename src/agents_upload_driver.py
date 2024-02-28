@@ -4,20 +4,16 @@
 from simulator.util import shell, run_parallel, simulator_home
 
 
-def __upload_driver(host, agent_yaml, driver_dir):
-    ssh_user = agent_yaml.get('ansible_user')
-    ssh_key = agent_yaml.get('ansible_ssh_private_key_file')
-    ssh_options = f"-i {ssh_key} -o StrictHostKeyChecking=no -o ConnectTimeout=60";
-
-    print(f"[INFO]     {host}  Uploading")
+def __upload_driver(host, driver_dir):
+    print(f"[INFO]     {host['public_ip']}  Uploading")
     shell(
-        f"""rsync --checksum -avv -L -e "ssh {ssh_options}" {simulator_home}/{driver_dir}/* {ssh_user}@{host}:hazelcast-simulator/{driver_dir}/""")
-    print(f"[INFO]     {host}  Uploading: done")
+        f"""rsync --checksum -avv -L -e "ssh {host['ssh_options']}" {simulator_home}/{driver_dir}/* {host['ssh_user']}@{host['public_ip']}:hazelcast-simulator/{driver_dir}/""")
+    print(f"[INFO]     {host['public_ip']}  Uploading: done")
 
 
-def upload_driver(driver, agents_yaml):
+def upload_driver(driver, hosts):
     driver_dir = f"drivers/driver-{driver}"
 
     print(f"[INFO]Uploading driver {driver} to {driver_dir}: starting")
-    run_parallel(__upload_driver, [(host, agent_yaml, driver_dir,) for host, agent_yaml in agents_yaml.items()])
+    run_parallel(__upload_driver, [(host, driver_dir,) for host in hosts])
     print(f"[INFO]Uploading driver {driver} to {driver_dir}: done")

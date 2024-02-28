@@ -1,5 +1,9 @@
 TODO
 
+- specific_coordinator_props_dir = f"{coordinator_props_dir}/{inventory_host_pattern}" can lead to problems
+when inventory_host pattern is not file string. Perhaps get rid of the inventory host pattern completely and pass
+the right directory and no need for driver to make subdir.
+
 - the install should only install on the configured machines; currently it will
 
 - the install should make use of inventory.py to get the data

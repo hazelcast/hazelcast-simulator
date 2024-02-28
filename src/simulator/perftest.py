@@ -135,18 +135,18 @@ class PerfTest:
             if node_driver is not None:
                 exit_with_error(f"test {test_yaml['name']} can't have both the driver and node_driver configured.")
 
-            self.driver_run(driver, test_yaml['name'], test_file, "nodes", coordinator_props_dir)
-            self.driver_run(driver, test_yaml['name'], test_file, "loadgenerators", coordinator_props_dir)
+            self.driver_run(driver, test_yaml['name'], test_file, True, coordinator_props_dir)
+            self.driver_run(driver, test_yaml['name'], test_file, False, coordinator_props_dir)
             coordinator_properties['loadgenerator_driver'] = driver
             coordinator_properties['node_driver'] = driver
         else:
             if node_driver is not None:
                 coordinator_properties['node_driver'] = node_driver
-                self.driver_run(node_driver, test_yaml['name'], test_file, "nodes", coordinator_props_dir)
+                self.driver_run(node_driver, test_yaml['name'], test_file, True, coordinator_props_dir)
 
             if loadgenerator_driver is None:
                 exit_with_error(f"test {test_yaml['name']} has no driver or loadgenerator_driver configured.")
-            self.driver_run(loadgenerator_driver, test_yaml['name'], test_file, "loadgenerators", coordinator_props_dir)
+            self.driver_run(loadgenerator_driver, test_yaml['name'], test_file, False, coordinator_props_dir)
             coordinator_properties['loadgenerator_driver'] = loadgenerator_driver
 
         print("--------------------------------------------------------")
@@ -246,11 +246,11 @@ class PerfTest:
                 exit_with_error(f"Failed run coordinator, exitcode={self.exitcode}")
             return self.exitcode
 
-    def driver_run(self, driver, test_name, test_file, inventory_target, coordinator_props_dir):
+    def driver_run(self, driver, test_name, test_file, is_server, coordinator_props_dir):
         self.exitcode = self.__shell(f"""
             export PYTHONPATH={simulator_home}/src:$PYTHONPATH
-            {simulator_home}/drivers/driver-{driver}/conf/install {test_name} {test_file} {inventory_target} {inventory_path} {coordinator_props_dir}
-            {simulator_home}/drivers/driver-{driver}/conf/configure {test_name} {test_file} {inventory_target} {inventory_path} {coordinator_props_dir}
+            {simulator_home}/drivers/driver-{driver}/conf/install {test_name} {test_file} {is_server} {inventory_path}
+            {simulator_home}/drivers/driver-{driver}/conf/configure {test_name} {test_file} {is_server} {inventory_path} {coordinator_props_dir}
         """)
 
     def run(self, tests_file, tags, skip_report, test_commit, test_pattern, run_label):

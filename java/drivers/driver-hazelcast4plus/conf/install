@@ -6,25 +6,21 @@ import subprocess
 import sys
 
 from agents_upload_driver import upload_driver
+from inventory import load_hosts
 from simulator.util import run_parallel, shell, load_yaml_file, write_file
 from simulator.ssh import Ssh
 
-def __upsync(host, agent_yaml, artifact_ids, version):
-    ssh_user = agent_yaml.get('ansible_user')
-    ssh_key =  agent_yaml.get('ansible_ssh_private_key_file')
+def __upsync(host, artifact_ids, version):
+    print(f"[INFO]     {host['public_ip']} starting")
 
-    print(f"[INFO]     {host} starting")
-    ssh_options = f"-i {ssh_key} -o StrictHostKeyChecking=no -o ConnectTimeout=60";
-    print(f"[INFO]     ssh_options {ssh_options}")
-
-    ssh = Ssh(host, ssh_user, ssh_options)
+    ssh = Ssh(host['public_ip'], host['ssh_user'], host['ssh_options'])
     ssh.exec("mkdir -p hazelcast-simulator/driver-lib/" + driver + "/")
     dest = f"hazelcast-simulator/driver-lib/{driver}/maven-{version}"
     ssh.exec(f"mkdir -p {dest}")
     for artifact_id in artifact_ids:
         ssh.rsync_to_remote(f"{local_jar_path(artifact_id, version)}", f"{dest}")
 
-    print(f"[INFO]     {host} done")
+    print(f"[INFO]     {host['public_ip']} done")
 
 
 def local_repo():
@@ -133,7 +129,7 @@ def upload_hazelcast_jars():
             download(artifact_id, version, remote_repo)
     for artifact_id in artifact_ids:
         print(f"[INFO]Uploading {artifact_id}")
-    run_parallel(__upsync, [(host, agent_yaml, artifact_ids, version) for host, agent_yaml in agents_yaml.items()])
+    run_parallel(__upsync, [(host, artifact_ids, version) for host in hosts])
     print(f"[INFO]Uploading Hazelcast jars: done")
 
 
@@ -146,17 +142,30 @@ for t in tests_yaml:
         test_yaml = t
         break
 
-inventory_target = sys.argv[3]
-inventory_yaml = load_yaml_file(sys.argv[4])
+is_server = bool(sys.argv[3])
+inventory_path = sys.argv[4]
 
-agents_yaml = inventory_yaml.get(inventory_target).get("hosts")
-version_spec = test_yaml.get('version')
+host_pattern = None
+if is_server:
+    host_pattern = test_yaml.get("node_hosts")
+    if host_pattern is None:
+        host_pattern = "nodes"
+else:
+    host_pattern = test_yaml.get("loadgenerator_hosts")
+    if host_pattern is None:
+        host_pattern = "loadgenerators"
+
+hosts = load_hosts(inventory_path=inventory_path, host_pattern=host_pattern)
+
+
 driver = test_yaml.get('driver')
 enterprise = is_enterprise(driver)
+
+# todo: this is where we could allow for server/client to run with different version
+version_spec = test_yaml.get('version')
 version = version(version_spec)
 remote_repo = remote_repo(enterprise)
 force_download = force_download_from_maven_repo(version_spec)
 
-
-upload_driver(driver, agents_yaml)
+upload_driver(driver, hosts)
 upload_hazelcast_jars()
