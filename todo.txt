@@ -1,16 +1,8 @@
 TODO
 
-- specific_coordinator_props_dir = f"{coordinator_props_dir}/{inventory_host_pattern}" can lead to problems
-when inventory_host pattern is not file string. Perhaps get rid of the inventory host pattern completely and pass
-the right directory and no need for driver to make subdir.
-
-- the install should only install on the configured machines; currently it will
-
-- the install should make use of inventory.py to get the data
+- remove client type from coordinator cli
 
 - pass path to worker.sh from test
-
-- configure hazelcast.xml  <!--LITE_MEMBER_CONFIG-->
 
 - the files in the coordinator_params_dir need to be added as command line prop
 
@@ -22,11 +14,45 @@ ERROR StatusLogger Error parsing /home/ubuntu/hazelcast-simulator/workers/c1f13c
 
 - properly fix worker.sh
 
-- hazelcast 3 install fix
-
 - undesirable driver upload output
 
+UNSURE
+
+- driver install should be optional
+
+- driver configure should be optional
+
+
+
+
 DONE
+
+- configure hazelcast.xml  <!--LITE_MEMBER_CONFIG-->
+
+- litemember 'True' problem
+
+- [INFO]Uploading Hazelcast jars: done
+Traceback (most recent call last):
+  File "/mnt/home/eng/Hazelcast/hazelcast-simulator/drivers/driver-hazelcast5/conf/configure", line 117, in <module>
+    raise Exception(f"Unrecognized client_type {client_type}")
+
+- config: clients were trying to connect to the clients
+
+- Traceback (most recent call last):
+  File "/mnt/home/eng/Hazelcast/hazelcast-simulator/drivers/driver-hazelcast5/conf/configure", line 115, in <module>
+    os.makedirs(specific_coordinator_props_dir)
+  File "<frozen os>", line 225, in makedirs
+FileExistsError: [Errno 17] File exists: '/tmp/tmpxv_n0z69/server'
+
+- configure should also get is_server setting
+
+- specific_coordinator_props_dir = f"{coordinator_props_dir}/{inventory_host_pattern}" can lead to problems
+when inventory_host pattern is not file string. Perhaps get rid of the inventory host pattern completely and pass
+the right directory and no need for driver to make subdir.
+
+- the install should only install on the configured machines; currently it will
+
+- the install should make use of inventory.py to get the data
 
 - configure client-hazelcast.xml <!--MEMBERS-->
 

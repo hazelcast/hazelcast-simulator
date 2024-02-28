@@ -70,6 +70,15 @@ def remove(file):
         shutil.rmtree(file)
 
 
+def parse_bool(v):
+    lower = v.lower()
+    if lower == 'true':
+        return True
+    elif lower == 'false':
+        return False
+    else:
+        raise Exception(f"{v} is not a valid boolean value.")
+
 def validate_dir(path):
     path = os.path.expanduser(path)
 

@@ -10,8 +10,8 @@ from simulator.util import exit_with_error
 default_inventory_path = 'inventory.yaml'
 
 
-def find_host_with_public_ip(inventory, public_ip):
-    for host in inventory:
+def find_host_with_public_ip(hosts, public_ip):
+    for host in hosts:
         if host["public_ip"] == public_ip:
             return host
     return

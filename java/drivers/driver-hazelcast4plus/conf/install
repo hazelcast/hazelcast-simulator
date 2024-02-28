@@ -7,7 +7,7 @@ import sys
 
 from agents_upload_driver import upload_driver
 from inventory import load_hosts
-from simulator.util import run_parallel, shell, load_yaml_file, write_file
+from simulator.util import run_parallel, shell, load_yaml_file, write_file, parse_bool
 from simulator.ssh import Ssh
 
 def __upsync(host, artifact_ids, version):
@@ -142,7 +142,7 @@ for t in tests_yaml:
         test_yaml = t
         break
 
-is_server = bool(sys.argv[3])
+is_server = parse_bool(sys.argv[3])
 inventory_path = sys.argv[4]
 
 host_pattern = None
