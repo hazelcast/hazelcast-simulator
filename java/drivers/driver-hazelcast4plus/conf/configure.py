@@ -8,13 +8,6 @@ from simulator.util import load_yaml_file, copy_file, find_config_file, find_dri
     read_file, write_file, parse_bool
 
 
-def find_test_yaml():
-    for t in tests_yaml:
-        if t.get('name') == test_name:
-            return t
-    raise Exception(f"Could not find test {test_name}")
-
-
 def generate_hazelcast_xml(lite_member=False):
     src_file = test_yaml.get("hazelcast_xml")
     if src_file is not None:
@@ -85,36 +78,40 @@ def generate_worker_sh():
     copy_file(src_worker_sh, f"{specific_coordinator_props_dir}/worker.sh")
 
 
-test_name = sys.argv[1]
-tests_yaml = load_yaml_file(sys.argv[2])
-test_yaml = find_test_yaml()
-driver = test_yaml.get('driver')
-is_server = parse_bool(sys.argv[3])
-inventory_path = sys.argv[4]
+def exec(test_yaml__, is_server__, inventory_path, coordinator_props_dir):
+    global test_yaml
+    test_yaml = test_yaml__
 
-nodes_pattern = test_yaml.get("node_hosts")
-if nodes_pattern is None:
-    nodes_pattern = "nodes"
+    global driver
+    driver = test_yaml.get('driver')
 
-nodes = load_hosts(inventory_path=inventory_path, host_pattern=nodes_pattern)
+    global is_server
+    is_server = is_server__
 
-coordinator_props_dir = sys.argv[5]
-mode = "server" if is_server else "client"
-specific_coordinator_props_dir = f"{coordinator_props_dir}/{mode}"
-os.makedirs(specific_coordinator_props_dir)
+    nodes_pattern = test_yaml.get("node_hosts")
+    if nodes_pattern is None:
+        nodes_pattern = "nodes"
 
-generate_log4j_xml()
-generate_worker_sh()
-if is_server:
-    generate_hazelcast_xml()
-else:
-    client_type = test_yaml.get('client_type')
-    if client_type is None:
-        client_type = 'javaclient'
+    global nodes
+    nodes = load_hosts(inventory_path=inventory_path, host_pattern=nodes_pattern)
 
-    if client_type == 'javaclient':
-        generate_client_hazelcast_xml()
-    elif client_type == 'litemember':
-        generate_hazelcast_xml(lite_member=True)
+    mode = "server" if is_server else "client"
+    global specific_coordinator_props_dir
+    specific_coordinator_props_dir = f"{coordinator_props_dir}/{mode}"
+    os.makedirs(specific_coordinator_props_dir)
+
+    generate_log4j_xml()
+    generate_worker_sh()
+    if is_server:
+        generate_hazelcast_xml()
     else:
-        raise Exception(f"Unrecognized client_type {client_type}")
+        client_type = test_yaml.get('client_type')
+        if client_type is None:
+            client_type = 'javaclient'
+
+        if client_type == 'javaclient':
+            generate_client_hazelcast_xml()
+        elif client_type == 'litemember':
+            generate_hazelcast_xml(lite_member=True)
+        else:
+            raise Exception(f"Unrecognized client_type {client_type}")

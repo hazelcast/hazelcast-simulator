@@ -62,7 +62,7 @@ def get_artifact_ids(enterprise, version):
         print(f"[ERROR] Unrecognized version {version}")
 
 
-def remote_repo(enteprise):
+def get_remote_repo(enteprise):
     if not enteprise:
         if version.endswith("-SNAPSHOT"):
             return "https://oss.sonatype.org/content/repositories/snapshots"
@@ -95,7 +95,7 @@ def parse_version_spec(version_spec):
     return result
 
 
-def version(version_spec):
+def get_version(version_spec):
     parsed_version_spec = parse_version_spec(version_spec)
 
     version = parsed_version_spec.get('maven')
@@ -133,39 +133,42 @@ def upload_hazelcast_jars():
     print(f"[INFO]Uploading Hazelcast jars: done")
 
 
+def exec(test_yaml, is_server__, inventory_path):
+    print("[INFO] install")
 
-test_name = sys.argv[1]
-tests_yaml = load_yaml_file(sys.argv[2])
-test_yaml = None
-for t in tests_yaml:
-    if t.get('name') == test_name:
-        test_yaml = t
-        break
+    global is_server
+    is_server = is_server__
 
-is_server = parse_bool(sys.argv[3])
-inventory_path = sys.argv[4]
+    if is_server:
+        host_pattern = test_yaml.get("node_hosts")
+        if host_pattern is None:
+            host_pattern = "nodes"
+    else:
+        host_pattern = test_yaml.get("loadgenerator_hosts")
+        if host_pattern is None:
+            host_pattern = "loadgenerators"
 
-host_pattern = None
-if is_server:
-    host_pattern = test_yaml.get("node_hosts")
-    if host_pattern is None:
-        host_pattern = "nodes"
-else:
-    host_pattern = test_yaml.get("loadgenerator_hosts")
-    if host_pattern is None:
-        host_pattern = "loadgenerators"
+    global hosts
+    hosts = load_hosts(inventory_path=inventory_path, host_pattern=host_pattern)
 
-hosts = load_hosts(inventory_path=inventory_path, host_pattern=host_pattern)
+    global driver
+    driver = test_yaml.get('driver')
 
+    global enterprise
+    enterprise = is_enterprise(driver)
 
-driver = test_yaml.get('driver')
-enterprise = is_enterprise(driver)
+    # todo: this is where we could allow for server/client to run with different version
+    global version_spec
+    version_spec = test_yaml.get('version')
 
-# todo: this is where we could allow for server/client to run with different version
-version_spec = test_yaml.get('version')
-version = version(version_spec)
-remote_repo = remote_repo(enterprise)
-force_download = force_download_from_maven_repo(version_spec)
+    global version
+    version = get_version(version_spec)
 
-upload_driver(driver, hosts)
-upload_hazelcast_jars()
+    global remote_repo
+    remote_repo = get_remote_repo(enterprise)
+
+    global force_download
+    force_download = force_download_from_maven_repo(version_spec)
+
+    upload_driver(driver, hosts)
+    upload_hazelcast_jars()

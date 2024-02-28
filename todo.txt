@@ -27,6 +27,10 @@ UNSURE
 
 DONE
 
+- configure doesn't need to run in separate process
+
+- install doesn't need to run in separate process
+
 - configure hazelcast.xml  <!--LITE_MEMBER_CONFIG-->
 
 - litemember 'True' problem
