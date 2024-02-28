@@ -6,7 +6,7 @@ import subprocess
 import sys
 
 from agents_upload_driver import upload_driver
-from simulator.util import run_parallel, shell, load_yaml_file
+from simulator.util import run_parallel, shell, load_yaml_file, write_file
 from simulator.ssh import Ssh
 
 def __upsync(host, agent_yaml, artifact_ids, version):
@@ -51,7 +51,7 @@ def download(artifact_id, version, repo):
         raise Exception(f"Failed to download artifact {artifact}")
 
 
-def artifact_ids(enterprise, version):
+def get_artifact_ids(enterprise, version):
     if version.startswith("4."):
         if enterprise:
             return ['hazelcast-enterprise-all']
@@ -110,13 +110,33 @@ def version(version_spec):
     return version_spec[6:]
 
 
-def force_download(version_spec):
+def force_download_from_maven_repo(version_spec):
     parsed_version_spec = parse_version_spec(version_spec)
     print(f"[INFO]version_spec:{parsed_version_spec}")
     force_download = parsed_version_spec.get('force_download')
     if not force_download:
         return False
     return "true" == force_download.lower()
+
+
+def upload_hazelcast_jars():
+    global local_repo
+    print(f"[INFO]Uploading Hazelcast jars")
+    local_repo = local_repo()
+    artifact_ids = get_artifact_ids(enterprise, version)
+    for artifact_id in artifact_ids:
+        path = local_jar_path(artifact_id, version)
+        if force_download_from_maven_repo and os.path.exists(path):
+            os.remove(path)
+
+        if not os.path.exists(path):
+            download(artifact_id, version, remote_repo)
+    for artifact_id in artifact_ids:
+        print(f"[INFO]Uploading {artifact_id}")
+    run_parallel(__upsync, [(host, agent_yaml, artifact_ids, version) for host, agent_yaml in agents_yaml.items()])
+    print(f"[INFO]Uploading Hazelcast jars: done")
+
+
 
 test_name = sys.argv[1]
 tests_yaml = load_yaml_file(sys.argv[2])
@@ -128,32 +148,15 @@ for t in tests_yaml:
 
 inventory_target = sys.argv[3]
 inventory_yaml = load_yaml_file(sys.argv[4])
-agents_yaml = inventory_yaml.get(inventory_target).get("hosts")
 
+agents_yaml = inventory_yaml.get(inventory_target).get("hosts")
 version_spec = test_yaml.get('version')
 driver = test_yaml.get('driver')
 enterprise = is_enterprise(driver)
 version = version(version_spec)
 remote_repo = remote_repo(enterprise)
-force_download = force_download(version_spec)
+force_download = force_download_from_maven_repo(version_spec)
+
 
 upload_driver(driver, agents_yaml)
-
-print(f"[INFO]Uploading Hazelcast jars")
-
-local_repo = local_repo()
-artifact_ids = artifact_ids(enterprise, version)
-
-for artifact_id in artifact_ids:
-    path = local_jar_path(artifact_id, version)
-    if force_download and os.path.exists(path):
-        os.remove(path)
-
-    if not os.path.exists(path):
-        download(artifact_id, version, remote_repo)
-
-for artifact_id in artifact_ids:
-    print(f"[INFO]Uploading {artifact_id}")
-
-run_parallel(__upsync, [(host, agent_yaml, artifact_ids, version) for host, agent_yaml in agents_yaml.items()])
-print(f"[INFO]Uploading Hazelcast jars: done")
+upload_hazelcast_jars()

@@ -20,7 +20,7 @@ from simulator.git import get_last_commit_hash, git_init, is_git_installed, is_i
     commit_modified_files
 from simulator.hosts import public_ip, ssh_user, ssh_options
 from simulator.ssh import Ssh, new_key
-from simulator.util import read, write, shell, run_parallel, exit_with_error, simulator_home, shell_logged, remove, \
+from simulator.util import read_file, write_file, shell, run_parallel, exit_with_error, simulator_home, shell_logged, remove, \
     load_yaml_file, parse_tags, write_yaml, AtomicLong
 from simulator.log import info, warn, log_header
 
@@ -123,30 +123,40 @@ class PerfTest:
         loadgenerator_driver = test_yaml.get('loadgenerator_driver')
         node_driver = test_yaml.get('node_driver')
 
+        coordinator_props_dir = tempfile.mkdtemp()
         if driver is not None:
             if loadgenerator_driver is not None:
-                exit_with_error(f"test {test_yaml['name']} can't have both the driver and loadgenerator_driver configured.")
+                exit_with_error(
+                    f"test {test_yaml['name']} can't have both the driver and loadgenerator_driver configured.")
             if node_driver is not None:
                 exit_with_error(f"test {test_yaml['name']} can't have both the driver and node_driver configured.")
 
-            self.driver_install(driver, test_yaml['name'],test_file, "nodes")
-            self.driver_install(driver, test_yaml['name'], test_file, "loadgenerators")
+            self.driver_run(driver, test_yaml['name'], test_file, "nodes", coordinator_props_dir)
+            self.driver_run(driver, test_yaml['name'], test_file, "loadgenerators", coordinator_props_dir)
             coordinator_args = f"{coordinator_args} --driver {driver}"
             coordinator_properties['loadgenerator_driver'] = driver
             coordinator_properties['node_driver'] = driver
         else:
             if node_driver is not None:
                 coordinator_properties['$node_driver'] = node_driver
-                self.driver_install(node_driver, test_yaml['name'], test_file, "nodes")
+                self.driver_run(node_driver, test_yaml['name'], test_file, "nodes", coordinator_props_dir)
                 coordinator_args = f"{coordinator_args} --nodeDriver {node_driver}"
 
             if loadgenerator_driver is None:
                 exit_with_error(f"test {test_yaml['name']} has no driver or loadgenerator_driver configured.")
-            self.driver_install(loadgenerator_driver, test_yaml['name'], test_file, "loadgenerators")
+            self.driver_run(loadgenerator_driver, test_yaml['name'], test_file, "loadgenerators", coordinator_props_dir)
             coordinator_args = f"{coordinator_args} --loadGeneratorDriver {loadgenerator_driver}"
             coordinator_properties['loadgenerator_driver'] = loadgenerator_driver
 
+        print("--------------------------------------------------------")
+        print(f"coordinator property dir: {coordinator_props_dir}")
+        for root, dirs, files in os.walk(coordinator_props_dir):
+            for file in files:
+                # Get the full path of the file
+                file_path = os.path.join(root, file)
+                print(file_path)
 
+        print("--------------------------------------------------------")
         # if worker_vm_startup_delay_ms is not None:
         #     args = f"{args} --workerVmStartupDelayMs {worker_vm_startup_delay_ms}"
         #
@@ -157,7 +167,7 @@ class PerfTest:
 
         parallel = test_yaml.get('parallel')
         if parallel:
-             coordinator_args = f"{coordinator_args} --parallel"
+            coordinator_args = f"{coordinator_args} --parallel"
 
         license_key = test_yaml.get('license_key')
 
@@ -169,15 +179,15 @@ class PerfTest:
         #
 
         if run_path is not None:
-             coordinator_args = f"{coordinator_args} --runPath {run_path}"
+            coordinator_args = f"{coordinator_args} --runPath {run_path}"
 
         duration = test_yaml.get('duration')
         if duration is not None:
-             coordinator_args = f"{coordinator_args} --duration {duration}"
+            coordinator_args = f"{coordinator_args} --duration {duration}"
 
         performance_monitor_interval_seconds = test_yaml.get("performance_monitor_interval_seconds")
         if performance_monitor_interval_seconds:
-             coordinator_args = f"{coordinator_args} --performanceMonitorInterval {performance_monitor_interval_seconds}"
+            coordinator_args = f"{coordinator_args} --performanceMonitorInterval {performance_monitor_interval_seconds}"
 
         node_hosts = test_yaml.get('node_hosts')
         if not node_hosts:
@@ -193,11 +203,11 @@ class PerfTest:
 
         members = test_yaml.get('members')
         if members is not None:
-             coordinator_args = f"{coordinator_args} --members {members}"
+            coordinator_args = f"{coordinator_args} --members {members}"
 
         member_args = test_yaml.get('member_args')
         if member_args:
-             coordinator_args = f"""{coordinator_args} --memberArgs "{member_args}" """
+            coordinator_args = f"""{coordinator_args} --memberArgs "{member_args}" """
 
         clients = test_yaml.get('clients')
         if clients is not None:
@@ -213,8 +223,8 @@ class PerfTest:
         #
         version = test_yaml.get('version')
         if version is not None:
-             coordinator_properties['version']=version
-             # coordinator_args = f"""{coordinator_args} --version "{version}"  """
+            coordinator_properties['version'] = version
+            # coordinator_args = f"""{coordinator_args} --version "{version}"  """
         #
         # if fail_fast is not None:
         #     args = f"{args} --failFast {fail_fast}"
@@ -242,13 +252,11 @@ class PerfTest:
                     else:
                         test_name = t['class'].split('.')[-1]
                     for key, value in t.items():
-                        tmp.write(test_name+'@')
+                        tmp.write(test_name + '@')
                         tmp.write(f"{key}={value}\n")
             else:
                 for key, value in test_inner.items():
                     tmp.write(f"{key}={value}\n")
-                #for key, value in coordinator_properties.items():
-                #    tmp.write(f"{key}={value}\n")
 
             tmp.flush()
 
@@ -257,10 +265,11 @@ class PerfTest:
                 exit_with_error(f"Failed run coordinator, exitcode={self.exitcode}")
             return self.exitcode
 
-    def driver_install(self, driver, test_name,test_file, inventory_target):
+    def driver_run(self, driver, test_name, test_file, inventory_target, coordinator_props_dir):
         self.exitcode = self.__shell(f"""
             export PYTHONPATH={simulator_home}/src:$PYTHONPATH
-            {simulator_home}/drivers/driver-{driver}/conf/install {test_name} {test_file} {inventory_target} {inventory_path} 
+            {simulator_home}/drivers/driver-{driver}/conf/install {test_name} {test_file} {inventory_target} {inventory_path} {coordinator_props_dir}
+            {simulator_home}/drivers/driver-{driver}/conf/configure {test_name} {test_file} {inventory_target} {inventory_path} {coordinator_props_dir}
         """)
 
     def run(self, tests_file, tags, skip_report, test_commit, test_pattern, run_label):
@@ -317,7 +326,7 @@ class PerfTest:
         exitcode = self.exec(
             test,
             test_file,
-            run_path = run_path,
+            run_path=run_path,
         )
 
         # duration=test.get('duration'),
@@ -371,7 +380,7 @@ class PerfTest:
             test_commit_hash = get_last_commit_hash()
             if test_commit_hash is not None:
                 commit_file = f"{dir}/test_commit"
-                simulator.util.write(commit_file, test_commit_hash)
+                simulator.util.write_file(commit_file, test_commit_hash)
 
         csv_path = f"{report_dir}/report.csv"
         if not os.path.exists(csv_path):
@@ -380,9 +389,9 @@ class PerfTest:
 
         run_id_path = f"{dir}/run.id"
         if not os.path.exists(run_id_path):
-            write(run_id_path, uuid.uuid4().hex)
+            write_file(run_id_path, uuid.uuid4().hex)
 
-        tags['run_id'] = read(run_id_path)
+        tags['run_id'] = read_file(run_id_path)
 
         results = {}
         with open(csv_path, newline='') as csv_file:
@@ -465,10 +474,10 @@ class PerftestCreateCli:
             for filename in files:
                 filepath = subdir + os.sep + filename
                 if os.access(filepath, os.W_OK):
-                    new_text = read(filepath).replace("<id>", id)
+                    new_text = read_file(filepath).replace("<id>", id)
                     rnd = ''.join(random.choices(string.ascii_lowercase, k=5))
                     new_text = new_text.replace("<rnd:5>", rnd)
-                    write(filepath, new_text)
+                    write_file(filepath, new_text)
 
 
 class PerftestCloneCli:
@@ -738,8 +747,8 @@ class PerftestExecCli:
             verify_enabled=args.verifyEnabled,
             client_type=args.clientType,
             skip_download=args.skipDownload,
-            member_worker_script = args.memberWorkerScript,
-            client_worker_script = args.clientWorkerScript
+            member_worker_script=args.memberWorkerScript,
+            client_worker_script=args.clientWorkerScript
         )
 
         perftest.collect(run_path,

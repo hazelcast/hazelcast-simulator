@@ -13,7 +13,7 @@ from pandas.errors import EmptyDataError
 
 from simulator.perftest_report_common import *
 import matplotlib.pyplot as plt
-from simulator.util import shell, simulator_home, read, write
+from simulator.util import shell, simulator_home, read_file, write_file
 
 
 def prepare_hdr(config: ReportConfig):
@@ -479,14 +479,14 @@ def __make_hgrm_latency_by_perc_dist_html(config: ReportConfig, hgrm_files):
             if not os.path.exists(hgrm_file_path):
                 continue
 
-            hgrm_text = read(hgrm_file_path)
+            hgrm_text = read_file(hgrm_file_path)
             histos.append(hgrm_text.strip())
             labels.append(run_label)
 
-        html_template = read(f"{simulator_home}/src/simulator/latency_by_percentile.html")
+        html_template = read_file(f"{simulator_home}/src/simulator/latency_by_percentile.html")
         html = html_template.replace("{HISTOS}", str(histos))
         html = html.replace("{NAMES}", str(labels))
         hgrm_file_name_no_ext = hgrm_file_name.rstrip(".hgrm")
         target_file_name = f"{config.report_dir}/latency/{hgrm_file_name_no_ext}.html"
         mkdir(os.path.dirname(target_file_name))
-        write(target_file_name, html)
+        write_file(target_file_name, html)

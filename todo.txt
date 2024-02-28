@@ -1,5 +1,23 @@
 TODO
 
+- configure copy hazelcast.xml
+
+- configure copy hazelcast-client.xml
+
+- properly locate worker.sh in configure
+
+- properly locate log4j.xml in configure
+
+- the worker config directory needs to be passed as property
+
+- the member args need to be passed as coordinator property
+
+- the client args need to be passed as coordinator property
+
+- better name for worker_config_dir
+
+- final_worker_params_dir: better name
+
 - [Fatal Error] log4j.xml:3:22: The prefix "log4j" for element "log4j:configuration" is not bound.
 ERROR StatusLogger Error parsing /home/ubuntu/hazelcast-simulator/workers/c1f13c7b5d09d041c84f8508ea3a4e843d8aad50/A1_W1-18.185.56.223-member/log4j.xml
  org.xml.sax.SAXParseException; systemId: file:///home/ubuntu/hazelcast-simulator/workers/c1f13c7b5d09d041c84f8508ea3a4e843d8aad50/A1_W1-18.185.56.223-member/log4j.xml; lineNumber: 3; columnNumber: 22; The prefix "log4j" for element "log4j:configuration" is not bound.
@@ -29,6 +47,15 @@ ERROR StatusLogger Error parsing /home/ubuntu/hazelcast-simulator/workers/c1f13c
 - uploading of the final Hazelcast config files
 
 DONE
+
+- config logic needs to go to config script
+
+- in the worker output directory, make subdirs with their content for 'target'
+
+- copy log4j.xml to worker output dir
+
+- copy worker.sh to worker output dir
+
 
 - update agents_upload_driver.py to new format
 

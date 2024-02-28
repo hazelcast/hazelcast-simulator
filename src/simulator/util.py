@@ -37,15 +37,18 @@ class AtomicLong:
             self.value += amount
 
 
-def read(file):
+def read_file(file):
     with open(file, 'r') as f:
         return f.read()
 
 
-def write(file, text):
+def write_file(file, text):
     with open(file, 'w') as f:
         return f.write(text)
 
+
+def copy_file(src, dst):
+    shutil.copy(src, dst)
 
 def write_yaml(file, content):
     with open(file, 'w') as f:

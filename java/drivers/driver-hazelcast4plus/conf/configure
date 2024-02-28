@@ -4,8 +4,8 @@ import os.path
 import subprocess
 
 import sys
-from simulator.util import run_parallel, shell, load_yaml_file, read
-from simulator.ssh import Ssh
+
+from simulator.util import load_yaml_file, write_file, copy_file, simulator_home
 
 test_name = sys.argv[1]
 tests_yaml = load_yaml_file(sys.argv[2])
@@ -17,15 +17,17 @@ for t in tests_yaml:
 
 inventory_target = sys.argv[3]
 inventory_yaml = load_yaml_file(sys.argv[4])
+coordinator_props_dir = sys.argv[5]
+
 agents_yaml = inventory_yaml.get(inventory_target).get("hosts")
-worker_type = sys.argv[5]
-run_id = sys.argv[6]
+version_spec = test_yaml.get('version')
+driver = test_yaml.get('driver')
 
-if worker_type == "member":
-    template =
-elif worker_type == "litemember":
+specific_coordinator_props_dir= f"{coordinator_props_dir}/{inventory_target}"
+os.makedirs(specific_coordinator_props_dir)
 
-elif worker_type == "client":
+copy_file(f"{simulator_home}/conf/worker-log4j.xml",f"{specific_coordinator_props_dir}/worker.log4j")
+copy_file(f"{simulator_home}/conf/worker.sh",f"{specific_coordinator_props_dir}/worker.sh")
+copy_file(f"{simulator_home}/driver/{driver}",f"{specific_coordinator_props_dir}/hazelcast.xml")
+copy_file(f"{simulator_home}/driver/{driver}",f"{specific_coordinator_props_dir}/hazelcast.xml")
 
-else:
-    raise Exception()

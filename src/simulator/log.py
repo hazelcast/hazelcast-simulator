@@ -54,7 +54,7 @@ def log(msg, level=Level.info, file=None):
             for line in msg.splitlines():
                 print(line)
                 if file: 
-                    file.write(line + "\n")
+                    file.write_file(line + "\n")
         return
 
     # get rid of color codes
@@ -66,7 +66,7 @@ def log(msg, level=Level.info, file=None):
             log_str = f"{level_txt} {dt} {line}"
             print(log_str)
             if file:
-                file.write(log_str + "\n")
+                file.write_file(log_str + "\n")
 
 
 def log_header(msg):
