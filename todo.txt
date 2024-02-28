@@ -1,5 +1,6 @@
 TODO
 
+
 - remove client type from coordinator cli
 
 - pass path to worker.sh from test
@@ -22,10 +23,13 @@ UNSURE
 
 - driver configure should be optional
 
-
-
-
 DONE
+
+- coordinator cli property rename to param
+
+- params to coordinator cli need to be escaped
+
+- configure should put results in dictionary instead of directory
 
 - configure doesn't need to run in separate process
 

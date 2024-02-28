@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 
 import os.path
-import sys
 
 from inventory import load_hosts
-from simulator.util import load_yaml_file, copy_file, find_config_file, find_driver_config_file, \
-    read_file, write_file, parse_bool
+from simulator.util import find_config_file, find_driver_config_file, \
+    read_file
 
 
-def generate_hazelcast_xml(lite_member=False):
+def configure_hazelcast_xml(nodes, test_yaml, is_server, params):
     src_file = test_yaml.get("hazelcast_xml")
     if src_file is not None:
         if not os.path.exists(src_file):
@@ -16,21 +15,21 @@ def generate_hazelcast_xml(lite_member=False):
     else:
         src_file = find_driver_config_file(driver, "hazelcast.xml")
 
-    dst_file = f"{specific_coordinator_props_dir}/hazelcast.xml"
-    template = read_file(src_file)
+    config = read_file(src_file)
 
     # configure <!--LICENSE-KEY-->
     license_key = test_yaml.get("license_key")
     if license_key is not None:
         license_key_config = f"<license-key>{license_key}</license_key>"
-        template = template.replace("<!--LICENSE-KEY-->", license_key_config)
+        config = config.replace("<!--LICENSE-KEY-->", license_key_config)
 
     # configure <!--LITE_MEMBER_CONFIG-->
-    if lite_member:
-        lite_member_config = "<lite-member enabled=\"true\"/>"
-    else:
+    if is_server:
         lite_member_config = "<lite-member enabled=\"false\"/>"
-    template = template.replace("<!--LITE_MEMBER_CONFIG-->", lite_member_config)
+    else:
+        lite_member_config = "<lite-member enabled=\"true\"/>"
+
+    config = config.replace("<!--LITE_MEMBER_CONFIG-->", lite_member_config)
 
     # configure <!--MEMBERS-->
     members_config = ""
@@ -39,13 +38,15 @@ def generate_hazelcast_xml(lite_member=False):
         member_port = "5701"
     for host in nodes:
         members_config = f"{members_config}<member>{host['private_ip']}:{member_port}</member>"
-    template = template.replace("<!--MEMBERS-->", members_config)
+    config = config.replace("<!--MEMBERS-->", members_config)
 
-    write_file(dst_file, template)
+    if is_server:
+        params['file:hazelcast.xml'] = config
+    else:
+        params['file:litemember-hazelcast.xml'] = config
 
 
-
-def generate_client_hazelcast_xml():
+def configure_client_hazelcast_xml(nodes, test_yaml, params):
     src_file = test_yaml.get("client_hazelcast_xml")
     if src_file is not None:
         if not os.path.exists(src_file):
@@ -53,8 +54,7 @@ def generate_client_hazelcast_xml():
     else:
         src_file = find_driver_config_file(driver, "client-hazelcast.xml")
 
-    dst_file = f"{specific_coordinator_props_dir}/client-hazelcast.xml"
-    template = read_file(src_file)
+    config = read_file(src_file)
 
     members_config = ""
     member_port = test_yaml.get('member_port')
@@ -63,55 +63,50 @@ def generate_client_hazelcast_xml():
     for host in nodes:
         members_config = f"{members_config}<address>{host['private_ip']}:{member_port}</address>"
 
-    template = template.replace("<!--MEMBERS-->", members_config)
-
-    write_file(dst_file, template)
-
-
-def generate_log4j_xml():
-    src_log4j_xml = find_config_file("worker-log4j.xml")
-    copy_file(src_log4j_xml, f"{specific_coordinator_props_dir}/worker.log4j")
+    config = config.replace("<!--MEMBERS-->", members_config)
+    params['file:client_hazelcast.xml']=config
 
 
-def generate_worker_sh():
-    src_worker_sh = find_config_file("worker.sh")
-    copy_file(src_worker_sh, f"{specific_coordinator_props_dir}/worker.sh")
+
+def configure_log4j_xml(is_server, params):
+    log4j_xml = read_file(find_config_file("worker-log4j.xml"))
+    if is_server:
+        params['server:file:log4j.xml'] = log4j_xml
+    else:
+        params['client:file:log4j.xml'] = log4j_xml
 
 
-def exec(test_yaml__, is_server__, inventory_path, coordinator_props_dir):
-    global test_yaml
-    test_yaml = test_yaml__
+def configure_worker_sh(is_server, params):
+    src_worker_sh = read_file(find_config_file("worker.sh"))
+    if is_server:
+        params['server:worker.sh'] = src_worker_sh
+    else:
+        params['client:worker.sh'] = src_worker_sh
 
+
+def exec(test_yaml, is_server, inventory_path, params):
     global driver
     driver = test_yaml.get('driver')
-
-    global is_server
-    is_server = is_server__
 
     nodes_pattern = test_yaml.get("node_hosts")
     if nodes_pattern is None:
         nodes_pattern = "nodes"
 
-    global nodes
     nodes = load_hosts(inventory_path=inventory_path, host_pattern=nodes_pattern)
 
-    mode = "server" if is_server else "client"
-    global specific_coordinator_props_dir
-    specific_coordinator_props_dir = f"{coordinator_props_dir}/{mode}"
-    os.makedirs(specific_coordinator_props_dir)
+    configure_log4j_xml(is_server, params)
+    configure_worker_sh(is_server, params)
 
-    generate_log4j_xml()
-    generate_worker_sh()
     if is_server:
-        generate_hazelcast_xml()
+        configure_hazelcast_xml(nodes, test_yaml, True, params)
     else:
         client_type = test_yaml.get('client_type')
         if client_type is None:
             client_type = 'javaclient'
 
         if client_type == 'javaclient':
-            generate_client_hazelcast_xml()
+            configure_client_hazelcast_xml(nodes, test_yaml, params)
         elif client_type == 'litemember':
-            generate_hazelcast_xml(lite_member=True)
+            configure_hazelcast_xml(nodes, test_yaml, False, params)
         else:
             raise Exception(f"Unrecognized client_type {client_type}")

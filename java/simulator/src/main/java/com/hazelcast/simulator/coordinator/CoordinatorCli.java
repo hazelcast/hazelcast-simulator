@@ -152,8 +152,8 @@ final class CoordinatorCli {
                     "The name of the group that makes up the loadGenerator.")
             .withRequiredArg().ofType(String.class).defaultsTo("all|!mc");
 
-    private final OptionSpec<String> propertySpec = parser.accepts("property",
-                    "A key=value property.")
+    private final OptionSpec<String> paramSpec = parser.accepts("param",
+                    "A key=value parameter.")
             .withRequiredArg().ofType(String.class);
 
 
@@ -164,7 +164,7 @@ final class CoordinatorCli {
 
         this.properties = loadSimulatorProperties();
 
-        List<String> propertyList = propertySpec.values(options);
+        List<String> propertyList = paramSpec.values(options);
         for (String p : propertyList) {
             int indexOf = p.indexOf("=");
             if (indexOf == -1) {

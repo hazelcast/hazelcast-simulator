@@ -3,6 +3,7 @@ import datetime
 import getpass
 import importlib
 import re
+import shlex
 import shutil
 import random
 import string
@@ -94,7 +95,7 @@ class PerfTest:
 
         self.clean()
 
-        coordinator_args = ""
+        coordinator_param = ""
 
         # exitcode = self.exec(
         #     test['name'],
@@ -121,16 +122,15 @@ class PerfTest:
         #     # member_worker_script=test.get('member_worker_script')
         # )
 
-        coordinator_properties = {}
+        coordinator_params = {}
         for key, value in test_yaml.items():
             if not key == 'test':
-                coordinator_properties[key] = value
+                coordinator_params[key] = value
 
         driver = test_yaml.get('driver')
         loadgenerator_driver = test_yaml.get('loadgenerator_driver')
         node_driver = test_yaml.get('node_driver')
 
-        coordinator_props_dir = tempfile.mkdtemp()
         if driver is not None:
             if loadgenerator_driver is not None:
                 exit_with_error(
@@ -138,29 +138,21 @@ class PerfTest:
             if node_driver is not None:
                 exit_with_error(f"test {test_yaml['name']} can't have both the driver and node_driver configured.")
 
-            self.driver_run(driver, test_yaml, True, coordinator_props_dir)
-            self.driver_run(driver, test_yaml, False, coordinator_props_dir)
-            coordinator_properties['loadgenerator_driver'] = driver
-            coordinator_properties['node_driver'] = driver
+            self.driver_run(driver, test_yaml, True, coordinator_params)
+            self.driver_run(driver, test_yaml, False, coordinator_params)
+            coordinator_params['loadgenerator_driver'] = driver
+            coordinator_params['node_driver'] = driver
         else:
             if node_driver is not None:
-                coordinator_properties['node_driver'] = node_driver
-                self.driver_run(node_driver, test_yaml, True, coordinator_props_dir)
+                coordinator_params['node_driver'] = node_driver
+                self.driver_run(node_driver, test_yaml, True, coordinator_params)
 
             if loadgenerator_driver is None:
                 exit_with_error(f"test {test_yaml['name']} has no driver or loadgenerator_driver configured.")
-            self.driver_run(loadgenerator_driver, test_yaml, False, coordinator_props_dir)
-            coordinator_properties['loadgenerator_driver'] = loadgenerator_driver
+            self.driver_run(loadgenerator_driver, test_yaml, False, coordinator_params)
+            coordinator_params['loadgenerator_driver'] = loadgenerator_driver
 
-        print("--------------------------------------------------------")
-        print(f"coordinator property dir: {coordinator_props_dir}")
-        for root, dirs, files in os.walk(coordinator_props_dir):
-            for file in files:
-                # Get the full path of the file
-                file_path = os.path.join(root, file)
-                print(file_path)
 
-        print("--------------------------------------------------------")
         # if worker_vm_startup_delay_ms is not None:
         #     args = f"{args} --workerVmStartupDelayMs {worker_vm_startup_delay_ms}"
         #
@@ -171,7 +163,7 @@ class PerfTest:
 
         parallel = test_yaml.get('parallel')
         if parallel:
-            coordinator_args = f"{coordinator_args} --parallel"
+            coordinator_param = f"{coordinator_param} --parallel"
 
         #
         # if skip_download is not None:
@@ -179,35 +171,35 @@ class PerfTest:
         #
 
         if run_path is not None:
-            coordinator_args = f"{coordinator_args} --runPath {run_path}"
+            coordinator_param = f"{coordinator_param} --runPath {run_path}"
 
         duration = test_yaml.get('duration')
         if duration is not None:
-            coordinator_args = f"{coordinator_args} --duration {duration}"
+            coordinator_param = f"{coordinator_param} --duration {duration}"
 
         performance_monitor_interval_seconds = test_yaml.get("performance_monitor_interval_seconds")
         if performance_monitor_interval_seconds:
-            coordinator_args = f"{coordinator_args} --performanceMonitorInterval {performance_monitor_interval_seconds}"
+            coordinator_param = f"{coordinator_param} --performanceMonitorInterval {performance_monitor_interval_seconds}"
 
         node_hosts = test_yaml.get('node_hosts')
         if not node_hosts:
             node_hosts = "all|!mc"
-        coordinator_args = f"{coordinator_args} --nodeHosts {node_hosts}"
+        coordinator_param = f"{coordinator_param} --nodeHosts {node_hosts}"
         self.verify_hosts(node_hosts)
 
         loadgenerator_hosts = test_yaml.get('loadgenerator_hosts')
         if not loadgenerator_hosts:
             loadgenerator_hosts = "all|!mc"
-        coordinator_args = f"{coordinator_args} --loadGeneratorHosts {loadgenerator_hosts}"
+        coordinator_param = f"{coordinator_param} --loadGeneratorHosts {loadgenerator_hosts}"
         self.verify_hosts(loadgenerator_hosts)
 
         members = test_yaml.get('members')
         if members is not None:
-            coordinator_args = f"{coordinator_args} --members {members}"
+            coordinator_param = f"{coordinator_param} --members {members}"
 
         clients = test_yaml.get('clients')
         if clients is not None:
-            coordinator_args = f"{coordinator_args} --clients {clients}"
+            coordinator_param = f"{coordinator_param} --clients {clients}"
 
           #
         # if fail_fast is not None:
@@ -215,7 +207,7 @@ class PerfTest:
         #
         verify_enabled = test_yaml.get("verify_enabled")
         if verify_enabled is not None:
-            coordinator_args = f"{coordinator_args} --verifyEnabled {verify_enabled}"
+            coordinator_param = f"{coordinator_param} --verifyEnabled {verify_enabled}"
         #
         # if member_worker_script:
         #     args = f"{args} --memberWorkerScript {member_worker_script}"
@@ -224,8 +216,8 @@ class PerfTest:
         #     args = f"{args} --clientWorkerScript {client_worker_script}"
         #
 
-        for key, value in coordinator_properties.items():
-            coordinator_args = f"{coordinator_args} --property {key}={value}"
+        for key, value in coordinator_params.items():
+            coordinator_param = f"{coordinator_param} --param {key}={shlex.quote(str(value))}"
 
         test_inner = test_yaml['test']
         with tempfile.NamedTemporaryFile(mode="w", delete=False, prefix="perftest_", suffix=".txt") as tmp:
@@ -244,15 +236,15 @@ class PerfTest:
 
             tmp.flush()
 
-            self.exitcode = self.__shell(f"{simulator_home}/bin/hidden/coordinator {coordinator_args} {tmp.name}")
+            self.exitcode = self.__shell(f"{simulator_home}/bin/hidden/coordinator {coordinator_param} {tmp.name}")
             if self.exitcode != 0 and self.exit_on_error:
                 exit_with_error(f"Failed run coordinator, exitcode={self.exitcode}")
             return self.exitcode
 
 
-    def driver_run(self, driver, test, is_server, coordinator_props_dir):
+    def driver_run(self, driver, test, is_server, params):
         self.perform_function_on_driver(driver, "install.py", "exec", test, is_server, inventory_path)
-        self.perform_function_on_driver(driver, "configure.py", "exec", test, is_server, inventory_path, coordinator_props_dir)
+        self.perform_function_on_driver(driver, "configure.py", "exec", test, is_server, inventory_path, params)
 
         # self.exitcode = self.__shell(f"""
         #     export PYTHONPATH={simulator_home}/src:$PYTHONPATH
