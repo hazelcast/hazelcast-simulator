@@ -1,33 +1,108 @@
 #!/usr/bin/env python3
 
 import os.path
-import subprocess
-
 import sys
 
-from simulator.util import load_yaml_file, write_file, copy_file, simulator_home
+from inventory import load_hosts
+from simulator.util import load_yaml_file, copy_file, find_config_file, find_driver_config_file, \
+    read_file, write_file
+
+
+def find_test_yaml():
+    for t in tests_yaml:
+        if t.get('name') == test_name:
+            return t
+    raise Exception(f"Could not find test {test_name}")
+
+
+def generate_hazelcast_xml():
+    src_file = test_yaml.get("hazelcast_xml")
+    if src_file is not None:
+        if not os.path.exists(src_file):
+            raise Exception(f"Could not find hazelcast.xml with path [{src_file}]")
+    else:
+        src_file = find_driver_config_file(driver, "hazelcast.xml")
+
+    dst_file = f"{specific_coordinator_props_dir}/hazelcast.xml"
+    template = read_file(src_file)
+
+    node_hosts = test_yaml.get("node_hosts")
+    if node_hosts is None:
+        node_hosts = "node_hosts"
+    hosts = load_hosts(inventory_path=inventory_path, host_pattern=node_hosts)
+
+    # configure <!--LICENSE-KEY-->
+    license_key = test_yaml.get("license_key")
+    if license_key is not None:
+        license_key_config = f"<license-key>{license_key}</license_key>"
+        template = template.replace("<!--LICENSE-KEY-->", license_key_config)
+
+    # todo: <!--LITE_MEMBER_CONFIG-->
+
+    # configure <!--MEMBERS-->
+    members_config = ""
+    member_port = test_yaml.get('member_port')
+    if member_port is None:
+        member_port = "5701"
+    for host in hosts:
+        members_config = f"{members_config}<member>{host['private_ip']}:{member_port}</member>"
+    template = template.replace("<!--MEMBERS-->", members_config)
+
+    write_file(dst_file, template)
+
+
+def generate_client_hazelcast_xml():
+    src_file = test_yaml.get("client_hazelcast_xml")
+    if src_file is not None:
+        if not os.path.exists(src_file):
+            raise Exception(f"Could not find client-hazelcast.xml with path [{src_file}]")
+    else:
+        src_file = find_driver_config_file(driver, "client-hazelcast.xml")
+
+    dst_file = f"{specific_coordinator_props_dir}/client-hazelcast.xml"
+    template = read_file(src_file)
+
+    node_hosts = test_yaml.get("node_hosts")
+    if node_hosts is None:
+        node_hosts = "node_hosts"
+
+    hosts = load_hosts(inventory_path=inventory_path, host_pattern=node_hosts)
+
+    members_config = ""
+    member_port = test_yaml.get('member_port')
+    if member_port is None:
+        member_port = "5701"
+    for host in hosts:
+        members_config = f"{members_config}<address>{host['private_ip']}:{member_port}</address>"
+
+    template = template.replace("<!--MEMBERS-->", members_config)
+
+    write_file(dst_file, template)
+
+
+def generate_log4j_xml():
+    src_log4j_xml = find_config_file("worker-log4j.xml")
+    copy_file(src_log4j_xml, f"{specific_coordinator_props_dir}/worker.log4j")
+
+
+def generate_worker_sh():
+    src_worker_sh = find_config_file("worker.sh")
+    copy_file(src_worker_sh, f"{specific_coordinator_props_dir}/worker.sh")
+
 
 test_name = sys.argv[1]
 tests_yaml = load_yaml_file(sys.argv[2])
-test_yaml = None
-for t in tests_yaml:
-    if t.get('name') == test_name:
-        test_yaml = t
-        break
-
-inventory_target = sys.argv[3]
-inventory_yaml = load_yaml_file(sys.argv[4])
-coordinator_props_dir = sys.argv[5]
-
-agents_yaml = inventory_yaml.get(inventory_target).get("hosts")
-version_spec = test_yaml.get('version')
+test_yaml = find_test_yaml()
 driver = test_yaml.get('driver')
 
-specific_coordinator_props_dir= f"{coordinator_props_dir}/{inventory_target}"
+inventory_host_pattern = sys.argv[3]
+inventory_path = sys.argv[4]
+
+coordinator_props_dir = sys.argv[5]
+specific_coordinator_props_dir = f"{coordinator_props_dir}/{inventory_host_pattern}"
 os.makedirs(specific_coordinator_props_dir)
 
-copy_file(f"{simulator_home}/conf/worker-log4j.xml",f"{specific_coordinator_props_dir}/worker.log4j")
-copy_file(f"{simulator_home}/conf/worker.sh",f"{specific_coordinator_props_dir}/worker.sh")
-copy_file(f"{simulator_home}/driver/{driver}",f"{specific_coordinator_props_dir}/hazelcast.xml")
-copy_file(f"{simulator_home}/driver/{driver}",f"{specific_coordinator_props_dir}/hazelcast.xml")
-
+generate_log4j_xml()
+generate_worker_sh()
+generate_hazelcast_xml()
+generate_client_hazelcast_xml()

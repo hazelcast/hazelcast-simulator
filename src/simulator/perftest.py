@@ -15,12 +15,13 @@ from os import path
 import csv
 
 import simulator.util
-from inventory import load_inventory
+from inventory import load_hosts
 from simulator.git import get_last_commit_hash, git_init, is_git_installed, is_inside_git_repo, \
     commit_modified_files
 from simulator.hosts import public_ip, ssh_user, ssh_options
 from simulator.ssh import Ssh, new_key
-from simulator.util import read_file, write_file, shell, run_parallel, exit_with_error, simulator_home, shell_logged, remove, \
+from simulator.util import read_file, write_file, shell, run_parallel, exit_with_error, simulator_home, shell_logged, \
+    remove, \
     load_yaml_file, parse_tags, write_yaml, AtomicLong
 from simulator.log import info, warn, log_header
 
@@ -66,7 +67,7 @@ class PerfTest:
             return
 
         info(f"Host verification [{host_pattern}]: starting")
-        hosts = load_inventory(host_pattern)
+        hosts = load_hosts(host_pattern=host_pattern)
         error_counter = AtomicLong()
         run_parallel(self.__verify, [(host, error_counter) for host in hosts])
 
@@ -82,7 +83,7 @@ class PerfTest:
 
     def kill_java(self, host_pattern):
         log_header(f"perftest kill_java [{host_pattern}]: started")
-        hosts = load_inventory(host_pattern)
+        hosts = load_hosts(host_pattern=host_pattern)
         run_parallel(self.__kill_java, [(host,) for host in hosts])
         log_header(f"perftest kill_java [{host_pattern}]: done")
 
@@ -118,6 +119,9 @@ class PerfTest:
         # )
 
         coordinator_properties = {}
+        for key, value in test_yaml.items():
+            if not key == 'test':
+                coordinator_properties[key] = value
 
         driver = test_yaml.get('driver')
         loadgenerator_driver = test_yaml.get('loadgenerator_driver')
@@ -133,19 +137,16 @@ class PerfTest:
 
             self.driver_run(driver, test_yaml['name'], test_file, "nodes", coordinator_props_dir)
             self.driver_run(driver, test_yaml['name'], test_file, "loadgenerators", coordinator_props_dir)
-            coordinator_args = f"{coordinator_args} --driver {driver}"
             coordinator_properties['loadgenerator_driver'] = driver
             coordinator_properties['node_driver'] = driver
         else:
             if node_driver is not None:
-                coordinator_properties['$node_driver'] = node_driver
+                coordinator_properties['node_driver'] = node_driver
                 self.driver_run(node_driver, test_yaml['name'], test_file, "nodes", coordinator_props_dir)
-                coordinator_args = f"{coordinator_args} --nodeDriver {node_driver}"
 
             if loadgenerator_driver is None:
                 exit_with_error(f"test {test_yaml['name']} has no driver or loadgenerator_driver configured.")
             self.driver_run(loadgenerator_driver, test_yaml['name'], test_file, "loadgenerators", coordinator_props_dir)
-            coordinator_args = f"{coordinator_args} --loadGeneratorDriver {loadgenerator_driver}"
             coordinator_properties['loadgenerator_driver'] = loadgenerator_driver
 
         print("--------------------------------------------------------")
@@ -169,10 +170,6 @@ class PerfTest:
         if parallel:
             coordinator_args = f"{coordinator_args} --parallel"
 
-        license_key = test_yaml.get('license_key')
-
-        if license_key:
-            coordinator_properties["license_key"] = license_key
         #
         # if skip_download is not None:
         #     args = f"{args} --skipDownload {skip_download}"
@@ -205,27 +202,11 @@ class PerfTest:
         if members is not None:
             coordinator_args = f"{coordinator_args} --members {members}"
 
-        member_args = test_yaml.get('member_args')
-        if member_args:
-            coordinator_args = f"""{coordinator_args} --memberArgs "{member_args}" """
-
         clients = test_yaml.get('clients')
         if clients is not None:
             coordinator_args = f"{coordinator_args} --clients {clients}"
 
-        client_args = test_yaml.get('client_args')
-        if client_args:
-            coordinator_args = f"""{coordinator_args} --clientArgs "{client_args}" """
-
-        #
-        # if client_type:
-        #     args = f"{args} --clientType {client_type}"
-        #
-        version = test_yaml.get('version')
-        if version is not None:
-            coordinator_properties['version'] = version
-            # coordinator_args = f"""{coordinator_args} --version "{version}"  """
-        #
+          #
         # if fail_fast is not None:
         #     args = f"{args} --failFast {fail_fast}"
         #

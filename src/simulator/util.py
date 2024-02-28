@@ -50,6 +50,7 @@ def write_file(file, text):
 def copy_file(src, dst):
     shutil.copy(src, dst)
 
+
 def write_yaml(file, content):
     with open(file, 'w') as f:
         yaml.dump(content, f)
@@ -197,3 +198,26 @@ def parse_tags(items):
             d[key] = value
     return d
 
+
+# Finds a config file. First look in the local directory and then in the simulator_home/conf dir.
+def find_config_file(filename):
+    p = filename
+    if os.path.exists(filename):
+        return p
+
+    p = f"{simulator_home}/conf/{filename}"
+    if os.path.exists(p):
+        return p
+
+    raise Exception(f"Could not find a configuration file with name '{filename}'")
+
+def find_driver_config_file(driver, filename):
+    p = filename
+    if os.path.exists(filename):
+        return p
+
+    p = f"{simulator_home}/drivers/{driver}/conf/{filename}"
+    if os.path.exists(p):
+        return p
+
+    raise Exception(f"Could not find a configuration file with name '{filename}'")

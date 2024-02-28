@@ -1,22 +1,14 @@
 TODO
 
-- configure copy hazelcast.xml
+- the install should only install on the configured machines; currently it will
 
-- configure copy hazelcast-client.xml
+- the install should make use of inventory.py to get the data
 
-- properly locate worker.sh in configure
+- pass path to worker.sh from test
 
-- properly locate log4j.xml in configure
+- configure hazelcast.xml  <!--LITE_MEMBER_CONFIG-->
 
-- the worker config directory needs to be passed as property
-
-- the member args need to be passed as coordinator property
-
-- the client args need to be passed as coordinator property
-
-- better name for worker_config_dir
-
-- final_worker_params_dir: better name
+- the files in the coordinator_params_dir need to be added as command line prop
 
 - [Fatal Error] log4j.xml:3:22: The prefix "log4j" for element "log4j:configuration" is not bound.
 ERROR StatusLogger Error parsing /home/ubuntu/hazelcast-simulator/workers/c1f13c7b5d09d041c84f8508ea3a4e843d8aad50/A1_W1-18.185.56.223-member/log4j.xml
@@ -28,98 +20,37 @@ ERROR StatusLogger Error parsing /home/ubuntu/hazelcast-simulator/workers/c1f13c
 
 - hazelcast 3 install fix
 
-- client type
-
-- fail fast
-
 - undesirable driver upload output
-
-- read out nodes driver with defaulting
-
-- read out nodes driver version with defaulting
-
-- read out load generators driver version with defaulting
-
-- read out load generators driver version with defaulting
-
-- creation of the final Hazelcast config files through the install script
-
-- uploading of the final Hazelcast config files
 
 DONE
 
-- config logic needs to go to config script
+- configure client-hazelcast.xml <!--MEMBERS-->
 
-- in the worker output directory, make subdirs with their content for 'target'
+- configure hazelcast.xml <!--MEMBERS-->
 
-- copy log4j.xml to worker output dir
+- can a client have a license key: no
 
-- copy worker.sh to worker output dir
+- the worker config directory needs to be passed as property
 
+- pass path to client_hazelcast.xml from test
 
-- update agents_upload_driver.py to new format
+- pass path to hazelcast.xml from test
 
-- driver-hazelcast5 not uploaded: the agents_upload_driver script is not called
+- configure hazelcast.xml <!--LICENSE-KEY-->
 
-- remove upload_hazelcast_jars.py
+- the member args need to be passed as coordinator property
 
-- hack in log4j.xml
+- the client args need to be passed as coordinator property
 
-- hack in worker.sh
+- properly load the hazelcast.xml and client-hazelcast.xml config files
 
-- fix:  cause=com.hazelcast.simulator.agent.workerprocess.CreateWorkerFailedException:
-Startup of Worker A1_W1 on Agent 18.185.56.223 failed,
-check log files in /home/ubuntu/hazelcast-simulator/workers/93b2cef18fe4fc7cd8e9244ada7edeb169d93132/A1_W1-18.185.56.223-member for more information!
+- add find driver config file
 
-- Could not create member Worker A1_W1, reason: Cannot invoke "String.replace(char, char)" because "versionSpec" is null
+- final_worker_params_dir: better name
 
-- benchmark directory 'runs/read_only/26-02-2024_15-24-36' does not exist!
+- better name for worker_config_dir
 
-- DRIVER=null
+- properly locate worker.sh in configure
 
-- uploading of the Hazelcast jars through the install script
+- properly locate log4j.xml in configure
 
-- todo: fix hardcoded driver in worker
-
-- Could not create member Worker A1_W1, reason: Cannot invoke "String.contains(java.lang.CharSequence)" because "driver" is null
-
-- coordinator can't deal with node driver
-
-- coordinator can't deal with load generator driver
-
-- no explicit walking over the properties in perfrest.py
-
-- coordinator cli: processing of the list of properties and append to the deployment plan
-
-- simulator properties need to be added to plan
-
-- no explicit license key parameter
-
-- adding all the properties to the coordinator cli
-
-- configure the run path
-    Too many TestSuite files specified: [hazelcast5, /tmp/perftest_mxkg_gvu.txt]
-
-- Could not create member Worker A1_W1, reason: dirname can't be null
-
-- add node driver to coordinator cli
-
-- add load generator driver to coordinator cli
-
-- add logic for the loadgenerator and node driver in the perftest.py
-
-- com.hazelcast.simulator.utils.CommandLineExitException: Could not locate driver class [com.hazelcast.simulator.hazelcast4plus.Hazelcast4PlusDriver]
-
-- the coordinator is still failing
-
-- installation of the load generators is missing
-
-- does the coordinator driver part still do the install?
-
-- driver properties
-
-- get the Hazelcast 4 install to run
-
-- fix No module named 'simulator'
-
-- driver script executable

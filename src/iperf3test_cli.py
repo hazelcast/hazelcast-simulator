@@ -3,7 +3,7 @@ import sys
 import threading
 from time import sleep
 
-from inventory import load_inventory, find_host_with_public_ip
+from inventory import load_hosts, find_host_with_public_ip
 from simulator.ssh import Ssh
 from simulator.util import exit_with_error
 
@@ -58,7 +58,7 @@ class IPerf3TestCli:
 class IPerf3Test:
 
     def __init__(self, server_public_ip, client_public_ip):
-        inventory = load_inventory()
+        inventory = load_hosts()
 
         self.client = find_host_with_public_ip(inventory, client_public_ip)
         if self.client is None:

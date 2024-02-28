@@ -75,11 +75,6 @@ final class CoordinatorCli {
                             + "duplicate connection issues.")
             .withRequiredArg().ofType(Integer.class).defaultsTo(0);
 
-    private final OptionSpec<String> driverSpec = parser.accepts("driver",
-                    "The driver for both the nodes and the load generators")
-            .withRequiredArg().ofType(String.class);
-
-
     private final OptionSpec<String> durationSpec = parser.accepts("duration",
                     "Amount of time to execute the RUN phase per test, e.g. 10s, 1m, 2h or 3d. If duration is set to 0, "
                             + "the test will run until the test decides to stop.")
@@ -137,14 +132,6 @@ final class CoordinatorCli {
                             + " List of defined test phases: %s", TestPhase.getLastTestPhase(), TestPhase.getIdsAsString()))
             .withRequiredArg().ofType(TestPhase.class).defaultsTo(TestPhase.getLastTestPhase());
 
-    private final OptionSpec<String> memberArgsSpec = parser.accepts("memberArgs",
-                    "Member Worker JVM options (quotes can be used). ")
-            .withRequiredArg().ofType(String.class).defaultsTo("-XX:+HeapDumpOnOutOfMemoryError");
-
-    private final OptionSpec<String> clientArgsSpec = parser.accepts("clientArgs",
-                    "Client Worker JVM options (quotes can be used).")
-            .withRequiredArg().ofType(String.class).defaultsTo("-XX:+HeapDumpOnOutOfMemoryError");
-
     private final OptionSpec skipDownloadSpec = parser.accepts("skipDownload",
             "Prevents downloading of the created worker artifacts.");
 
@@ -164,14 +151,6 @@ final class CoordinatorCli {
     private final OptionSpec<String> loadGeneratorHostsSpec = parser.accepts("loadGeneratorHosts",
                     "The name of the group that makes up the loadGenerator.")
             .withRequiredArg().ofType(String.class).defaultsTo("all|!mc");
-
-    private final OptionSpec<String> memberWorkerScriptSpec = parser.accepts("memberWorkerScript",
-                    "The worker script for members.")
-            .withRequiredArg().ofType(String.class);
-
-    private final OptionSpec<String> clientWorkerScriptSpec = parser.accepts("clientWorkerScript",
-                    "The worker script for clients.")
-            .withRequiredArg().ofType(String.class);
 
     private final OptionSpec<String> propertySpec = parser.accepts("property",
                     "A key=value property.")
