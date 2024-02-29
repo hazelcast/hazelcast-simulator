@@ -3,28 +3,28 @@
 import os.path
 
 from inventory import load_hosts
-from simulator.util import find_config_file, find_driver_config_file, \
-    read_file
+from simulator.driver import find_driver_config_file, DriverConfigureArgs
+from simulator.util import find_config_file, read_file
 
 
-def configure_hazelcast_xml(nodes, test_yaml, is_server, params):
-    src_file = test_yaml.get("hazelcast_xml")
+def _configure_hazelcast_xml(nodes, args: DriverConfigureArgs):
+    src_file = args.test.get("hazelcast_xml")
     if src_file is not None:
         if not os.path.exists(src_file):
             raise Exception(f"Could not find hazelcast.xml with path [{src_file}]")
     else:
-        src_file = find_driver_config_file(driver, "hazelcast.xml")
+        src_file = find_driver_config_file(_get_driver(args), "hazelcast.xml")
 
     config = read_file(src_file)
 
     # configure <!--LICENSE-KEY-->
-    license_key = test_yaml.get("license_key")
+    license_key = args.test.get("license_key")
     if license_key is not None:
         license_key_config = f"<license-key>{license_key}</license_key>"
         config = config.replace("<!--LICENSE-KEY-->", license_key_config)
 
     # configure <!--LITE_MEMBER_CONFIG-->
-    if is_server:
+    if args.is_server:
         lite_member_config = "<lite-member enabled=\"false\"/>"
     else:
         lite_member_config = "<lite-member enabled=\"true\"/>"
@@ -33,80 +33,83 @@ def configure_hazelcast_xml(nodes, test_yaml, is_server, params):
 
     # configure <!--MEMBERS-->
     members_config = ""
-    member_port = test_yaml.get('member_port')
+    member_port = args.test.get('member_port')
     if member_port is None:
         member_port = "5701"
     for host in nodes:
         members_config = f"{members_config}<member>{host['private_ip']}:{member_port}</member>"
     config = config.replace("<!--MEMBERS-->", members_config)
 
-    if is_server:
-        params['file:hazelcast.xml'] = config
+    if args.is_server:
+        args.coordinator_params['file:hazelcast.xml'] = config
     else:
-        params['file:litemember-hazelcast.xml'] = config
+        args.coordinator_params['file:litemember-hazelcast.xml'] = config
 
 
-def configure_client_hazelcast_xml(nodes, test_yaml, params):
-    src_file = test_yaml.get("client_hazelcast_xml")
+def _configure_client_hazelcast_xml(nodes, args:DriverConfigureArgs):
+    src_file = args.test.get("client_hazelcast_xml")
     if src_file is not None:
         if not os.path.exists(src_file):
             raise Exception(f"Could not find client-hazelcast.xml with path [{src_file}]")
     else:
-        src_file = find_driver_config_file(driver, "client-hazelcast.xml")
+        src_file = find_driver_config_file(_get_driver(args), "client-hazelcast.xml")
 
     config = read_file(src_file)
 
     members_config = ""
-    member_port = test_yaml.get('member_port')
+    member_port = args.test.get('member_port')
     if member_port is None:
         member_port = "5701"
     for host in nodes:
         members_config = f"{members_config}<address>{host['private_ip']}:{member_port}</address>"
 
     config = config.replace("<!--MEMBERS-->", members_config)
-    params['file:client_hazelcast.xml']=config
+    args.coordinator_params['file:client_hazelcast.xml']=config
 
 
 
-def configure_log4j_xml(is_server, params):
+def _configure_log4j_xml(args:DriverConfigureArgs):
     log4j_xml = read_file(find_config_file("worker-log4j.xml"))
-    if is_server:
-        params['server:file:log4j.xml'] = log4j_xml
+    # todo: fix key
+    if args.is_server:
+        args.coordinator_params['file:server-log4j.xml'] = log4j_xml
     else:
-        params['client:file:log4j.xml'] = log4j_xml
+        args.coordinator_params['file:client-log4j.xml'] = log4j_xml
 
 
-def configure_worker_sh(is_server, params):
-    src_worker_sh = read_file(find_config_file("worker.sh"))
-    if is_server:
-        params['server:worker.sh'] = src_worker_sh
+def _configure_worker_sh(args:DriverConfigureArgs):
+    if args.is_server:
+        worker_sh = read_file(find_config_file("worker.sh"))
+        args.coordinator_params['file:server-worker.sh'] = worker_sh
     else:
-        params['client:worker.sh'] = src_worker_sh
+        worker_sh = read_file(find_config_file("worker.sh"))
+        args.coordinator_params['file:client-worker.sh'] = worker_sh
 
 
-def exec(test_yaml, is_server, inventory_path, params):
-    global driver
-    driver = test_yaml.get('driver')
+def _get_driver(args):
+    return args.test.get('driver')
 
-    nodes_pattern = test_yaml.get("node_hosts")
+
+def exec(args: DriverConfigureArgs):
+    nodes_pattern = args.test.get("node_hosts")
     if nodes_pattern is None:
         nodes_pattern = "nodes"
 
-    nodes = load_hosts(inventory_path=inventory_path, host_pattern=nodes_pattern)
+    nodes = load_hosts(inventory_path=args.inventory_path, host_pattern=nodes_pattern)
 
-    configure_log4j_xml(is_server, params)
-    configure_worker_sh(is_server, params)
+    _configure_log4j_xml(args)
+    _configure_worker_sh(args)
 
-    if is_server:
-        configure_hazelcast_xml(nodes, test_yaml, True, params)
+    if args.is_server:
+        _configure_hazelcast_xml(nodes, args)
     else:
-        client_type = test_yaml.get('client_type')
+        client_type = args.test.get('client_type')
         if client_type is None:
             client_type = 'javaclient'
 
         if client_type == 'javaclient':
-            configure_client_hazelcast_xml(nodes, test_yaml, params)
+            _configure_client_hazelcast_xml(nodes, args)
         elif client_type == 'litemember':
-            configure_hazelcast_xml(nodes, test_yaml, False, params)
+            _configure_hazelcast_xml(nodes, args)
         else:
             raise Exception(f"Unrecognized client_type {client_type}")

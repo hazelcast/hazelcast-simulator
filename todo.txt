@@ -1,11 +1,11 @@
 TODO
 
 
+- lite member: what should be name of config file
+
+- get the right param files in the workers directory
+
 - remove client type from coordinator cli
-
-- pass path to worker.sh from test
-
-- the files in the coordinator_params_dir need to be added as command line prop
 
 - [Fatal Error] log4j.xml:3:22: The prefix "log4j" for element "log4j:configuration" is not bound.
 ERROR StatusLogger Error parsing /home/ubuntu/hazelcast-simulator/workers/c1f13c7b5d09d041c84f8508ea3a4e843d8aad50/A1_W1-18.185.56.223-member/log4j.xml
@@ -17,6 +17,8 @@ ERROR StatusLogger Error parsing /home/ubuntu/hazelcast-simulator/workers/c1f13c
 
 - undesirable driver upload output
 
+- remove the driver parameters from the Java code.
+
 UNSURE
 
 - driver install should be optional
@@ -25,70 +27,16 @@ UNSURE
 
 DONE
 
-- coordinator cli property rename to param
+- fix driver args problems
 
-- params to coordinator cli need to be escaped
+- rename driverinstall to driverinstallargs
 
-- configure should put results in dictionary instead of directory
+- introduce a driver install config
 
-- configure doesn't need to run in separate process
+- introduce a driver configure config
 
-- install doesn't need to run in separate process
+- move agents_upload_driver into driver
 
-- configure hazelcast.xml  <!--LITE_MEMBER_CONFIG-->
+- move driver call to driver
 
-- litemember 'True' problem
-
-- [INFO]Uploading Hazelcast jars: done
-Traceback (most recent call last):
-  File "/mnt/home/eng/Hazelcast/hazelcast-simulator/drivers/driver-hazelcast5/conf/configure", line 117, in <module>
-    raise Exception(f"Unrecognized client_type {client_type}")
-
-- config: clients were trying to connect to the clients
-
-- Traceback (most recent call last):
-  File "/mnt/home/eng/Hazelcast/hazelcast-simulator/drivers/driver-hazelcast5/conf/configure", line 115, in <module>
-    os.makedirs(specific_coordinator_props_dir)
-  File "<frozen os>", line 225, in makedirs
-FileExistsError: [Errno 17] File exists: '/tmp/tmpxv_n0z69/server'
-
-- configure should also get is_server setting
-
-- specific_coordinator_props_dir = f"{coordinator_props_dir}/{inventory_host_pattern}" can lead to problems
-when inventory_host pattern is not file string. Perhaps get rid of the inventory host pattern completely and pass
-the right directory and no need for driver to make subdir.
-
-- the install should only install on the configured machines; currently it will
-
-- the install should make use of inventory.py to get the data
-
-- configure client-hazelcast.xml <!--MEMBERS-->
-
-- configure hazelcast.xml <!--MEMBERS-->
-
-- can a client have a license key: no
-
-- the worker config directory needs to be passed as property
-
-- pass path to client_hazelcast.xml from test
-
-- pass path to hazelcast.xml from test
-
-- configure hazelcast.xml <!--LICENSE-KEY-->
-
-- the member args need to be passed as coordinator property
-
-- the client args need to be passed as coordinator property
-
-- properly load the hazelcast.xml and client-hazelcast.xml config files
-
-- add find driver config file
-
-- final_worker_params_dir: better name
-
-- better name for worker_config_dir
-
-- properly locate worker.sh in configure
-
-- properly locate log4j.xml in configure
-
+- introduce driver utils or something

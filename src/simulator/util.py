@@ -220,13 +220,3 @@ def find_config_file(filename):
 
     raise Exception(f"Could not find a configuration file with name '{filename}'")
 
-def find_driver_config_file(driver, filename):
-    p = filename
-    if os.path.exists(filename):
-        return p
-
-    p = f"{simulator_home}/drivers/{driver}/conf/{filename}"
-    if os.path.exists(p):
-        return p
-
-    raise Exception(f"Could not find a configuration file with name '{filename}'")

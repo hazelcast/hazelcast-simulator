@@ -1,15 +1,12 @@
 import argparse
 import datetime
 import getpass
-import importlib
+
 import re
 import shlex
 import shutil
 import random
 import string
-import sys
-import sys
-import importlib.util
 import tempfile
 import uuid
 from datetime import datetime
@@ -20,6 +17,7 @@ import csv
 
 import simulator.util
 from inventory import load_hosts
+from simulator.driver import driver_run
 from simulator.git import get_last_commit_hash, git_init, is_git_installed, is_inside_git_repo, \
     commit_modified_files
 from simulator.hosts import public_ip, ssh_user, ssh_options
@@ -138,18 +136,18 @@ class PerfTest:
             if node_driver is not None:
                 exit_with_error(f"test {test_yaml['name']} can't have both the driver and node_driver configured.")
 
-            self.driver_run(driver, test_yaml, True, coordinator_params)
-            self.driver_run(driver, test_yaml, False, coordinator_params)
+            driver_run(driver, test_yaml, True, coordinator_params, inventory_path)
+            driver_run(driver, test_yaml, False, coordinator_params, inventory_path)
             coordinator_params['loadgenerator_driver'] = driver
             coordinator_params['node_driver'] = driver
         else:
             if node_driver is not None:
                 coordinator_params['node_driver'] = node_driver
-                self.driver_run(node_driver, test_yaml, True, coordinator_params)
+                driver_run(node_driver, test_yaml, True, coordinator_params, inventory_path)
 
             if loadgenerator_driver is None:
                 exit_with_error(f"test {test_yaml['name']} has no driver or loadgenerator_driver configured.")
-            self.driver_run(loadgenerator_driver, test_yaml, False, coordinator_params)
+            driver_run(loadgenerator_driver, test_yaml, False, coordinator_params, inventory_path)
             coordinator_params['loadgenerator_driver'] = loadgenerator_driver
 
 
@@ -240,44 +238,6 @@ class PerfTest:
             if self.exitcode != 0 and self.exit_on_error:
                 exit_with_error(f"Failed run coordinator, exitcode={self.exitcode}")
             return self.exitcode
-
-
-    def driver_run(self, driver, test, is_server, params):
-        self.perform_function_on_driver(driver, "install.py", "exec", test, is_server, inventory_path)
-        self.perform_function_on_driver(driver, "configure.py", "exec", test, is_server, inventory_path, params)
-
-        # self.exitcode = self.__shell(f"""
-        #     export PYTHONPATH={simulator_home}/src:$PYTHONPATH
-        #     {simulator_home}/drivers/driver-{driver}/conf/install {test_name} {test_file} {is_server} {inventory_path}
-        #     {simulator_home}/drivers/driver-{driver}/conf/configure {test_name} {test_file} {is_server} {inventory_path} {coordinator_props_dir}
-        # """)
-        pass
-
-    def perform_function_on_driver(self, driver, module, function_name, *args, **kwargs):
-        # Add the directory containing the module to the Python path
-        driver_path = f"{simulator_home}/drivers/driver-{driver}/conf/"
-        module_path = f"{driver_path}/{module}"
-        try:
-            sys.path.append(driver_path)
-
-            # Import the module dynamically
-            spec = importlib.util.spec_from_file_location("example_module", module_path)
-            if spec is None:
-                raise Exception(f"Could not load module {module_path} from {driver_path}")
-            module = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(module)
-
-            # Call the function from the imported module
-            if hasattr(module, function_name):
-                function = getattr(module, function_name)
-                result = function(*args, **kwargs)
-                return result
-            else:
-                raise AttributeError(f"Function '{function_name}' not found in module '{module_path}'")
-        finally:
-            # Remove the directory from the Python path to avoid cluttering the path
-            if driver_path in sys.path:
-                sys.path.remove(driver_path)
 
     def run(self, tests_file, tags, skip_report, test_commit, test_pattern, run_label):
         if test_commit:
