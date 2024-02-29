@@ -10,7 +10,7 @@ import java.lang.reflect.Method;
 import java.util.concurrent.Callable;
 
 /**
- * This task gets value of HlogLengthExposer from the member.
+ * This task gets value of HybridLogLength from the member.
  * <p>Reflection is used to build project without dependency on Enterprise Edition code.
  * <p>To get cluster-wise value it must be sent to all members and aggregated.
  **/
@@ -36,8 +36,7 @@ public class GetHybridLogLengthTask implements HazelcastInstanceAware, Callable<
         Method getPerMemberMetrics = metrics.getClass().getMethod("getPerMemberMetrics");
         Object perMemberMetrics = getPerMemberMetrics.invoke(metrics);
 
-        //Needs to be replaced with getLastSeenHybridLogLength after https://github.com/hazelcast/hazelcast-mono/pull/844/
-        Method getHlogLengthExposer = perMemberMetrics.getClass().getMethod("getHlogLengthExposer");
+        Method getHlogLengthExposer = perMemberMetrics.getClass().getMethod("getLastSeenHybridLogLength");
         return (Long) getHlogLengthExposer.invoke(perMemberMetrics);
     }
 
