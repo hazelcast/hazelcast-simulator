@@ -113,31 +113,28 @@ def _get_force_download_from_maven_repo(version_spec:str):
 
 
 def _upload_hazelcast_jars(args:DriverInstallArgs, hosts):
-
     driver = args.test.get('driver')
-
     is_enterprise = _get_is_enterprise(driver)
-
-    # todo: this is where we could allow for server/client to run with different version
     version_spec = args.test.get('version')
     version = _get_version(version_spec)
-
     remote_repo = _get_remote_repo(is_enterprise, version)
-
     force_download = _get_force_download_from_maven_repo(version_spec)
 
     print(f"[INFO]Uploading Hazelcast jars")
     artifact_ids = _get_artifact_ids(is_enterprise, version)
     for artifact_id in artifact_ids:
         path = _get_local_jar_path(artifact_id, version)
-        if _get_force_download_from_maven_repo and os.path.exists(path):
+        if force_download and os.path.exists(path):
             os.remove(path)
 
         if not os.path.exists(path):
             _download_from_maven_repo(artifact_id, version, remote_repo)
+
     for artifact_id in artifact_ids:
         print(f"[INFO]Uploading {artifact_id}")
+
     run_parallel(_upsync, [(host, artifact_ids, version, driver) for host in hosts])
+
     print(f"[INFO]Uploading Hazelcast jars: done")
 
 
