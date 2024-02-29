@@ -145,13 +145,9 @@ def exec(args:DriverInstallArgs):
     print("[INFO] install")
 
     if args.is_server:
-        host_pattern = args.test.get("node_hosts")
-        if host_pattern is None:
-            host_pattern = "nodes"
+        host_pattern = args.test.get("node_hosts", "nodes")
     else:
-        host_pattern = args.test.get("loadgenerator_hosts")
-        if host_pattern is None:
-            host_pattern = "loadgenerators"
+        host_pattern = args.test.get("loadgenerator_hosts", "loadgenerators")
 
     hosts = load_hosts(inventory_path=args.inventory_path, host_pattern=host_pattern)
 

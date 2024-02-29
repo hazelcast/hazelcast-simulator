@@ -91,9 +91,7 @@ def _get_driver(args):
 
 
 def exec(args: DriverConfigureArgs):
-    nodes_pattern = args.test.get("node_hosts")
-    if nodes_pattern is None:
-        nodes_pattern = "nodes"
+    nodes_pattern = args.test.get("node_hosts", 'nodes')
 
     nodes = load_hosts(inventory_path=args.inventory_path, host_pattern=nodes_pattern)
 
@@ -103,9 +101,7 @@ def exec(args: DriverConfigureArgs):
     if args.is_server:
         _configure_hazelcast_xml(nodes, args)
     else:
-        client_type = args.test.get('client_type')
-        if client_type is None:
-            client_type = 'javaclient'
+        client_type = args.test.get('client_type', 'javaclient')
 
         if client_type == 'javaclient':
             _configure_client_hazelcast_xml(nodes, args)
