@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 import os.path
 import subprocess
 from simulator.driver import upload_driver, DriverInstallArgs
@@ -21,7 +19,8 @@ def _upsync(host, artifact_ids, version, driver):
 
 
 def _get_local_repo():
-    cmd = "mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=settings.localRepository -q -DforceStdout"
+    cmd = ("mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate "
+           "-Dexpression=settings.localRepository -q -DforceStdout")
     return subprocess.check_output(cmd, shell=True, text=True)
 
 
@@ -31,7 +30,8 @@ def _get_local_jar_path(artifact_id, version):
 
 def _download_from_maven_repo(artifact_id:str, version:str, repo:str):
     artifact = f"com.hazelcast:{artifact_id}:{version}"
-    cmd = f"mvn org.apache.maven.plugins:maven-dependency-plugin:3.2.0:get -DremoteRepositories={repo} -Dartifact={artifact}"
+    cmd = (f"mvn org.apache.maven.plugins:maven-dependency-plugin:3.2.0:get "
+           f"-DremoteRepositories={repo} -Dartifact={artifact}")
     print(f"[INFO]{cmd}")
     exitcode = shell(cmd)
     if exitcode != 0:

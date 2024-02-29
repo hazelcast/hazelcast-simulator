@@ -2,6 +2,8 @@ import importlib
 import importlib.util
 import os
 import sys
+from dataclasses import dataclass
+
 from simulator.util import shell, run_parallel, simulator_home
 
 def find_driver_config_file(driver, filename):
@@ -19,7 +21,9 @@ def find_driver_config_file(driver, filename):
 def _upload_driver(host, driver_dir):
     print(f"[INFO]     {host['public_ip']}  Uploading")
     shell(
-        f"""rsync --checksum -avv -L -e "ssh {host['ssh_options']}" {simulator_home}/{driver_dir}/* {host['ssh_user']}@{host['public_ip']}:hazelcast-simulator/{driver_dir}/""")
+        f"""rsync --checksum -avv -L -e "ssh {host['ssh_options']}" \
+            {simulator_home}/{driver_dir}/* \
+            {host['ssh_user']}@{host['public_ip']}:hazelcast-simulator/{driver_dir}/""")
     print(f"[INFO]     {host['public_ip']}  Uploading: done")
 
 
@@ -30,33 +34,37 @@ def upload_driver(driver, hosts):
     run_parallel(_upload_driver, [(host, driver_dir,) for host in hosts])
     print(f"[INFO]Uploading driver {driver} to {driver_dir}: done")
 
-
-def driver_run(driver:str, test:str, is_server:bool, params:dict, inventory_path:str):
+def driver_run(driver:str, test:dict, is_server:bool, params:dict, inventory_path:str):
     install_args = DriverInstallArgs(test, is_server, inventory_path)
-    _perform_function_on_driver(
-        driver, "install.py", "exec", install_args)
+    _driver_exec(driver, "install.py", install_args)
     configure_args = DriverConfigureArgs(test, is_server, inventory_path, params)
-    _perform_function_on_driver(
-        driver, "configure.py", "exec", configure_args)
+    _driver_exec(driver, "configure.py", configure_args)
 
 
+@dataclass
 class DriverInstallArgs:
-    def __init__(self, test, is_server, inventory_path):
-        self.test = test
-        self.is_server = is_server
-        self.inventory_path = inventory_path
+    test: dict
+    is_server: bool
+    inventory_path: str
 
+@dataclass
 class DriverConfigureArgs:
-    def __init__(self, test, is_server, inventory_path, coordinator_params):
-        self.test = test
-        self.is_server = is_server
-        self.inventory_path = inventory_path
-        self.coordinator_params = coordinator_params
+    test:dict
+    is_server:bool
+    inventory_path:str
+    coordinator_params:dict
 
-def _perform_function_on_driver(driver, module, function_name, *args, **kwargs):
+
+def _driver_exec(driver:str, module:str, *args, **kwargs):
     # Add the directory containing the module to the Python path
     driver_path = f"{simulator_home}/drivers/driver-{driver}/conf/"
     module_path = f"{driver_path}/{module}"
+    function_name = "exec"
+
+    if not os.path.exists(module_path):
+        print(f"[INFO] skipping {driver}.{module}")
+        return
+
     try:
         sys.path.append(driver_path)
 

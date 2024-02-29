@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 import os.path
 
 from inventory import load_hosts
@@ -92,7 +90,6 @@ def _get_driver(args):
 
 def exec(args: DriverConfigureArgs):
     nodes_pattern = args.test.get("node_hosts", 'nodes')
-
     nodes = load_hosts(inventory_path=args.inventory_path, host_pattern=nodes_pattern)
 
     _configure_log4j_xml(args)

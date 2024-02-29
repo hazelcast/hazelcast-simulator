@@ -1,6 +1,5 @@
 TODO
 
-
 - lite member: what should be name of config file
 
 - get the right param files in the workers directory
@@ -19,13 +18,15 @@ ERROR StatusLogger Error parsing /home/ubuntu/hazelcast-simulator/workers/c1f13c
 
 - remove the driver parameters from the Java code.
 
-UNSURE
+DONE
+
+- make DriverInstallArgs a dataclass
+
+- make DriverConfigureArgs a dataclass
 
 - driver install should be optional
 
 - driver configure should be optional
-
-DONE
 
 - fix driver args problems
 
