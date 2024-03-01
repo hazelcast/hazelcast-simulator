@@ -1,8 +1,11 @@
 TODO
 
-- lite member: what should be name of config file
+- with litemember I get following failure
+com.hazelcast.simulator.utils.CommandLineExitException: Could not locate driver class [com.hazelcast.simulator.hazelcast4plus.Hazelcast4PlusDriver]
 
 - get the right param files in the workers directory
+
+- lite member: what should be name of config file
 
 - remove client type from coordinator cli
 
@@ -19,6 +22,20 @@ ERROR StatusLogger Error parsing /home/ubuntu/hazelcast-simulator/workers/c1f13c
 - remove the driver parameters from the Java code.
 
 DONE
+
+- fix [INFO] without space
+
+- run with javaclient
+
+- multi member test running
+
+- member only test running
+
+- WARN  14:05:22 Unexpected remote arg: duration:
+  WARN  14:05:22 rsync error: syntax or usage error (code 1) at main.c(1508) [sender=3.2.7]
+
+- null
+com.hazelcast.config.InvalidConfigurationException: The element type "license-key" must be terminated by the matching end-tag "</license-key>".
 
 - make DriverInstallArgs a dataclass
 

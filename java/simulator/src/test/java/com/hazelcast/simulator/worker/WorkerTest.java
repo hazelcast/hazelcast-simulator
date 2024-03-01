@@ -58,9 +58,9 @@ public class WorkerTest {
                 .set("CONFIG", fileAsText(localResourceDirectory() + "/hazelcast.xml"));
         workerAddress = workerAddress(AGENT_INDEX, WORKER_INDEX);
 
-        parameters = driver.loadWorkerParameters("member", agent.getAddressIndex())
-                .set("WORKER_ADDRESS", workerAddress)
-                .set("PUBLIC_ADDRESS", PUBLIC_ADDRESS);
+//        parameters = driver.loadWorkerParameters("member", agent.getAddressIndex())
+//                .set("WORKER_ADDRESS", workerAddress)
+//                .set("PUBLIC_ADDRESS", PUBLIC_ADDRESS);
 
         for (Map.Entry<String, String> entry : parameters.entrySet()) {
             String key = entry.getKey();

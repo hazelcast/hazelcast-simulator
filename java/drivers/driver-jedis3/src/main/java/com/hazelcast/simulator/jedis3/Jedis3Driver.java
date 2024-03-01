@@ -15,7 +15,6 @@
  */
 package com.hazelcast.simulator.jedis3;
 
-import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.drivers.Driver;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import redis.clients.jedis.HostAndPort;
@@ -25,36 +24,33 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
-import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
-import static java.lang.String.format;
-
 public class Jedis3Driver extends Driver<JedisCluster> {
 
     private static final int DEFAULT_REDIS_PORT = 6378;
 
     private JedisCluster client;
 
-    @Override
-    public WorkerParameters loadWorkerParameters(String workerType, int agentIndex) {
-        WorkerParameters params = new WorkerParameters()
-                .setAll(properties)
-                .set("WORKER_TYPE", workerType)
-                .set("file:log4j.xml", loadLog4jConfig());
-
-        if ("javaclient".equals(workerType)) {
-            loadClientParameters(params);
-        } else {
-            throw new IllegalArgumentException(format("Unsupported workerType [%s]", workerType));
-        }
-
-        return params;
-    }
-
-    private void loadClientParameters(WorkerParameters params) {
-        params.set("JVM_OPTIONS", get("CLIENT_ARGS", ""))
-                .set("nodes", fileAsText("nodes.txt"))
-                .set("file:worker.sh", loadWorkerScript("javaclient"));
-    }
+//    @Override
+//    public WorkerParameters loadWorkerParameters(String workerType, int agentIndex) {
+//        WorkerParameters params = new WorkerParameters()
+//                .setAll(properties)
+//                .set("WORKER_TYPE", workerType)
+//                .set("file:log4j.xml", loadLog4jConfig());
+//
+//        if ("javaclient".equals(workerType)) {
+//            loadClientParameters(params);
+//        } else {
+//            throw new IllegalArgumentException(format("Unsupported workerType [%s]", workerType));
+//        }
+//
+//        return params;
+//    }
+//
+//    private void loadClientParameters(WorkerParameters params) {
+//        params.set("JVM_OPTIONS", get("CLIENT_ARGS", ""))
+//                .set("nodes", fileAsText("nodes.txt"))
+//                .set("file:worker.sh", loadWorkerScript("javaclient"));
+//    }
 
     @Override
     public JedisCluster getDriverInstance() {

@@ -15,41 +15,38 @@
  */
 package com.hazelcast.simulator.mongodb;
 
-import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.drivers.Driver;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
-import java.io.IOException;
 
-import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
-import static java.lang.String.format;
+import java.io.IOException;
 
 public class MongodbDriver extends Driver<MongoClient> {
 
     private MongoClient client;
 
-    @Override
-    public WorkerParameters loadWorkerParameters(String workerType, int agentIndex) {
-        WorkerParameters params = new WorkerParameters()
-                .setAll(properties)
-                .set("WORKER_TYPE", workerType)
-                .set("file:log4j.xml", loadLog4jConfig());
-
-        if ("javaclient".equals(workerType)) {
-            loadClientParameters(params);
-        } else {
-            throw new IllegalArgumentException(format("Unsupported workerType [%s]", workerType));
-        }
-
-        return params;
-    }
-
-    private void loadClientParameters(WorkerParameters params) {
-        params.set("JVM_OPTIONS", get("CLIENT_ARGS", ""))
-                // currently just one node
-                .set("node", fileAsText("node.txt"))
-                .set("file:worker.sh", loadWorkerScript("javaclient"));
-    }
+//    @Override
+//    public WorkerParameters loadWorkerParameters(String workerType, int agentIndex) {
+//        WorkerParameters params = new WorkerParameters()
+//                .setAll(properties)
+//                .set("WORKER_TYPE", workerType)
+//                .set("file:log4j.xml", loadLog4jConfig());
+//
+//        if ("javaclient".equals(workerType)) {
+//            loadClientParameters(params);
+//        } else {
+//            throw new IllegalArgumentException(format("Unsupported workerType [%s]", workerType));
+//        }
+//
+//        return params;
+//    }
+//
+//    private void loadClientParameters(WorkerParameters params) {
+//        params.set("JVM_OPTIONS", get("CLIENT_ARGS", ""))
+//                // currently just one node
+//                .set("node", fileAsText("node.txt"))
+//                .set("file:worker.sh", loadWorkerScript("javaclient"));
+//    }
 
     @Override
     public MongoClient getDriverInstance() {

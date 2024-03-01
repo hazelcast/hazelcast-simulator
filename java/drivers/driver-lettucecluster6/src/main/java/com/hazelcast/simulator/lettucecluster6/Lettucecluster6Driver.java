@@ -30,50 +30,50 @@ public class Lettucecluster6Driver extends Driver<RedisClusterClient> {
 
     private RedisClusterClient client;
 
-    @Override
-    public WorkerParameters loadWorkerParameters(String workerType, int agentIndex) {
-        WorkerParameters params = new WorkerParameters()
-                .setAll(properties)
-                .set("WORKER_TYPE", workerType)
-                .set("file:log4j.xml", loadLog4jConfig());
+//    @Override
+//    public WorkerParameters loadWorkerParameters(String workerType, int agentIndex) {
+//        WorkerParameters params = new WorkerParameters()
+//                .setAll(properties)
+//                .set("WORKER_TYPE", workerType)
+//                .set("file:log4j.xml", loadLog4jConfig());
+//
+//        if ("javaclient".equals(workerType)) {
+//            loadClientParameters(params);
+//        } else {
+//            throw new IllegalArgumentException(format("Unsupported workerType [%s]", workerType));
+//        }
+//
+//        return params;
+//    }
 
-        if ("javaclient".equals(workerType)) {
-            loadClientParameters(params);
-        } else {
-            throw new IllegalArgumentException(format("Unsupported workerType [%s]", workerType));
-        }
+//    private void loadClientParameters(WorkerParameters params) {
+//        params.set("JVM_OPTIONS", get("CLIENT_ARGS", ""))
+//                .set("file:worker.sh", loadWorkerScript("javaclient"))
+//                .set("server_list", initialHosts(true));
+//    }
 
-        return params;
-    }
-
-    private void loadClientParameters(WorkerParameters params) {
-        params.set("JVM_OPTIONS", get("CLIENT_ARGS", ""))
-                .set("file:worker.sh", loadWorkerScript("javaclient"))
-                .set("server_list", initialHosts(true));
-    }
-
-    private String initialHosts(boolean clientMode) {
-        String port = clientMode ? get("CLIENT_PORT", "11222") : get("HAZELCAST_PORT");
-
-        StringBuilder sb = new StringBuilder();
-        boolean first = true;
-        for (AgentData agent : agents) {
-            if (first) {
-                first = false;
-            } else if (clientMode) {
-                sb.append(';');
-            } else {
-                sb.append(',');
-            }
-
-            if (clientMode) {
-                sb.append(agent.getPrivateAddress()).append(":").append(port);
-            } else {
-                sb.append(agent.getPrivateAddress()).append("[").append(port).append("]");
-            }
-        }
-        return sb.toString();
-    }
+//    private String initialHosts(boolean clientMode) {
+//        String port = clientMode ? get("CLIENT_PORT", "11222") : get("HAZELCAST_PORT");
+//
+//        StringBuilder sb = new StringBuilder();
+//        boolean first = true;
+//        for (AgentData agent : agents) {
+//            if (first) {
+//                first = false;
+//            } else if (clientMode) {
+//                sb.append(';');
+//            } else {
+//                sb.append(',');
+//            }
+//
+//            if (clientMode) {
+//                sb.append(agent.getPrivateAddress()).append(":").append(port);
+//            } else {
+//                sb.append(agent.getPrivateAddress()).append("[").append(port).append("]");
+//            }
+//        }
+//        return sb.toString();
+//    }
 
     @Override
     public RedisClusterClient getDriverInstance() {
@@ -81,7 +81,7 @@ public class Lettucecluster6Driver extends Driver<RedisClusterClient> {
     }
 
     @Override
-    public void startDriverInstance() throws Exception {
+    public void startDriverInstance() {
         String workerType = get("WORKER_TYPE");
         if ("javaclient".equals(workerType)) {
             String[] uris = get("URI").split(",");

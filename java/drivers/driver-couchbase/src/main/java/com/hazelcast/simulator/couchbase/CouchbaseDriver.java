@@ -16,39 +16,35 @@
 package com.hazelcast.simulator.couchbase;
 
 import com.couchbase.client.java.CouchbaseCluster;
-import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.drivers.Driver;
 
 import java.io.IOException;
-
-import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
-import static java.lang.String.format;
 
 public class CouchbaseDriver extends Driver<CouchbaseCluster> {
 
     private CouchbaseCluster cluster;
 
-    @Override
-    public WorkerParameters loadWorkerParameters(String workerType, int agentIndex) {
-        WorkerParameters params = new WorkerParameters()
-                .setAll(properties)
-                .set("WORKER_TYPE", workerType)
-                .set("file:log4j.xml", loadLog4jConfig());
-
-        if ("javaclient".equals(workerType)) {
-            loadClientParameters(params);
-        } else {
-            throw new IllegalArgumentException(format("Unsupported workerType [%s]", workerType));
-        }
-
-        return params;
-    }
-
-    private void loadClientParameters(WorkerParameters params) {
-        params.set("JVM_OPTIONS", get("CLIENT_ARGS", ""))
-                .set("nodes", fileAsText("nodes.txt"))
-                .set("file:worker.sh", loadWorkerScript("javaclient"));
-    }
+//    @Override
+//    public WorkerParameters loadWorkerParameters(String workerType, int agentIndex) {
+//        WorkerParameters params = new WorkerParameters()
+//                .setAll(properties)
+//                .set("WORKER_TYPE", workerType)
+//                .set("file:log4j.xml", loadLog4jConfig());
+//
+//        if ("javaclient".equals(workerType)) {
+//            loadClientParameters(params);
+//        } else {
+//            throw new IllegalArgumentException(format("Unsupported workerType [%s]", workerType));
+//        }
+//
+//        return params;
+//    }
+//
+//    private void loadClientParameters(WorkerParameters params) {
+//        params.set("JVM_OPTIONS", get("CLIENT_ARGS", ""))
+//                .set("nodes", fileAsText("nodes.txt"))
+//                .set("file:worker.sh", loadWorkerScript("javaclient"));
+//    }
 
     @Override
     public CouchbaseCluster getDriverInstance() {
@@ -56,7 +52,7 @@ public class CouchbaseDriver extends Driver<CouchbaseCluster> {
     }
 
     @Override
-    public void startDriverInstance() throws Exception {
+    public void startDriverInstance() {
         String[] nodes = get("nodes").split(",");
         this.cluster = CouchbaseCluster.create(nodes);
     }

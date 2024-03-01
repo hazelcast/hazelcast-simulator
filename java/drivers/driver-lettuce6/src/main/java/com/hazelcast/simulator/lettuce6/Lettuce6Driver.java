@@ -15,61 +15,57 @@
  */
 package com.hazelcast.simulator.lettuce6;
 
-import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
-import com.hazelcast.simulator.coordinator.registry.AgentData;
 import com.hazelcast.simulator.drivers.Driver;
 import io.lettuce.core.RedisClient;
 
-import static java.lang.String.format;
-
 public class Lettuce6Driver extends Driver<RedisClient> {
 
-     private RedisClient client;
+    private RedisClient client;
 
-    @Override
-    public WorkerParameters loadWorkerParameters(String workerType, int agentIndex) {
-        WorkerParameters params = new WorkerParameters()
-                .setAll(properties)
-                .set("WORKER_TYPE", workerType)
-                .set("file:log4j.xml", loadLog4jConfig());
+//    @Override
+//    public WorkerParameters loadWorkerParameters(String workerType, int agentIndex) {
+//        WorkerParameters params = new WorkerParameters()
+//                .setAll(properties)
+//                .set("WORKER_TYPE", workerType)
+//                .set("file:log4j.xml", loadLog4jConfig());
+//
+//        if ("javaclient".equals(workerType)) {
+//            loadClientParameters(params);
+//        } else {
+//            throw new IllegalArgumentException(format("Unsupported workerType [%s]", workerType));
+//        }
+//
+//        return params;
+//    }
+//
+//    private void loadClientParameters(WorkerParameters params) {
+//        params.set("JVM_OPTIONS", get("CLIENT_ARGS", ""))
+//                .set("file:worker.sh", loadWorkerScript("javaclient"))
+//                .set("server_list", initialHosts(true));
+//    }
 
-        if ("javaclient".equals(workerType)) {
-            loadClientParameters(params);
-        } else {
-            throw new IllegalArgumentException(format("Unsupported workerType [%s]", workerType));
-        }
-
-        return params;
-    }
-
-    private void loadClientParameters(WorkerParameters params) {
-        params.set("JVM_OPTIONS", get("CLIENT_ARGS", ""))
-                .set("file:worker.sh", loadWorkerScript("javaclient"))
-                .set("server_list", initialHosts(true));
-    }
-
-    private String initialHosts(boolean clientMode) {
-        String port = clientMode ? get("CLIENT_PORT", "11222") : get("HAZELCAST_PORT");
-
-        StringBuilder sb = new StringBuilder();
-        boolean first = true;
-        for (AgentData agent : agents) {
-            if (first) {
-                first = false;
-            } else if (clientMode) {
-                sb.append(';');
-            } else {
-                sb.append(',');
-            }
-
-            if (clientMode) {
-                sb.append(agent.getPrivateAddress()).append(":").append(port);
-            } else {
-                sb.append(agent.getPrivateAddress()).append("[").append(port).append("]");
-            }
-        }
-        return sb.toString();
-    }
+//    private String initialHosts(boolean clientMode) {
+//        String port = clientMode ? get("CLIENT_PORT", "11222") : get("HAZELCAST_PORT");
+//
+//        StringBuilder sb = new StringBuilder();
+//        boolean first = true;
+//        for (AgentData agent : agents) {
+//            if (first) {
+//                first = false;
+//            } else if (clientMode) {
+//                sb.append(';');
+//            } else {
+//                sb.append(',');
+//            }
+//
+//            if (clientMode) {
+//                sb.append(agent.getPrivateAddress()).append(":").append(port);
+//            } else {
+//                sb.append(agent.getPrivateAddress()).append("[").append(port).append("]");
+//            }
+//        }
+//        return sb.toString();
+//    }
 
     @Override
     public RedisClient getDriverInstance() {
@@ -80,7 +76,7 @@ public class Lettuce6Driver extends Driver<RedisClient> {
     public void startDriverInstance() throws Exception {
         String workerType = get("WORKER_TYPE");
         if ("javaclient".equals(workerType)) {
-             client = RedisClient.create(get("URI"));
+            client = RedisClient.create(get("URI"));
         }
     }
 

@@ -15,8 +15,6 @@
  */
 package com.hazelcast.simulator.infinispan11;
 
-import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
-import com.hazelcast.simulator.coordinator.registry.AgentData;
 import com.hazelcast.simulator.drivers.Driver;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -31,8 +29,6 @@ import org.infinispan.server.hotrod.configuration.HotRodServerConfigurationBuild
 
 import java.util.Properties;
 
-import static java.lang.String.format;
-
 public class Infinispan11Driver extends Driver<BasicCacheContainer> {
 
     private static final Logger LOGGER = LogManager.getLogger(Infinispan11Driver.class);
@@ -40,65 +36,65 @@ public class Infinispan11Driver extends Driver<BasicCacheContainer> {
     private BasicCacheContainer cacheContainer;
     private HotRodServer hotRodServer;
 
-    @Override
-    public WorkerParameters loadWorkerParameters(String workerType, int agentIndex) {
-        WorkerParameters params = new WorkerParameters()
-                .setAll(properties)
-                .set("WORKER_TYPE", workerType)
-                .set("file:log4j.xml", loadLog4jConfig());
-
-        if ("member".equals(workerType)) {
-            loadServerParameters(params, agents.get(agentIndex - 1));
-        } else if ("javaclient".equals(workerType)) {
-            loadClientParameters(params);
-        } else {
-            throw new IllegalArgumentException(format("Unsupported workerType [%s]", workerType));
-        }
-
-        return params;
-    }
-
-    private void loadServerParameters(WorkerParameters params, AgentData agent) {
-        String memberArgs = get("MEMBER_ARGS", "")
-                + " -Djava.net.preferIPv4Stack=true"
-                + " -Djgroups.bind_address=" + agent.getPrivateAddress()
-                + " -Djgroups.tcp.address=" + agent.getPrivateAddress()
-                + " -Djgroups.tcp.port=" + get("HAZELCAST_PORT")
-                + " -Djgroups.tcpping.initial_hosts=" + initialHosts(false);
-
-        params.set("JVM_OPTIONS", memberArgs)
-                .set("file:infinispan.xml", loadConfigFile("Infinispan configuration", "infinispan.xml"))
-                .set("file:worker.sh", loadWorkerScript("member"));
-    }
-
-    private void loadClientParameters(WorkerParameters params) {
-        params.set("JVM_OPTIONS", get("CLIENT_ARGS", ""))
-                .set("file:worker.sh", loadWorkerScript("javaclient"))
-                .set("server_list", initialHosts(true));
-    }
-
-    private String initialHosts(boolean clientMode) {
-        String port = clientMode ? get("CLIENT_PORT", "11222") : get("HAZELCAST_PORT");
-
-        StringBuilder sb = new StringBuilder();
-        boolean first = true;
-        for (AgentData agent : agents) {
-            if (first) {
-                first = false;
-            } else if (clientMode) {
-                sb.append(';');
-            } else {
-                sb.append(',');
-            }
-
-            if (clientMode) {
-                sb.append(agent.getPrivateAddress()).append(":").append(port);
-            } else {
-                sb.append(agent.getPrivateAddress()).append("[").append(port).append("]");
-            }
-        }
-        return sb.toString();
-    }
+//    @Override
+//    public WorkerParameters loadWorkerParameters(String workerType, int agentIndex) {
+//        WorkerParameters params = new WorkerParameters()
+//                .setAll(properties)
+//                .set("WORKER_TYPE", workerType)
+//                .set("file:log4j.xml", loadLog4jConfig());
+//
+//        if ("member".equals(workerType)) {
+//            loadServerParameters(params, agents.get(agentIndex - 1));
+//        } else if ("javaclient".equals(workerType)) {
+//            loadClientParameters(params);
+//        } else {
+//            throw new IllegalArgumentException(format("Unsupported workerType [%s]", workerType));
+//        }
+//
+//        return params;
+//    }
+//
+//    private void loadServerParameters(WorkerParameters params, AgentData agent) {
+//        String memberArgs = get("MEMBER_ARGS", "")
+//                + " -Djava.net.preferIPv4Stack=true"
+//                + " -Djgroups.bind_address=" + agent.getPrivateAddress()
+//                + " -Djgroups.tcp.address=" + agent.getPrivateAddress()
+//                + " -Djgroups.tcp.port=" + get("HAZELCAST_PORT")
+//                + " -Djgroups.tcpping.initial_hosts=" + initialHosts(false);
+//
+//        params.set("JVM_OPTIONS", memberArgs)
+//                .set("file:infinispan.xml", loadConfigFile("Infinispan configuration", "infinispan.xml"))
+//                .set("file:worker.sh", loadWorkerScript("member"));
+//    }
+//
+//    private void loadClientParameters(WorkerParameters params) {
+//        params.set("JVM_OPTIONS", get("CLIENT_ARGS", ""))
+//                .set("file:worker.sh", loadWorkerScript("javaclient"))
+//                .set("server_list", initialHosts(true));
+//    }
+//
+//    private String initialHosts(boolean clientMode) {
+//        String port = clientMode ? get("CLIENT_PORT", "11222") : get("HAZELCAST_PORT");
+//
+//        StringBuilder sb = new StringBuilder();
+//        boolean first = true;
+//        for (AgentData agent : agents) {
+//            if (first) {
+//                first = false;
+//            } else if (clientMode) {
+//                sb.append(';');
+//            } else {
+//                sb.append(',');
+//            }
+//
+//            if (clientMode) {
+//                sb.append(agent.getPrivateAddress()).append(":").append(port);
+//            } else {
+//                sb.append(agent.getPrivateAddress()).append("[").append(port).append("]");
+//            }
+//        }
+//        return sb.toString();
+//    }
 
     @Override
     public BasicCacheContainer getDriverInstance() {
@@ -109,7 +105,7 @@ public class Infinispan11Driver extends Driver<BasicCacheContainer> {
     public void startDriverInstance() throws Exception {
         String workerType = get("WORKER_TYPE");
         if ("javaclient".equals(workerType)) {
-             Properties hotrodProperties = new Properties();
+            Properties hotrodProperties = new Properties();
             hotrodProperties.setProperty("infinispan.client.hotrod.server_list", get("server_list"));
             ConfigurationBuilder configurationBuilder = new ConfigurationBuilder().withProperties(hotrodProperties);
             Configuration configuration = configurationBuilder.build();

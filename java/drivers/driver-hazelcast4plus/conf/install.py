@@ -5,7 +5,8 @@ from inventory import load_hosts
 from simulator.util import run_parallel, shell
 from simulator.ssh import Ssh
 
-def _upsync(host, artifact_ids, version, driver):
+
+def _upload(host, artifact_ids, version, driver):
     print(f"[INFO]     {host['public_ip']} starting")
 
     ssh = Ssh(host['public_ip'], host['ssh_user'], host['ssh_options'])
@@ -32,7 +33,7 @@ def _download_from_maven_repo(artifact_id:str, version:str, repo:str):
     artifact = f"com.hazelcast:{artifact_id}:{version}"
     cmd = (f"mvn org.apache.maven.plugins:maven-dependency-plugin:3.2.0:get "
            f"-DremoteRepositories={repo} -Dartifact={artifact}")
-    print(f"[INFO]{cmd}")
+    print(f"[INFO] {cmd}")
     exitcode = shell(cmd)
     if exitcode != 0:
         print(f"[ERROR] Failed to download artifact {artifact}")
@@ -105,7 +106,6 @@ def _get_version(version_spec:str):
 
 def _get_force_download_from_maven_repo(version_spec:str):
     parsed_version_spec = _parse_version_spec(version_spec)
-    print(f"[INFO]version_spec:{parsed_version_spec}")
     force_download = parsed_version_spec.get('force_download')
     if not force_download:
         return False
@@ -113,14 +113,14 @@ def _get_force_download_from_maven_repo(version_spec:str):
 
 
 def _upload_hazelcast_jars(args:DriverInstallArgs, hosts):
-    driver = args.test.get('driver')
+    driver = _get_driver(args)
     is_enterprise = _get_is_enterprise(driver)
-    version_spec = args.test.get('version')
+    version_spec = args.test.get('version', 'maven=5.4.0')
     version = _get_version(version_spec)
     remote_repo = _get_remote_repo(is_enterprise, version)
     force_download = _get_force_download_from_maven_repo(version_spec)
 
-    print(f"[INFO]Uploading Hazelcast jars")
+    print(f"[INFO] Uploading Hazelcast jars")
     artifact_ids = _get_artifact_ids(is_enterprise, version)
     for artifact_id in artifact_ids:
         path = _get_local_jar_path(artifact_id, version)
@@ -131,15 +131,19 @@ def _upload_hazelcast_jars(args:DriverInstallArgs, hosts):
             _download_from_maven_repo(artifact_id, version, remote_repo)
 
     for artifact_id in artifact_ids:
-        print(f"[INFO]Uploading {artifact_id}")
+        print(f"[INFO] Uploading {artifact_id}")
 
-    run_parallel(_upsync, [(host, artifact_ids, version, driver) for host in hosts])
+    run_parallel(_upload, [(host, artifact_ids, version, driver) for host in hosts])
 
-    print(f"[INFO]Uploading Hazelcast jars: done")
+    print(f"[INFO] Uploading Hazelcast jars: done")
+
+
+def _get_driver(args):
+    return args.test.get('driver')
 
 
 def exec(args:DriverInstallArgs):
-    print("[INFO] install")
+    print("[INFO] Install")
 
     if args.is_server:
         host_pattern = args.test.get("node_hosts", "nodes")
@@ -148,5 +152,7 @@ def exec(args:DriverInstallArgs):
 
     hosts = load_hosts(inventory_path=args.inventory_path, host_pattern=host_pattern)
 
-    upload_driver(args.test, hosts)
+    upload_driver(_get_driver(args), hosts)
     _upload_hazelcast_jars(args, hosts)
+
+    print("[INFO] Install: done")

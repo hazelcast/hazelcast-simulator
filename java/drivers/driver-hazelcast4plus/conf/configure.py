@@ -18,7 +18,7 @@ def _configure_hazelcast_xml(nodes, args: DriverConfigureArgs):
     # configure <!--LICENSE-KEY-->
     license_key = args.test.get("license_key")
     if license_key is not None:
-        license_key_config = f"<license-key>{license_key}</license_key>"
+        license_key_config = f"<license-key>{license_key}</license-key>"
         config = config.replace("<!--LICENSE-KEY-->", license_key_config)
 
     # configure <!--LITE_MEMBER_CONFIG-->
@@ -62,8 +62,7 @@ def _configure_client_hazelcast_xml(nodes, args:DriverConfigureArgs):
         members_config = f"{members_config}<address>{host['private_ip']}:{member_port}</address>"
 
     config = config.replace("<!--MEMBERS-->", members_config)
-    args.coordinator_params['file:client_hazelcast.xml']=config
-
+    args.coordinator_params['file:client-hazelcast.xml']=config
 
 
 def _configure_log4j_xml(args:DriverConfigureArgs):
@@ -89,6 +88,8 @@ def _get_driver(args):
 
 
 def exec(args: DriverConfigureArgs):
+    print("[INFO] Configure")
+
     nodes_pattern = args.test.get("node_hosts", 'nodes')
     nodes = load_hosts(inventory_path=args.inventory_path, host_pattern=nodes_pattern)
 
@@ -106,3 +107,5 @@ def exec(args: DriverConfigureArgs):
             _configure_hazelcast_xml(nodes, args)
         else:
             raise Exception(f"Unrecognized client_type {client_type}")
+
+    print("[INFO] Configure: done")
