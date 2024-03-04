@@ -2,7 +2,7 @@ import os.path
 
 from inventory import load_hosts
 from simulator.driver import find_driver_config_file, DriverConfigureArgs
-from simulator.util import find_config_file, read_file
+from simulator.util import read_file
 
 
 def _configure_hazelcast_xml(nodes, args: DriverConfigureArgs):
@@ -66,8 +66,8 @@ def _configure_client_hazelcast_xml(nodes, args:DriverConfigureArgs):
 
 
 def _configure_log4j_xml(args:DriverConfigureArgs):
-    log4j_xml = read_file(find_config_file("worker-log4j.xml"))
-    # todo: fix key
+    driver = _get_driver(args)
+    log4j_xml = read_file(find_driver_config_file("worker-log4j.xml", driver))
     if args.is_server:
         args.coordinator_params['file:server-log4j.xml'] = log4j_xml
     else:
