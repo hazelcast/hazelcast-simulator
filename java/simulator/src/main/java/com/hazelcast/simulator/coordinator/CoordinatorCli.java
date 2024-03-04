@@ -80,14 +80,12 @@ final class CoordinatorCli {
                             + "the test will run until the test decides to stop.")
             .withRequiredArg().ofType(String.class).defaultsTo(format("%ds", DEFAULT_DURATION_SECONDS));
 
-    // todo: should be named nodeCountSpec
-    private final OptionSpec<Integer> membersSpec = parser.accepts("members",
+    private final OptionSpec<Integer> passiveCountSpec = parser.accepts("passiveCount",
                     "Number of cluster member Worker JVMs. If no value is specified and no mixed members are specified,"
                             + " then the number of cluster members will be equal to the number of machines in the agents file.")
             .withRequiredArg().ofType(Integer.class).defaultsTo(-1);
 
-    // todo: should be named laodGeneratorCountspec
-    private final OptionSpec<Integer> clientsSpec = parser.accepts("clients",
+    private final OptionSpec<Integer> activeCountSpec = parser.accepts("activeCount",
                     "Number of cluster client Worker JVMs.")
             .withRequiredArg().ofType(Integer.class).defaultsTo(0);
 
@@ -339,14 +337,14 @@ final class CoordinatorCli {
             throw new CommandLineExitException("client workerType can't be [member]");
         }
 
-        int members = options.valueOf(membersSpec);
+        int members = options.valueOf(passiveCountSpec);
         if (members == -1) {
             members = registry.agentCount();
         } else if (members < -1) {
             throw new CommandLineExitException("--member must be a equal or larger than -1");
         }
 
-        int clients = options.valueOf(clientsSpec);
+        int clients = options.valueOf(activeCountSpec);
         if (clients < 0) {
             throw new CommandLineExitException("--client must be a equal or larger than 0");
         }

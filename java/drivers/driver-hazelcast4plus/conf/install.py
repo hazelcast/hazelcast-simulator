@@ -145,7 +145,7 @@ def _get_driver(args):
 def exec(args:DriverInstallArgs):
     print("[INFO] Install")
 
-    if args.is_server:
+    if args.is_passive:
         host_pattern = args.test.get("node_hosts", "nodes")
     else:
         host_pattern = args.test.get("loadgenerator_hosts", "loadgenerators")

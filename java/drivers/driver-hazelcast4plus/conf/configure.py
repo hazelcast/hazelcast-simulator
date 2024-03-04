@@ -22,7 +22,7 @@ def _configure_hazelcast_xml(nodes, args: DriverConfigureArgs):
         config = config.replace("<!--LICENSE-KEY-->", license_key_config)
 
     # configure <!--LITE_MEMBER_CONFIG-->
-    if args.is_server:
+    if args.is_passive:
         lite_member_config = "<lite-member enabled=\"false\"/>"
     else:
         lite_member_config = "<lite-member enabled=\"true\"/>"
@@ -38,13 +38,13 @@ def _configure_hazelcast_xml(nodes, args: DriverConfigureArgs):
         members_config = f"{members_config}<member>{host['private_ip']}:{member_port}</member>"
     config = config.replace("<!--MEMBERS-->", members_config)
 
-    if args.is_server:
+    if args.is_passive:
         args.coordinator_params['file:hazelcast.xml'] = config
     else:
         args.coordinator_params['file:litemember-hazelcast.xml'] = config
 
 
-def _configure_client_hazelcast_xml(nodes, args:DriverConfigureArgs):
+def _configure_client_hazelcast_xml(nodes, args: DriverConfigureArgs):
     src_file = args.test.get("client_hazelcast_xml")
     if src_file is not None:
         if not os.path.exists(src_file):
@@ -62,26 +62,26 @@ def _configure_client_hazelcast_xml(nodes, args:DriverConfigureArgs):
         members_config = f"{members_config}<address>{host['private_ip']}:{member_port}</address>"
 
     config = config.replace("<!--MEMBERS-->", members_config)
-    args.coordinator_params['file:client-hazelcast.xml']=config
+    args.coordinator_params['file:client-hazelcast.xml'] = config
 
 
-def _configure_log4j_xml(args:DriverConfigureArgs):
+def _configure_log4j_xml(args: DriverConfigureArgs):
     driver = _get_driver(args)
-    log4j_xml = read_file(find_driver_config_file("worker-log4j.xml", driver))
-    if args.is_server:
+    log4j_xml = read_file(find_driver_config_file(driver, "worker-log4j.xml"))
+    if args.is_passive:
         args.coordinator_params['file:server-log4j.xml'] = log4j_xml
     else:
         args.coordinator_params['file:client-log4j.xml'] = log4j_xml
 
 
-def _configure_worker_sh(args:DriverConfigureArgs):
+def _configure_worker_sh(args: DriverConfigureArgs):
     driver = _get_driver(args)
 
-    if args.is_server:
-        worker_sh = read_file(find_driver_config_file("worker.sh", driver))
+    if args.is_passive:
+        worker_sh = read_file(find_driver_config_file(driver, "worker.sh"))
         args.coordinator_params['file:server-worker.sh'] = worker_sh
     else:
-        worker_sh = read_file(find_driver_config_file("worker.sh", driver))
+        worker_sh = read_file(find_driver_config_file(driver, "worker.sh"))
         args.coordinator_params['file:client-worker.sh'] = worker_sh
 
 
@@ -98,7 +98,7 @@ def exec(args: DriverConfigureArgs):
     _configure_log4j_xml(args)
     _configure_worker_sh(args)
 
-    if args.is_server:
+    if args.is_passive:
         _configure_hazelcast_xml(nodes, args)
     else:
         client_type = args.test.get('client_type', 'javaclient')

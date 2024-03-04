@@ -193,11 +193,11 @@ class PerfTest:
 
         members = test_yaml.get('members')
         if members is not None:
-            coordinator_param = f"{coordinator_param} --members {members}"
+            coordinator_param = f"{coordinator_param} --passiveCount {members}"
 
         clients = test_yaml.get('clients')
         if clients is not None:
-            coordinator_param = f"{coordinator_param} --clients {clients}"
+            coordinator_param = f"{coordinator_param} --activeCount {clients}"
 
           #
         # if fail_fast is not None:

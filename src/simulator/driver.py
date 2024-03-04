@@ -6,16 +6,21 @@ from dataclasses import dataclass
 
 from simulator.util import shell, run_parallel, simulator_home
 
+
 def find_driver_config_file(driver, filename):
-    p = filename
-    if os.path.exists(filename):
-        return p
+    path_cwd_config = f"{os.getcwd()}/{filename}"
+    path_driver_config = f"{simulator_home}/drivers/driver-{driver}/conf/{filename}"
 
-    p = f"{simulator_home}/drivers/{driver}/conf/{filename}"
-    if os.path.exists(p):
-        return p
+    # check if it exists locally
+    if os.path.exists(path_cwd_config):
+        return path_cwd_config
 
-    raise Exception(f"Could not find a configuration file with name '{filename}'")
+    # check if it exists in driver dir
+    if os.path.exists(path_driver_config):
+        return path_driver_config
+
+    raise Exception(
+        f"Could not find a configuration file with name '{filename}', lookin [{path_cwd_config},{path_driver_config}]")
 
 
 def _upload_driver(host, driver_dir):
@@ -34,7 +39,8 @@ def upload_driver(driver, hosts):
     run_parallel(_upload_driver, [(host, driver_dir,) for host in hosts])
     print(f"[INFO]Uploading driver {driver} to {driver_dir}: done")
 
-def driver_run(driver:str, test:dict, is_server:bool, params:dict, inventory_path:str):
+
+def driver_run(driver: str, test: dict, is_server: bool, params: dict, inventory_path: str):
     install_args = DriverInstallArgs(test, is_server, inventory_path)
     _driver_exec(driver, "install.py", install_args)
     configure_args = DriverConfigureArgs(test, is_server, inventory_path, params)
@@ -44,18 +50,19 @@ def driver_run(driver:str, test:dict, is_server:bool, params:dict, inventory_pat
 @dataclass
 class DriverInstallArgs:
     test: dict
-    is_server: bool
+    is_passive: bool
     inventory_path: str
+
 
 @dataclass
 class DriverConfigureArgs:
-    test:dict
-    is_server:bool
-    inventory_path:str
-    coordinator_params:dict
+    test: dict
+    is_passive: bool
+    inventory_path: str
+    coordinator_params: dict
 
 
-def _driver_exec(driver:str, module:str, *args, **kwargs):
+def _driver_exec(driver: str, module: str, *args, **kwargs):
     # Add the directory containing the module to the Python path
     driver_path = f"{simulator_home}/drivers/driver-{driver}/conf/"
     module_path = f"{driver_path}/{module}"

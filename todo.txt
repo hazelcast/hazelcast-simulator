@@ -1,7 +1,5 @@
 TODO
 
-- with litemember I get following failure
-com.hazelcast.simulator.utils.CommandLineExitException: Could not locate driver class [com.hazelcast.simulator.hazelcast4plus.Hazelcast4PlusDriver]
 
 - get the right param files in the workers directory
 
@@ -23,38 +21,18 @@ ERROR StatusLogger Error parsing /home/ubuntu/hazelcast-simulator/workers/c1f13c
 
 DONE
 
-- fix [INFO] without space
+ - DriverInstallArgs.is_server ---> is_passive
 
-- run with javaclient
+ - DriverConfigureArgs.is_server --> is_passive
 
-- multi member test running
 
-- member only test running
+-  File "/eng/Hazelcast/hazelcast-simulator/src/simulator/driver.py", line 18, in find_driver_config_file
+    raise Exception(f"Could not find a configuration file with name '{filename}'")
+Exception: Could not find a configuration file with name 'hazelcast5'
 
-- WARN  14:05:22 Unexpected remote arg: duration:
-  WARN  14:05:22 rsync error: syntax or usage error (code 1) at main.c(1508) [sender=3.2.7]
 
-- null
-com.hazelcast.config.InvalidConfigurationException: The element type "license-key" must be terminated by the matching end-tag "</license-key>".
+- CoordinatorCli: members --> passiveCountSpec
 
-- make DriverInstallArgs a dataclass
+- CoordinatorCli: clients ---> activeCountSpec
 
-- make DriverConfigureArgs a dataclass
-
-- driver install should be optional
-
-- driver configure should be optional
-
-- fix driver args problems
-
-- rename driverinstall to driverinstallargs
-
-- introduce a driver install config
-
-- introduce a driver configure config
-
-- move agents_upload_driver into driver
-
-- move driver call to driver
-
-- introduce driver utils or something
+- improved error message when file not found in findDriverConfig file
