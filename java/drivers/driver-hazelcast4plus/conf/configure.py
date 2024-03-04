@@ -75,11 +75,13 @@ def _configure_log4j_xml(args:DriverConfigureArgs):
 
 
 def _configure_worker_sh(args:DriverConfigureArgs):
+    driver = _get_driver(args)
+
     if args.is_server:
-        worker_sh = read_file(find_config_file("worker.sh"))
+        worker_sh = read_file(find_driver_config_file("worker.sh", driver))
         args.coordinator_params['file:server-worker.sh'] = worker_sh
     else:
-        worker_sh = read_file(find_config_file("worker.sh"))
+        worker_sh = read_file(find_driver_config_file("worker.sh", driver))
         args.coordinator_params['file:client-worker.sh'] = worker_sh
 
 
