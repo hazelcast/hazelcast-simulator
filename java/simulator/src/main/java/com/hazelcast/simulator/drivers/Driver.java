@@ -111,13 +111,6 @@ public abstract class Driver<V> implements Closeable {
         return this;
     }
 
-    public Driver<V> setIfNotNull(String key, Object value) {
-        if (value == null) {
-            return this;
-        }
-        return set(key, value);
-    }
-
     /**
      * Gets the created Driver instance. Method is called on the worker-side
      *
@@ -133,20 +126,6 @@ public abstract class Driver<V> implements Closeable {
      */
     public abstract void startDriverInstance() throws Exception;
 
-    protected String loadConfigFile(String logPrefix, String filename) {
-        File file = getConfigurationFile(filename, get("driver"));
-        String config = configCache.get(filename);
-        if (config == null) {
-            config = fileAsText(file);
-            configCache.put(filename, config);
-            LOGGER.info("Loading " + logPrefix + ":" + file.getAbsolutePath());
-        }
-        return config;
-    }
-
-    protected String loadLog4jConfig() {
-        return loadConfigFile("Log4J configuration for worker", "worker-log4j.xml");
-    }
 
 
 }

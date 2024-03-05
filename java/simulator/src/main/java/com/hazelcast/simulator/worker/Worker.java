@@ -68,7 +68,7 @@ public class Worker {
         this.publicAddress = parameters.get("PUBLIC_ADDRESS");
         this.workerAddress = SimulatorAddress.fromString(parameters.get("WORKER_ADDRESS"));
 
-        String driverString = parameters.get("driver");
+        String driverString = parameters.findDriver();
         this.driver = loadDriver(driverString)
                 .setAll(parameters.asMap());
         this.server = new Server("workers")

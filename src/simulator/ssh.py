@@ -121,8 +121,8 @@ class Ssh:
         cmd = f'scp {self.options} -r -q {src} {self.user}@{self.ip}:{dst}'
         self.__scp(cmd)
 
-    def rsync_to_remote(self, src, dst):
-        cmd = f'rsync -P -e "ssh {self.options}" {src} {self.user}@{self.ip}:{dst}'
+    def rsync_to_remote(self, src, dst, args='-P --checksum'):
+        cmd = f'rsync {args} -e "ssh {self.options}" {src} {self.user}@{self.ip}:{dst}'
         self.__rsync(cmd)
 
     def __scp(self, cmd):

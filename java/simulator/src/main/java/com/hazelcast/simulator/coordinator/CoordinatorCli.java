@@ -15,6 +15,7 @@
  */
 package com.hazelcast.simulator.coordinator;
 
+import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestPhase;
@@ -51,8 +52,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 @SuppressWarnings("FieldCanBeLocal")
 final class CoordinatorCli {
-    static final int DEFAULT_DURATION_SECONDS = 0;
-
     private static final Logger LOGGER = LogManager.getLogger(CoordinatorCli.class);
 
     CoordinatorRunMonolith runMonolith;
@@ -74,11 +73,6 @@ final class CoordinatorCli {
                     "Amount of time in milliseconds to wait between starting up the next worker. This is useful to prevent"
                             + "duplicate connection issues.")
             .withRequiredArg().ofType(Integer.class).defaultsTo(0);
-
-    private final OptionSpec<String> durationSpec = parser.accepts("duration",
-                    "Amount of time to execute the RUN phase per test, e.g. 10s, 1m, 2h or 3d. If duration is set to 0, "
-                            + "the test will run until the test decides to stop.")
-            .withRequiredArg().ofType(String.class).defaultsTo(format("%ds", DEFAULT_DURATION_SECONDS));
 
     private final OptionSpec<Integer> passiveCountSpec = parser.accepts("passiveCount",
                     "Number of cluster member Worker JVMs. If no value is specified and no mixed members are specified,"
@@ -141,14 +135,6 @@ final class CoordinatorCli {
     private final OptionSpec cleanSpec = parser.accepts("clean",
             "Cleans the remote Worker directories on the provisioned machines. "
                     + "If this option is set, no other tasks are executed");
-
-    private final OptionSpec<String> nodeHostsSpec = parser.accepts("nodeHosts",
-                    "The name of the group that makes up the nodes.")
-            .withRequiredArg().ofType(String.class).defaultsTo("all|!mc");
-
-    private final OptionSpec<String> loadGeneratorHostsSpec = parser.accepts("loadGeneratorHosts",
-                    "The name of the group that makes up the loadGenerator.")
-            .withRequiredArg().ofType(String.class).defaultsTo("all|!mc");
 
     private final OptionSpec<String> paramSpec = parser.accepts("param",
                     "A key=value parameter.")
@@ -238,7 +224,7 @@ final class CoordinatorCli {
             workerQuery.setMaxCount(targetCount);
         }
 
-        int durationSeconds = getDurationSeconds(options, durationSpec);
+        int durationSeconds = getDurationSeconds(properties.get("duration"));
         testSuite.setDurationSeconds(durationSeconds)
                 .setFailFast(options.valueOf(failFastSpec))
                 .setVerifyEnabled(options.valueOf(verifyEnabledSpec))
@@ -282,29 +268,28 @@ final class CoordinatorCli {
         return testSuite;
     }
 
-    public static int getDurationSeconds(OptionSet options, OptionSpec<String> optionSpec) {
-        int duration;
-        String value = options.valueOf(optionSpec);
+    public static int getDurationSeconds(String durationString) {
+        int durationSec;
         try {
-            if (value.endsWith("s")) {
-                duration = parseDurationWithoutLastChar(SECONDS, value);
-            } else if (value.endsWith("m")) {
-                duration = parseDurationWithoutLastChar(MINUTES, value);
-            } else if (value.endsWith("h")) {
-                duration = parseDurationWithoutLastChar(HOURS, value);
-            } else if (value.endsWith("d")) {
-                duration = parseDurationWithoutLastChar(DAYS, value);
+            if (durationString.endsWith("s")) {
+                durationSec = parseDurationWithoutLastChar(SECONDS, durationString);
+            } else if (durationString.endsWith("m")) {
+                durationSec = parseDurationWithoutLastChar(MINUTES, durationString);
+            } else if (durationString.endsWith("h")) {
+                durationSec = parseDurationWithoutLastChar(HOURS, durationString);
+            } else if (durationString.endsWith("d")) {
+                durationSec = parseDurationWithoutLastChar(DAYS, durationString);
             } else {
-                duration = Integer.parseInt(value);
+                durationSec = Integer.parseInt(durationString);
             }
         } catch (NumberFormatException e) {
-            throw new CommandLineExitException(format("Failed to parse duration '%s'", value), e);
+            throw new CommandLineExitException(format("Failed to parse duration '%s'", durationString), e);
         }
 
-        if (duration < 0) {
-            throw new CommandLineExitException("duration must be a positive number, but was: " + duration);
+        if (durationSec < 0) {
+            throw new CommandLineExitException("duration must be a positive number, but was: " + durationSec);
         }
-        return duration;
+        return durationSec;
     }
 
     public static int parseDurationWithoutLastChar(TimeUnit timeUnit, String value) {
@@ -313,12 +298,10 @@ final class CoordinatorCli {
     }
 
     private Registry newRegistry() {
-        Registry registry;
-        registry = Registry.loadInventoryYaml(
+        Registry registry = Registry.loadInventoryYaml(
                 locateInventoryFile(),
-                options.valueOf(loadGeneratorHostsSpec),
-                options.valueOf(nodeHostsSpec));
-
+                properties.get("loadgenerator_hosts"),
+                properties.get("node_hosts"));
 
         if (options.has(dedicatedMemberMachinesSpec)) {
             registry.assignDedicatedMemberMachines(options.valueOf(dedicatedMemberMachinesSpec));
