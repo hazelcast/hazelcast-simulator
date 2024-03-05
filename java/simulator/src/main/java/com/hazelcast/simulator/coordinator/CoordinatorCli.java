@@ -174,8 +174,8 @@ final class CoordinatorCli {
         }
 
 
-//        if (!"fake".equals(properties.get("DRIVER"))) {
-//            properties.set("DRIVER", options.valueOf(driverSpec));
+//        if (!"fake".equals(properties.get("driver"))) {
+//            properties.set("driver", options.valueOf(driverSpec));
 //        }
 //
 //        if (options.hasArgument(versionSpec)) {

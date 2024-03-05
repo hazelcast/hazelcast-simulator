@@ -49,7 +49,7 @@ public class WorkerTest {
         AgentData agent = registry.addAgent(PUBLIC_ADDRESS, PUBLIC_ADDRESS);
 
         SimulatorProperties properties = new SimulatorProperties()
-                .set("DRIVER", "fake")
+                .set("driver", "fake")
                 .set("MANAGEMENT_CENTER_URL", "none");
 
         Driver<?> driver = new FakeDriver()

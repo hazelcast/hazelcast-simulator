@@ -39,7 +39,7 @@ public class TestEnvironmentUtils {
 
         originalSimulatorHome = System.getProperty("SIMULATOR_HOME");
         System.setProperty("SIMULATOR_HOME", simulatorHome.getAbsolutePath());
-        System.setProperty("DRIVER","fake");
+        System.setProperty("driver","fake");
         return simulatorHome;
     }
 

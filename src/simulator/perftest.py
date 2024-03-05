@@ -33,7 +33,7 @@ inventory_path = 'inventory.yaml'
 
 class PerfTest:
 
-    def __init__(self, logfile=None, log_shell_command=True, exit_on_error=False):
+    def __init__(self, logfile=None, log_shell_command=False, exit_on_error=False):
         self.logfile = logfile
         self.log_shell_command = log_shell_command
         self.exit_on_error = exit_on_error
@@ -110,7 +110,7 @@ class PerfTest:
         #     # member_args=test.get('member_args'),
         #     # members=test.get('members'),
         #     # clients=test.get('clients'),
-        #     # node_driver=node_driver,
+        #     # passive_driver=passive_driver,
         #     # load_generator_driver=load_generator_driver,
         #     # version=test.get('version'),
         #     # fail_fast=test.get('fail_fast'),
@@ -126,29 +126,27 @@ class PerfTest:
                 coordinator_params[key] = value
 
         driver = test_yaml.get('driver')
-        loadgenerator_driver = test_yaml.get('loadgenerator_driver')
-        node_driver = test_yaml.get('node_driver')
+        active_driver = test_yaml.get('active_driver')
+        passive_driver = test_yaml.get('passive_driver')
 
         if driver is not None:
-            if loadgenerator_driver is not None:
+            if active_driver is not None:
                 exit_with_error(
-                    f"test {test_yaml['name']} can't have both the driver and loadgenerator_driver configured.")
-            if node_driver is not None:
-                exit_with_error(f"test {test_yaml['name']} can't have both the driver and node_driver configured.")
+                    f"test {test_yaml['name']} can't have both the driver and active_driver configured.")
+            if passive_driver is not None:
+                exit_with_error(f"test {test_yaml['name']} can't have both the driver and passive_driver configured.")
 
             driver_run(driver, test_yaml, True, coordinator_params, inventory_path)
             driver_run(driver, test_yaml, False, coordinator_params, inventory_path)
-            coordinator_params['loadgenerator_driver'] = driver
-            coordinator_params['node_driver'] = driver
         else:
-            if node_driver is not None:
-                coordinator_params['node_driver'] = node_driver
-                driver_run(node_driver, test_yaml, True, coordinator_params, inventory_path)
+            if passive_driver is not None:
+                coordinator_params['passive_driver'] = passive_driver
+                driver_run(passive_driver, test_yaml, True, coordinator_params, inventory_path)
 
-            if loadgenerator_driver is None:
-                exit_with_error(f"test {test_yaml['name']} has no driver or loadgenerator_driver configured.")
-            driver_run(loadgenerator_driver, test_yaml, False, coordinator_params, inventory_path)
-            coordinator_params['loadgenerator_driver'] = loadgenerator_driver
+            if active_driver is None:
+                exit_with_error(f"test {test_yaml['name']} has no driver or active_driver configured.")
+            driver_run(active_driver, test_yaml, False, coordinator_params, inventory_path)
+            coordinator_params['active_driver'] = active_driver
 
 
         # if worker_vm_startup_delay_ms is not None:

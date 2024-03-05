@@ -1,5 +1,10 @@
 TODO
 
+- VERSION_SPEC to version
+
+- delete ExecuteScriptMessage
+
+- seems that the hazelcast jars are always uploaded even when there is no change.
 
 - get the right param files in the workers directory
 
@@ -21,18 +26,12 @@ ERROR StatusLogger Error parsing /home/ubuntu/hazelcast-simulator/workers/c1f13c
 
 DONE
 
- - DriverInstallArgs.is_server ---> is_passive
+- don't log the coordinatorcli command because of params noise
+    - cause is in the worker plan
 
- - DriverConfigureArgs.is_server --> is_passive
-
-
--  File "/eng/Hazelcast/hazelcast-simulator/src/simulator/driver.py", line 18, in find_driver_config_file
-    raise Exception(f"Could not find a configuration file with name '{filename}'")
-Exception: Could not find a configuration file with name 'hazelcast5'
-
-
-- CoordinatorCli: members --> passiveCountSpec
-
-- CoordinatorCli: clients ---> activeCountSpec
-
-- improved error message when file not found in findDriverConfig file
+- null
+com.hazelcast.simulator.utils.CommandLineExitException: Could not locate driver class [com.hazelcast.simulator.null.NullDriver]
+	at com.hazelcast.simulator.drivers.Driver.loadInstance(Driver.java:67)
+	at com.hazelcast.simulator.drivers.Driver.loadDriver(Driver.java:56)
+	at com.hazelcast.simulator.worker.Worker.<init>(Worker.java:71)
+	at com.hazelcast.simulator.worker.Worker.main(Worker.java:127)

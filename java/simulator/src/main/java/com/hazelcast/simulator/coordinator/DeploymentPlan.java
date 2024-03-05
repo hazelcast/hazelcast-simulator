@@ -85,13 +85,7 @@ public final class DeploymentPlan {
             workerParameters.setAll(properties);
             workerParameters.set("WORKER_TYPE", workerType);
 
-            if ("member".equals(workerType)) {
-                workerParameters.set("DRIVER", workerParameters.get("node_driver"));
-                workerParameters.set("VERSION_SPEC", workerParameters.get("version"));
-            } else {
-                workerParameters.set("DRIVER", workerParameters.get("loadgenerator_driver"));
-                workerParameters.set("VERSION_SPEC", workerParameters.get("version"));
-            }
+            workerParameters.set("VERSION_SPEC", workerParameters.get("version"));
 
             workerParameters.set("file:log4j.xml", "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                     "<!DOCTYPE log4j:configuration SYSTEM \"log4j.dtd\" >\n" +
@@ -140,9 +134,6 @@ public final class DeploymentPlan {
                    );
 
             workersPerAgent.registerWorker(workerParameters);
-
-            System.out.println("[INFO]" + workerParameters);
-
             List<WorkerParameters> workerParametersList = workerDeployment.get(agent.getAddress());
             workerParametersList.add(workerParameters);
         }

@@ -223,7 +223,7 @@ public class WorkerProcessLauncher {
                 + uploadDirToClassPath(workerHome)
                 + CLASSPATH_SEPARATOR + CLASSPATH;
 
-        String driver = parameters.get("DRIVER");
+        String driver = parameters.get("driver");
         if (driver.contains("hazelcast")) {
             String hzVersionDirectory = directoryForVersionSpec(parameters.get("VERSION_SPEC"));
             classpath += CLASSPATH_SEPARATOR + simulatorHome + "/driver-lib/" + driver + "/" + hzVersionDirectory + "/*";

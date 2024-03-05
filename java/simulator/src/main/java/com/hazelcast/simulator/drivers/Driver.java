@@ -134,7 +134,7 @@ public abstract class Driver<V> implements Closeable {
     public abstract void startDriverInstance() throws Exception;
 
     protected String loadConfigFile(String logPrefix, String filename) {
-        File file = getConfigurationFile(filename, get("DRIVER"));
+        File file = getConfigurationFile(filename, get("driver"));
         String config = configCache.get(filename);
         if (config == null) {
             config = fileAsText(file);

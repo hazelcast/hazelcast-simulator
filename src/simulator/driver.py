@@ -35,9 +35,9 @@ def _upload_driver(host, driver_dir):
 def upload_driver(driver, hosts):
     driver_dir = f"drivers/driver-{driver}"
 
-    print(f"[INFO]Uploading driver {driver} to {driver_dir}: starting")
+    print(f"[INFO] Uploading driver {driver} to {driver_dir}: starting")
     run_parallel(_upload_driver, [(host, driver_dir,) for host in hosts])
-    print(f"[INFO]Uploading driver {driver} to {driver_dir}: done")
+    print(f"[INFO] Uploading driver {driver} to {driver_dir}: done")
 
 
 def driver_run(driver: str, test: dict, is_server: bool, params: dict, inventory_path: str):
@@ -69,7 +69,7 @@ def _driver_exec(driver: str, module: str, *args, **kwargs):
     function_name = "exec"
 
     if not os.path.exists(module_path):
-        print(f"[INFO] skipping {driver}.{module}")
+        print(f"[INFO] Skipping {driver}.{module}")
         return
 
     try:

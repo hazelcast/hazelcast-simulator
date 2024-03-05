@@ -68,7 +68,8 @@ public class Worker {
         this.publicAddress = parameters.get("PUBLIC_ADDRESS");
         this.workerAddress = SimulatorAddress.fromString(parameters.get("WORKER_ADDRESS"));
 
-        this.driver = loadDriver(parameters.get("DRIVER"))
+        String driverString = parameters.get("driver");
+        this.driver = loadDriver(driverString)
                 .setAll(parameters.asMap());
         this.server = new Server("workers")
                 .setBrokerURL(localIp(), parseInt(parameters.get("AGENT_PORT")))
@@ -124,7 +125,8 @@ public class Worker {
             log("Version: %s, Commit: %s, Build Time: %s", getSimulatorVersion(), getCommitIdAbbrev(), getBuildTime());
             log("SIMULATOR_HOME: %s%n", getSimulatorHome().getAbsolutePath());
 
-            Worker worker = new Worker(loadParameters(new File(getUserDir(), "parameters")));
+            WorkerParameters workerParameters = loadParameters(new File(getUserDir(), "parameters"));
+            Worker worker = new Worker(workerParameters);
             worker.start();
         } catch (Throwable e) {
             ExceptionReporter.report(null, e);

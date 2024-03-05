@@ -46,7 +46,7 @@ public class Hazelcast3Driver extends Driver<HazelcastInstance> {
 //        Map<String, String> s = new HashMap<>(properties);
 //        s.remove("CONFIG");
 //
-//        if ("hazelcast-enterprise3".equals(get("DRIVER"))) {
+//        if ("hazelcast-enterprise3".equals(get("driver"))) {
 //            String licenceKey = get("LICENCE_KEY");
 //            if (licenceKey == null) {
 //                throw new IllegalStateException("licenceKey needs to be set with 'hazelcast-enterprise3' as driver");
