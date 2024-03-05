@@ -81,8 +81,8 @@ public class Worker {
 
         Runtime.getRuntime().addShutdownHook(new WorkerShutdownThread(true));
 
-        int interval = Integer.parseInt(parameters.get("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS"));
-        this.performanceMonitor = new OperationsMonitor(server, testManager, interval);
+        int performanceMonitorIntervalSeconds = Integer.parseInt(parameters.get("performance_monitor_interval_seconds"));
+        this.performanceMonitor = new OperationsMonitor(server, testManager, performanceMonitorIntervalSeconds);
     }
 
     public void start() throws Exception {

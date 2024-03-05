@@ -64,11 +64,6 @@ final class CoordinatorCli {
 
     private final OptionParser parser = new OptionParser();
 
-    private final OptionSpec<Integer> performanceMonitorInterval = parser.accepts("performanceMonitorInterval",
-                    "Defines the interval for throughput and latency snapshots on the workers.\n" +
-                            "# 0 disabled tracking performance.")
-            .withRequiredArg().ofType(Integer.class).defaultsTo(10);
-
     private final OptionSpec<Integer> workerVmStartupDelayMsSpec = parser.accepts("workerVmStartupDelayMs",
                     "Amount of time in milliseconds to wait between starting up the next worker. This is useful to prevent"
                             + "duplicate connection issues.")
@@ -97,17 +92,6 @@ final class CoordinatorCli {
     private final OptionSpec<String> runPathSpec = parser.accepts("runPath", "The path to store the results")
             .withRequiredArg().ofType(String.class)
             .defaultsTo("runs/" + new SimpleDateFormat("yyyy-mm-dd_hh:mm:ss").format(Calendar.getInstance().getTime()));
-
-    private final OptionSpec<Boolean> verifyEnabledSpec = parser.accepts("verifyEnabled",
-                    "Defines if tests are verified.")
-            .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
-
-    private final OptionSpec<Boolean> failFastSpec = parser.accepts("failFast",
-                    "Defines if the TestSuite should fail immediately when a test from a TestSuite fails instead of continuing.")
-            .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
-
-    private final OptionSpec parallelSpec = parser.accepts("parallel",
-            "If defined tests are run in parallel.");
 
     private final OptionSpec<TestPhase> syncToTestPhaseSpec = parser.accepts("syncToTestPhase",
                     format("Defines the last TestPhase which is synchronized between all parallel running tests."
@@ -165,10 +149,7 @@ final class CoordinatorCli {
 
         if (!(options.has(downloadSpec) || options.has(cleanSpec))) {
             this.coordinatorParameters = loadCoordinatorParameters();
-            this.properties.set("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS", "" + options.valueOf(performanceMonitorInterval));
             this.coordinator = new Coordinator(registry, coordinatorParameters);
-
-
             this.testSuite = loadTestSuite();
 
             if (testSuite == null) {
@@ -223,13 +204,13 @@ final class CoordinatorCli {
 
         int durationSeconds = getDurationSeconds(properties.get("duration"));
         testSuite.setDurationSeconds(durationSeconds)
-                .setFailFast(options.valueOf(failFastSpec))
-                .setVerifyEnabled(options.valueOf(verifyEnabledSpec))
-                .setParallel(options.has(parallelSpec))
+                .setFailFast(properties.getBoolean("fail_fast"))
+                .setVerifyEnabled(properties.getBoolean("verify_enabled"))
+                .setParallel(properties.getBoolean("parallel"))
                 .setWorkerQuery(workerQuery);
 
         // if the coordinator is not monitoring performance, we don't care for measuring latencies
-        if (coordinatorParameters.getSimulatorProperties().getInt("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS") == 0) {
+        if (coordinatorParameters.getSimulatorProperties().getInt("performance_monitor_interval_seconds") == 0) {
             for (TestCase testCase : testSuite.getTestCaseList()) {
                 testCase.setProperty("measureLatency", "false");
             }
@@ -343,7 +324,7 @@ final class CoordinatorCli {
         File file = preferredInventoryFile();
 
         if (!file.exists()) {
-            throw new CommandLineExitException(format("Agents file [%s] does not exist", file));
+            throw new CommandLineExitException(format("Inventory file [%s] does not exist", file));
         }
 
         LOGGER.info("Loading inventory file: " + file.getAbsolutePath());

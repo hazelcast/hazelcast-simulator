@@ -72,7 +72,7 @@ public class RunTestSuiteTaskTest {
 //                .addEnvironment("LOG4j_CONFIG", fileAsText(logFile))
 //                .addEnvironment("AUTOCREATE_HAZELCAST_INSTANCE", "true")
 //                .addEnvironment("JVM_OPTIONS", "")
-//                .addEnvironment("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS", "10")
+//                .addEnvironment("performance_monitor_interval_seconds", "10")
 //                .addEnvironment("driver", "hazelcast4")
 //                .addEnvironment("WORKER_TYPE", "member")
 //                .setWorkerStartupTimeout(simulatorProperties.getWorkerStartupTimeoutSeconds())

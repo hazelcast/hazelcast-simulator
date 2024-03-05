@@ -1,25 +1,10 @@
 TODO
 
-- worker launcher only can handle driver and not active/passive-driver
-    - I think just needs verify
-
-- driver sanity check logic to right place
-
-- coordinator cli: verify_enabled
-
-- coordinator cli: fail_fast
-
-- coordinator cli: performance_monitor_interval_seconds
-
 - coordinator cli: runPath
-
-- coordinator cli: parallel
 
 - download logic should be removed from coordinator
 
 - clean logic should be removed from coordinator
-
-- locateInventoryFile --> pointing to agents file. Fix
 
 - undesirable driver upload output
 
@@ -44,6 +29,24 @@ ERROR StatusLogger Error parsing /home/ubuntu/hazelcast-simulator/workers/c1f13c
 - remove the driver parameters from the Java code.
 
 DONE
+- driver sanity check logic to right place
+
+
+- locateInventoryFile --> pointing to agents file. Fix
+
+- worker launcher only can handle driver and not active/passive-driver
+    - I think just needs verify
+
+- SimulatorProperties getBoolean ignore case
+
+- coordinator cli: verify_enabled
+
+- coordinator cli: fail_fast
+
+- coordinator cli: performance_monitor_interval_seconds
+
+- coordinator cli: parallel
+
 - activeCount should be param
 
 - passiveCount should be param

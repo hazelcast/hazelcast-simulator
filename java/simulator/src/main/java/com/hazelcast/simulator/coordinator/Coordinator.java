@@ -125,7 +125,7 @@ public class Coordinator implements Closeable {
         log("Run path: " + parameters.getRunPath().getAbsolutePath());
 
         int performanceIntervalSeconds
-                = parameters.getSimulatorProperties().getInt("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS");
+                = parameters.getSimulatorProperties().getInt("performance_monitor_interval_seconds");
 
         if (performanceIntervalSeconds > 0) {
             log("Performance monitor enabled (%d seconds interval)", performanceIntervalSeconds);

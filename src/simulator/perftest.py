@@ -132,12 +132,6 @@ class PerfTest:
         passive_driver = test_yaml.get('passive_driver')
 
         if driver is not None:
-            if active_driver is not None:
-                exit_with_error(
-                    f"test {test_yaml['name']} can't have both the driver and active_driver configured.")
-            if passive_driver is not None:
-                exit_with_error(f"test {test_yaml['name']} can't have both the driver and passive_driver configured.")
-
             driver_run(driver, test_yaml, True, coordinator_params, inventory_path)
             driver_run(driver, test_yaml, False, coordinator_params, inventory_path)
         else:
@@ -145,50 +139,27 @@ class PerfTest:
                 coordinator_params['passive_driver'] = passive_driver
                 driver_run(passive_driver, test_yaml, True, coordinator_params, inventory_path)
 
-            if active_driver is None:
-                exit_with_error(f"test {test_yaml['name']} has no driver or active_driver configured.")
             driver_run(active_driver, test_yaml, False, coordinator_params, inventory_path)
             coordinator_params['active_driver'] = active_driver
+
+        if run_path is not None:
+            coordinator_params['run_path'] = run_path
 
         # if worker_vm_startup_delay_ms is not None:
         #     args = f"{args} --workerVmStartupDelayMs {worker_vm_startup_delay_ms}"
         #
-
         # dedicated_member_machines = test_yaml['']
         # if dedicated_member_machines is not None:
         #     args = f"{args} --dedicatedMemberMachines {dedicated_member_machines}"
-
-        parallel = test_yaml.get('parallel')
-        if parallel:
-            coordinator_param = f"{coordinator_param} --parallel"
-
-
         #
         # if skip_download is not None:
         #     args = f"{args} --skipDownload {skip_download}"
-        #
-
-        if run_path is not None:
-            coordinator_param = f"{coordinator_param} --runPath {run_path}"
-
-        performance_monitor_interval_seconds = test_yaml.get("performance_monitor_interval_seconds")
-        if performance_monitor_interval_seconds:
-            coordinator_param = f"{coordinator_param} --performanceMonitorInterval {performance_monitor_interval_seconds}"
-
-        #
-        # if fail_fast is not None:
-        #     args = f"{args} --failFast {fail_fast}"
-        #
-        verify_enabled = test_yaml.get("verify_enabled")
-        if verify_enabled is not None:
-            coordinator_param = f"{coordinator_param} --verifyEnabled {verify_enabled}"
         #
         # if member_worker_script:
         #     args = f"{args} --memberWorkerScript {member_worker_script}"
         #
         # if client_worker_script:
         #     args = f"{args} --clientWorkerScript {client_worker_script}"
-        #
 
         for key, value in coordinator_params.items():
             coordinator_param = f"{coordinator_param} --param {key}={shlex.quote(str(value))}"
@@ -216,7 +187,19 @@ class PerfTest:
             return self.exitcode
 
     def _sanitize_test(self, test_yaml: dict):
-        # passive_count/members
+        driver = test_yaml.get('driver')
+        active_driver = test_yaml.get('active_driver')
+        passive_driver = test_yaml.get('passive_driver')
+        if driver is not None:
+            if active_driver is not None:
+                exit_with_error(
+                    f"test {test_yaml['name']} can't have both the driver and active_driver configured.")
+            if passive_driver is not None:
+                exit_with_error(f"test {test_yaml['name']} can't have both the driver and passive_driver configured.")
+        else:
+            if active_driver is None:
+                exit_with_error(f"test {test_yaml['name']} has no driver or active_driver configured.")
+
         members = test_yaml.get('members')
         if members is not None:
             if test_yaml.get('passive_count') is not None:
@@ -239,28 +222,36 @@ class PerfTest:
             del test_yaml['clients']
             test_yaml['active_count'] = clients
 
-        # active_count/clients
         active_count = test_yaml.get('active_count')
         if active_count is None:
             test_yaml['active_count'] = -1
 
-        # node_hosts logic
         node_hosts = test_yaml.get('node_hosts', 'all')
         if not node_hosts:
             node_hosts = "all|!mc"
             test_yaml['node_hosts'] = node_hosts
         self.verify_hosts(node_hosts)
 
-        # loadgenerator_hosts
         loadgenerator_hosts = test_yaml.get('loadgenerator_hosts')
         if not loadgenerator_hosts:
             loadgenerator_hosts = "all|!mc"
             test_yaml['loadgenerator_hosts'] = loadgenerator_hosts
         self.verify_hosts(loadgenerator_hosts)
 
-        # duration logic
         if test_yaml.get("duration") is None:
             raise Exception(f"The 'duration' property is not specified in test {test_yaml.get('name')}")
+
+        if test_yaml.get("parallel") is None:
+            test_yaml['parallel'] = False
+
+        if test_yaml.get("performance_monitor_interval_seconds") is None:
+            test_yaml['performance_monitor_interval_seconds'] = 1
+
+        if test_yaml.get("fail_fast") is None:
+            test_yaml['fail_fast'] = True
+
+        if test_yaml.get("verify_enabled") is None:
+            test_yaml['verify_enabled'] = True
 
     def run(self, tests_file, tags, skip_report, test_commit, test_pattern, run_label):
         if test_commit:

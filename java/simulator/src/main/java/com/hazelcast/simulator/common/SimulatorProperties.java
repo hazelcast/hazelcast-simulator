@@ -136,12 +136,13 @@ public class SimulatorProperties {
         return Integer.parseInt(get(property));
     }
 
-    public String getUser() {
-        return get("SIMULATOR_USER", "simulator");
+    public boolean getBoolean(String property) {
+        String v = get(property).toLowerCase();
+        return Boolean.parseBoolean(v);
     }
 
-    public int getWorkerPingIntervalSeconds() {
-        return parseInt(get("WORKER_PING_INTERVAL_SECONDS", "60"));
+    public String getUser() {
+        return get("SIMULATOR_USER", "simulator");
     }
 
     public int getMemberWorkerShutdownDelaySeconds() {
