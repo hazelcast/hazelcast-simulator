@@ -22,15 +22,5 @@
 
     <modules>
         <module>driver-hazelcast4plus</module>
-        <module>driver-hazelcast3</module>
-        <module>driver-ignite2</module>
-        <module>driver-infinispan11</module>
-        <module>driver-couchbase</module>
-        <module>driver-memcached</module>
-        <module>driver-mongodb</module>
-        <module>driver-lettuce6</module>
-        <module>driver-lettucecluster6</module>
-        <module>driver-jedis3</module>
-        <module>driver-jedis5</module>
     </modules>
 </project>

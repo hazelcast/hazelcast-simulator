@@ -93,7 +93,7 @@ Also contains pointers where to go next.
 
 
 2. Install tools
-    - JDK 8+
+    - JDK 17 or newer
     - [Maven](https://maven.apache.org/download.cgi)
     - [Terraform](https://developer.hashicorp.com/terraform/downloads)
     - [Python 3.8 or newer](https://www.python.org/downloads/)

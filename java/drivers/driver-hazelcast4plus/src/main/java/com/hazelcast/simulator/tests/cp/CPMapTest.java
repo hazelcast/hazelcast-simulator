@@ -15,17 +15,26 @@
  */
 package com.hazelcast.simulator.tests.cp;
 
+import com.hazelcast.collection.IList;
 import com.hazelcast.cp.CPMap;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
-import com.hazelcast.simulator.test.annotations.Prepare;
+import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.TimeStep;
+import com.hazelcast.simulator.test.annotations.Verify;
+import com.hazelcast.simulator.tests.cp.helpers.CpMapOperationCounter;
 import com.hazelcast.simulator.utils.GeneratorUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
+import static org.junit.Assert.assertTrue;
 
+/**
+ * This test is running as part of release verification simulator test. Hence every change in this class should be
+ * discussed with QE team since it can affect release verification tests.
+ */
 public class CPMapTest extends HazelcastTest {
     // number of cp groups to host the created maps; if (distinctMaps % maps) == 0 then there's a uniform distribution of maps
     // over cp groups, otherwise maps are allocated per-cp group in a RR-fashion. If cpGroups == 0 then all CPMap instances will
@@ -35,16 +44,20 @@ public class CPMapTest extends HazelcastTest {
     public int maps = 1;
     // number of distinct keys to create and use per-map; key domain is [0, keys)
     public int keys = 1;
+    // number of possible values
+    public int valuesCount = 100;
     // size in bytes for each key's associated value
     public int valueSizeBytes = 100;
-    private List<CPMap<Integer, String>> mapReferences;
 
-    private String v; // this is always the value associated with any key; exception is remove and delete
+    private List<CPMap<Integer, byte[]>> mapReferences;
 
+    private byte[][] values;
+
+    private IList<CpMapOperationCounter> operationCounterList;
 
     @Setup
     public void setup() {
-        v = GeneratorUtils.generateAsciiString(valueSizeBytes);
+        values = createValues();
 
         // (1) create the cp group names that will host the maps
         String[] cpGroupNames = createCpGroupNames();
@@ -55,6 +68,17 @@ public class CPMapTest extends HazelcastTest {
             String mapName = "map" + i + "@" + cpGroup;
             mapReferences.add(targetInstance.getCPSubsystem().getMap(mapName));
         }
+
+        operationCounterList = targetInstance.getList(name + "Report");
+    }
+
+    private byte[][] createValues() {
+        byte[][] valuesArray = new byte[valuesCount][valueSizeBytes];
+        Random random = new Random(0);
+        for (int i = 0; i < valuesArray.length; i++) {
+            valuesArray[i] = GeneratorUtils.generateByteArray(random, valueSizeBytes);
+        }
+        return valuesArray;
     }
 
     private String[] createCpGroupNames() {
@@ -69,63 +93,107 @@ public class CPMapTest extends HazelcastTest {
         return cpGroupNames;
     }
 
-    @Prepare(global = true)
-    public void prepare() {
-        for (CPMap<Integer, String> mapReference : mapReferences) {
-            for (int key = 0; key < keys; key++) {
-                mapReference.set(key, v);
-            }
-        }
-    }
-
     @TimeStep(prob = 1)
     public void set(ThreadState state) {
-        state.randomMap().set(state.randomKey(), v);
+        state.randomMap().set(state.randomKey(), state.randomValue());
+        state.operationCounter.setCount++;
     }
 
     @TimeStep(prob = 0)
-    public String put(ThreadState state) {
-        return state.randomMap().put(state.randomKey(), v);
+    public void put(ThreadState state) {
+        state.randomMap().put(state.randomKey(), state.randomValue());
+        state.operationCounter.putCount++;
     }
 
     @TimeStep(prob = 0)
-    public String get(ThreadState state) {
-        return state.randomMap().get(state.randomKey());
+    public void putIfAbsent(ThreadState state) {
+        state.randomMap().putIfAbsent(state.randomKey(), state.randomValue());
+        state.operationCounter.putIfAbsentCount++;
+    }
+
+    @TimeStep(prob = 0)
+    public void get(ThreadState state) {
+        state.randomMap().get(state.randomKey());
+        state.operationCounter.getCount++;
     }
 
     // 'remove' and 'delete' other than their first invocation pointless -- we're just timing the logic that underpins the
     // retrieval of no value.
 
     @TimeStep(prob = 0)
-    public String remove(ThreadState state) {
-        return state.randomMap().remove(state.randomKey());
+    public void remove(ThreadState state) {
+        state.randomMap().remove(state.randomKey());
+        state.operationCounter.removeCount++;
     }
 
     @TimeStep(prob = 0)
     public void delete(ThreadState state) {
         state.randomMap().delete(state.randomKey());
+        state.operationCounter.deleteCount++;
     }
 
     @TimeStep(prob = 0)
-    public boolean cas(ThreadState state) {
-        // 'v' is always associated with 'k'
-        return state.randomMap().compareAndSet(state.randomKey(), v, v);
+    public void cas(ThreadState state) {
+        CPMap<Integer, byte[]> randomMap = state.randomMap();
+        Integer key = state.randomKey();
+        byte[] expectedValue = randomMap.get(key);
+        if (expectedValue != null) {
+            randomMap.compareAndSet(key, expectedValue, state.randomValue());
+            state.operationCounter.casCount++;
+        }
     }
 
     @TimeStep(prob = 0)
     public void setThenDelete(ThreadState state) {
-        CPMap<Integer, String> map = state.randomMap();
+        CPMap<Integer, byte[]> map = state.randomMap();
         int key = state.randomKey();
-        map.set(key, v);
+        map.set(key, state.randomValue());
         map.delete(key);
     }
 
+    @AfterRun
+    public void afterRun(ThreadState state) {
+        operationCounterList.add(state.operationCounter);
+    }
+
+    @Verify(global = true)
+    public void verify() {
+        // print stats
+        CpMapOperationCounter total = new CpMapOperationCounter();
+        for (CpMapOperationCounter operationCounter : operationCounterList) {
+            total.add(operationCounter);
+        }
+        logger.info(name + ": " + total + " from " + operationCounterList.size() + " worker threads");
+
+        // basic verification
+        for (CPMap<Integer, byte[]> mapReference : mapReferences) {
+            int entriesCount = 0;
+            for (int key = 0; key < keys; key++) {
+                byte[] get = mapReference.get(key);
+                if (get != null) {
+                    entriesCount++;
+                }
+            }
+            // Just check that CP map after test contains any item.
+            // In theory we can deliberately remove all keys but this is not expected way how we want to use this test.
+            logger.info(name + ":  CP Map " + mapReference.getName() + " entries count: " + entriesCount);
+            assertTrue("CP Map " + mapReference.getName() + " doesn't contain any of expected items.", entriesCount > 0);
+        }
+    }
+
     public class ThreadState extends BaseThreadState {
+
+        final CpMapOperationCounter operationCounter = new CpMapOperationCounter();
+
         public int randomKey() {
             return randomInt(keys); // [0, keys)
         }
 
-        public CPMap<Integer, String> randomMap() {
+        public byte[] randomValue() {
+            return values[randomInt(valuesCount)]; // [0, values)
+        }
+
+        public CPMap<Integer, byte[]> randomMap() {
             return mapReferences.get(randomInt(maps));
         }
     }
