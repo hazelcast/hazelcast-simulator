@@ -29,6 +29,12 @@ exec 2> worker.err
 
 JVM_ARGS="-Dlog4j2.configurationFile=log4j.xml"
 
+if [ "${WORKER_TYPE}" = "member" ]; then
+    JVM_OPTIONS=$member_args
+else
+    JVM_OPTIONS=$client_args
+fi
+
 # Include the member/client-worker jvm options
 JVM_ARGS="$JVM_OPTIONS $JVM_ARGS"
 

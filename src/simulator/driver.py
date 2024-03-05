@@ -21,7 +21,7 @@ def find_driver_config_file(driver, filename):
         return path_driver_config
 
     raise Exception(
-        f"Could not find a configuration file with name '{filename}', lookin [{path_cwd_config},{path_driver_config}]")
+        f"Could not find a configuration file with name '{filename}', looked in [{path_cwd_config},{path_driver_config}]")
 
 
 def _upload_driver(host, driver_dir):

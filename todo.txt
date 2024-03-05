@@ -1,6 +1,5 @@
 TODO
 
-
 - fix member JVM args
 
 - fix client JVM args
@@ -20,8 +19,6 @@ TODO
 
 - undesirable driver upload output
 
-- get the right param files in the workers directory
-
 - remove client type from coordinator cli
 
 - [Fatal Error] log4j.xml:3:22: The prefix "log4j" for element "log4j:configuration" is not bound.
@@ -32,6 +29,9 @@ ERROR StatusLogger Error parsing /home/ubuntu/hazelcast-simulator/workers/c1f13c
 - remove the driver parameters from the Java code.
 
 DONE
+
+- get the right param files in the workers directory
+
 - properly fix log4j.xml
 
 - properly fix worker.sh
