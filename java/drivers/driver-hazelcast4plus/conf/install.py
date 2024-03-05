@@ -145,12 +145,16 @@ def _get_driver(args):
 def exec(args:DriverInstallArgs):
     print("[INFO] Install")
 
-    if args.is_passive:
-        host_pattern = args.test.get("node_hosts", "nodes")
-    else:
-        host_pattern = args.test.get("loadgenerator_hosts", "loadgenerators")
+    hosts = []
 
-    hosts = load_hosts(inventory_path=args.inventory_path, host_pattern=host_pattern)
+    node_hosts = args.test.get("node_hosts")
+    if node_hosts is not None:
+        hosts.extend(load_hosts(inventory_path=args.inventory_path, host_pattern=node_hosts))
+
+    loadgenerator_hosts = args.test.get("loadgenerator_hosts")
+    hosts.extend(load_hosts(inventory_path=args.inventory_path, host_pattern=loadgenerator_hosts))
+
+    # todo: we should filter out duplicates
 
     upload_driver(_get_driver(args), hosts)
     _upload_hazelcast_jars(args, hosts)

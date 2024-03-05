@@ -2,6 +2,7 @@
 import os.path
 import subprocess
 import sys
+from typing import Optional
 
 import yaml
 from yaml import dump
@@ -17,7 +18,7 @@ def find_host_with_public_ip(hosts, public_ip):
     return
 
 
-def load_hosts(inventory_path=None, host_pattern="all"):
+def load_hosts(inventory_path=None, host_pattern:str="all"):
     if not inventory_path:
         inventory_path = default_inventory_path
 

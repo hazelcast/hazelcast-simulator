@@ -84,52 +84,6 @@ public final class DeploymentPlan {
             workerParameters.setAll(properties);
             workerParameters.set("WORKER_TYPE", workerType);
 
-            workerParameters.set("file:log4j.xml", "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-                    "<!DOCTYPE log4j:configuration SYSTEM \"log4j.dtd\" >\n" +
-                    "<log4j:configuration>\n" +
-                    "\n" +
-                    "    <appender name=\"console\" class=\"org.apache.log4j.ConsoleAppender\">\n" +
-                    "        <param name=\"Threshold\" value=\"TRACE\"/>\n" +
-                    "        <layout class=\"org.apache.log4j.PatternLayout\">\n" +
-                    "            <param name=\"ConversionPattern\" value=\"%-5p %d{HH:mm:ss} %m%n\"/>\n" +
-                    "        </layout>\n" +
-                    "    </appender>\n" +
-                    "\n" +
-                    "    <root>\n" +
-                    "        <priority value=\"info\"/>\n" +
-                    "        <appender-ref ref=\"console\"/>\n" +
-                    "    </root>\n" +
-                    "</log4j:configuration>\n");
-
-            workerParameters.set("file:worker.sh","#!/bin/bash\n" +
-                    "\n" +
-                    "#\n" +
-                    "# Script to start up a Simulator Worker.\n" +
-                    "#\n" +
-                    "# To customize the behavior of the Worker, including Java configuration, copy this file into the 'work dir' of Simulator.\n" +
-                    "# See the end of this file for examples for different profilers.\n" +
-                    "#\n" +
-                    "\n" +
-                    "# automatic exit on script failure\n" +
-                    "set -e\n" +
-                    "# printing the command being executed (useful for debugging)\n" +
-                    "#set -x\n" +
-                    "\n" +
-                    "# redirecting output/error to the right log files\n" +
-                    "exec > worker.out\n" +
-                    "exec 2> worker.err\n" +
-                    "\n" +
-                    "JVM_ARGS=\"-Dlog4j2.configurationFile=log4j.xml\"\n" +
-                    "\n" +
-                    "# Include the member/client-worker jvm options\n" +
-                    "JVM_ARGS=\"$JVM_OPTIONS $JVM_ARGS\"\n" +
-                    "\n" +
-                    "MAIN=com.hazelcast.simulator.worker.Worker\n" +
-                    "\n" +
-                    "java -classpath \"$CLASSPATH\" ${JVM_ARGS} ${MAIN}\n" +
-                    "\n"
-                   );
-
             workersPerAgent.registerWorker(workerParameters);
             List<WorkerParameters> workerParametersList = workerDeployment.get(agent.getAddress());
             workerParametersList.add(workerParameters);

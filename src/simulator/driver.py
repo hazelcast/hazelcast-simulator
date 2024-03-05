@@ -3,6 +3,7 @@ import importlib.util
 import os
 import sys
 from dataclasses import dataclass
+from typing import Optional
 
 from simulator.util import shell, run_parallel, simulator_home
 
@@ -40,24 +41,24 @@ def upload_driver(driver, hosts):
     print(f"[INFO] Uploading driver {driver} to {driver_dir}: done")
 
 
-def driver_install_and_configure(driver: str, test: dict, is_server: bool, params: dict, inventory_path: str):
-    install_args = DriverInstallArgs(test, is_server, inventory_path)
+def driver_install_and_configure(driver: str, test: dict, is_loadgenerator: Optional[bool], params: dict, inventory_path: str):
+    install_args = DriverInstallArgs(test, is_loadgenerator, inventory_path)
     _driver_exec(driver, "install.py", install_args)
-    configure_args = DriverConfigureArgs(test, is_server, inventory_path, params)
+    configure_args = DriverConfigureArgs(test, is_loadgenerator, inventory_path, params)
     _driver_exec(driver, "configure.py", configure_args)
 
 
 @dataclass
 class DriverInstallArgs:
     test: dict
-    is_passive: bool
+    is_loadgenerator: Optional[bool]
     inventory_path: str
 
 
 @dataclass
 class DriverConfigureArgs:
     test: dict
-    is_passive: bool
+    is_loadgenerator: Optional[bool]
     inventory_path: str
     coordinator_params: dict
 

@@ -1,5 +1,10 @@
 TODO
 
+
+- fix member JVM args
+
+- fix client JVM args
+
 - fix cluster layout
 
     INFO  10:38:49 =========================================================================
@@ -15,13 +20,7 @@ TODO
 
 - undesirable driver upload output
 
-- fix member JVM args
-
-- fix client JVM args
-
 - get the right param files in the workers directory
-
-- lite member: what should be name of config file
 
 - remove client type from coordinator cli
 
@@ -29,13 +28,24 @@ TODO
 ERROR StatusLogger Error parsing /home/ubuntu/hazelcast-simulator/workers/c1f13c7b5d09d041c84f8508ea3a4e843d8aad50/A1_W1-18.185.56.223-member/log4j.xml
  org.xml.sax.SAXParseException; systemId: file:///home/ubuntu/hazelcast-simulator/workers/c1f13c7b5d09d041c84f8508ea3a4e843d8aad50/A1_W1-18.185.56.223-member/log4j.xml; lineNumber: 3; columnNumber: 22; The prefix "log4j" for element "log4j:configuration" is not bound.
 
-- properly fix log4j.xml
-
-- properly fix worker.sh
 
 - remove the driver parameters from the Java code.
 
 DONE
+- properly fix log4j.xml
+
+- properly fix worker.sh
+
+- fix
+com.hazelcast.simulator.utils.CommandLineExitException: Could not locate driver class [com.hazelcast.simulator.hazelcast4plus.Hazelcast4PlusDriver]
+	at com.hazelcast.simulator.drivers.Driver.loadInstance(Driver.java:67)
+	at com.hazelcast.simulator.drivers.Driver.loadDriver(Driver.java:52)
+	at com.hazelcast.simulator.worker.Worker.<init>(Worker.java:72)
+	at com.hazelcast.simulator.worker.Worker.main(Worker.java:129)
+
+- lite member: what should be name of config file
+
+- driver exec rename
 
 - passive --> nodes
 
@@ -76,7 +86,6 @@ java.lang.NullPointerException
 - coordinatorcli: node_hosts should be param
 
 - coordinatorcli: loadgenerator_hosts should be param
-
 
 - perftest sanitize
 

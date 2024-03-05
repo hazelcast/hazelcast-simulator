@@ -20,7 +20,6 @@ import com.hazelcast.simulator.common.TestPhase;
 
 import java.io.File;
 import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -66,12 +65,12 @@ public class CoordinatorParameters {
     public CoordinatorParameters setRunPath(String runPath) {
         checkNotNull(runPath, "runPath can't be null");
 
-
         this.runPath = new File(runPath);
         this.runPath.mkdirs();
         this.runId = toSHA1(runPath);
-        if(simulatorProperties!=null)
+        if (simulatorProperties != null) {
             simulatorProperties.set("RUN_ID", runId);
+        }
         return this;
     }
 
@@ -90,8 +89,9 @@ public class CoordinatorParameters {
 
     public CoordinatorParameters setSimulatorProperties(SimulatorProperties simulatorProperties) {
         this.simulatorProperties = simulatorProperties;
-        if(runId!=null)
+        if (runId != null) {
             simulatorProperties.set("RUN_ID", runId);
+        }
         return this;
     }
 
