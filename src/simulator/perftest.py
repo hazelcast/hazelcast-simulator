@@ -17,7 +17,7 @@ import csv
 
 import simulator.util
 from inventory import load_hosts
-from simulator.driver import driver_run
+from simulator.driver import driver_install_and_configure
 from simulator.git import get_last_commit_hash, git_init, is_git_installed, is_inside_git_repo, \
     commit_modified_files
 from simulator.hosts import public_ip, ssh_user, ssh_options
@@ -132,14 +132,14 @@ class PerfTest:
         node_driver = test_yaml.get('node_driver')
 
         if driver is not None:
-            driver_run(driver, test_yaml, True, coordinator_params, inventory_path)
-            driver_run(driver, test_yaml, False, coordinator_params, inventory_path)
+            driver_install_and_configure(driver, test_yaml, True, coordinator_params, inventory_path)
+            driver_install_and_configure(driver, test_yaml, False, coordinator_params, inventory_path)
         else:
             if node_driver is not None:
                 coordinator_params['node_driver'] = node_driver
-                driver_run(node_driver, test_yaml, True, coordinator_params, inventory_path)
+                driver_install_and_configure(node_driver, test_yaml, True, coordinator_params, inventory_path)
 
-            driver_run(loadgenerator_driver, test_yaml, False, coordinator_params, inventory_path)
+            driver_install_and_configure(loadgenerator_driver, test_yaml, False, coordinator_params, inventory_path)
             coordinator_params['loadgenerator_driver'] = loadgenerator_driver
 
         if run_path is not None:

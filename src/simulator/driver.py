@@ -40,7 +40,7 @@ def upload_driver(driver, hosts):
     print(f"[INFO] Uploading driver {driver} to {driver_dir}: done")
 
 
-def driver_run(driver: str, test: dict, is_server: bool, params: dict, inventory_path: str):
+def driver_install_and_configure(driver: str, test: dict, is_server: bool, params: dict, inventory_path: str):
     install_args = DriverInstallArgs(test, is_server, inventory_path)
     _driver_exec(driver, "install.py", install_args)
     configure_args = DriverConfigureArgs(test, is_server, inventory_path, params)
