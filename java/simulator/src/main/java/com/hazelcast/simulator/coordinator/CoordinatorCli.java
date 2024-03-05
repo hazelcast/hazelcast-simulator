@@ -294,27 +294,27 @@ final class CoordinatorCli {
             throw new CommandLineExitException("client workerType can't be [member]");
         }
 
-        int passiveCount = properties.getInt("passive_count");
-        if (passiveCount == -1) {
-            passiveCount = registry.agentCount();
-        } else if (passiveCount < -1) {
-            throw new CommandLineExitException("--member must be a equal or larger than -1");
+        int nodeCount = properties.getInt("node_count");
+        if (nodeCount == -1) {
+            nodeCount = registry.agentCount();
+        } else if (nodeCount < -1) {
+            throw new CommandLineExitException("--node_count must be a equal or larger than -1");
         }
 
-        int activeCount = properties.getInt("active_count");
-        if (activeCount < 0) {
-            throw new CommandLineExitException("--client must be a equal or larger than 0");
+        int loadGeneratorCount = properties.getInt("loadgenerator_count");
+        if (loadGeneratorCount < 0) {
+            throw new CommandLineExitException("--loadgenerator_count must be a equal or larger than 0");
         }
 
-        if (passiveCount == 0 && activeCount == 0) {
+        if (nodeCount == 0 && loadGeneratorCount == 0) {
             throw new CommandLineExitException("No workers have been defined!");
         }
 
         DeploymentPlan plan = new DeploymentPlan(registry.getAgents());
         plan.addAllProperty(properties.asMap());
         plan.addProperty("RUN_ID", coordinatorParameters.getRunId());
-        plan.addToPlan(passiveCount, "member");
-        plan.addToPlan(activeCount, options.valueOf(clientTypeSpec));
+        plan.addToPlan(nodeCount, "member");
+        plan.addToPlan(loadGeneratorCount, options.valueOf(clientTypeSpec));
 
         plan.printLayout();
         return plan;

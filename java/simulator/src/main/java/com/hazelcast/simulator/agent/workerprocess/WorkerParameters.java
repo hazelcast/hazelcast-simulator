@@ -46,9 +46,9 @@ public class WorkerParameters {
         }
 
         if (getWorkerType().equals("member")) {
-            return map.get("passive_driver");
+            return map.get("node_driver");
         } else {
-            return map.get("active_driver");
+            return map.get("loadgenerator_driver");
         }
     }
 

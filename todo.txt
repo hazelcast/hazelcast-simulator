@@ -1,5 +1,12 @@
 TODO
 
+- fix cluster layout
+
+    INFO  10:38:49 =========================================================================
+    INFO  10:38:49     Agent    52.29.77.129     10.0.25.232 (A1) members:  1, clients:  0, mode: MEMBERS_ONLY, version specs: [maven=5.3.0]
+    INFO  10:38:49     Agent  18.192.214.161      10.0.25.92 (A2) members:  0, clients:  1, mode: CLIENTS_ONLY, version specs: [maven=5.3.0]
+    INFO  10:38:49 Total number of agents: 2
+
 - coordinator cli: runPath
 
 - download logic should be removed from coordinator
@@ -29,8 +36,12 @@ ERROR StatusLogger Error parsing /home/ubuntu/hazelcast-simulator/workers/c1f13c
 - remove the driver parameters from the Java code.
 
 DONE
-- driver sanity check logic to right place
 
+- passive --> nodes
+
+- active --> load generators
+
+- driver sanity check logic to right place
 
 - locateInventoryFile --> pointing to agents file. Fix
 

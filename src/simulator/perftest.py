@@ -110,7 +110,7 @@ class PerfTest:
         #     # member_args=test.get('member_args'),
         #     # members=test.get('members'),
         #     # clients=test.get('clients'),
-        #     # passive_driver=passive_driver,
+        #     # node_driver=node_driver,
         #     # load_generator_driver=load_generator_driver,
         #     # version=test.get('version'),
         #     # fail_fast=test.get('fail_fast'),
@@ -128,19 +128,19 @@ class PerfTest:
                 coordinator_params[key] = value
 
         driver = test_yaml.get('driver')
-        active_driver = test_yaml.get('active_driver')
-        passive_driver = test_yaml.get('passive_driver')
+        loadgenerator_driver = test_yaml.get('loadgenerator_driver')
+        node_driver = test_yaml.get('node_driver')
 
         if driver is not None:
             driver_run(driver, test_yaml, True, coordinator_params, inventory_path)
             driver_run(driver, test_yaml, False, coordinator_params, inventory_path)
         else:
-            if passive_driver is not None:
-                coordinator_params['passive_driver'] = passive_driver
-                driver_run(passive_driver, test_yaml, True, coordinator_params, inventory_path)
+            if node_driver is not None:
+                coordinator_params['node_driver'] = node_driver
+                driver_run(node_driver, test_yaml, True, coordinator_params, inventory_path)
 
-            driver_run(active_driver, test_yaml, False, coordinator_params, inventory_path)
-            coordinator_params['active_driver'] = active_driver
+            driver_run(loadgenerator_driver, test_yaml, False, coordinator_params, inventory_path)
+            coordinator_params['loadgenerator_driver'] = loadgenerator_driver
 
         if run_path is not None:
             coordinator_params['run_path'] = run_path
@@ -188,43 +188,43 @@ class PerfTest:
 
     def _sanitize_test(self, test_yaml: dict):
         driver = test_yaml.get('driver')
-        active_driver = test_yaml.get('active_driver')
-        passive_driver = test_yaml.get('passive_driver')
+        loadgenerator_driver = test_yaml.get('loadgenerator_driver')
+        node_driver = test_yaml.get('node_driver')
         if driver is not None:
-            if active_driver is not None:
+            if loadgenerator_driver is not None:
                 exit_with_error(
-                    f"test {test_yaml['name']} can't have both the driver and active_driver configured.")
-            if passive_driver is not None:
-                exit_with_error(f"test {test_yaml['name']} can't have both the driver and passive_driver configured.")
+                    f"test {test_yaml['name']} can't have both the driver and loadgenerator_driver configured.")
+            if node_driver is not None:
+                exit_with_error(f"test {test_yaml['name']} can't have both the driver and node_driver configured.")
         else:
-            if active_driver is None:
-                exit_with_error(f"test {test_yaml['name']} has no driver or active_driver configured.")
+            if loadgenerator_driver is None:
+                exit_with_error(f"test {test_yaml['name']} has no driver or loadgenerator_driver configured.")
 
         members = test_yaml.get('members')
         if members is not None:
-            if test_yaml.get('passive_count') is not None:
-                raise Exception("passive_count and members can't be set at the same time.")
+            if test_yaml.get('node_count') is not None:
+                raise Exception("node_count and members can't be set at the same time.")
 
-            print("[WARN] 'members' is a deprecated property, use 'passive_count' instead.")
+            print("[WARN] 'members' is a deprecated property, use 'node_count' instead.")
             del test_yaml['members']
-            test_yaml['passive_count'] = members
+            test_yaml['node_count'] = members
 
-        passive_count = test_yaml.get("passive_count")
-        if passive_count is None:
-            test_yaml['passive_count'] = 0
+        node_count = test_yaml.get("node_count")
+        if node_count is None:
+            test_yaml['node_count'] = 0
 
         clients = test_yaml.get('clients')
         if clients is not None:
-            if test_yaml.get('active_count') is not None:
-                raise Exception("active_count and clients can't be set at the same time.")
+            if test_yaml.get('loadgenerator_count') is not None:
+                raise Exception("loadgenerator_count and clients can't be set at the same time.")
 
-            print("[WARN] 'clients' is a deprecated property, use 'active_count' instead.")
+            print("[WARN] 'clients' is a deprecated property, use 'loadgenerator_count' instead.")
             del test_yaml['clients']
-            test_yaml['active_count'] = clients
+            test_yaml['loadgenerator_count'] = clients
 
-        active_count = test_yaml.get('active_count')
-        if active_count is None:
-            test_yaml['active_count'] = -1
+        loadgenerator_count = test_yaml.get('loadgenerator_count')
+        if loadgenerator_count is None:
+            test_yaml['loadgenerator_count'] = -1
 
         node_hosts = test_yaml.get('node_hosts', 'all')
         if not node_hosts:
