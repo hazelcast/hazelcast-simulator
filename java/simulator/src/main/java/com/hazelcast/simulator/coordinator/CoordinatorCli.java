@@ -177,10 +177,6 @@ final class CoordinatorCli {
 //        if (!"fake".equals(properties.get("driver"))) {
 //            properties.set("driver", options.valueOf(driverSpec));
 //        }
-//
-//        if (options.hasArgument(versionSpec)) {
-//            properties.set("VERSION_SPEC", options.valueOf(versionSpec));
-//        }
 
         this.registry = newRegistry();
 

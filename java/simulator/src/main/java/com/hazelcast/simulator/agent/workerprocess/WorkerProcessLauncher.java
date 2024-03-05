@@ -225,7 +225,7 @@ public class WorkerProcessLauncher {
 
         String driver = parameters.get("driver");
         if (driver.contains("hazelcast")) {
-            String hzVersionDirectory = directoryForVersionSpec(parameters.get("VERSION_SPEC"));
+            String hzVersionDirectory = directoryForVersion(parameters.get("version"));
             classpath += CLASSPATH_SEPARATOR + simulatorHome + "/driver-lib/" + driver + "/" + hzVersionDirectory + "/*";
         }
 
@@ -251,14 +251,14 @@ public class WorkerProcessLauncher {
         return uploadClassPath;
     }
 
-    private static String directoryForVersionSpec(String versionSpec) {
-        if ("bringmyown".equals(versionSpec)) {
+    private static String directoryForVersion(String version) {
+        if ("bringmyown".equals(version)) {
             return null;
         }
-        if ("outofthebox".equals(versionSpec)) {
+        if ("outofthebox".equals(version)) {
             return "outofthebox";
         }
-        String s = versionSpec.replace('=', '-');
+        String s = version.replace('=', '-');
 
         // we need to replace all forward slashes by double back slashes.
         StringBuilder result = new StringBuilder();

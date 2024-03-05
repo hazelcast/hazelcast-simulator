@@ -271,7 +271,7 @@ public class Registry {
 
         for (AgentData agent : agents) {
 
-            Set<String> agentVersionSpecs = agent.getVersionSpecs();
+            Set<String> agentVersions = agent.getVersions();
             int agentMemberWorkerCount = agent.getCount("member");
             int agentClientWorkerCount = agent.getWorkers().size() - agentMemberWorkerCount;
             int totalWorkerCount = agentMemberWorkerCount + agentClientWorkerCount;
@@ -288,14 +288,14 @@ public class Registry {
                     agent.getAddress(),
                     formatLong(agentMemberWorkerCount, 2),
                     formatLong(agentClientWorkerCount, 2),
-                    agentVersionSpecs)).append('\n');
+                    agentVersions)).append('\n');
 
             for (WorkerData worker : agent.getWorkers()) {
                 WorkerParameters parameters = worker.getParameters();
                 sb.append("        Worker ")
                         .append(worker.getAddress())
                         .append(" ").append(parameters.getWorkerType())
-                        .append(" [").append(parameters.get("VERSION_SPEC")).append("]")
+                        .append(" [").append(parameters.get("version")).append("]")
                         .append('\n');
             }
         }

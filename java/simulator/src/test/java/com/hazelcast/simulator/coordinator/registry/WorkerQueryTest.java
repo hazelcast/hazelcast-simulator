@@ -40,14 +40,14 @@ public class WorkerQueryTest {
     }
 
     @Test
-    public void versionSpec() {
+    public void version() {
         list.add(new WorkerData(newParameters(agent1, 1, "member", "maven=3.6")));
         list.add(new WorkerData(newParameters(agent1, 2, "member", "maven=3.7")));
         list.add(new WorkerData(newParameters(agent1, 3, "member", "maven=3.8")));
         list.add(new WorkerData(newParameters(agent1, 4, "member", "maven=3.7")));
 
         List<WorkerData> result = new WorkerQuery()
-                .setVersionSpec("maven=3.7")
+                .setVersion("maven=3.7")
                 .execute(list);
         assertEquals(asList(list.get(1), list.get(3)), result);
     }
@@ -158,10 +158,10 @@ public class WorkerQueryTest {
         assertEquals(asList(list.get(0), list.get(2)), result);
     }
 
-    private WorkerParameters newParameters(SimulatorAddress agent, int workerIndex, String workerType, String versionSpec) {
+    private WorkerParameters newParameters(SimulatorAddress agent, int workerIndex, String workerType, String version) {
         return new WorkerParameters()
                 .set("WORKER_ADDRESS", workerAddress(agent.getAgentIndex(), workerIndex))
                 .set("WORKER_TYPE", workerType)
-                .set("VERSION_SPEC", versionSpec);
+                .set("version", version);
     }
 }

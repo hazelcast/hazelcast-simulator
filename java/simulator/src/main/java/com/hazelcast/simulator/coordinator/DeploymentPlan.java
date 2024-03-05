@@ -21,7 +21,6 @@ import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.coordinator.registry.WorkerData;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.utils.CommandLineExitException;
-import com.hazelcast.simulator.utils.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -84,8 +83,6 @@ public final class DeploymentPlan {
             WorkerParameters workerParameters = new WorkerParameters();
             workerParameters.setAll(properties);
             workerParameters.set("WORKER_TYPE", workerType);
-
-            workerParameters.set("VERSION_SPEC", workerParameters.get("version"));
 
             workerParameters.set("file:log4j.xml", "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                     "<!DOCTYPE log4j:configuration SYSTEM \"log4j.dtd\" >\n" +
@@ -171,7 +168,7 @@ public final class DeploymentPlan {
         LOGGER.info(HORIZONTAL_RULER);
 
         for (WorkersPerAgent workersPerAgent : workersPerAgentList) {
-            Set<String> agentVersionSpecs = workersPerAgent.getVersionSpecs();
+            Set<String> agentVersions = workersPerAgent.getVersion();
             int agentMemberWorkerCount = workersPerAgent.count("member");
             int agentClientWorkerCount = workersPerAgent.workers.size() - agentMemberWorkerCount;
             int totalWorkerCount = agentMemberWorkerCount + agentClientWorkerCount;
@@ -188,15 +185,15 @@ public final class DeploymentPlan {
                     formatLong(agentMemberWorkerCount, 2),
                     formatLong(agentClientWorkerCount, 2),
                     padLeft(workersPerAgent.agent.getAgentWorkerMode().toString(), WORKER_MODE_LENGTH),
-                    agentVersionSpecs
+                    agentVersions
             ));
         }
     }
 
-    public Set<String> getVersionSpecs() {
+    public Set<String> getVersions() {
         Set<String> result = new HashSet<>();
         for (WorkersPerAgent workersPerAgent : workersPerAgentList) {
-            result.addAll(workersPerAgent.getVersionSpecs());
+            result.addAll(workersPerAgent.getVersion());
         }
 
         return result;
@@ -244,10 +241,10 @@ public final class DeploymentPlan {
             this.agent = agent;
         }
 
-        Set<String> getVersionSpecs() {
+        Set<String> getVersion() {
             Set<String> result = new HashSet<>();
             for (WorkerParameters workerParameters : workers) {
-                result.add(workerParameters.get("VERSION_SPEC"));
+                result.add(workerParameters.get("version"));
             }
             return result;
         }

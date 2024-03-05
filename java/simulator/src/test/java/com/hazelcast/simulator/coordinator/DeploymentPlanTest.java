@@ -4,7 +4,6 @@ import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.coordinator.registry.AgentData;
 import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.drivers.Driver;
-import com.hazelcast.simulator.fake.FakeDriver;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.junit.Before;
@@ -205,31 +204,31 @@ public class DeploymentPlanTest {
 
 
     @Test
-    public void testGetVersionSpecs() {
+    public void testGetVersions() {
         AgentData agent = new AgentData(1, "127.0.0.1", "127.0.0.1");
 
-        testGetVersionSpecs(singletonList(agent), 1, 0);
+        testGetVersions(singletonList(agent), 1, 0);
     }
 
     @Test
-    public void testGetVersionSpecs_noWorkersOnSecondAgent() {
+    public void testGetVersions_noWorkersOnSecondAgent() {
         AgentData agent1 = new AgentData(1, "172.16.16.1", "127.0.0.1");
         AgentData agent2 = new AgentData(2, "172.16.16.2", "127.0.0.1");
 
-        testGetVersionSpecs(asList(agent1,agent2), 1, 0);
+        testGetVersions(asList(agent1,agent2), 1, 0);
     }
 
-    private void testGetVersionSpecs(List<AgentData> agents, int memberCount, int clientCount) {
+    private void testGetVersions(List<AgentData> agents, int memberCount, int clientCount) {
         Registry registry = new Registry();
         for (AgentData agent : agents) {
             registry.addAgent(agent.getPublicAddress(), agent.getPrivateAddress());
         }
 
-        driver.set("VERSION_SPEC","outofthebox");
+        driver.set("version","outofthebox");
         DeploymentPlan deploymentPlan = new DeploymentPlan(registry)
                 .addToPlan(memberCount, "member")
                 .addToPlan(clientCount, "javaclient");
 
-        assertEquals(singleton("outofthebox"), deploymentPlan.getVersionSpecs());
+        assertEquals(singleton("outofthebox"), deploymentPlan.getVersions());
     }
 }

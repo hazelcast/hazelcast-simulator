@@ -66,7 +66,7 @@ public class RunTestSuiteTaskTest {
 //        File logFile = new File(internalDistPath() + "/conf/agent-log4j.xml");
 //
 //        WorkerParameters workerParameters = new WorkerParameters()
-//                .setVersionSpec(simulatorProperties.getVersionSpec())
+//                .setVersionSpec(simulatorProperties.getVersion())
 //                .addEnvironment(simulatorProperties.asMap())
 //                .addEnvironment("HAZELCAST_CONFIG", hzConfig)
 //                .addEnvironment("LOG4j_CONFIG", fileAsText(logFile))

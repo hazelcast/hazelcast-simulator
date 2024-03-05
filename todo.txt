@@ -1,8 +1,6 @@
 TODO
 
-- VERSION_SPEC to version
-
-- delete ExecuteScriptMessage
+- merge latest master
 
 - seems that the hazelcast jars are always uploaded even when there is no change.
 
@@ -25,6 +23,8 @@ ERROR StatusLogger Error parsing /home/ubuntu/hazelcast-simulator/workers/c1f13c
 - remove the driver parameters from the Java code.
 
 DONE
+
+- VERSION_SPEC to version
 
 - don't log the coordinatorcli command because of params noise
     - cause is in the worker plan

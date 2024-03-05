@@ -93,7 +93,7 @@
                             <excludeTransitive>true</excludeTransitive>
                             <!-- the com.hazelcast libraries are excluded, because an explicit version is configured
                                  in the workerdir/simulator.properties. If you want to provide your own hazelcast
-                                 dependencies, set VERSION_SPEC to none and remove 'com.hazelcast' from
+                                 dependencies, set version to none and remove 'com.hazelcast' from
                                  the excludedGroupIds -->
                             <excludeGroupIds>com.hazelcast.simulator,com.hazelcast</excludeGroupIds>
                             <outputDirectory>\${project.build.directory}</outputDirectory>

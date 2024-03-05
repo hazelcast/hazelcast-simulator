@@ -164,10 +164,10 @@ public class AgentData {
         return result;
     }
 
-    public Set<String> getVersionSpecs() {
+    public Set<String> getVersions() {
         Set<String> result = new HashSet<>();
         for (WorkerData worker : workers) {
-            result.add(worker.getParameters().get("VERSION_SPEC"));
+            result.add(worker.getParameters().get("version"));
         }
         return result;
     }
