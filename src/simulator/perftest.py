@@ -148,18 +148,8 @@ class PerfTest:
         # if worker_vm_startup_delay_ms is not None:
         #     args = f"{args} --workerVmStartupDelayMs {worker_vm_startup_delay_ms}"
         #
-        # dedicated_member_machines = test_yaml['']
-        # if dedicated_member_machines is not None:
-        #     args = f"{args} --dedicatedMemberMachines {dedicated_member_machines}"
-        #
         # if skip_download is not None:
         #     args = f"{args} --skipDownload {skip_download}"
-        #
-        # if member_worker_script:
-        #     args = f"{args} --memberWorkerScript {member_worker_script}"
-        #
-        # if client_worker_script:
-        #     args = f"{args} --clientWorkerScript {client_worker_script}"
 
         for key, value in coordinator_params.items():
             coordinator_param = f"{coordinator_param} --param {key}={shlex.quote(str(value))}"
@@ -252,6 +242,7 @@ class PerfTest:
 
         if test_yaml.get("verify_enabled") is None:
             test_yaml['verify_enabled'] = True
+
 
     def run(self, tests_file, tags, skip_report, test_commit, test_pattern, run_label):
         if test_commit:

@@ -15,7 +15,6 @@
  */
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestPhase;
@@ -68,13 +67,7 @@ final class CoordinatorCli {
                     "Amount of time in milliseconds to wait between starting up the next worker. This is useful to prevent"
                             + "duplicate connection issues.")
             .withRequiredArg().ofType(Integer.class).defaultsTo(0);
-
-    private final OptionSpec<Integer> dedicatedMemberMachinesSpec = parser.accepts("dedicatedMemberMachines",
-                    "Controls the number of dedicated member machines. For example when there are 4 machines,"
-                            + " 2 members and 9 clients with 1 dedicated member machine defined, then"
-                            + " 1 machine gets the 2 members and the 3 remaining machines get 3 clients each.")
-            .withRequiredArg().ofType(Integer.class).defaultsTo(0);
-
+    
     private final OptionSpec<TargetType> targetTypeSpec = parser.accepts("targetType",
                     format("Defines the type of Workers which execute the RUN phase."
                             + " The type PREFER_CLIENT selects client Workers if they are available, member Workers otherwise."
@@ -145,7 +138,10 @@ final class CoordinatorCli {
 //            properties.set("driver", options.valueOf(driverSpec));
 //        }
 
-        this.registry = newRegistry();
+        this.registry = Registry.loadInventoryYaml(
+                locateInventoryFile(),
+                properties.get("loadgenerator_hosts"),
+                properties.get("node_hosts"));
 
         if (!(options.has(downloadSpec) || options.has(cleanSpec))) {
             this.coordinatorParameters = loadCoordinatorParameters();
@@ -275,19 +271,6 @@ final class CoordinatorCli {
         return (int) timeUnit.toSeconds(Integer.parseInt(sub));
     }
 
-    private Registry newRegistry() {
-        Registry registry = Registry.loadInventoryYaml(
-                locateInventoryFile(),
-                properties.get("loadgenerator_hosts"),
-                properties.get("node_hosts"));
-
-        if (options.has(dedicatedMemberMachinesSpec)) {
-            registry.assignDedicatedMemberMachines(options.valueOf(dedicatedMemberMachinesSpec));
-        }
-
-        return registry;
-    }
-
     private DeploymentPlan newDeploymentPlan() {
         String workerType = options.valueOf(clientTypeSpec);
         if ("member".equals(workerType)) {
@@ -298,12 +281,12 @@ final class CoordinatorCli {
         if (nodeCount == -1) {
             nodeCount = registry.agentCount();
         } else if (nodeCount < -1) {
-            throw new CommandLineExitException("--node_count must be a equal or larger than -1");
+            throw new CommandLineExitException("node_count must be a equal or larger than -1");
         }
 
         int loadGeneratorCount = properties.getInt("loadgenerator_count");
         if (loadGeneratorCount < 0) {
-            throw new CommandLineExitException("--loadgenerator_count must be a equal or larger than 0");
+            throw new CommandLineExitException("loadgenerator_count must be a equal or larger than 0");
         }
 
         if (nodeCount == 0 && loadGeneratorCount == 0) {
