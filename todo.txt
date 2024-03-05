@@ -1,16 +1,25 @@
 TODO
 
+- worker launcher only can handle driver and not active/passive-driver
+    - I think just needs verify
+
+- driver sanity check logic to right place
+
+- coordinator cli: verify_enabled
+
+- coordinator cli: fail_fast
+
+- coordinator cli: performance_monitor_interval_seconds
+
+- coordinator cli: runPath
+
+- coordinator cli: parallel
+
 - download logic should be removed from coordinator
 
 - clean logic should be removed from coordinator
 
 - locateInventoryFile --> pointing to agents file. Fix
-
-- perftest.py 'members' should be legacy value
-
-- perftest.py 'clients' should be legacy value
-
-- worker launcher only can handle driver and not active/passive-driver
 
 - undesirable driver upload output
 
@@ -35,6 +44,13 @@ ERROR StatusLogger Error parsing /home/ubuntu/hazelcast-simulator/workers/c1f13c
 - remove the driver parameters from the Java code.
 
 DONE
+- activeCount should be param
+
+- passiveCount should be param
+
+- perftest.py 'members' should be legacy value
+
+- perftest.py 'clients' should be legacy value
 
 - fix
 java.lang.NullPointerException

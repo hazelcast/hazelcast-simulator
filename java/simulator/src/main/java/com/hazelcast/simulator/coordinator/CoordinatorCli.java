@@ -74,15 +74,6 @@ final class CoordinatorCli {
                             + "duplicate connection issues.")
             .withRequiredArg().ofType(Integer.class).defaultsTo(0);
 
-    private final OptionSpec<Integer> passiveCountSpec = parser.accepts("passiveCount",
-                    "Number of cluster member Worker JVMs. If no value is specified and no mixed members are specified,"
-                            + " then the number of cluster members will be equal to the number of machines in the agents file.")
-            .withRequiredArg().ofType(Integer.class).defaultsTo(-1);
-
-    private final OptionSpec<Integer> activeCountSpec = parser.accepts("activeCount",
-                    "Number of cluster client Worker JVMs.")
-            .withRequiredArg().ofType(Integer.class).defaultsTo(0);
-
     private final OptionSpec<Integer> dedicatedMemberMachinesSpec = parser.accepts("dedicatedMemberMachines",
                     "Controls the number of dedicated member machines. For example when there are 4 machines,"
                             + " 2 members and 9 clients with 1 dedicated member machine defined, then"
@@ -148,16 +139,22 @@ final class CoordinatorCli {
 
         this.properties = loadSimulatorProperties();
 
+        // Add all the params to the properties
         List<String> propertyList = paramSpec.values(options);
-        for (String p : propertyList) {
-            int indexOf = p.indexOf("=");
+        for (String property : propertyList) {
+            int indexOf = property.indexOf("=");
             if (indexOf == -1) {
-                throw new CommandLineExitException("Invalid property '" + p + "', should have format key=value");
+                throw new CommandLineExitException("Invalid property '" + property + "', should have format key=value");
             }
-            String key = p.substring(0, indexOf);
-            String value = p.substring(indexOf + 1);
+            String key = property.substring(0, indexOf);
+            String value = property.substring(indexOf + 1);
             properties.set(key, value);
+
+            if(!value.contains("\n")) {
+                LOGGER.info(key + "=" + value);
+            }
         }
+
 
 
 //        if (!"fake".equals(properties.get("driver"))) {
@@ -316,27 +313,27 @@ final class CoordinatorCli {
             throw new CommandLineExitException("client workerType can't be [member]");
         }
 
-        int members = options.valueOf(passiveCountSpec);
-        if (members == -1) {
-            members = registry.agentCount();
-        } else if (members < -1) {
+        int passiveCount = properties.getInt("passive_count");
+        if (passiveCount == -1) {
+            passiveCount = registry.agentCount();
+        } else if (passiveCount < -1) {
             throw new CommandLineExitException("--member must be a equal or larger than -1");
         }
 
-        int clients = options.valueOf(activeCountSpec);
-        if (clients < 0) {
+        int activeCount = properties.getInt("active_count");
+        if (activeCount < 0) {
             throw new CommandLineExitException("--client must be a equal or larger than 0");
         }
 
-        if (members == 0 && clients == 0) {
+        if (passiveCount == 0 && activeCount == 0) {
             throw new CommandLineExitException("No workers have been defined!");
         }
 
         DeploymentPlan plan = new DeploymentPlan(registry.getAgents());
         plan.addAllProperty(properties.asMap());
         plan.addProperty("RUN_ID", coordinatorParameters.getRunId());
-        plan.addToPlan(members, "member");
-        plan.addToPlan(clients, options.valueOf(clientTypeSpec));
+        plan.addToPlan(passiveCount, "member");
+        plan.addToPlan(activeCount, options.valueOf(clientTypeSpec));
 
         plan.printLayout();
         return plan;

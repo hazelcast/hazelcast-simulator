@@ -120,6 +120,8 @@ class PerfTest:
         #     # member_worker_script=test.get('member_worker_script')
         # )
 
+        self._sanitize_test(test_yaml)
+
         coordinator_params = {}
         for key, value in test_yaml.items():
             if not key == 'test':
@@ -160,7 +162,6 @@ class PerfTest:
         if parallel:
             coordinator_param = f"{coordinator_param} --parallel"
 
-        self._sanitize_test(test_yaml)
 
         #
         # if skip_download is not None:
@@ -173,14 +174,6 @@ class PerfTest:
         performance_monitor_interval_seconds = test_yaml.get("performance_monitor_interval_seconds")
         if performance_monitor_interval_seconds:
             coordinator_param = f"{coordinator_param} --performanceMonitorInterval {performance_monitor_interval_seconds}"
-
-        members = test_yaml.get('members')
-        if members is not None:
-            coordinator_param = f"{coordinator_param} --passiveCount {members}"
-
-        clients = test_yaml.get('clients')
-        if clients is not None:
-            coordinator_param = f"{coordinator_param} --activeCount {clients}"
 
         #
         # if fail_fast is not None:
@@ -222,19 +215,50 @@ class PerfTest:
                 exit_with_error(f"Failed run coordinator, exitcode={self.exitcode}")
             return self.exitcode
 
-    def _sanitize_test(self, test_yaml):
+    def _sanitize_test(self, test_yaml: dict):
+        # passive_count/members
+        members = test_yaml.get('members')
+        if members is not None:
+            if test_yaml.get('passive_count') is not None:
+                raise Exception("passive_count and members can't be set at the same time.")
+
+            print("[WARN] 'members' is a deprecated property, use 'passive_count' instead.")
+            del test_yaml['members']
+            test_yaml['passive_count'] = members
+
+        passive_count = test_yaml.get("passive_count")
+        if passive_count is None:
+            test_yaml['passive_count'] = 0
+
+        clients = test_yaml.get('clients')
+        if clients is not None:
+            if test_yaml.get('active_count') is not None:
+                raise Exception("active_count and clients can't be set at the same time.")
+
+            print("[WARN] 'clients' is a deprecated property, use 'active_count' instead.")
+            del test_yaml['clients']
+            test_yaml['active_count'] = clients
+
+        # active_count/clients
+        active_count = test_yaml.get('active_count')
+        if active_count is None:
+            test_yaml['active_count'] = -1
+
+        # node_hosts logic
         node_hosts = test_yaml.get('node_hosts', 'all')
         if not node_hosts:
             node_hosts = "all|!mc"
             test_yaml['node_hosts'] = node_hosts
         self.verify_hosts(node_hosts)
 
+        # loadgenerator_hosts
         loadgenerator_hosts = test_yaml.get('loadgenerator_hosts')
         if not loadgenerator_hosts:
             loadgenerator_hosts = "all|!mc"
             test_yaml['loadgenerator_hosts'] = loadgenerator_hosts
         self.verify_hosts(loadgenerator_hosts)
 
+        # duration logic
         if test_yaml.get("duration") is None:
             raise Exception(f"The 'duration' property is not specified in test {test_yaml.get('name')}")
 
