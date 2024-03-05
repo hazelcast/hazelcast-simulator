@@ -128,18 +128,15 @@ class PerfTest:
                 coordinator_params[key] = value
 
         driver = test_yaml.get('driver')
-        loadgenerator_driver = test_yaml.get('loadgenerator_driver')
-        node_driver = test_yaml.get('node_driver')
-
         if driver is not None:
             driver_install_and_configure(driver, test_yaml, None, coordinator_params, inventory_path)
         else:
+            node_driver = test_yaml.get('node_driver')
             if node_driver is not None:
-                coordinator_params['node_driver'] = node_driver
                 driver_install_and_configure(node_driver, test_yaml, False, coordinator_params, inventory_path)
 
+            loadgenerator_driver = test_yaml.get('loadgenerator_driver')
             driver_install_and_configure(loadgenerator_driver, test_yaml, True, coordinator_params, inventory_path)
-            coordinator_params['loadgenerator_driver'] = loadgenerator_driver
 
         if run_path is not None:
             coordinator_params['run_path'] = run_path
