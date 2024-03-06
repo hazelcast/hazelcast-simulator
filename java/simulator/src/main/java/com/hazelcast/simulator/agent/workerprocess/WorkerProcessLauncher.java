@@ -55,7 +55,7 @@ public class WorkerProcessLauncher {
     private final WorkerParameters parameters;
     private final SimulatorAddress workerAddress;
 
-    private File runId;
+    private File workerDir;
 
     WorkerProcessLauncher(WorkerProcessManager processManager,
                           WorkerParameters parameters) {
@@ -67,8 +67,8 @@ public class WorkerProcessLauncher {
     void launch() throws Exception {
         WorkerProcess process = null;
         try {
-            runId = getRunId();
-            ensureExistingDirectory(runId);
+            workerDir = getWorkerDir();
+            ensureExistingDirectory(workerDir);
 
             String type = parameters.getWorkerType();
             LOGGER.info(format("Starting a Java Virtual Machine for %s Worker %s", type, workerAddress));
@@ -86,17 +86,15 @@ public class WorkerProcessLauncher {
         }
     }
 
-    private File getRunId() {
+    private File getWorkerDir() {
         String runId = parameters.get("RUN_ID");
-        System.out.println("runId: " + runId);
-        System.out.println(parameters);
         File workersDir = ensureExistingDirectory(getSimulatorHome(), "workers");
         return ensureExistingDirectory(workersDir, runId);
     }
 
     private WorkerProcess startWorker() throws IOException {
         String workerName = parameters.get("WORKER_NAME");
-        File workerHome = ensureFreshDirectory(new File(runId, workerName));
+        File workerHome = ensureFreshDirectory(new File(workerDir, workerName));
 
         copyResourcesToWorkerHome(workerName);
 
@@ -217,7 +215,7 @@ public class WorkerProcessLauncher {
 
     private String getClasspath(File workerHome) {
         String simulatorHome = getSimulatorHome().getAbsolutePath();
-        String classpath = new File(getRunId(), "lib/*").getAbsolutePath()
+        String classpath = new File(getWorkerDir(), "lib/*").getAbsolutePath()
                 + CLASSPATH_SEPARATOR + workerHome.getAbsolutePath() + "/upload/*"
                 + CLASSPATH_SEPARATOR + simulatorHome + "/user-lib/*"
                 + uploadDirToClassPath(workerHome)
