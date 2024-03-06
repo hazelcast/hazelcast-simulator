@@ -137,7 +137,7 @@ class PerfTest:
 
                 exitcode = self.run_single_test(test)
 
-                hosts = load_hosts(inventory_path=inventory_path, host_pattern= "loadgenerators")
+                hosts = load_hosts(inventory_path=inventory_path, host_pattern="loadgenerators")
                 print(hosts)
                 agents_download(hosts, run_path, test['RUN_ID'])
                 agents_clean(hosts)
@@ -196,10 +196,12 @@ class PerfTest:
                 exit_with_error(f"Failed run coordinator, exitcode={self.exitcode}")
             return self.exitcode
 
-
     def _sanitize_test(self, test: dict):
         if test.get('name') is None:
             exit_with_error(f"Test is missing 'name' property")
+
+        if test.get('test') is None:
+            exit_with_error(f"test {test['name']} is missing a 'test' section.")
 
         run_path = test.get('run_path')
         if run_path is None:

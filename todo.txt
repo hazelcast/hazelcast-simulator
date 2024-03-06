@@ -1,11 +1,10 @@
 TODO
+
 - PrepareRunTask: fully to python
 
 - current design with run_path will run into problems after first run because the run_path will be set.
 
 - setdefault
-
-- test should have 'test' section
 
 - fix runTestSuiteTaskTest
 
@@ -35,6 +34,8 @@ ERROR StatusLogger Error parsing /home/ubuntu/hazelcast-simulator/workers/c1f13c
 
 
 DONE
+
+- test should have 'test' section
 
 - remove the driver parameters from the Java code.
 
