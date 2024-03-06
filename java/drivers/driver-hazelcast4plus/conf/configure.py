@@ -59,21 +59,27 @@ def _configure_client_hazelcast_xml(nodes, args: DriverConfigureArgs):
     config = config.replace("<!--MEMBERS-->", members_config)
     args.coordinator_params['file:client-hazelcast.xml'] = config
 
-
 def _configure_log4j_xml(args: DriverConfigureArgs):
     driver = _get_driver(args)
     log4j_xml = read_file(find_driver_config_file(driver, "log4j.xml"))
     args.coordinator_params['file:log4j.xml'] = log4j_xml
 
-
 def _configure_worker_sh(args: DriverConfigureArgs):
     driver = _get_driver(args)
-    worker_sh = read_file(find_driver_config_file(driver, "worker.sh"))
+
+    worker_sh_path = args.test.get('worker_sh')
+    if worker_sh_path is None:
+        worker_sh = read_file(find_driver_config_file(driver, "worker.sh"))
+    else:
+        worker_sh = read_file(worker_sh_path)
+
     args.coordinator_params['file:worker.sh'] = worker_sh
 
-def _get_driver(args):
-    return args.test.get('driver')
-
+def _get_driver(args: DriverConfigureArgs):
+    driver = args.test.get('driver')
+    if driver is None:
+        raise Exception(f"Could not find 'driver' in test {args.test['name']}")
+    return driver
 
 def exec(args: DriverConfigureArgs):
     print("[INFO] Configure")
