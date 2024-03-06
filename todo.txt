@@ -10,8 +10,6 @@ TODO
 
 - fix workerTest
 
-- worker.sh should source parameter itself and simplify the launcher
-
 - worker.sh should configure its own classpath and simplify the launcher
 
 - move driver-lib classpath logic from launcher to worker.sh
@@ -33,6 +31,7 @@ ERROR StatusLogger Error parsing /home/ubuntu/hazelcast-simulator/workers/c1f13c
 
 
 DONE
+- worker.sh should source parameter itself and simplify the launcher
 
 - test should have 'test' section
 
