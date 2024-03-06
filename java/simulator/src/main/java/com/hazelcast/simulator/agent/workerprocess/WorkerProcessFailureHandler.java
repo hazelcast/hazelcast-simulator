@@ -39,7 +39,7 @@ public class WorkerProcessFailureHandler {
 
     public void handle(String message, FailureType type, WorkerProcess workerProcess, String testId, String cause) {
         SimulatorAddress workerAddress = workerProcess.getAddress();
-        String workerId = workerProcess.getId();
+        String workerId = workerProcess.getWorkerName();
 
         FailureMessage failure = new FailureMessage(
                 message,

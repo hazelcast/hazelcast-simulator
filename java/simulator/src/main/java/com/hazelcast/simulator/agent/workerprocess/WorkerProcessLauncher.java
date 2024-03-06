@@ -95,12 +95,12 @@ public class WorkerProcessLauncher {
     }
 
     private WorkerProcess startWorker() throws IOException {
-        String workerDirName = parameters.get("WORKER_NAME");
-        File workerHome = ensureFreshDirectory(new File(runId, workerDirName));
+        String workerName = parameters.get("WORKER_NAME");
+        File workerHome = ensureFreshDirectory(new File(runId, workerName));
 
-        copyResourcesToWorkerHome(workerDirName);
+        copyResourcesToWorkerHome(workerName);
 
-        WorkerProcess workerProcess = new WorkerProcess(workerAddress, workerDirName, workerHome);
+        WorkerProcess workerProcess = new WorkerProcess(workerAddress, workerName, workerHome);
 
         ProcessBuilder processBuilder = new ProcessBuilder("bash", "worker.sh")
                 .directory(workerHome);
@@ -153,7 +153,7 @@ public class WorkerProcessLauncher {
 
             String pid = readPid(worker);
             if (pid != null) {
-                LOGGER.info(format("Worker %s started", worker.getId()));
+                LOGGER.info(format("Worker %s started", worker.getWorkerName()));
                 return;
             }
 

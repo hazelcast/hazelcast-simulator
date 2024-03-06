@@ -220,12 +220,12 @@ public final class DeploymentPlan {
             int workerIndex = agent.getNextWorkerIndex();
             SimulatorAddress workerAddress = workerAddress(agent.getAddressIndex(), workerIndex);
 
-            String workerDirName = workerAddress.toString() + '-' + agent.getPublicAddress() + '-' + parameters.getWorkerType();
+            String workerName = workerAddress.toString() + '-' + agent.getPublicAddress() + '-' + parameters.getWorkerType();
             parameters.set("WORKER_ADDRESS", workerAddress)
                     .set("WORKER_INDEX", workerIndex)
                     .set("PUBLIC_ADDRESS", agent.getPublicAddress())
                     .set("PRIVATE_ADDRESS", agent.getPrivateAddress())
-                    .set("WORKER_NAME", workerDirName);
+                    .set("WORKER_NAME", workerName);
             workers.add(parameters);
         }
 
