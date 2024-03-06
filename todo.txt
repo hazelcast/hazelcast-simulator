@@ -4,6 +4,7 @@ TODO
 - current design with run_path will run into problems after first run because the run_path will be set.
 
 - setdefault
+
 - test should have 'test' section
 
 - fix runTestSuiteTaskTest
@@ -23,8 +24,6 @@ TODO
     INFO  10:38:49     Agent  18.192.214.161      10.0.25.92 (A2) members:  0, clients:  1, mode: CLIENTS_ONLY, version specs: [maven=5.3.0]
     INFO  10:38:49 Total number of agents: 2
 
-- coordinator cli: runPath
-
 
 - undesirable driver upload output
 
@@ -34,9 +33,12 @@ TODO
 ERROR StatusLogger Error parsing /home/ubuntu/hazelcast-simulator/workers/c1f13c7b5d09d041c84f8508ea3a4e843d8aad50/A1_W1-18.185.56.223-member/log4j.xml
  org.xml.sax.SAXParseException; systemId: file:///home/ubuntu/hazelcast-simulator/workers/c1f13c7b5d09d041c84f8508ea3a4e843d8aad50/A1_W1-18.185.56.223-member/log4j.xml; lineNumber: 3; columnNumber: 22; The prefix "log4j" for element "log4j:configuration" is not bound.
 
-- remove the driver parameters from the Java code.
 
 DONE
+
+- remove the driver parameters from the Java code.
+
+- coordinator cli: runPath
 
 - fix
 ===
