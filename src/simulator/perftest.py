@@ -140,7 +140,7 @@ class PerfTest:
                 hosts = load_hosts(inventory_path=inventory_path, host_pattern="loadgenerators")
                 print(hosts)
                 agents_download(hosts, run_path, test['RUN_ID'])
-                agents_clean(hosts)
+                #agents_clean(hosts)
 
                 if exitcode == 0 and not skip_report:
                     self.collect(run_path,

@@ -93,7 +93,10 @@ public class WorkerParameters {
 
         Map<String, String> properties = new HashMap<>();
         for (Map.Entry<Object, Object> entry : p.entrySet()) {
-            properties.put("" + entry.getKey(), "" + entry.getValue());
+
+            Object key = entry.getKey();
+            Object value = entry.getValue();
+            properties.put("" + key, "" + value);
         }
         return new WorkerParameters(properties);
     }

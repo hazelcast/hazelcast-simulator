@@ -71,7 +71,7 @@ public class WorkerProcessManager {
         WorkerParameters workerParameters = msg.getWorkerParameters();
 
         // we add the pid to the worker-parameters so the worker can check if the agent is still alive.
-        workerParameters.set("agent.pid", getPID());
+        workerParameters.set("agent_pid", getPID());
 
         WorkerProcessLauncher launcher = new WorkerProcessLauncher(WorkerProcessManager.this, workerParameters);
         LaunchSingleWorkerTask task = new LaunchSingleWorkerTask(launcher, workerParameters, promise);

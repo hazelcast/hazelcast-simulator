@@ -105,7 +105,7 @@ public class WorkerProcessLauncher {
 
         Map<String, String> environment = processBuilder.environment();
 
-        StringBuilder sb = new StringBuilder();
+        StringBuilder parametersText = new StringBuilder();
         List<String> keys = new ArrayList<>(parameters.asMap().keySet());
         Collections.sort(keys);
         for (String key : keys) {
@@ -114,21 +114,20 @@ public class WorkerProcessLauncher {
                 String fileName = key.substring(FILE_PREFIX.length());
                 writeText(value, new File(workerDir, fileName));
             } else {
-                environment.put(key, value);
-                sb.append(key).append("=").append(value).append("\n");
+                parametersText.append(key).append("=").append(value).append("\n");
             }
         }
-        sb.append("CLASSPATH=").append(getClasspath(workerDir)).append("\n");
-
-        writeText(sb.toString(), new File(workerDir, "parameters"));
-
-        environment.putAll(System.getenv());
+        parametersText.append("CLASSPATH=").append(getClasspath(workerDir)).append("\n");
         String javaHome = getJavaHome();
         String path = javaHome + "/bin:" + environment.get("PATH");
-        environment.put("PATH", path);
-        environment.put("JAVA_HOME", javaHome);
-        environment.put("CLASSPATH", getClasspath(workerDir));
-        environment.put("SIMULATOR_HOME", getSimulatorHome().getAbsolutePath());
+        parametersText.append("PATH=").append(path).append("\n");
+        parametersText.append("JAVA_HOME=").append(javaHome).append("\n");
+        parametersText.append("CLASSPATH=").append(getClasspath(workerDir)).append("\n");
+        parametersText.append("SIMULATOR_HOME=").append(getSimulatorHome().getAbsolutePath()).append("\n");
+
+        writeText(parametersText.toString(), new File(workerDir, "parameters"));
+
+        environment.putAll(System.getenv());
 
         Process process = processBuilder.start();
 
