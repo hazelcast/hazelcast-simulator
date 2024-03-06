@@ -95,15 +95,6 @@ public class CoordinatorParameters {
         return this;
     }
 
-    public boolean skipDownload() {
-        return skipDownload;
-    }
-
-    public CoordinatorParameters setSkipDownload(boolean skipDownload) {
-        this.skipDownload = skipDownload;
-        return this;
-    }
-
     public boolean skipShutdownHook() {
         return skipShutdownHook;
     }

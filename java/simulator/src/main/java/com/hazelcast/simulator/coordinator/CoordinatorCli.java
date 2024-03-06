@@ -92,9 +92,6 @@ final class CoordinatorCli {
                             + " List of defined test phases: %s", TestPhase.getLastTestPhase(), TestPhase.getIdsAsString()))
             .withRequiredArg().ofType(TestPhase.class).defaultsTo(TestPhase.getLastTestPhase());
 
-    private final OptionSpec skipDownloadSpec = parser.accepts("skipDownload",
-            "Prevents downloading of the created worker artifacts.");
-
     private final OptionSpec downloadSpec = parser.accepts("download",
             "Downloads all the session directories and applies postprocessing. "
                     + "If this option is set, no other tasks are executed. "
@@ -179,7 +176,6 @@ final class CoordinatorCli {
         return new CoordinatorParameters()
                 .setSimulatorProperties(properties)
                 .setLastTestPhaseToSync(options.valueOf(syncToTestPhaseSpec))
-                .setSkipDownload(options.has(skipDownloadSpec))
                 .setWorkerVmStartupDelayMs(options.valueOf(workerVmStartupDelayMsSpec))
                 .setRunPath(options.valueOf(runPathSpec));
     }

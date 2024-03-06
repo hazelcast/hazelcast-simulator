@@ -89,11 +89,9 @@ class PerfTest:
         run_parallel(self.__kill_java, [(host,) for host in hosts])
         log_header(f"perftest kill_java [{host_pattern}]: done")
 
-    def exec(self, test_yaml, test_file, run_path=None):
-
+    def exec(self, test_yaml, run_path=None):
         self.clean()
 
-        coordinator_param = ""
 
         # exitcode = self.exec(
         #     test['name'],
@@ -143,10 +141,8 @@ class PerfTest:
 
         # if worker_vm_startup_delay_ms is not None:
         #     args = f"{args} --workerVmStartupDelayMs {worker_vm_startup_delay_ms}"
-        #
-        # if skip_download is not None:
-        #     args = f"{args} --skipDownload {skip_download}"
 
+        coordinator_param = ""
         for key, value in coordinator_params.items():
             coordinator_param = f"{coordinator_param} --param {key}={shlex.quote(str(value))}"
 
@@ -273,7 +269,7 @@ class PerfTest:
                 repetitions = 1
 
             for i in range(0, repetitions):
-                exitcode, run_path = self.run_test(test, tests_file, run_label=run_label)
+                exitcode, run_path = self.run_test(test, run_label=run_label)
                 if exitcode == 0 and not skip_report:
                     self.collect(run_path,
                                  tags,
@@ -281,7 +277,7 @@ class PerfTest:
                                  cooldown_seconds=test.get('cooldown_seconds'))
         return
 
-    def run_test(self, test, test_file, *, run_path=None, run_label=None):
+    def run_test(self, test, *, run_path=None, run_label=None):
         if not run_path:
             name = test['name']
             if not run_label:
@@ -293,7 +289,6 @@ class PerfTest:
 
         exitcode = self.exec(
             test,
-            test_file,
             run_path=run_path,
         )
 

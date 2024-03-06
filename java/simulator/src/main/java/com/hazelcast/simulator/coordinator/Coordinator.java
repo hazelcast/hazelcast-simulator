@@ -144,7 +144,7 @@ public class Coordinator implements Closeable {
 
         stopAgents(registry);
 
-        if (!parameters.skipDownload()) {
+        if (!parameters.getSimulatorProperties().getBoolean("skip_download")) {
             new AgentsDownloadTask(
                     registry,
                     properties.asMap(),
