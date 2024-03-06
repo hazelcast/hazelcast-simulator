@@ -2,12 +2,13 @@ import os.path
 import subprocess
 from simulator.driver import upload_driver, DriverInstallArgs
 from inventory import load_hosts
+from simulator.log import info
 from simulator.util import run_parallel, shell
 from simulator.ssh import Ssh
 
 
 def _upload(host, artifact_ids, version, driver):
-    print(f"[INFO]     {host['public_ip']} starting")
+    info(f"     {host['public_ip']} starting")
 
     ssh = Ssh(host['public_ip'], host['ssh_user'], host['ssh_options'])
     ssh.exec("mkdir -p hazelcast-simulator/driver-lib/" + driver + "/")
@@ -16,7 +17,7 @@ def _upload(host, artifact_ids, version, driver):
     for artifact_id in artifact_ids:
         ssh.rsync_to_remote(f"{_get_local_jar_path(artifact_id, version)}", f"{dest}")
 
-    print(f"[INFO]     {host['public_ip']} done")
+    info(f"     {host['public_ip']} done")
 
 
 def _get_local_repo():
@@ -33,7 +34,7 @@ def _download_from_maven_repo(artifact_id:str, version:str, repo:str):
     artifact = f"com.hazelcast:{artifact_id}:{version}"
     cmd = (f"mvn org.apache.maven.plugins:maven-dependency-plugin:3.2.0:get "
            f"-DremoteRepositories={repo} -Dartifact={artifact}")
-    print(f"[INFO] {cmd}")
+    info(f"{cmd}")
     exitcode = shell(cmd)
     if exitcode != 0:
         print(f"[ERROR] Failed to download artifact {artifact}")
@@ -120,7 +121,7 @@ def _upload_hazelcast_jars(args:DriverInstallArgs, hosts):
     remote_repo = _get_remote_repo(is_enterprise, version)
     force_download = _get_force_download_from_maven_repo(version_spec)
 
-    print(f"[INFO] Uploading Hazelcast jars")
+    info(f"Uploading Hazelcast jars")
     artifact_ids = _get_artifact_ids(is_enterprise, version)
     for artifact_id in artifact_ids:
         path = _get_local_jar_path(artifact_id, version)
@@ -131,11 +132,11 @@ def _upload_hazelcast_jars(args:DriverInstallArgs, hosts):
             _download_from_maven_repo(artifact_id, version, remote_repo)
 
     for artifact_id in artifact_ids:
-        print(f"[INFO] Uploading {artifact_id}")
+        info(f"Uploading {artifact_id}")
 
     run_parallel(_upload, [(host, artifact_ids, version, driver) for host in hosts])
 
-    print(f"[INFO] Uploading Hazelcast jars: done")
+    info(f"Uploading Hazelcast jars: done")
 
 
 def _get_driver(args):
@@ -143,7 +144,7 @@ def _get_driver(args):
 
 
 def exec(args:DriverInstallArgs):
-    print("[INFO] Install")
+    info("Install")
 
     hosts = []
 
@@ -159,4 +160,4 @@ def exec(args:DriverInstallArgs):
     upload_driver(_get_driver(args), hosts)
     _upload_hazelcast_jars(args, hosts)
 
-    print("[INFO] Install: done")
+    info("Install: done")

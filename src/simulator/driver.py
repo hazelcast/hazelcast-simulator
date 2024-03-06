@@ -5,6 +5,7 @@ import sys
 from dataclasses import dataclass
 from typing import Optional
 
+from simulator.log import info
 from simulator.util import shell, run_parallel, simulator_home
 
 
@@ -25,20 +26,20 @@ def find_driver_config_file(driver, filename):
 
 
 def _upload_driver(host, driver_dir):
-    print(f"[INFO]     {host['public_ip']}  Uploading")
+    info(f"     {host['public_ip']}  Uploading")
     shell(
         f"""rsync --checksum -avv -L -e "ssh {host['ssh_options']}" \
             {simulator_home}/{driver_dir}/* \
             {host['ssh_user']}@{host['public_ip']}:hazelcast-simulator/{driver_dir}/""")
-    print(f"[INFO]     {host['public_ip']}  Uploading: done")
+    info(f"     {host['public_ip']}  Uploading: done")
 
 
 def upload_driver(driver, hosts):
     driver_dir = f"drivers/driver-{driver}"
 
-    print(f"[INFO] Uploading driver {driver} to {driver_dir}: starting")
+    info(f"Uploading driver {driver} to {driver_dir}: starting")
     run_parallel(_upload_driver, [(host, driver_dir,) for host in hosts])
-    print(f"[INFO] Uploading driver {driver} to {driver_dir}: done")
+    info(f"Uploading driver {driver} to {driver_dir}: done")
 
 
 def driver_install_and_configure(driver: str, test: dict, is_loadgenerator: Optional[bool], params: dict, inventory_path: str):
@@ -70,7 +71,7 @@ def _driver_exec(driver: str, module: str, *args, **kwargs):
     function_name = "exec"
 
     if not os.path.exists(module_path):
-        print(f"[INFO] Skipping {driver}.{module}")
+        info(f"Skipping {driver}.{module}")
         return
 
     try:

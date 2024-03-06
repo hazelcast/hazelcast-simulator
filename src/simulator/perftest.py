@@ -1,6 +1,7 @@
 import argparse
 import datetime
 import getpass
+import hashlib
 
 import re
 import shlex
@@ -16,6 +17,8 @@ from os import path
 import csv
 
 import simulator.util
+from agents_clean import agents_clean
+from agents_download import agents_download
 from inventory import load_hosts
 from simulator.driver import driver_install_and_configure
 from simulator.git import get_last_commit_hash, git_init, is_git_installed, is_inside_git_repo, \
@@ -40,7 +43,7 @@ class PerfTest:
         self.exit_code = None
         self.verified_hosts = set()
 
-    def __verify(self, host, error_counter):
+    def _verify_host(self, host, error_counter):
         ssh = Ssh(public_ip(host), ssh_user(host), ssh_options(host))
 
         exitcode = ssh.connect()
@@ -71,7 +74,7 @@ class PerfTest:
         info(f"Host verification [{host_pattern}]: starting")
         hosts = load_hosts(host_pattern=host_pattern)
         error_counter = AtomicLong()
-        run_parallel(self.__verify, [(host, error_counter) for host in hosts])
+        run_parallel(self._verify_host, [(host, error_counter) for host in hosts])
 
         if error_counter.get() > 0:
             exit_with_error(f"Hosts verification [{host_pattern}]: failed")
@@ -88,153 +91,6 @@ class PerfTest:
         hosts = load_hosts(host_pattern=host_pattern)
         run_parallel(self.__kill_java, [(host,) for host in hosts])
         log_header(f"perftest kill_java [{host_pattern}]: done")
-
-    def exec(self, test_yaml, run_path=None):
-        self.clean()
-
-
-        # exitcode = self.exec(
-        #     test['name'],
-        #     tests,
-        #     test_file,
-        #     run_path=run_path,
-        #     # duration=test.get('duration'),
-        #     # performance_monitor_interval_seconds=test.get('performance_monitor_interval_seconds'),
-        #     # parallel=test.get('parallel'),
-        #     # node_hosts=test.get('node_hosts'),
-        #     # loadgenerator_hosts=test.get('loadgenerator_hosts'),
-        #     # license_key=test.get('license_key'),
-        #     # client_args=test.get('client_args'),
-        #     # member_args=test.get('member_args'),
-        #     # members=test.get('members'),
-        #     # clients=test.get('clients'),
-        #     # node_driver=node_driver,
-        #     # load_generator_driver=load_generator_driver,
-        #     # version=test.get('version'),
-        #     # fail_fast=test.get('fail_fast'),
-        #     # verify_enabled=test.get('verify_enabled'),
-        #     # client_type=test.get('client_type'),
-        #     # client_worker_script=test.get('client_worker_script'),
-        #     # member_worker_script=test.get('member_worker_script')
-        # )
-
-        self._sanitize_test(test_yaml)
-
-        coordinator_params = {}
-        for key, value in test_yaml.items():
-            if not key == 'test':
-                coordinator_params[key] = value
-
-        driver = test_yaml.get('driver')
-        if driver is not None:
-            driver_install_and_configure(driver, test_yaml, None, coordinator_params, inventory_path)
-        else:
-            node_driver = test_yaml.get('node_driver')
-            if node_driver is not None:
-                driver_install_and_configure(node_driver, test_yaml, False, coordinator_params, inventory_path)
-
-            loadgenerator_driver = test_yaml.get('loadgenerator_driver')
-            driver_install_and_configure(loadgenerator_driver, test_yaml, True, coordinator_params, inventory_path)
-
-        if run_path is not None:
-            coordinator_params['run_path'] = run_path
-
-        # if worker_vm_startup_delay_ms is not None:
-        #     args = f"{args} --workerVmStartupDelayMs {worker_vm_startup_delay_ms}"
-
-        coordinator_param = ""
-        for key, value in coordinator_params.items():
-            coordinator_param = f"{coordinator_param} --param {key}={shlex.quote(str(value))}"
-
-        test_inner = test_yaml['test']
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, prefix="perftest_", suffix=".txt") as tmp:
-            if isinstance(test_inner, list):
-                for t in test_inner:
-                    if 'name' in t:
-                        test_name = t['name']
-                    else:
-                        test_name = t['class'].split('.')[-1]
-                    for key, value in t.items():
-                        tmp.write(test_name + '@')
-                        tmp.write(f"{key}={value}\n")
-            else:
-                for key, value in test_inner.items():
-                    tmp.write(f"{key}={value}\n")
-
-            tmp.flush()
-
-            self.exitcode = self.__shell(f"{simulator_home}/bin/hidden/coordinator {coordinator_param} {tmp.name}")
-            if self.exitcode != 0 and self.exit_on_error:
-                exit_with_error(f"Failed run coordinator, exitcode={self.exitcode}")
-            return self.exitcode
-
-    def _sanitize_test(self, test_yaml: dict):
-        driver = test_yaml.get('driver')
-        loadgenerator_driver = test_yaml.get('loadgenerator_driver')
-        node_driver = test_yaml.get('node_driver')
-        if driver is not None:
-            if loadgenerator_driver is not None:
-                exit_with_error(
-                    f"test {test_yaml['name']} can't have both the driver and loadgenerator_driver configured.")
-            if node_driver is not None:
-                exit_with_error(f"test {test_yaml['name']} can't have both the driver and node_driver configured.")
-        else:
-            if loadgenerator_driver is None:
-                exit_with_error(f"test {test_yaml['name']} has no driver or loadgenerator_driver configured.")
-
-        members = test_yaml.get('members')
-        if members is not None:
-            if test_yaml.get('node_count') is not None:
-                raise Exception("node_count and members can't be set at the same time.")
-
-            print("[WARN] 'members' is a deprecated property, use 'node_count' instead.")
-            del test_yaml['members']
-            test_yaml['node_count'] = members
-
-        node_count = test_yaml.get("node_count")
-        if node_count is None:
-            test_yaml['node_count'] = 0
-
-        clients = test_yaml.get('clients')
-        if clients is not None:
-            if test_yaml.get('loadgenerator_count') is not None:
-                raise Exception("loadgenerator_count and clients can't be set at the same time.")
-
-            print("[WARN] 'clients' is a deprecated property, use 'loadgenerator_count' instead.")
-            del test_yaml['clients']
-            test_yaml['loadgenerator_count'] = clients
-
-        loadgenerator_count = test_yaml.get('loadgenerator_count')
-        if loadgenerator_count is None:
-            test_yaml['loadgenerator_count'] = -1
-
-        node_hosts = test_yaml.get('node_hosts', 'all')
-        if not node_hosts:
-            node_hosts = "all|!mc"
-            test_yaml['node_hosts'] = node_hosts
-        self.verify_hosts(node_hosts)
-
-        loadgenerator_hosts = test_yaml.get('loadgenerator_hosts')
-        if not loadgenerator_hosts:
-            loadgenerator_hosts = "all|!mc"
-            test_yaml['loadgenerator_hosts'] = loadgenerator_hosts
-        self.verify_hosts(loadgenerator_hosts)
-
-        if test_yaml.get("duration") is None:
-            raise Exception(f"The 'duration' property is not specified in test {test_yaml.get('name')}")
-
-        if test_yaml.get("parallel") is None:
-            test_yaml['parallel'] = False
-
-        if test_yaml.get("performance_monitor_interval_seconds") is None:
-            test_yaml['performance_monitor_interval_seconds'] = 1
-
-        if test_yaml.get("fail_fast") is None:
-            test_yaml['fail_fast'] = True
-
-        if test_yaml.get("verify_enabled") is None:
-            test_yaml['verify_enabled'] = True
-
 
     def run(self, tests_file, tags, skip_report, test_commit, test_pattern, run_label):
         if test_commit:
@@ -268,55 +124,164 @@ class PerfTest:
             if not repetitions:
                 repetitions = 1
 
+            if run_label is not None:
+                test['run_label'] = run_label
+
             for i in range(0, repetitions):
-                exitcode, run_path = self.run_test(test, run_label=run_label)
+                self._sanitize_test(test)
+
+                # todo run_path should be reset.
+                run_path = test['run_path']
+                test['RUN_ID'] = hashlib.sha256(run_path.encode("utf-8")).hexdigest()[:16]
+                print(f"RUN_ID={test['RUN_ID']}")
+
+                exitcode = self.run_single_test(test)
+
+                hosts = load_hosts(inventory_path=inventory_path, host_pattern= "loadgenerators")
+                print(hosts)
+                agents_download(hosts, run_path, test['RUN_ID'])
+                agents_clean(hosts)
+
                 if exitcode == 0 and not skip_report:
                     self.collect(run_path,
                                  tags,
                                  warmup_seconds=test.get('warmup_seconds'),
                                  cooldown_seconds=test.get('cooldown_seconds'))
+
         return
 
-    def run_test(self, test, *, run_path=None, run_label=None):
-        if not run_path:
+    def run_single_test(self, test):
+
+        self.clean()
+
+        coordinator_params = {}
+        for key, value in test.items():
+            if not key == 'test':
+                coordinator_params[key] = value
+
+        driver = test.get('driver')
+        if driver is not None:
+            driver_install_and_configure(driver, test, None, coordinator_params, inventory_path)
+        else:
+            node_driver = test.get('node_driver')
+            if node_driver is not None:
+                driver_install_and_configure(node_driver, test, False, coordinator_params, inventory_path)
+
+            loadgenerator_driver = test.get('loadgenerator_driver')
+            driver_install_and_configure(loadgenerator_driver, test, True, coordinator_params, inventory_path)
+
+        test_inner = test['test']
+        with tempfile.NamedTemporaryFile(mode="w", delete=False, prefix="perftest_", suffix=".txt") as tmp:
+            if isinstance(test_inner, list):
+                for t in test_inner:
+                    if 'name' in t:
+                        test_name = t['name']
+                    else:
+                        test_name = t['class'].split('.')[-1]
+                    for key, value in t.items():
+                        tmp.write(test_name + '@')
+                        tmp.write(f"{key}={value}\n")
+            else:
+                for key, value in test_inner.items():
+                    tmp.write(f"{key}={value}\n")
+
+            tmp.flush()
+
+            coordinator_param = ""
+            for key, value in coordinator_params.items():
+                coordinator_param = f"{coordinator_param} --param {key}={shlex.quote(str(value))}"
+
+            self.exitcode = self.__shell(f"{simulator_home}/bin/hidden/coordinator {coordinator_param} {tmp.name}")
+            if self.exitcode != 0 and self.exit_on_error:
+                exit_with_error(f"Failed run coordinator, exitcode={self.exitcode}")
+            return self.exitcode
+
+
+    def _sanitize_test(self, test: dict):
+        if test.get('name') is None:
+            exit_with_error(f"Test is missing 'name' property")
+
+        run_path = test.get('run_path')
+        if run_path is None:
             name = test['name']
+            run_label = test.get('run_label')
             if not run_label:
                 dt = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
                 run_path = f"runs/{name}/{dt}"
             else:
                 run_path = f"runs/{name}/{run_label}"
                 remove(run_path)
+            test['run_path'] = run_path
 
-        exitcode = self.exec(
-            test,
-            run_path=run_path,
-        )
+        driver = test.get('driver')
+        loadgenerator_driver = test.get('loadgenerator_driver')
+        node_driver = test.get('node_driver')
+        if driver is not None:
+            if loadgenerator_driver is not None:
+                exit_with_error(
+                    f"test {test['name']} can't have both the driver and loadgenerator_driver configured.")
+            if node_driver is not None:
+                exit_with_error(f"test {test['name']} can't have both the driver and node_driver configured.")
+        else:
+            if loadgenerator_driver is None:
+                exit_with_error(f"test {test['name']} has no driver or loadgenerator_driver configured.")
 
-        # duration=test.get('duration'),
-        # performance_monitor_interval_seconds=test.get('performance_monitor_interval_seconds'),
-        # parallel=test.get('parallel'),
-        # node_hosts=test.get('node_hosts'),
-        # loadgenerator_hosts=test.get('loadgenerator_hosts'),
-        # license_key=test.get('license_key'),
-        # client_args=test.get('client_args'),
-        # member_args=test.get('member_args'),
-        # members=test.get('members'),
-        # clients=test.get('clients'),
-        # node_driver=node_driver,
-        # load_generator_driver=load_generator_driver,
-        # version=test.get('version'),
-        # fail_fast=test.get('fail_fast'),
-        # verify_enabled=test.get('verify_enabled'),
-        # client_type=test.get('client_type'),
-        # client_worker_script=test.get('client_worker_script'),
-        # member_worker_script=test.get('member_worker_script')
+        members = test.get('members')
+        if members is not None:
+            if test.get('node_count') is not None:
+                exit_with_error("node_count and members can't be set at the same time.")
 
-        return exitcode, run_path
+            warn("'members' is a deprecated property, use 'node_count' instead.")
+            del test['members']
+            test['node_count'] = members
+
+        node_count = test.get("node_count")
+        if node_count is None:
+            test['node_count'] = 0
+
+        clients = test.get('clients')
+        if clients is not None:
+            if test.get('loadgenerator_count') is not None:
+                exit_with_error("loadgenerator_count and clients can't be set at the same time.")
+
+            warn("'clients' is a deprecated property, use 'loadgenerator_count' instead.")
+            del test['clients']
+            test['loadgenerator_count'] = clients
+
+        loadgenerator_count = test.get('loadgenerator_count')
+        if loadgenerator_count is None:
+            test['loadgenerator_count'] = -1
+
+        node_hosts = test.get('node_hosts', 'all')
+        if not node_hosts:
+            node_hosts = "all|!mc"
+            test['node_hosts'] = node_hosts
+        self.verify_hosts(node_hosts)
+
+        loadgenerator_hosts = test.get('loadgenerator_hosts')
+        if not loadgenerator_hosts:
+            loadgenerator_hosts = "all|!mc"
+            test['loadgenerator_hosts'] = loadgenerator_hosts
+        self.verify_hosts(loadgenerator_hosts)
+
+        if test.get("duration") is None:
+            exit_with_error(f"The 'duration' property is not specified in test {test.get('name')}")
+
+        if test.get("parallel") is None:
+            test['parallel'] = False
+
+        if test.get("performance_monitor_interval_seconds") is None:
+            test['performance_monitor_interval_seconds'] = 1
+
+        if test.get("fail_fast") is None:
+            test['fail_fast'] = True
+
+        if test.get("verify_enabled") is None:
+            test['verify_enabled'] = True
 
     def clean(self):
-        exitcode = self.__shell(f"{simulator_home}/bin/hidden/coordinator --clean --param node_hosts=all!mc")
-        if exitcode != 0:
-            exit_with_error(f"Failed to clean, exitcode={exitcode}")
+        hosts = load_hosts(inventory_path=inventory_path, host_pattern="all")
+        agents_clean(hosts)
 
     def __shell(self, cmd):
         if self.log_shell_command:

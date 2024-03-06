@@ -2,6 +2,7 @@ import os.path
 
 from inventory import load_hosts
 from simulator.driver import find_driver_config_file, DriverConfigureArgs
+from simulator.log import info
 from simulator.util import read_file
 
 
@@ -82,7 +83,7 @@ def _get_driver(args: DriverConfigureArgs):
     return driver
 
 def exec(args: DriverConfigureArgs):
-    print("[INFO] Configure")
+    info("Configure")
 
     nodes_pattern = args.test.get("node_hosts")
     nodes = load_hosts(inventory_path=args.inventory_path, host_pattern=nodes_pattern)
@@ -93,4 +94,4 @@ def exec(args: DriverConfigureArgs):
     _configure_hazelcast_xml(nodes, args, True)
     _configure_client_hazelcast_xml(nodes, args)
 
-    print("[INFO] Configure: done")
+    info("Configure: done")

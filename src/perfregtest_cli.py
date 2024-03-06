@@ -110,7 +110,7 @@ def run(test, commit, runs, project_path, debug=False):
         run_path = f"{commit_dir}/{dt}"
         info(f"{i + 1} {run_path}")
 
-        exitcode, run_path = perftest.run_test(test, run_path=run_path)
+        exitcode, run_path = perftest.run_single_test(test, run_path=run_path)
         if exitcode == 0:
             perftest.collect(f"{run_path}",
                              {'commit': commit, "testname": test_name},

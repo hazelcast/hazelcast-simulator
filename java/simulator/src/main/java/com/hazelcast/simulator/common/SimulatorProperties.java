@@ -137,7 +137,8 @@ public class SimulatorProperties {
     }
 
     public boolean getBoolean(String property) {
-        String v = get(property).toLowerCase();
+        String s = get(property);
+        String v = s.toLowerCase();
         return Boolean.parseBoolean(v);
     }
 

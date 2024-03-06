@@ -11,6 +11,7 @@ import plotly.tools as tls
 from matplotlib.ticker import FuncFormatter
 from pandas.errors import EmptyDataError
 
+from simulator.log import warn
 from simulator.perftest_report_common import *
 import matplotlib.pyplot as plt
 from simulator.util import shell, simulator_home, read_file, write_file
@@ -119,10 +120,15 @@ def analyze_latency_history(report_dir, run_dir, attributes):
     run_label = attributes["run_label"]
 
     start_sec = time.time()
-    result = None
 
     # iterate over the files in the run directory
     dir = f"{report_dir}/hdr/{run_label}"
+
+    if not os.path.exists(dir):
+        warn(f"Skipping hdr latency analysis, dir [{dir}] does not exist.")
+        return None
+
+    result = None
     for outer_file_name in os.listdir(dir):
         outer_path = f"{dir}/{outer_file_name}"
         if outer_file_name.endswith(".latency-history.csv"):

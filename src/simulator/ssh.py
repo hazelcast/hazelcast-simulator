@@ -48,7 +48,7 @@ class Ssh:
                 return 0
             args = f"{args} -M -S {self.control_socket_file} -o ControlPersist=5m"
         cmd = f'ssh {args} {self.user}@{self.ip} exit'
-        # print(f"[INFO]{cmd}")
+        # info(f"{cmd}")
         exitcode = None
         max_attempts = 300
         for attempt in range(1, max_attempts):

@@ -20,9 +20,8 @@ import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.coordinator.registry.WorkerQuery;
-import com.hazelcast.simulator.coordinator.tasks.AgentsClearTask;
-import com.hazelcast.simulator.coordinator.tasks.AgentsDownloadTask;
 import com.hazelcast.simulator.utils.CommandLineExitException;
+import com.hazelcast.simulator.utils.FileUtils;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
@@ -30,8 +29,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.File;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -67,7 +67,7 @@ final class CoordinatorCli {
                     "Amount of time in milliseconds to wait between starting up the next worker. This is useful to prevent"
                             + "duplicate connection issues.")
             .withRequiredArg().ofType(Integer.class).defaultsTo(0);
-    
+
     private final OptionSpec<TargetType> targetTypeSpec = parser.accepts("targetType",
                     format("Defines the type of Workers which execute the RUN phase."
                             + " The type PREFER_CLIENT selects client Workers if they are available, member Workers otherwise."
@@ -82,24 +82,11 @@ final class CoordinatorCli {
                     "Defines the number of Workers which execute the RUN phase. The value 0 selects all Workers.")
             .withRequiredArg().ofType(Integer.class).defaultsTo(0);
 
-    private final OptionSpec<String> runPathSpec = parser.accepts("runPath", "The path to store the results")
-            .withRequiredArg().ofType(String.class)
-            .defaultsTo("runs/" + new SimpleDateFormat("yyyy-mm-dd_hh:mm:ss").format(Calendar.getInstance().getTime()));
-
     private final OptionSpec<TestPhase> syncToTestPhaseSpec = parser.accepts("syncToTestPhase",
                     format("Defines the last TestPhase which is synchronized between all parallel running tests."
                             + " Use --syncToTestPhase %s to synchronize all test phases."
                             + " List of defined test phases: %s", TestPhase.getLastTestPhase(), TestPhase.getIdsAsString()))
             .withRequiredArg().ofType(TestPhase.class).defaultsTo(TestPhase.getLastTestPhase());
-
-    private final OptionSpec downloadSpec = parser.accepts("download",
-            "Downloads all the session directories and applies postprocessing. "
-                    + "If this option is set, no other tasks are executed. "
-                    + "If '--runPath' is set, only that session is downloaded.");
-
-    private final OptionSpec cleanSpec = parser.accepts("clean",
-            "Cleans the remote Worker directories on the provisioned machines. "
-                    + "If this option is set, no other tasks are executed");
 
     private final OptionSpec<String> paramSpec = parser.accepts("param",
                     "A key=value parameter.")
@@ -110,7 +97,6 @@ final class CoordinatorCli {
 
     CoordinatorCli(String[] args) {
         this.options = initOptionsWithHelp(parser, args);
-
         this.properties = loadSimulatorProperties();
 
         // Add all the params to the properties
@@ -124,11 +110,10 @@ final class CoordinatorCli {
             String value = property.substring(indexOf + 1);
             properties.set(key, value);
 
-            if(!value.contains("\n")) {
+            if (!value.contains("\n")) {
                 LOGGER.info(key + "=" + value);
             }
         }
-
 
 
 //        if (!"fake".equals(properties.get("driver"))) {
@@ -140,44 +125,34 @@ final class CoordinatorCli {
                 properties.get("loadgenerator_hosts"),
                 properties.get("node_hosts"));
 
-        if (!(options.has(downloadSpec) || options.has(cleanSpec))) {
-            this.coordinatorParameters = loadCoordinatorParameters();
-            this.coordinator = new Coordinator(registry, coordinatorParameters);
-            this.testSuite = loadTestSuite();
+        String runPath = properties.get("run_path");
+        FileUtils.ensureExistingDirectory(new File(runPath));
 
-            if (testSuite == null) {
-                throw new CommandLineExitException("Can't run without a testSuite");
-            } else {
-                this.deploymentPlan = newDeploymentPlan();
-                this.runMonolith = new CoordinatorRunMonolith(coordinator, coordinatorParameters);
-            }
+        this.coordinatorParameters = loadCoordinatorParameters();
+        this.coordinator = new Coordinator(registry, coordinatorParameters);
+        this.testSuite = loadTestSuite();
+
+        if (testSuite == null) {
+            throw new CommandLineExitException("Can't run without a testSuite");
+        } else {
+            this.deploymentPlan = newDeploymentPlan();
+            this.runMonolith = new CoordinatorRunMonolith(coordinator, coordinatorParameters);
         }
+
     }
 
     void run() throws Exception {
-        if (options.has(downloadSpec)) {
-            String runPath = options.has(runPathSpec) ? options.valueOf(runPathSpec) : "*";
-            new AgentsDownloadTask(
-                    registry,
-                    properties.asMap(),
-                    new File(runPath),
-                    CoordinatorParameters.toSHA1(runPath)).run();
-        } else if (options.has(cleanSpec)) {
-            new AgentsClearTask(registry).run();
-        } else {
-            coordinator.start();
-            runMonolith.init(deploymentPlan);
-            boolean success = runMonolith.run(testSuite);
-            System.exit(success ? 0 : 1);
-        }
+        coordinator.start();
+        runMonolith.init(deploymentPlan);
+        boolean success = runMonolith.run(testSuite);
+        System.exit(success ? 0 : 1);
     }
 
     private CoordinatorParameters loadCoordinatorParameters() {
         return new CoordinatorParameters()
                 .setSimulatorProperties(properties)
                 .setLastTestPhaseToSync(options.valueOf(syncToTestPhaseSpec))
-                .setWorkerVmStartupDelayMs(options.valueOf(workerVmStartupDelayMsSpec))
-                .setRunPath(options.valueOf(runPathSpec));
+                .setWorkerVmStartupDelayMs(options.valueOf(workerVmStartupDelayMsSpec));
     }
 
     private TestSuite loadTestSuite() {
@@ -291,7 +266,6 @@ final class CoordinatorCli {
 
         DeploymentPlan plan = new DeploymentPlan(registry.getAgents());
         plan.addAllProperty(properties.asMap());
-        plan.addProperty("RUN_ID", coordinatorParameters.getRunId());
         plan.addToPlan(nodeCount, "member");
         plan.addToPlan(loadGeneratorCount, options.valueOf(clientTypeSpec));
 

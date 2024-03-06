@@ -45,7 +45,7 @@ public class FailureCollectorTest {
     public void before() {
         outputDirectory = TestUtils.createTmpDirectory();
         registry = new Registry();
-        failureCollector = new FailureCollector(outputDirectory, registry);
+        failureCollector = new FailureCollector(outputDirectory.getPath(), registry);
 
         agentAddress = registry.addAgent("192.168.0.1", "192.168.0.1").getAddress();
 

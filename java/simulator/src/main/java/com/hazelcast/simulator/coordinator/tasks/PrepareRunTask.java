@@ -41,12 +41,11 @@ public class PrepareRunTask {
 
     public PrepareRunTask(List<AgentData> agents,
                           Map<String, String> simulatorProperties,
-                          File uploadDir,
-                          String runId) {
+                          File uploadDir) {
         this.agents = agents;
         this.simulatorProperties = simulatorProperties;
         this.uploadDir = uploadDir;
-        this.runId = runId;
+        this.runId = simulatorProperties.get("RUN_ID");
     }
 
     public void run() {
