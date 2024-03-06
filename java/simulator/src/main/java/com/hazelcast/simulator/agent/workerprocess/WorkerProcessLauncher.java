@@ -95,7 +95,7 @@ public class WorkerProcessLauncher {
     }
 
     private WorkerProcess startWorker() throws IOException {
-        String workerDirName = parameters.get("WORKER_DIR_NAME");
+        String workerDirName = parameters.get("WORKER_NAME");
         File workerHome = ensureFreshDirectory(new File(runId, workerDirName));
 
         copyResourcesToWorkerHome(workerDirName);

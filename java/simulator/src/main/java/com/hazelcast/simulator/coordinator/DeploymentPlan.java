@@ -225,7 +225,7 @@ public final class DeploymentPlan {
                     .set("WORKER_INDEX", workerIndex)
                     .set("PUBLIC_ADDRESS", agent.getPublicAddress())
                     .set("PRIVATE_ADDRESS", agent.getPrivateAddress())
-                    .set("WORKER_DIR_NAME", workerDirName);
+                    .set("WORKER_NAME", workerDirName);
             workers.add(parameters);
         }
 

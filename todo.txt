@@ -23,7 +23,6 @@ TODO
     INFO  10:38:49     Agent  18.192.214.161      10.0.25.92 (A2) members:  0, clients:  1, mode: CLIENTS_ONLY, version specs: [maven=5.3.0]
     INFO  10:38:49 Total number of agents: 2
 
-
 - undesirable driver upload output
 
 - remove client type from coordinator cli
