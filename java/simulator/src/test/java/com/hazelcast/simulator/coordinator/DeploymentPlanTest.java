@@ -24,7 +24,6 @@ public class DeploymentPlanTest {
     private SimulatorAddress agent1;
     private SimulatorAddress agent2;
     private SimulatorAddress agent3;
-    private Driver<?> driver;
 
     @Before
     public void before() {
@@ -224,11 +223,12 @@ public class DeploymentPlanTest {
             registry.addAgent(agent.getPublicAddress(), agent.getPrivateAddress());
         }
 
-        driver.set("version","outofthebox");
-        DeploymentPlan deploymentPlan = new DeploymentPlan(registry)
-                .addToPlan(memberCount, "member")
-                .addToPlan(clientCount, "javaclient");
+        DeploymentPlan plan = new DeploymentPlan(registry);
+        plan.addProperty("version","outofthebox");
+        plan.addToPlan(memberCount, "member");
+        plan.addToPlan(clientCount, "javaclient");
 
-        assertEquals(singleton("outofthebox"), deploymentPlan.getVersions());
+
+        assertEquals(singleton("outofthebox"), plan.getVersions());
     }
 }
