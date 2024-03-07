@@ -2,8 +2,6 @@ TODO
 
 - PrepareRunTask: fully to python
 
-- current design with run_path will run into problems after first run because the run_path will be set.
-
 - setdefault
 
 - fix runTestSuiteTaskTest
@@ -25,34 +23,19 @@ TODO
 
 - remove client type from coordinator cli
 
+
+DONE
+
 - [Fatal Error] log4j.xml:3:22: The prefix "log4j" for element "log4j:configuration" is not bound.
 ERROR StatusLogger Error parsing /home/ubuntu/hazelcast-simulator/workers/c1f13c7b5d09d041c84f8508ea3a4e843d8aad50/A1_W1-18.185.56.223-member/log4j.xml
  org.xml.sax.SAXParseException; systemId: file:///home/ubuntu/hazelcast-simulator/workers/c1f13c7b5d09d041c84f8508ea3a4e843d8aad50/A1_W1-18.185.56.223-member/log4j.xml; lineNumber: 3; columnNumber: 22; The prefix "log4j" for element "log4j:configuration" is not bound.
 
+- clean disabled
 
-DONE
-- worker.sh should source parameter itself and simplify the launcher
+- download only done on clients.
 
-- test should have 'test' section
+- unwanted  print(hosts)
 
-- remove the driver parameters from the Java code.
-
-- coordinator cli: runPath
-
-- fix
-===
-2024-03-06 08:32:02,407 Thread-4 WARN Unable to register Log4j shutdown hook because JVM is shutting down. Using SimpleLogger
-INFO  08:32:13 Report directory '/mnt/home/eng/Hazelcast/testing/driver-redesign/runs/read_only/06-03-2024_08-30-47/report'
-ERROR 08:32:13 benchmark directory 'runs/read_only/06-03-2024_08-30-47' does not exist!
-WARN  08:32:13 Could not find [runs/read_only/06-03-2024_08-30-47/report/report.csv]
+- current design with run_path will run into problems after first run because the run_path will be set.
 
 
-- download logic should be removed from coordinator
-
-- clean logic should be removed from coordinator
-
-- use info instead of print
-
-- fix worker async profiler
-
-- fix worker perf.

@@ -26,7 +26,7 @@ from simulator.git import get_last_commit_hash, git_init, is_git_installed, is_i
 from simulator.hosts import public_ip, ssh_user, ssh_options
 from simulator.ssh import Ssh, new_key
 from simulator.util import read_file, write_file, shell, run_parallel, exit_with_error, simulator_home, shell_logged, \
-    remove, \
+    remove_dir, \
     load_yaml_file, parse_tags, write_yaml, AtomicLong
 from simulator.log import info, warn, log_header
 
@@ -117,42 +117,49 @@ class PerfTest:
                     print(f"Skipping test {test_name}")
                     continue
 
-            repetitions = test.get('repetitions')
-            if repetitions < 0:
-                continue
-
-            if not repetitions:
-                repetitions = 1
-
+            repetitions = test.get('repetitions', 1)
+            run_path = test.get('run_path')
             if run_label is not None:
                 test['run_label'] = run_label
+            run_label = test.get('run_label')
+            if repetitions <= 0:
+                continue
+            elif repetitions > 1:
+                if run_path is not None:
+                    exit_with_error(
+                        f"Test {test['name']} can't have repetitions larger than 1 with a run_path configured.")
+                elif run_label is not None:
+                    exit_with_error(
+                        f"Test {test['name']} can't have repetitions larger than 1 with a run_label configured.")
 
             for i in range(0, repetitions):
-                self._sanitize_test(test)
+                exitcode, run_path = self.run_single_test(test)
 
-                # todo run_path should be reset.
-                run_path = test['run_path']
-                test['RUN_ID'] = hashlib.sha256(run_path.encode("utf-8")).hexdigest()[:16]
-                print(f"RUN_ID={test['RUN_ID']}")
-
-                exitcode = self.run_single_test(test)
-
-                hosts = load_hosts(inventory_path=inventory_path, host_pattern="loadgenerators")
-                print(hosts)
-                agents_download(hosts, run_path, test['RUN_ID'])
-                #agents_clean(hosts)
-
-                if exitcode == 0 and not skip_report:
-                    self.collect(run_path,
-                                 tags,
-                                 warmup_seconds=test.get('warmup_seconds'),
-                                 cooldown_seconds=test.get('cooldown_seconds'))
-
+                if exitcode == 0:
+                    if not skip_report:
+                        self.collect(run_path,
+                                     tags,
+                                     warmup_seconds=test.get('warmup_seconds'),
+                                     cooldown_seconds=test.get('cooldown_seconds'))
+                elif self.exit_on_error:
+                    exit_with_error(f"Failed run coordinator, exitcode={self.exitcode}")
         return
 
     def run_single_test(self, test):
-
+        self._sanitize_test(test)
         self.clean()
+        run_path = test.get('run_path')
+        if run_path is None:
+            name = test['name']
+            run_label = test.get('run_label')
+            if not run_label:
+                dt = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
+                run_path = f"runs/{name}/{dt}"
+            else:
+                run_path = f"runs/{name}/{run_label}"
+                remove_dir(run_path)
+            test['run_path'] = run_path
+        test['RUN_ID'] = hashlib.sha256(run_path.encode("utf-8")).hexdigest()[:16]
 
         coordinator_params = {}
         for key, value in test.items():
@@ -192,9 +199,11 @@ class PerfTest:
                 coordinator_param = f"{coordinator_param} --param {key}={shlex.quote(str(value))}"
 
             self.exitcode = self.__shell(f"{simulator_home}/bin/hidden/coordinator {coordinator_param} {tmp.name}")
-            if self.exitcode != 0 and self.exit_on_error:
-                exit_with_error(f"Failed run coordinator, exitcode={self.exitcode}")
-            return self.exitcode
+            del test['run_path']
+            hosts = load_hosts(inventory_path=inventory_path, host_pattern="all:!mc")
+            agents_download(hosts, run_path, test['RUN_ID'])
+            agents_clean(hosts)
+            return self.exitcode, run_path
 
     def _sanitize_test(self, test: dict):
         if test.get('name') is None:
@@ -202,18 +211,6 @@ class PerfTest:
 
         if test.get('test') is None:
             exit_with_error(f"test {test['name']} is missing a 'test' section.")
-
-        run_path = test.get('run_path')
-        if run_path is None:
-            name = test['name']
-            run_label = test.get('run_label')
-            if not run_label:
-                dt = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
-                run_path = f"runs/{name}/{dt}"
-            else:
-                run_path = f"runs/{name}/{run_label}"
-                remove(run_path)
-            test['run_path'] = run_path
 
         driver = test.get('driver')
         loadgenerator_driver = test.get('loadgenerator_driver')
@@ -282,7 +279,8 @@ class PerfTest:
             test['verify_enabled'] = True
 
     def clean(self):
-        hosts = load_hosts(inventory_path=inventory_path, host_pattern="all")
+        # the !mc pattern is very ugly
+        hosts = load_hosts(inventory_path=inventory_path, host_pattern="all:!mc")
         agents_clean(hosts)
 
     def __shell(self, cmd):
@@ -428,7 +426,7 @@ class PerftestCloneCli:
 
         if args.force:
             info(f"Removing [{dest}].")
-            remove(dest)
+            remove_dir(dest)
         else:
             if path.exists(dest):
                 exit_with_error(f"Can't copy performance test to [{dest}], the directory already exists.")
@@ -448,23 +446,23 @@ class PerftestCloneCli:
     def __clone(self, src, dest):
         shutil.copytree(src, dest)
 
-        remove(f"{dest}/runs")
-        remove(f"{dest}/logs")
-        remove(f"{dest}/venv")
-        remove(f"{dest}/.idea")
-        remove(f"{dest}/.git")
-        remove(f"{dest}/key")
-        remove(f"{dest}/key.pub")
-        remove(f"{dest}/.gitignore")
+        remove_dir(f"{dest}/runs")
+        remove_dir(f"{dest}/logs")
+        remove_dir(f"{dest}/venv")
+        remove_dir(f"{dest}/.idea")
+        remove_dir(f"{dest}/.git")
+        remove_dir(f"{dest}/key")
+        remove_dir(f"{dest}/key.pub")
+        remove_dir(f"{dest}/.gitignore")
 
         # get rid of the terraform created files.
         for subdir, dirs, files in os.walk(dest):
             for dir in dirs:
                 if dir.startswith(".terraform"):
-                    remove(subdir + os.sep + dir)
+                    remove_dir(subdir + os.sep + dir)
             for file in files:
                 if file.startswith("terraform.tfstate") or file.startswith(".terraform"):
-                    remove(subdir + os.sep + file)
+                    remove_dir(subdir + os.sep + file)
 
     def __add_parent(self, src, dest):
         with open(f"{dest}/clone_parent.txt", "w") as file:

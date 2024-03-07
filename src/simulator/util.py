@@ -60,15 +60,6 @@ def now_seconds():
     return round(time.time())
 
 
-def remove(file):
-    if not path.exists(file):
-        return
-
-    if path.isfile(file):
-        os.remove(file)
-    else:
-        shutil.rmtree(file)
-
 
 def parse_bool(v):
     lower = v.lower()
@@ -92,6 +83,15 @@ def validate_dir(path):
 
     return path
 
+
+def remove_dir(file):
+    if not path.exists(file):
+        return
+
+    if path.isfile(file):
+        os.remove(file)
+    else:
+        shutil.rmtree(file)
 
 def validate_git_dir(path):
     path = validate_dir(path)
