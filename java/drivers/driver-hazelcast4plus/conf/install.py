@@ -155,8 +155,6 @@ def exec(args:DriverInstallArgs):
     loadgenerator_hosts = args.test.get("loadgenerator_hosts")
     hosts.extend(load_hosts(inventory_path=args.inventory_path, host_pattern=loadgenerator_hosts))
 
-    # todo: we should filter out duplicates
-
     upload_driver(_get_driver(args), hosts)
     _upload_hazelcast_jars(args, hosts)
 
