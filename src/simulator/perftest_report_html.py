@@ -9,7 +9,7 @@ import pandas as pd
 
 from simulator.log import info
 from simulator.perftest_report_common import ReportConfig
-from simulator.util import simulator_home, read
+from simulator.util import simulator_home, read_file
 
 
 class HTMLReport:
@@ -22,7 +22,7 @@ class HTMLReport:
         image_list = self.__import_images()
         report_df = self.__load_report_csv()
 
-        html_template = read(f"{simulator_home}/src/simulator/report.html")
+        html_template = read_file(f"{simulator_home}/src/simulator/report.html")
         file_path = os.path.join(self.config.report_dir + "/report.html")
         file_url = "file://" + file_path
         info(f"Generating HTML report : {file_url}")

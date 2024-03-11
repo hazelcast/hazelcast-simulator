@@ -3,7 +3,7 @@ import os
 from os import path
 import subprocess
 
-from simulator.util import shell, exit_with_error, read, write_yaml
+from simulator.util import shell, exit_with_error, read_file, write_yaml
 from simulator.log import info
 
 
@@ -67,7 +67,7 @@ def terraform_import(terraform_plan):
 
     info("Creating [inventory.yaml]")
     write_yaml("inventory.yaml", inventory)
-    info(read("inventory.yaml"))
+    info(read_file("inventory.yaml"))
 
 
 def terraform_destroy(inventory_plan_yaml, force=False):

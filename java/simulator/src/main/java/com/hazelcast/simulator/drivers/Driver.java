@@ -75,12 +75,6 @@ public abstract class Driver<V> implements Closeable {
     }
 
     /**
-     * Installs the software on the agent machines. Method is called on the coordinator-side.
-     */
-    public void install() {
-    }
-
-    /**
      * This method closes any active driver instance. Method is called on the worker-side.
      */
     @Override
@@ -117,13 +111,6 @@ public abstract class Driver<V> implements Closeable {
         return this;
     }
 
-    public Driver<V> setIfNotNull(String key, Object value) {
-        if (value == null) {
-            return this;
-        }
-        return set(key, value);
-    }
-
     /**
      * Gets the created Driver instance. Method is called on the worker-side
      *
@@ -139,73 +126,6 @@ public abstract class Driver<V> implements Closeable {
      */
     public abstract void startDriverInstance() throws Exception;
 
-    /**
-     * Loads the parameters to create a worker. Method is called on the coordinator-side
-     *
-     * @param workerType the type of the worker.
-     * @param agentIndex the index of the agent
-     * @return the loaded WorkerParameters
-     */
-    public abstract WorkerParameters loadWorkerParameters(String workerType, int agentIndex);
 
-    protected String loadConfigFile(String logPrefix, String filename) {
-        File file = getConfigurationFile(filename, get("DRIVER"));
-        String config = configCache.get(filename);
-        if (config == null) {
-            config = fileAsText(file);
-            configCache.put(filename, config);
-            LOGGER.info("Loading " + logPrefix + ":" + file.getAbsolutePath());
-        }
-        return config;
-    }
 
-    protected String loadLog4jConfig() {
-        return loadConfigFile("Log4J configuration for worker", "worker-log4j.xml");
-    }
-
-    protected String loadWorkerScript(String workerType) {
-
-        List<File> files = new LinkedList<>();
-        File confDir = new File(getSimulatorHome(), "conf");
-
-        String driver = properties.get("DRIVER");
-
-        if (workerType.equals("member")) {
-            String workerScript = properties.get("MEMBER_WORKER_SCRIPT");
-            if (workerScript != null) {
-                files.add(new File(workerScript).getAbsoluteFile());
-            }
-        }
-
-        if (!workerType.equals("member")) {
-            String workerScript = properties.get("CLIENT_WORKER_SCRIPT");
-            if (workerScript != null) {
-                files.add(new File(workerScript).getAbsoluteFile());
-            }
-        }
-
-        files.add(new File("worker-" + driver + "-" + workerType + ".sh").getAbsoluteFile());
-        files.add(new File("worker-" + workerType + ".sh").getAbsoluteFile());
-        files.add(new File("worker-" + driver + ".sh").getAbsoluteFile());
-        files.add(new File("worker.sh").getAbsoluteFile());
-
-        files.add(new File(confDir, "worker-" + driver + "-" + workerType + ".sh").getAbsoluteFile());
-        files.add(new File(confDir, "worker-" + driver + ".sh").getAbsoluteFile());
-        files.add(new File(confDir, "worker.sh").getAbsoluteFile());
-
-        for (File file : files) {
-            if (file.exists()) {
-                String key = workerType + "#" + file.getName();
-                String config = configCache.get(key);
-                if (config == null) {
-                    config = fileAsText(file);
-                    configCache.put(key, config);
-                    LOGGER.info("Loading " + driver + " " + workerType + " worker script: " + file.getAbsolutePath());
-                }
-                return config;
-            }
-        }
-
-        throw new CommandLineExitException("Failed to load worker script from the following locations:" + files);
-    }
 }

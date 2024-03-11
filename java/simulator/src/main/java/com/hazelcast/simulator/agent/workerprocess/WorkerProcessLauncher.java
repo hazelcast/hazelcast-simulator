@@ -55,7 +55,7 @@ public class WorkerProcessLauncher {
     private final WorkerParameters parameters;
     private final SimulatorAddress workerAddress;
 
-    private File runId;
+    private File runDir;
 
     WorkerProcessLauncher(WorkerProcessManager processManager,
                           WorkerParameters parameters) {
@@ -67,8 +67,8 @@ public class WorkerProcessLauncher {
     void launch() throws Exception {
         WorkerProcess process = null;
         try {
-            runId = getRunId();
-            ensureExistingDirectory(runId);
+            runDir = getRunDir();
+            ensureExistingDirectory(runDir);
 
             String type = parameters.getWorkerType();
             LOGGER.info(format("Starting a Java Virtual Machine for %s Worker %s", type, workerAddress));
@@ -86,51 +86,48 @@ public class WorkerProcessLauncher {
         }
     }
 
-    private File getRunId() {
+    private File getRunDir() {
         String runId = parameters.get("RUN_ID");
-        System.out.println("runId: " + runId);
-        System.out.println(parameters);
         File workersDir = ensureExistingDirectory(getSimulatorHome(), "workers");
         return ensureExistingDirectory(workersDir, runId);
     }
 
     private WorkerProcess startWorker() throws IOException {
-        String workerDirName = parameters.get("WORKER_DIR_NAME");
-        File workerHome = ensureFreshDirectory(new File(runId, workerDirName));
+        String workerName = parameters.get("WORKER_NAME");
+        File workerDir = ensureFreshDirectory(new File(runDir, workerName));
 
-        copyResourcesToWorkerHome(workerDirName);
+        copyResourcesToWorkerHome(workerName);
 
-        WorkerProcess workerProcess = new WorkerProcess(workerAddress, workerDirName, workerHome);
+        WorkerProcess workerProcess = new WorkerProcess(workerAddress, workerName, workerDir);
 
         ProcessBuilder processBuilder = new ProcessBuilder("bash", "worker.sh")
-                .directory(workerHome);
+                .directory(workerDir);
 
         Map<String, String> environment = processBuilder.environment();
 
-        StringBuilder sb = new StringBuilder();
+        StringBuilder parametersText = new StringBuilder();
         List<String> keys = new ArrayList<>(parameters.asMap().keySet());
         Collections.sort(keys);
         for (String key : keys) {
             String value = parameters.get(key);
             if (key.startsWith(FILE_PREFIX)) {
                 String fileName = key.substring(FILE_PREFIX.length());
-                writeText(value, new File(workerHome, fileName));
+                writeText(value, new File(workerDir, fileName));
             } else {
-                environment.put(key, value);
-                sb.append(key).append("=").append(value).append("\n");
+                parametersText.append(key).append("=").append(value).append("\n");
             }
         }
-        sb.append("CLASSPATH=").append(getClasspath(workerHome)).append("\n");
-
-        writeText(sb.toString(), new File(workerHome, "parameters"));
-
-        environment.putAll(System.getenv());
+        parametersText.append("CLASSPATH=").append(getClasspath(workerDir)).append("\n");
         String javaHome = getJavaHome();
         String path = javaHome + "/bin:" + environment.get("PATH");
-        environment.put("PATH", path);
-        environment.put("JAVA_HOME", javaHome);
-        environment.put("CLASSPATH", getClasspath(workerHome));
-        environment.put("SIMULATOR_HOME", getSimulatorHome().getAbsolutePath());
+        parametersText.append("PATH=").append(path).append("\n");
+        parametersText.append("JAVA_HOME=").append(javaHome).append("\n");
+        parametersText.append("CLASSPATH=").append(getClasspath(workerDir)).append("\n");
+        parametersText.append("SIMULATOR_HOME=").append(getSimulatorHome().getAbsolutePath()).append("\n");
+
+        writeText(parametersText.toString(), new File(workerDir, "parameters"));
+
+        environment.putAll(System.getenv());
 
         Process process = processBuilder.start();
 
@@ -153,7 +150,7 @@ public class WorkerProcessLauncher {
 
             String pid = readPid(worker);
             if (pid != null) {
-                LOGGER.info(format("Worker %s started", worker.getId()));
+                LOGGER.info(format("Worker %s started", worker.getWorkerName()));
                 return;
             }
 
@@ -217,15 +214,15 @@ public class WorkerProcessLauncher {
 
     private String getClasspath(File workerHome) {
         String simulatorHome = getSimulatorHome().getAbsolutePath();
-        String classpath = new File(getRunId(), "lib/*").getAbsolutePath()
+        String classpath = new File(getRunDir(), "lib/*").getAbsolutePath()
                 + CLASSPATH_SEPARATOR + workerHome.getAbsolutePath() + "/upload/*"
                 + CLASSPATH_SEPARATOR + simulatorHome + "/user-lib/*"
                 + uploadDirToClassPath(workerHome)
                 + CLASSPATH_SEPARATOR + CLASSPATH;
 
-        String driver = parameters.get("DRIVER");
+        String driver = parameters.findDriver();
         if (driver.contains("hazelcast")) {
-            String hzVersionDirectory = directoryForVersionSpec(parameters.get("VERSION_SPEC"));
+            String hzVersionDirectory = directoryForVersion(parameters.get("version"));
             classpath += CLASSPATH_SEPARATOR + simulatorHome + "/driver-lib/" + driver + "/" + hzVersionDirectory + "/*";
         }
 
@@ -251,14 +248,14 @@ public class WorkerProcessLauncher {
         return uploadClassPath;
     }
 
-    private static String directoryForVersionSpec(String versionSpec) {
-        if ("bringmyown".equals(versionSpec)) {
+    private static String directoryForVersion(String version) {
+        if ("bringmyown".equals(version)) {
             return null;
         }
-        if ("outofthebox".equals(versionSpec)) {
+        if ("outofthebox".equals(version)) {
             return "outofthebox";
         }
-        String s = versionSpec.replace('=', '-');
+        String s = version.replace('=', '-');
 
         // we need to replace all forward slashes by double back slashes.
         StringBuilder result = new StringBuilder();

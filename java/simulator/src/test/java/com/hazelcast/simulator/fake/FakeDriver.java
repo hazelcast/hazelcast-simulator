@@ -19,13 +19,6 @@ public class FakeDriver extends Driver<FakeInstance> {
     }
 
     @Override
-    public WorkerParameters loadWorkerParameters(String workerType, int agentIndex) {
-        return new WorkerParameters()
-                .setAll(properties)
-                .set("WORKER_TYPE", workerType);
-    }
-
-    @Override
     public void close() throws IOException {
     }
 }

@@ -28,7 +28,7 @@ import static java.util.Collections.shuffle;
 
 public class WorkerQuery implements Serializable {
 
-    private String versionSpec;
+    private String version;
     private List<String> workerAddresses;
     private List<String> agentAddresses;
     private Integer maxCount;
@@ -60,12 +60,12 @@ public class WorkerQuery implements Serializable {
         return this;
     }
 
-    public String getVersionSpec() {
-        return versionSpec;
+    public String getVersion() {
+        return version;
     }
 
-    public WorkerQuery setVersionSpec(String versionSpec) {
-        this.versionSpec = versionSpec;
+    public WorkerQuery setVersion(String version) {
+        this.version = version;
         return this;
     }
 
@@ -142,7 +142,7 @@ public class WorkerQuery implements Serializable {
     @SuppressWarnings("checkstyle:booleanexpressioncomplexity")
     private boolean hasConflict(WorkerData worker, Boolean isMember) {
         return hasIsMemberConflict(worker, isMember)
-                || hasVersionSpecConflict(worker)
+                || hasVersionConflict(worker)
                 || hasWorkerAddressConflict(worker)
                 || hasWorkerTagConflict(worker)
                 || hasAgentAddressConflict(worker)
@@ -199,13 +199,11 @@ public class WorkerQuery implements Serializable {
         return false;
     }
 
-    private boolean hasVersionSpecConflict(WorkerData worker) {
+    private boolean hasVersionConflict(WorkerData worker) {
         WorkerParameters workerParameters = worker.getParameters();
 
-        if (versionSpec != null) {
-            if (!workerParameters.get("VERSION_SPEC").equals(versionSpec)) {
-                return true;
-            }
+        if (version != null) {
+            return !workerParameters.get("version").equals(version);
         }
         return false;
     }
@@ -222,7 +220,7 @@ public class WorkerQuery implements Serializable {
     @Override
     public String toString() {
         return "WorkerQuery{"
-                + "versionSpec='" + versionSpec + '\''
+                + "version='" + version + '\''
                 + ", maxCount=" + maxCount
                 + ", workerType=" + workerType
                 + ", random=" + random

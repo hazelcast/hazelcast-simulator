@@ -67,7 +67,9 @@ public class Worker {
         this.parameters = parameters;
         this.publicAddress = parameters.get("PUBLIC_ADDRESS");
         this.workerAddress = SimulatorAddress.fromString(parameters.get("WORKER_ADDRESS"));
-        this.driver = loadDriver(parameters.get("DRIVER"))
+
+        String driverString = parameters.findDriver();
+        this.driver = loadDriver(driverString)
                 .setAll(parameters.asMap());
         this.server = new Server("workers")
                 .setBrokerURL(localIp(), parseInt(parameters.get("AGENT_PORT")))
@@ -79,8 +81,8 @@ public class Worker {
 
         Runtime.getRuntime().addShutdownHook(new WorkerShutdownThread(true));
 
-        int interval = Integer.parseInt(parameters.get("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS"));
-        this.performanceMonitor = new OperationsMonitor(server, testManager, interval);
+        int performanceMonitorIntervalSeconds = Integer.parseInt(parameters.get("performance_monitor_interval_seconds"));
+        this.performanceMonitor = new OperationsMonitor(server, testManager, performanceMonitorIntervalSeconds);
     }
 
     public void start() throws Exception {
@@ -123,7 +125,8 @@ public class Worker {
             log("Version: %s, Commit: %s, Build Time: %s", getSimulatorVersion(), getCommitIdAbbrev(), getBuildTime());
             log("SIMULATOR_HOME: %s%n", getSimulatorHome().getAbsolutePath());
 
-            Worker worker = new Worker(loadParameters(new File(getUserDir(), "parameters")));
+            WorkerParameters workerParameters = loadParameters(new File(getUserDir(), "parameters"));
+            Worker worker = new Worker(workerParameters);
             worker.start();
         } catch (Throwable e) {
             ExceptionReporter.report(null, e);

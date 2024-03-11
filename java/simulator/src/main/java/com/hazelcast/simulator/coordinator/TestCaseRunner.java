@@ -112,7 +112,7 @@ public final class TestCaseRunner {
         this.targetType = testSuite.getWorkerQuery().getTargetType().resolvePreferClient(registry.hasClientWorkers());
         this.targetCount = targets.size();
         this.performanceMonitorIntervalSeconds
-                = coordinatorParameters.getSimulatorProperties().getInt("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS");
+                = coordinatorParameters.getSimulatorProperties().getInt("performance_monitor_interval_seconds");
         if (performanceMonitorIntervalSeconds > 0) {
             this.logRunPhaseIntervalSeconds = min(performanceMonitorIntervalSeconds, RUN_PHASE_LOG_INTERVAL_SECONDS);
         } else {

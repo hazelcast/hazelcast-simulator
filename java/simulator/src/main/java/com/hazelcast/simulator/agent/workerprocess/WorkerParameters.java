@@ -39,6 +39,19 @@ public class WorkerParameters {
         this.map.putAll(map);
     }
 
+    public String findDriver() {
+        String driver = map.get("driver");
+        if (driver != null) {
+            return driver;
+        }
+
+        if (getWorkerType().equals("member")) {
+            return map.get("node_driver");
+        } else {
+            return map.get("loadgenerator_driver");
+        }
+    }
+
     public Map<String, String> asMap() {
         return map;
     }
@@ -80,7 +93,9 @@ public class WorkerParameters {
 
         Map<String, String> properties = new HashMap<>();
         for (Map.Entry<Object, Object> entry : p.entrySet()) {
-            properties.put("" + entry.getKey(), "" + entry.getValue());
+            Object key = entry.getKey();
+            Object value = entry.getValue();
+            properties.put("" + key, "" + value);
         }
         return new WorkerParameters(properties);
     }

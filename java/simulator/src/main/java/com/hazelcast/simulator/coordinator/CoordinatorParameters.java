@@ -20,7 +20,6 @@ import com.hazelcast.simulator.common.TestPhase;
 
 import java.io.File;
 import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -31,49 +30,15 @@ import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
  */
 public class CoordinatorParameters {
 
-    private File runPath;
     private TestPhase lastTestPhaseToSync = TestPhase.getLastTestPhase();
 
     private SimulatorProperties simulatorProperties;
-    private boolean skipDownload;
     private boolean skipShutdownHook;
     private int workerVmStartupDelayMs;
-    private String runId;
 
     public CoordinatorParameters() {
     }
 
-    public File getRunPath() {
-        return runPath;
-    }
-
-    public String getRunId() {
-        return runId;
-    }
-
-    public static String toSHA1(String s) {
-        MessageDigest md;
-        try {
-            md = MessageDigest.getInstance("SHA-1");
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        }
-        md.reset();
-        md.update(s.getBytes());
-        return String.format("%040x", new BigInteger(1, md.digest()));
-    }
-
-    public CoordinatorParameters setRunPath(String runPath) {
-        checkNotNull(runPath, "runPath can't be null");
-
-
-        this.runPath = new File(runPath);
-        this.runPath.mkdirs();
-        this.runId = toSHA1(runPath);
-        if(simulatorProperties!=null)
-            simulatorProperties.set("RUN_ID", runId);
-        return this;
-    }
 
     public TestPhase getLastTestPhaseToSync() {
         return lastTestPhaseToSync;
@@ -90,17 +55,6 @@ public class CoordinatorParameters {
 
     public CoordinatorParameters setSimulatorProperties(SimulatorProperties simulatorProperties) {
         this.simulatorProperties = simulatorProperties;
-        if(runId!=null)
-            simulatorProperties.set("RUN_ID", runId);
-        return this;
-    }
-
-    public boolean skipDownload() {
-        return skipDownload;
-    }
-
-    public CoordinatorParameters setSkipDownload(boolean skipDownload) {
-        this.skipDownload = skipDownload;
         return this;
     }
 

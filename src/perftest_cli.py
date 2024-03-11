@@ -3,10 +3,9 @@ import os
 import sys
 import argparse
 
-from simulator.perftest import PerftestCreateCli, PerftestCloneCli, PerftestRunCli, PerftestExecCli, \
+from simulator.perftest import PerftestCreateCli, PerftestCloneCli, PerftestRunCli, \
     PerftestKillJavaCli, PerftestCollectCli, PerftestCleanCli
 from simulator.perftest_report import PerfTestReportCli
-
 
 usage = '''perftest <command> [<args>]
 
@@ -14,7 +13,6 @@ The available commands are:
     create      Creates a new performance test based on a template.
     clone       Clones an existing performance test.
     collect     Collects the performance test data and stores it in result.yaml.
-    exec        Executes a performance test.
     run         Runs a tests.yaml which is a self contained set of tests
     kill_java   Kills all Java processes   
     report      Generate performance report 
@@ -49,9 +47,6 @@ class PerftestCli:
 
     def run(self):
         PerftestRunCli(sys.argv[2:])
-
-    def exec(self):
-        PerftestExecCli(sys.argv[2:])
 
     def kill_java(self):
         PerftestKillJavaCli(sys.argv[2:])

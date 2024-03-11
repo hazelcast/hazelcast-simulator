@@ -20,10 +20,8 @@ import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.coordinator.registry.WorkerQuery;
-import com.hazelcast.simulator.coordinator.tasks.AgentsClearTask;
-import com.hazelcast.simulator.coordinator.tasks.AgentsDownloadTask;
-import com.hazelcast.simulator.drivers.Driver;
 import com.hazelcast.simulator.utils.CommandLineExitException;
+import com.hazelcast.simulator.utils.FileUtils;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
@@ -31,14 +29,14 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.File;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
 import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
-import static com.hazelcast.simulator.drivers.Driver.loadDriver;
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
@@ -53,8 +51,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 @SuppressWarnings("FieldCanBeLocal")
 final class CoordinatorCli {
-    static final int DEFAULT_DURATION_SECONDS = 0;
-
     private static final Logger LOGGER = LogManager.getLogger(CoordinatorCli.class);
 
     CoordinatorRunMonolith runMonolith;
@@ -64,48 +60,12 @@ final class CoordinatorCli {
     Registry registry;
     SimulatorProperties properties;
     DeploymentPlan deploymentPlan;
-    Driver driver;
 
     private final OptionParser parser = new OptionParser();
-
-    private final OptionSpec<Integer> performanceMonitorInterval = parser.accepts("performanceMonitorInterval",
-                    "Defines the interval for throughput and latency snapshots on the workers.\n" +
-                            "# 0 disabled tracking performance.")
-            .withRequiredArg().ofType(Integer.class).defaultsTo(10);
 
     private final OptionSpec<Integer> workerVmStartupDelayMsSpec = parser.accepts("workerVmStartupDelayMs",
                     "Amount of time in milliseconds to wait between starting up the next worker. This is useful to prevent"
                             + "duplicate connection issues.")
-            .withRequiredArg().ofType(Integer.class).defaultsTo(0);
-
-    private final OptionSpec<String> driverSpec = parser.accepts("driver",
-                    "The driver to run. Available options hazelcast5,hazelcast-enterprise4,hazelcast4,hazelcast-enterprise4,"
-                            + "hazelcast3,hazelcast-enterprise3,ignite2,infinispan9,infinispan10,"
-                            + "infinispan11,couchbase,lettuce6,lettucecluster6,jedis3")
-            .withRequiredArg().ofType(String.class).defaultsTo("hazelcast5");
-
-    private final OptionSpec<String> versionSpec = parser.accepts("version",
-                    "The version of the vendor to use. Only hazelcast3/4/5 (and enterprise) will use this version")
-            .withRequiredArg().ofType(String.class);
-
-    private final OptionSpec<String> durationSpec = parser.accepts("duration",
-                    "Amount of time to execute the RUN phase per test, e.g. 10s, 1m, 2h or 3d. If duration is set to 0, "
-                            + "the test will run until the test decides to stop.")
-            .withRequiredArg().ofType(String.class).defaultsTo(format("%ds", DEFAULT_DURATION_SECONDS));
-
-    private final OptionSpec<Integer> membersSpec = parser.accepts("members",
-                    "Number of cluster member Worker JVMs. If no value is specified and no mixed members are specified,"
-                            + " then the number of cluster members will be equal to the number of machines in the agents file.")
-            .withRequiredArg().ofType(Integer.class).defaultsTo(-1);
-
-    private final OptionSpec<Integer> clientsSpec = parser.accepts("clients",
-                    "Number of cluster client Worker JVMs.")
-            .withRequiredArg().ofType(Integer.class).defaultsTo(0);
-
-    private final OptionSpec<Integer> dedicatedMemberMachinesSpec = parser.accepts("dedicatedMemberMachines",
-                    "Controls the number of dedicated member machines. For example when there are 4 machines,"
-                            + " 2 members and 9 clients with 1 dedicated member machine defined, then"
-                            + " 1 machine gets the 2 members and the 3 remaining machines get 3 clients each.")
             .withRequiredArg().ofType(Integer.class).defaultsTo(0);
 
     private final OptionSpec<TargetType> targetTypeSpec = parser.accepts("targetType",
@@ -122,133 +82,77 @@ final class CoordinatorCli {
                     "Defines the number of Workers which execute the RUN phase. The value 0 selects all Workers.")
             .withRequiredArg().ofType(Integer.class).defaultsTo(0);
 
-    private final OptionSpec<String> runPathSpec = parser.accepts("runPath", "The path to store the results")
-            .withRequiredArg().ofType(String.class)
-            .defaultsTo("runs/" + new SimpleDateFormat("yyyy-mm-dd_hh:mm:ss").format(Calendar.getInstance().getTime()));
-
-    private final OptionSpec<Boolean> verifyEnabledSpec = parser.accepts("verifyEnabled",
-                    "Defines if tests are verified.")
-            .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
-
-    private final OptionSpec<Boolean> failFastSpec = parser.accepts("failFast",
-                    "Defines if the TestSuite should fail immediately when a test from a TestSuite fails instead of continuing.")
-            .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
-
-    private final OptionSpec parallelSpec = parser.accepts("parallel",
-            "If defined tests are run in parallel.");
-
     private final OptionSpec<TestPhase> syncToTestPhaseSpec = parser.accepts("syncToTestPhase",
                     format("Defines the last TestPhase which is synchronized between all parallel running tests."
                             + " Use --syncToTestPhase %s to synchronize all test phases."
                             + " List of defined test phases: %s", TestPhase.getLastTestPhase(), TestPhase.getIdsAsString()))
             .withRequiredArg().ofType(TestPhase.class).defaultsTo(TestPhase.getLastTestPhase());
 
-    private final OptionSpec<String> memberArgsSpec = parser.accepts("memberArgs",
-                    "Member Worker JVM options (quotes can be used). ")
-            .withRequiredArg().ofType(String.class).defaultsTo("-XX:+HeapDumpOnOutOfMemoryError");
-
-    private final OptionSpec<String> clientArgsSpec = parser.accepts("clientArgs",
-                    "Client Worker JVM options (quotes can be used).")
-            .withRequiredArg().ofType(String.class).defaultsTo("-XX:+HeapDumpOnOutOfMemoryError");
-
-    private final OptionSpec<String> licenseKeySpec = parser.accepts("licenseKey",
-                    "Sets the license key for Hazelcast Enterprise Edition.")
+    private final OptionSpec<String> paramSpec = parser.accepts("param",
+                    "A key=value parameter.")
             .withRequiredArg().ofType(String.class);
 
-    private final OptionSpec skipDownloadSpec = parser.accepts("skipDownload",
-            "Prevents downloading of the created worker artifacts.");
-
-    private final OptionSpec downloadSpec = parser.accepts("download",
-            "Downloads all the session directories and applies postprocessing. "
-                    + "If this option is set, no other tasks are executed. "
-                    + "If '--runPath' is set, only that session is downloaded.");
-
-    private final OptionSpec cleanSpec = parser.accepts("clean",
-            "Cleans the remote Worker directories on the provisioned machines. "
-                    + "If this option is set, no other tasks are executed");
-
-    private final OptionSpec<String> nodeHostsSpec = parser.accepts("nodeHosts",
-                    "The name of the group that makes up the nodes.")
-            .withRequiredArg().ofType(String.class).defaultsTo("all|!mc");
-
-    private final OptionSpec<String> loadGeneratorHostsSpec = parser.accepts("loadGeneratorHosts",
-                    "The name of the group that makes up the loadGenerator.")
-            .withRequiredArg().ofType(String.class).defaultsTo("all|!mc");
-
-    private final OptionSpec<String> memberWorkerScriptSpec = parser.accepts("memberWorkerScript",
-                    "The worker script for members.")
-            .withRequiredArg().ofType(String.class);
-
-    private final OptionSpec<String> clientWorkerScriptSpec = parser.accepts("clientWorkerScript",
-                    "The worker script for clients.")
-            .withRequiredArg().ofType(String.class);
 
     private final OptionSet options;
 
     CoordinatorCli(String[] args) {
         this.options = initOptionsWithHelp(parser, args);
+        this.properties = loadSimulatorProperties();
 
-        this.properties = loadSimulatorProperties()
-                .setIfNotNull("LICENCE_KEY", options.valueOf(licenseKeySpec));
+        // Add all the params to the properties
+        List<String> propertyList = paramSpec.values(options);
+        for (String property : propertyList) {
+            int indexOf = property.indexOf("=");
+            if (indexOf == -1) {
+                throw new CommandLineExitException("Invalid property '" + property + "', should have format key=value");
+            }
+            String key = property.substring(0, indexOf);
+            String value = property.substring(indexOf + 1);
+            properties.set(key, value);
 
-        if (!"fake".equals(properties.get("DRIVER"))) {
-            properties.set("DRIVER", options.valueOf(driverSpec));
-        }
-
-        if (options.hasArgument(versionSpec)) {
-            properties.set("VERSION_SPEC", options.valueOf(versionSpec));
-        }
-
-        this.registry = newRegistry();
-
-        if (!(options.has(downloadSpec) || options.has(cleanSpec))) {
-            this.coordinatorParameters = loadCoordinatorParameters();
-            this.properties.set("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS", "" + options.valueOf(performanceMonitorInterval));
-            this.coordinator = new Coordinator(registry, coordinatorParameters);
-            this.driver = loadDriver(properties.get("DRIVER"))
-                    .setAll(properties.asMap())
-                    .setAgents(registry.getAgents())
-                    .set("CLIENT_ARGS", options.valueOf(clientArgsSpec))
-                    .set("MEMBER_ARGS", options.valueOf(memberArgsSpec))
-                    .set("CLIENT_WORKER_SCRIPT", options.valueOf(clientWorkerScriptSpec))
-                    .set("MEMBER_WORKER_SCRIPT", options.valueOf(memberWorkerScriptSpec));
-
-            this.testSuite = loadTestSuite();
-
-            if (testSuite == null) {
-                throw new CommandLineExitException("Can't run without a testSuite");
-            } else {
-                this.deploymentPlan = newDeploymentPlan();
-                this.runMonolith = new CoordinatorRunMonolith(coordinator, coordinatorParameters);
+            if (!value.contains("\n")) {
+                LOGGER.info(key + "=" + value);
             }
         }
+
+
+//        if (!"fake".equals(properties.get("driver"))) {
+//            properties.set("driver", options.valueOf(driverSpec));
+//        }
+
+        this.registry = Registry.loadInventoryYaml(
+                locateInventoryFile(),
+                properties.get("loadgenerator_hosts"),
+                properties.get("node_hosts"));
+
+        String runPath = properties.get("run_path");
+        FileUtils.ensureExistingDirectory(new File(runPath));
+
+        this.coordinatorParameters = loadCoordinatorParameters();
+        this.coordinator = new Coordinator(registry, coordinatorParameters);
+        this.testSuite = loadTestSuite();
+
+        if (testSuite == null) {
+            throw new CommandLineExitException("Can't run without a testSuite");
+        } else {
+            this.deploymentPlan = newDeploymentPlan();
+            this.runMonolith = new CoordinatorRunMonolith(coordinator, coordinatorParameters);
+        }
+
     }
 
     void run() throws Exception {
-        if (options.has(downloadSpec)) {
-            String runPath = options.has(runPathSpec) ? options.valueOf(runPathSpec) : "*";
-            new AgentsDownloadTask(
-                    registry,
-                    properties.asMap(),
-                    new File(runPath),
-                    CoordinatorParameters.toSHA1(runPath)).run();
-        } else if (options.has(cleanSpec)) {
-            new AgentsClearTask(registry).run();
-        } else {
-            coordinator.start();
-            runMonolith.init(deploymentPlan);
-            boolean success = runMonolith.run(testSuite);
-            System.exit(success ? 0 : 1);
-        }
+        coordinator.start();
+        runMonolith.init(deploymentPlan);
+        boolean success = runMonolith.run(testSuite);
+        System.exit(success ? 0 : 1);
     }
 
     private CoordinatorParameters loadCoordinatorParameters() {
         return new CoordinatorParameters()
                 .setSimulatorProperties(properties)
                 .setLastTestPhaseToSync(options.valueOf(syncToTestPhaseSpec))
-                .setSkipDownload(options.has(skipDownloadSpec))
-                .setWorkerVmStartupDelayMs(options.valueOf(workerVmStartupDelayMsSpec))
-                .setRunPath(options.valueOf(runPathSpec));
+                .setWorkerVmStartupDelayMs(options.valueOf(workerVmStartupDelayMsSpec));
     }
 
     private TestSuite loadTestSuite() {
@@ -265,15 +169,15 @@ final class CoordinatorCli {
             workerQuery.setMaxCount(targetCount);
         }
 
-        int durationSeconds = getDurationSeconds(options, durationSpec);
+        int durationSeconds = getDurationSeconds(properties.get("duration"));
         testSuite.setDurationSeconds(durationSeconds)
-                .setFailFast(options.valueOf(failFastSpec))
-                .setVerifyEnabled(options.valueOf(verifyEnabledSpec))
-                .setParallel(options.has(parallelSpec))
+                .setFailFast(properties.getBoolean("fail_fast"))
+                .setVerifyEnabled(properties.getBoolean("verify_enabled"))
+                .setParallel(properties.getBoolean("parallel"))
                 .setWorkerQuery(workerQuery);
 
         // if the coordinator is not monitoring performance, we don't care for measuring latencies
-        if (coordinatorParameters.getSimulatorProperties().getInt("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS") == 0) {
+        if (coordinatorParameters.getSimulatorProperties().getInt("performance_monitor_interval_seconds") == 0) {
             for (TestCase testCase : testSuite.getTestCaseList()) {
                 testCase.setProperty("measureLatency", "false");
             }
@@ -309,49 +213,33 @@ final class CoordinatorCli {
         return testSuite;
     }
 
-    public static int getDurationSeconds(OptionSet options, OptionSpec<String> optionSpec) {
-        int duration;
-        String value = options.valueOf(optionSpec);
+    public static int getDurationSeconds(String durationString) {
+        int durationSec;
         try {
-            if (value.endsWith("s")) {
-                duration = parseDurationWithoutLastChar(SECONDS, value);
-            } else if (value.endsWith("m")) {
-                duration = parseDurationWithoutLastChar(MINUTES, value);
-            } else if (value.endsWith("h")) {
-                duration = parseDurationWithoutLastChar(HOURS, value);
-            } else if (value.endsWith("d")) {
-                duration = parseDurationWithoutLastChar(DAYS, value);
+            if (durationString.endsWith("s")) {
+                durationSec = parseDurationWithoutLastChar(SECONDS, durationString);
+            } else if (durationString.endsWith("m")) {
+                durationSec = parseDurationWithoutLastChar(MINUTES, durationString);
+            } else if (durationString.endsWith("h")) {
+                durationSec = parseDurationWithoutLastChar(HOURS, durationString);
+            } else if (durationString.endsWith("d")) {
+                durationSec = parseDurationWithoutLastChar(DAYS, durationString);
             } else {
-                duration = Integer.parseInt(value);
+                durationSec = Integer.parseInt(durationString);
             }
         } catch (NumberFormatException e) {
-            throw new CommandLineExitException(format("Failed to parse duration '%s'", value), e);
+            throw new CommandLineExitException(format("Failed to parse duration '%s'", durationString), e);
         }
 
-        if (duration < 0) {
-            throw new CommandLineExitException("duration must be a positive number, but was: " + duration);
+        if (durationSec < 0) {
+            throw new CommandLineExitException("duration must be a positive number, but was: " + durationSec);
         }
-        return duration;
+        return durationSec;
     }
 
     public static int parseDurationWithoutLastChar(TimeUnit timeUnit, String value) {
         String sub = value.substring(0, value.length() - 1);
         return (int) timeUnit.toSeconds(Integer.parseInt(sub));
-    }
-
-    private Registry newRegistry() {
-        Registry registry;
-        registry = Registry.loadInventoryYaml(
-                locateInventoryFile(),
-                options.valueOf(loadGeneratorHostsSpec),
-                options.valueOf(nodeHostsSpec));
-
-
-        if (options.has(dedicatedMemberMachinesSpec)) {
-            registry.assignDedicatedMemberMachines(options.valueOf(dedicatedMemberMachinesSpec));
-        }
-
-        return registry;
     }
 
     private DeploymentPlan newDeploymentPlan() {
@@ -360,25 +248,27 @@ final class CoordinatorCli {
             throw new CommandLineExitException("client workerType can't be [member]");
         }
 
-        int members = options.valueOf(membersSpec);
-        if (members == -1) {
-            members = registry.agentCount();
-        } else if (members < -1) {
-            throw new CommandLineExitException("--member must be a equal or larger than -1");
+        int nodeCount = properties.getInt("node_count");
+        if (nodeCount == -1) {
+            nodeCount = registry.agentCount();
+        } else if (nodeCount < -1) {
+            throw new CommandLineExitException("node_count must be a equal or larger than -1");
         }
 
-        int clients = options.valueOf(clientsSpec);
-        if (clients < 0) {
-            throw new CommandLineExitException("--client must be a equal or larger than 0");
+        int loadGeneratorCount = properties.getInt("loadgenerator_count");
+        if (loadGeneratorCount < 0) {
+            throw new CommandLineExitException("loadgenerator_count must be a equal or larger than 0");
         }
 
-        if (members == 0 && clients == 0) {
+        if (nodeCount == 0 && loadGeneratorCount == 0) {
             throw new CommandLineExitException("No workers have been defined!");
         }
 
-        DeploymentPlan plan = new DeploymentPlan(driver, registry.getAgents())
-                .addToPlan(members, "member")
-                .addToPlan(clients, options.valueOf(clientTypeSpec));
+        DeploymentPlan plan = new DeploymentPlan(registry.getAgents());
+        plan.addAllProperty(properties.asMap());
+        plan.addToPlan(nodeCount, "member");
+        plan.addToPlan(loadGeneratorCount, options.valueOf(clientTypeSpec));
+
         plan.printLayout();
         return plan;
     }
@@ -387,7 +277,7 @@ final class CoordinatorCli {
         File file = preferredInventoryFile();
 
         if (!file.exists()) {
-            throw new CommandLineExitException(format("Agents file [%s] does not exist", file));
+            throw new CommandLineExitException(format("Inventory file [%s] does not exist", file));
         }
 
         LOGGER.info("Loading inventory file: " + file.getAbsolutePath());

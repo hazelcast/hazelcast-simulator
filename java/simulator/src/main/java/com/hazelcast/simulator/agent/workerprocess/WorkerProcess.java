@@ -27,16 +27,16 @@ import static java.lang.System.currentTimeMillis;
 public class WorkerProcess {
 
     private final SimulatorAddress address;
-    private final String id;
+    private final String workerName;
     private final File workerHome;
     private volatile long lastSeen = currentTimeMillis();
     private volatile boolean oomeDetected;
     private volatile boolean isFinished;
     private volatile Process process;
 
-    public WorkerProcess(SimulatorAddress address, String id, File workerHome) {
+    public WorkerProcess(SimulatorAddress address, String workerName, File workerHome) {
         this.address = address;
-        this.id = id;
+        this.workerName = workerName;
         this.workerHome = workerHome;
     }
 
@@ -44,8 +44,8 @@ public class WorkerProcess {
         return address;
     }
 
-    public String getId() {
-        return id;
+    public String getWorkerName() {
+        return workerName;
     }
 
     public File getWorkerHome() {

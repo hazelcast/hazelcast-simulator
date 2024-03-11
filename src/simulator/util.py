@@ -37,14 +37,18 @@ class AtomicLong:
             self.value += amount
 
 
-def read(file):
+def read_file(file):
     with open(file, 'r') as f:
         return f.read()
 
 
-def write(file, text):
+def write_file(file, text):
     with open(file, 'w') as f:
         return f.write(text)
+
+
+def copy_file(src, dst):
+    shutil.copy(src, dst)
 
 
 def write_yaml(file, content):
@@ -56,15 +60,15 @@ def now_seconds():
     return round(time.time())
 
 
-def remove(file):
-    if not path.exists(file):
-        return
 
-    if path.isfile(file):
-        os.remove(file)
+def parse_bool(v):
+    lower = v.lower()
+    if lower == 'true':
+        return True
+    elif lower == 'false':
+        return False
     else:
-        shutil.rmtree(file)
-
+        raise Exception(f"{v} is not a valid boolean value.")
 
 def validate_dir(path):
     path = os.path.expanduser(path)
@@ -79,6 +83,15 @@ def validate_dir(path):
 
     return path
 
+
+def remove_dir(file):
+    if not path.exists(file):
+        return
+
+    if path.isfile(file):
+        os.remove(file)
+    else:
+        shutil.rmtree(file)
 
 def validate_git_dir(path):
     path = validate_dir(path)
@@ -193,4 +206,17 @@ def parse_tags(items):
             key, value = __parse_tag(item)
             d[key] = value
     return d
+
+
+# Finds a config file. First look in the local directory and then in the simulator_home/conf dir.
+def find_config_file(filename):
+    p = filename
+    if os.path.exists(filename):
+        return p
+
+    p = f"{simulator_home}/conf/{filename}"
+    if os.path.exists(p):
+        return p
+
+    raise Exception(f"Could not find a configuration file with name '{filename}'")
 

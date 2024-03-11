@@ -98,14 +98,6 @@ public class SimulatorProperties {
         check(file);
         load(file, false);
 
-        if (properties.containsKey("VENDOR")) {
-            LOGGER.warn("The VENDOR property in the simulator.properties is deprecated. "
-                    + "Remove it from simulator.properties and use `coordinator --driver " + get("VENDOR") + " instead.");
-            if (!properties.containsKey("DRIVER")) {
-                properties.put("DRIVER", properties.get("VENDOR"));
-            }
-        }
-
         return this;
     }
 
@@ -140,32 +132,18 @@ public class SimulatorProperties {
         }
     }
 
-    public boolean containsKey(String name) {
-        return properties.containsKey(name);
-    }
-
     public int getInt(String property) {
         return Integer.parseInt(get(property));
     }
 
-    public String getSshOptions() {
-        return get("SSH_OPTIONS", "");
+    public boolean getBoolean(String property) {
+        String s = get(property);
+        String v = s.toLowerCase();
+        return Boolean.parseBoolean(v);
     }
 
     public String getUser() {
         return get("SIMULATOR_USER", "simulator");
-    }
-
-    public String getVersionSpec() {
-        return get("VERSION_SPEC", "outofthebox");
-    }
-
-    public int getWorkerPingIntervalSeconds() {
-        return parseInt(get("WORKER_PING_INTERVAL_SECONDS", "60"));
-    }
-
-    public int getWorkerLastSeenTimeoutSeconds() {
-        return getWorkerPingIntervalSeconds() * WORKER_TIMEOUT_FACTOR;
     }
 
     public int getMemberWorkerShutdownDelaySeconds() {
@@ -178,10 +156,6 @@ public class SimulatorProperties {
 
     public int getTestCompletionTimeoutSeconds() {
         return parseInt(get("TEST_COMPLETION_TIMEOUT_SECONDS", "300"));
-    }
-
-    public int getAgentThreadPoolSize() {
-        return parseInt(get("AGENT_THREAD_POOL_SIZE", "0"));
     }
 
     public int getAgentPort() {

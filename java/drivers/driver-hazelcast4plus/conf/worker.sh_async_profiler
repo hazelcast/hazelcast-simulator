@@ -15,8 +15,20 @@ set -e
 exec > worker.out
 exec 2> worker.err
 
+# Read the parameters file and add it to the environment
+while IFS='=' read -r key value; do
+    export "$key"="$value"
+done < "parameters"
+
 JVM_ARGS="-XX:OnOutOfMemoryError=\"touch;-9;worker.oome\" \
           -Dlog4j2.configurationFile=file:log4j.xml"
+
+
+if [ "${WORKER_TYPE}" = "member" ]; then
+    JVM_OPTIONS=$member_args
+else
+    JVM_OPTIONS=$client_args
+fi
 
 # Include the member/client-worker jvm options
 JVM_ARGS="$JVM_OPTIONS $JVM_ARGS"

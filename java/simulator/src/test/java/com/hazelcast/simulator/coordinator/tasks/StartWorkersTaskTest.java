@@ -93,10 +93,9 @@ public class StartWorkersTaskTest {
     private Map<SimulatorAddress, List<WorkerParameters>> getDeployment(int dedicatedMemberMachineCount,
                                                                         int memberWorkerCount,
                                                                         int clientWorkerCount) {
-        FakeDriver driver = new FakeDriver();
         registry.assignDedicatedMemberMachines(dedicatedMemberMachineCount);
 
-        DeploymentPlan deploymentPlan = new DeploymentPlan(driver, registry.getAgents())
+        DeploymentPlan deploymentPlan = new DeploymentPlan(registry.getAgents())
                 .addToPlan(memberWorkerCount,"member")
                 .addToPlan(clientWorkerCount,"javaclient");
 

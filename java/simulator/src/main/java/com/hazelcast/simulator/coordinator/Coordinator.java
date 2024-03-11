@@ -20,14 +20,12 @@ import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.coordinator.registry.AgentData;
 import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.coordinator.registry.TestData;
-import com.hazelcast.simulator.coordinator.tasks.AgentsDownloadTask;
 import com.hazelcast.simulator.coordinator.tasks.PrepareRunTask;
 import com.hazelcast.simulator.coordinator.tasks.RunTestSuiteTask;
 import com.hazelcast.simulator.coordinator.tasks.StartWorkersTask;
 import com.hazelcast.simulator.coordinator.tasks.TerminateWorkersTask;
 import com.hazelcast.simulator.protocol.CoordinatorClient;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.utils.BashCommand;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.CommonUtils;
 import org.apache.logging.log4j.LogManager;
@@ -70,7 +68,7 @@ public class Coordinator implements Closeable {
     public Coordinator(Registry registry, CoordinatorParameters parameters) {
         this.registry = registry;
         this.parameters = parameters;
-        this.failureCollector = new FailureCollector(parameters.getRunPath(), registry);
+        this.failureCollector = new FailureCollector(parameters.getSimulatorProperties().get("run_path"), registry);
         this.properties = parameters.getSimulatorProperties();
         this.testCompletionTimeoutSeconds = properties.getTestCompletionTimeoutSeconds();
 
@@ -100,10 +98,7 @@ public class Coordinator implements Closeable {
         new PrepareRunTask(
                 registry.getAgents(),
                 properties.asMap(),
-                new File(getUserDir(), "upload").getAbsoluteFile(),
-                parameters.getRunId()).run();
-
-        installDriver(properties.getVersionSpec());
+                new File(getUserDir(), "upload").getAbsoluteFile()).run();
 
         log("Coordinator started...");
     }
@@ -124,10 +119,11 @@ public class Coordinator implements Closeable {
 
     private void logConfiguration() {
         log("Total number of agents: %s", registry.agentCount());
-        log("Run path: " + parameters.getRunPath().getAbsolutePath());
+        String runPath = parameters.getSimulatorProperties().get("run_path");
+        log("Run path: " + new File(runPath).getAbsolutePath());
 
         int performanceIntervalSeconds
-                = parameters.getSimulatorProperties().getInt("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS");
+                = parameters.getSimulatorProperties().getInt("performance_monitor_interval_seconds");
 
         if (performanceIntervalSeconds > 0) {
             log("Performance monitor enabled (%d seconds interval)", performanceIntervalSeconds);
@@ -145,14 +141,6 @@ public class Coordinator implements Closeable {
         client.close();
 
         stopAgents(registry);
-
-        if (!parameters.skipDownload()) {
-            new AgentsDownloadTask(
-                    registry,
-                    properties.asMap(),
-                    parameters.getRunPath(),
-                    parameters.getRunId()).run();
-        }
 
         failureCollector.logFailureInfo();
     }
@@ -207,14 +195,6 @@ public class Coordinator implements Closeable {
         LOGGER.info("Remote client started successfully!");
     }
 
-    public void download() {
-        new AgentsDownloadTask(registry,
-                properties.asMap(),
-                parameters.getRunPath(),
-                parameters.getRunId()).run();
-
-    }
-
     public void stop() {
         LOGGER.info("Shutting down...");
 
@@ -233,22 +213,6 @@ public class Coordinator implements Closeable {
         }).start();
     }
 
-    public void installDriver(String versionSpec) {
-        new BashCommand(locatePythonFile("agents_upload_driver.py"))
-                .addParams(AgentData.toYaml(registry))
-                .addParams(properties.get("DRIVER"))
-                .execute();
-
-        loadDriver(properties.get("DRIVER"))
-                .setAll(properties.asMap())
-                .set("VERSION_SPEC", versionSpec)
-                .setAgents(registry.getAgents())
-                .install();
-    }
-
-    public String printLayout() {
-        return registry.printLayout();
-    }
 
     StartWorkersTask createStartWorkersTask(Map<SimulatorAddress, List<WorkerParameters>> deploymentPlan,
                                             Map<String, String> workerTags) {

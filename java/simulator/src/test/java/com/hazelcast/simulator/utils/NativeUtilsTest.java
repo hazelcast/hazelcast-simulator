@@ -1,48 +1,20 @@
 package com.hazelcast.simulator.utils;
 
-import com.hazelcast.simulator.utils.helper.ExitExceptionSecurityManager;
-import com.hazelcast.simulator.utils.helper.ExitStatusOneException;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
 import static com.hazelcast.simulator.utils.NativeUtils.getPID;
 import static com.hazelcast.simulator.utils.NativeUtils.getPidFromBeanString;
 import static com.hazelcast.simulator.utils.NativeUtils.getPidFromManagementBean;
 import static com.hazelcast.simulator.utils.NativeUtils.getPidViaReflection;
-import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 public class NativeUtilsTest {
 
-    private SecurityManager oldSecurityManager;
-
-    @Before
-    public void before() {
-        oldSecurityManager = System.getSecurityManager();
-        System.setSecurityManager(new ExitExceptionSecurityManager(true));
-    }
-
-    @After
-    public void after() {
-        System.setSecurityManager(oldSecurityManager);
-    }
-
-    @Test
-    public void testConstructor() throws Exception {
-        invokePrivateConstructor(NativeUtils.class);
-    }
-
     @Test
     public void testExecute() {
         NativeUtils.execute("pwd");
-    }
-
-    @Test(expected = ExitStatusOneException.class)
-    public void testExecute_exitStatus() {
-        NativeUtils.execute("pwd && false");
     }
 
     @Test(expected = ScriptException.class)

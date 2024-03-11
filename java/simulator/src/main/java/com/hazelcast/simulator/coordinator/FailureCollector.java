@@ -53,7 +53,7 @@ public class FailureCollector {
     private final File file;
     private final Registry registry;
 
-    public FailureCollector(File outputDirectory, Registry registry) {
+    public FailureCollector(String outputDirectory, Registry registry) {
         this.file = new File(outputDirectory, "failures.txt");
         this.registry = registry;
     }

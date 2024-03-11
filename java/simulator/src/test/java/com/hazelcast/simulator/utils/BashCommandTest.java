@@ -1,38 +1,28 @@
 package com.hazelcast.simulator.utils;
 
-import com.hazelcast.simulator.utils.helper.ExitExceptionSecurityManager;
-import com.hazelcast.simulator.utils.helper.ExitStatusOneException;
-import org.junit.After;
-import org.junit.Before;
+
 import org.junit.Test;
 
+import static org.junit.Assert.assertThrows;
+
 public class BashCommandTest {
-
-    private SecurityManager oldSecurityManager;
-
-    @Before
-    public void before() {
-        oldSecurityManager = System.getSecurityManager();
-        System.setSecurityManager(new ExitExceptionSecurityManager(true));
-    }
-
-    @After
-    public void after() {
-        System.setSecurityManager(oldSecurityManager);
-    }
 
     @Test
     public void testExecute() {
         new BashCommand("pwd").execute();
     }
 
-    @Test(expected = ExitStatusOneException.class)
+    @Test
     public void testExecute_exitStatus() {
-        new BashCommand("pwd && false").execute();
+        BashCommand cmd = new BashCommand("pwd && false");
+        cmd.setThrowsExceptionOnError(true);
+        assertThrows(ScriptException.class, ()-> cmd.execute());
     }
 
-    @Test(expected = ScriptException.class)
+    @Test
     public void testExecute_withException() {
-        new BashCommand("pwd && false").setThrowsExceptionOnError(true).execute();
+        BashCommand cmd = new BashCommand("pwd && false");
+        cmd.setThrowsExceptionOnError(true);
+        assertThrows(ScriptException.class, ()-> cmd.execute());
     }
 }

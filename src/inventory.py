@@ -2,22 +2,26 @@
 import os.path
 import subprocess
 import sys
+from typing import Optional
 
 import yaml
 from yaml import dump
 from simulator.util import exit_with_error
 
-inventory_path = 'inventory.yaml'
+default_inventory_path = 'inventory.yaml'
 
 
-def find_host_with_public_ip(inventory, public_ip):
-    for host in inventory:
+def find_host_with_public_ip(hosts, public_ip):
+    for host in hosts:
         if host["public_ip"] == public_ip:
             return host
     return
 
 
-def load_inventory(host_pattern="all"):
+def load_hosts(inventory_path=None, host_pattern:str="all"):
+    if not inventory_path:
+        inventory_path = default_inventory_path
+
     if not os.path.exists(inventory_path):
         exit_with_error(f"Could not find [{inventory_path}]")
 
@@ -56,5 +60,5 @@ def load_inventory(host_pattern="all"):
 
 
 if __name__ == '__main__':
-    inventory = load_inventory(sys.argv[1])
+    inventory = load_hosts(host_pattern=sys.argv[1])
     print(dump(inventory))

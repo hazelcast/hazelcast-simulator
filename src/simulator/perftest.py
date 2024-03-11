@@ -1,11 +1,13 @@
 import argparse
 import datetime
 import getpass
+import hashlib
+
 import re
+import shlex
 import shutil
 import random
 import string
-
 import tempfile
 import uuid
 from datetime import datetime
@@ -15,12 +17,16 @@ from os import path
 import csv
 
 import simulator.util
-from inventory import load_inventory
+from agents_clean import agents_clean
+from agents_download import agents_download
+from inventory import load_hosts
+from simulator.driver import driver_install_and_configure
 from simulator.git import get_last_commit_hash, git_init, is_git_installed, is_inside_git_repo, \
     commit_modified_files
 from simulator.hosts import public_ip, ssh_user, ssh_options
 from simulator.ssh import Ssh, new_key
-from simulator.util import read, write, shell, run_parallel, exit_with_error, simulator_home, shell_logged, remove, \
+from simulator.util import read_file, write_file, shell, run_parallel, exit_with_error, simulator_home, shell_logged, \
+    remove_dir, \
     load_yaml_file, parse_tags, write_yaml, AtomicLong
 from simulator.log import info, warn, log_header
 
@@ -30,14 +36,14 @@ inventory_path = 'inventory.yaml'
 
 class PerfTest:
 
-    def __init__(self, logfile=None, log_shell_command=True, exit_on_error=False):
+    def __init__(self, logfile=None, log_shell_command=False, exit_on_error=False):
         self.logfile = logfile
         self.log_shell_command = log_shell_command
         self.exit_on_error = exit_on_error
         self.exit_code = None
         self.verified_hosts = set()
 
-    def __verify(self, host, error_counter):
+    def _verify_host(self, host, error_counter):
         ssh = Ssh(public_ip(host), ssh_user(host), ssh_options(host))
 
         exitcode = ssh.connect()
@@ -66,9 +72,9 @@ class PerfTest:
             return
 
         info(f"Host verification [{host_pattern}]: starting")
-        hosts = load_inventory(host_pattern)
+        hosts = load_hosts(host_pattern=host_pattern)
         error_counter = AtomicLong()
-        run_parallel(self.__verify, [(host, error_counter) for host in hosts])
+        run_parallel(self._verify_host, [(host, error_counter) for host in hosts])
 
         if error_counter.get() > 0:
             exit_with_error(f"Hosts verification [{host_pattern}]: failed")
@@ -82,127 +88,11 @@ class PerfTest:
 
     def kill_java(self, host_pattern):
         log_header(f"perftest kill_java [{host_pattern}]: started")
-        hosts = load_inventory(host_pattern)
+        hosts = load_hosts(host_pattern=host_pattern)
         run_parallel(self.__kill_java, [(host,) for host in hosts])
         log_header(f"perftest kill_java [{host_pattern}]: done")
 
-    def exec(self,
-             test,
-             run_path=None,
-             performance_monitor_interval_seconds=None,
-             worker_vm_startup_delay_ms=None,
-             dedicated_member_machines=None,
-             parallel=None,
-             license_key=None,
-             skip_download=None,
-             node_hosts=None,
-             duration=None,
-             loadgenerator_hosts=None,
-             client_args=None,
-             member_args=None,
-             members=None,
-             clients=None,
-             driver=None,
-             version=None,
-             fail_fast=None,
-             verify_enabled=None,
-             client_type=None,
-             member_worker_script=None,
-             client_worker_script=None):
-
-        self.clean()
-
-        args = ""
-
-        if worker_vm_startup_delay_ms is not None:
-            args = f"{args} --workerVmStartupDelayMs {worker_vm_startup_delay_ms}"
-
-        if dedicated_member_machines is not None:
-            args = f"{args} --dedicatedMemberMachines {dedicated_member_machines}"
-
-        if parallel:
-            args = f"{args} --parallel"
-
-        if license_key:
-            args = f"{args} --licenseKey {license_key}"
-
-        if skip_download is not None:
-            args = f"{args} --skipDownload {skip_download}"
-
-        if run_path:
-            args = f"{args} --runPath {run_path}"
-
-        if duration is not None:
-            args = f"{args} --duration {duration}"
-
-        if performance_monitor_interval_seconds:
-            args = f"{args} --performanceMonitorInterval {performance_monitor_interval_seconds}"
-
-        if not node_hosts:
-            node_hosts = "all|!mc"
-        args = f"{args} --nodeHosts {node_hosts}"
-        self.verify_hosts(node_hosts)
-
-        if not loadgenerator_hosts:
-            loadgenerator_hosts = "all|!mc"
-        args = f"{args} --loadGeneratorHosts {loadgenerator_hosts}"
-        self.verify_hosts(loadgenerator_hosts)
-
-        if members is not None:
-            args = f"{args} --members {members}"
-
-        if member_args:
-            args = f"""{args} --memberArgs "{member_args}" """
-
-        if clients is not None:
-            args = f"{args} --clients {clients}"
-
-        if client_args:
-            args = f"""{args} --clientArgs "{client_args}" """
-
-        if client_type:
-            args = f"{args} --clientType {client_type}"
-
-        if driver:
-            args = f"{args} --driver {driver}"
-
-        if version is not None:
-            args = f"""{args} --version "{version}"  """
-
-        if fail_fast is not None:
-            args = f"{args} --failFast {fail_fast}"
-
-        if verify_enabled is not None:
-            args = f"{args} --verifyEnabled {verify_enabled}"
-
-        if member_worker_script:
-            args = f"{args} --memberWorkerScript {member_worker_script}"
-
-        if client_worker_script:
-            args = f"{args} --clientWorkerScript {client_worker_script}"
-
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, prefix="perftest_", suffix=".txt") as tmp:
-            if isinstance(test, list):
-                for t in test:
-                    if 'name' in t:
-                        test_name = t['name']
-                    else:
-                        test_name = t['class'].split('.')[-1]
-                    for key, value in t.items():
-                        tmp.write(test_name+'@')
-                        tmp.write(f"{key}={value}\n")
-            else:
-                for key, value in test.items():
-                    tmp.write(f"{key}={value}\n")
-
-            tmp.flush()
-
-            self.exitcode = self.__shell(f"{simulator_home}/bin/hidden/coordinator {args} {tmp.name}")
-            if self.exitcode != 0 and self.exit_on_error:
-                exit_with_error(f"Failed run coordinator, exitcode={self.exitcode}")
-            return self.exitcode
-
-    def run(self, tests, tags, skip_report, test_commit, test_pattern, run_label):
+    def run(self, tests_file, tags, skip_report, test_commit, test_pattern, run_label):
         if test_commit:
             info("Automatic test commit enabled.")
             if not is_git_installed():
@@ -214,6 +104,7 @@ class PerfTest:
 
             commit_modified_files(datetime.now().strftime("%m/%d/%Y, %H:%M:%S"))
 
+        tests = load_yaml_file(tests_file)
         for test in tests:
             if test_pattern is not None:
                 regex = re.compile(test_pattern)
@@ -226,60 +117,171 @@ class PerfTest:
                     print(f"Skipping test {test_name}")
                     continue
 
-            repetitions = test.get('repetitions')
-            if repetitions < 0:
+            repetitions = test.get('repetitions', 1)
+            run_path = test.get('run_path')
+            if run_label is not None:
+                test['run_label'] = run_label
+            run_label = test.get('run_label')
+            if repetitions <= 0:
                 continue
-
-            if not repetitions:
-                repetitions = 1
+            elif repetitions > 1:
+                if run_path is not None:
+                    exit_with_error(
+                        f"Test {test['name']} can't have repetitions larger than 1 with a run_path configured.")
+                elif run_label is not None:
+                    exit_with_error(
+                        f"Test {test['name']} can't have repetitions larger than 1 with a run_label configured.")
 
             for i in range(0, repetitions):
-                exitcode, run_path = self.run_test(test, run_label=run_label)
-                if exitcode == 0 and not skip_report:
-                    self.collect(run_path,
-                                 tags,
-                                 warmup_seconds=test.get('warmup_seconds'),
-                                 cooldown_seconds=test.get('cooldown_seconds'))
+                exitcode, run_path = self.run_single_test(test)
+
+                if exitcode == 0:
+                    if not skip_report:
+                        self.collect(run_path,
+                                     tags,
+                                     warmup_seconds=test.get('warmup_seconds'),
+                                     cooldown_seconds=test.get('cooldown_seconds'))
+                elif self.exit_on_error:
+                    exit_with_error(f"Failed run coordinator, exitcode={self.exitcode}")
         return
 
-    def run_test(self, test, *, run_path=None, run_label=None):
-        if not run_path:
+    def run_single_test(self, test):
+        self._sanitize_test(test)
+        self.clean()
+        run_path = test.get('run_path')
+        if run_path is None:
             name = test['name']
+            run_label = test.get('run_label')
             if not run_label:
                 dt = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
                 run_path = f"runs/{name}/{dt}"
             else:
                 run_path = f"runs/{name}/{run_label}"
-                remove(run_path)
+                remove_dir(run_path)
+            test['run_path'] = run_path
+        test['RUN_ID'] = hashlib.sha256(run_path.encode("utf-8")).hexdigest()[:16]
 
-        exitcode = self.exec(
-            test['test'],
-            run_path=run_path,
-            duration=test.get('duration'),
-            performance_monitor_interval_seconds=test.get('performance_monitor_interval_seconds'),
-            parallel=test.get('parallel'),
-            node_hosts=test.get('node_hosts'),
-            loadgenerator_hosts=test.get('loadgenerator_hosts'),
-            license_key=test.get('license_key'),
-            client_args=test.get('client_args'),
-            member_args=test.get('member_args'),
-            members=test.get('members'),
-            clients=test.get('clients'),
-            driver=test.get('driver'),
-            version=test.get('version'),
-            fail_fast=test.get('fail_fast'),
-            verify_enabled=test.get('verify_enabled'),
-            client_type=test.get('client_type'),
-            client_worker_script=test.get('client_worker_script'),
-            member_worker_script=test.get('member_worker_script')
-        )
+        coordinator_params = {}
+        for key, value in test.items():
+            if not key == 'test':
+                coordinator_params[key] = value
 
-        return exitcode, run_path
+        driver = test.get('driver')
+        if driver is not None:
+            driver_install_and_configure(driver, test, None, coordinator_params, inventory_path)
+        else:
+            node_driver = test.get('node_driver')
+            if node_driver is not None:
+                driver_install_and_configure(node_driver, test, False, coordinator_params, inventory_path)
+
+            loadgenerator_driver = test.get('loadgenerator_driver')
+            driver_install_and_configure(loadgenerator_driver, test, True, coordinator_params, inventory_path)
+
+        test_inner = test['test']
+        with tempfile.NamedTemporaryFile(mode="w", delete=False, prefix="perftest_", suffix=".txt") as tmp:
+            if isinstance(test_inner, list):
+                for t in test_inner:
+                    if 'name' in t:
+                        test_name = t['name']
+                    else:
+                        test_name = t['class'].split('.')[-1]
+                    for key, value in t.items():
+                        tmp.write(test_name + '@')
+                        tmp.write(f"{key}={value}\n")
+            else:
+                for key, value in test_inner.items():
+                    tmp.write(f"{key}={value}\n")
+
+            tmp.flush()
+
+            coordinator_param = ""
+            for key, value in coordinator_params.items():
+                coordinator_param = f"{coordinator_param} --param {key}={shlex.quote(str(value))}"
+
+            self.exitcode = self.__shell(f"{simulator_home}/bin/hidden/coordinator {coordinator_param} {tmp.name}")
+            del test['run_path']
+            hosts = load_hosts(inventory_path=inventory_path, host_pattern="all:!mc")
+            agents_download(hosts, run_path, test['RUN_ID'])
+            agents_clean(hosts)
+            return self.exitcode, run_path
+
+    def _sanitize_test(self, test: dict):
+        if test.get('name') is None:
+            exit_with_error(f"Test is missing 'name' property")
+
+        if test.get('test') is None:
+            exit_with_error(f"test {test['name']} is missing a 'test' section.")
+
+        driver = test.get('driver')
+        loadgenerator_driver = test.get('loadgenerator_driver')
+        node_driver = test.get('node_driver')
+        if driver is not None:
+            if loadgenerator_driver is not None:
+                exit_with_error(
+                    f"test {test['name']} can't have both the driver and loadgenerator_driver configured.")
+            if node_driver is not None:
+                exit_with_error(f"test {test['name']} can't have both the driver and node_driver configured.")
+        else:
+            if loadgenerator_driver is None:
+                exit_with_error(f"test {test['name']} has no driver or loadgenerator_driver configured.")
+
+        members = test.get('members')
+        if members is not None:
+            if test.get('node_count') is not None:
+                exit_with_error("node_count and members can't be set at the same time.")
+
+            warn("'members' is a deprecated property, use 'node_count' instead.")
+            del test['members']
+            test['node_count'] = members
+
+        node_count = test.get("node_count")
+        if node_count is None:
+            test['node_count'] = 0
+
+        clients = test.get('clients')
+        if clients is not None:
+            if test.get('loadgenerator_count') is not None:
+                exit_with_error("loadgenerator_count and clients can't be set at the same time.")
+
+            warn("'clients' is a deprecated property, use 'loadgenerator_count' instead.")
+            del test['clients']
+            test['loadgenerator_count'] = clients
+
+        loadgenerator_count = test.get('loadgenerator_count')
+        if loadgenerator_count is None:
+            test['loadgenerator_count'] = -1
+
+        node_hosts = test.get('node_hosts', 'all')
+        if not node_hosts:
+            node_hosts = "all|!mc"
+            test['node_hosts'] = node_hosts
+        self.verify_hosts(node_hosts)
+
+        loadgenerator_hosts = test.get('loadgenerator_hosts')
+        if not loadgenerator_hosts:
+            loadgenerator_hosts = "all|!mc"
+            test['loadgenerator_hosts'] = loadgenerator_hosts
+        self.verify_hosts(loadgenerator_hosts)
+
+        if test.get("duration") is None:
+            exit_with_error(f"The 'duration' property is not specified in test {test.get('name')}")
+
+        if test.get("parallel") is None:
+            test['parallel'] = False
+
+        if test.get("performance_monitor_interval_seconds") is None:
+            test['performance_monitor_interval_seconds'] = 1
+
+        if test.get("fail_fast") is None:
+            test['fail_fast'] = True
+
+        if test.get("verify_enabled") is None:
+            test['verify_enabled'] = True
 
     def clean(self):
-        exitcode = self.__shell(f"{simulator_home}/bin/hidden/coordinator --clean")
-        if exitcode != 0:
-            exit_with_error(f"Failed to clean, exitcode={exitcode}")
+        # the !mc pattern is very ugly
+        hosts = load_hosts(inventory_path=inventory_path, host_pattern="all:!mc")
+        agents_clean(hosts)
 
     def __shell(self, cmd):
         if self.log_shell_command:
@@ -306,7 +308,7 @@ class PerfTest:
             test_commit_hash = get_last_commit_hash()
             if test_commit_hash is not None:
                 commit_file = f"{dir}/test_commit"
-                simulator.util.write(commit_file, test_commit_hash)
+                simulator.util.write_file(commit_file, test_commit_hash)
 
         csv_path = f"{report_dir}/report.csv"
         if not os.path.exists(csv_path):
@@ -315,9 +317,9 @@ class PerfTest:
 
         run_id_path = f"{dir}/run.id"
         if not os.path.exists(run_id_path):
-            write(run_id_path, uuid.uuid4().hex)
+            write_file(run_id_path, uuid.uuid4().hex)
 
-        tags['run_id'] = read(run_id_path)
+        tags['run_id'] = read_file(run_id_path)
 
         results = {}
         with open(csv_path, newline='') as csv_file:
@@ -400,10 +402,10 @@ class PerftestCreateCli:
             for filename in files:
                 filepath = subdir + os.sep + filename
                 if os.access(filepath, os.W_OK):
-                    new_text = read(filepath).replace("<id>", id)
+                    new_text = read_file(filepath).replace("<id>", id)
                     rnd = ''.join(random.choices(string.ascii_lowercase, k=5))
                     new_text = new_text.replace("<rnd:5>", rnd)
-                    write(filepath, new_text)
+                    write_file(filepath, new_text)
 
 
 class PerftestCloneCli:
@@ -424,7 +426,7 @@ class PerftestCloneCli:
 
         if args.force:
             info(f"Removing [{dest}].")
-            remove(dest)
+            remove_dir(dest)
         else:
             if path.exists(dest):
                 exit_with_error(f"Can't copy performance test to [{dest}], the directory already exists.")
@@ -444,23 +446,23 @@ class PerftestCloneCli:
     def __clone(self, src, dest):
         shutil.copytree(src, dest)
 
-        remove(f"{dest}/runs")
-        remove(f"{dest}/logs")
-        remove(f"{dest}/venv")
-        remove(f"{dest}/.idea")
-        remove(f"{dest}/.git")
-        remove(f"{dest}/key")
-        remove(f"{dest}/key.pub")
-        remove(f"{dest}/.gitignore")
+        remove_dir(f"{dest}/runs")
+        remove_dir(f"{dest}/logs")
+        remove_dir(f"{dest}/venv")
+        remove_dir(f"{dest}/.idea")
+        remove_dir(f"{dest}/.git")
+        remove_dir(f"{dest}/key")
+        remove_dir(f"{dest}/key.pub")
+        remove_dir(f"{dest}/.gitignore")
 
         # get rid of the terraform created files.
         for subdir, dirs, files in os.walk(dest):
             for dir in dirs:
                 if dir.startswith(".terraform"):
-                    remove(subdir + os.sep + dir)
+                    remove_dir(subdir + os.sep + dir)
             for file in files:
                 if file.startswith("terraform.tfstate") or file.startswith(".terraform"):
-                    remove(subdir + os.sep + file)
+                    remove_dir(subdir + os.sep + file)
 
     def __add_parent(self, src, dest):
         with open(f"{dest}/clone_parent.txt", "w") as file:
@@ -512,175 +514,10 @@ class PerftestRunCli:
         # run_path = args.runPath
         run_label = args.runLabel[0]
 
-        tests = load_yaml_file(args.file)
+        tests_file = args.file
         perftest = PerfTest()
 
-        perftest.run(tests, tags, args.skip_report, args.commit, pattern, run_label)
-
-
-class PerftestExecCli:
-
-    def __init__(self, argv):
-        parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-                                         description='Executes a performance test.')
-        parser.add_argument('file', nargs='?', help='The test file', default=default_tests_path)
-        parser.add_argument('-w', '--warmup', nargs=1, default=[0], type=int,
-                            help='The warmup period in seconds. The warmup removes datapoints from the start.')
-
-        parser.add_argument('--performanceMonitorInterval',
-                            nargs=1,
-                            default=10,
-                            help='Defines the interval for throughput and latency snapshots on the workers. '
-                                 '# 0 disabled tracking performance.')
-
-        parser.add_argument('--workerVmStartupDelayMs',
-                            nargs=1,
-                            default=0,
-                            help="Amount of time in milliseconds to wait between starting up the next worker. This is "
-                                 "useful to prevent duplicate connection issues.")
-
-        parser.add_argument('--driver',
-                            default="hazelcast5",
-                            nargs=1,
-                            help="The driver to run. Available options hazelcast5,hazelcast-enterprise5,hazelcast4,"
-                                 "hazelcast-enterprise4, hazelcast3,hazelcast-enterprise3,ignite2"
-                                 "infinispan11,couchbase,lettuce5,lettucecluster5,jedis3,jedis5")
-
-        parser.add_argument('--version',
-                            nargs=1,
-                            help="The version of the vendor to use. Only hazelcast3/4/5 (and enterprise) will "
-                                 "use this version")
-
-        parser.add_argument('--duration',
-                            nargs=1,
-                            default="0s",
-                            help="Amount of time to execute the RUN phase per test, e.g. 10s, 1m, 2h or 3d. If duration"
-                                 " is set to 0, the test will run until the test decides to stop.")
-
-        parser.add_argument('--members',
-                            nargs=1,
-                            default=-1,
-                            help="Number of cluster member Worker JVMs. If no value is specified and no mixed members "
-                                 "are specified, then the number of cluster members will be equal to the number of "
-                                 "machines in the agents file.")
-
-        parser.add_argument('--clients',
-                            nargs=1,
-                            default=0,
-                            help="Number of cluster client Worker JVMs.")
-
-        parser.add_argument('--dedicatedMemberMachines',
-                            nargs=1,
-                            default=0,
-                            help="Controls the number of dedicated member machines. For example when there are 4 machines,"
-                                 + " 2 members and 9 clients with 1 dedicated member machine defined, then"
-                                 + " 1 machine gets the 2 members and the 3 remaining machines get 3 clients each.")
-
-        # parser.add_argument('--targetType',
-        #                     nargs='1',
-        #                     default=0,
-        #                     help= "Controls the number of dedicated member machines. For example when there are 4 machines,"
-        #                     + " 2 members and 9 clients with 1 dedicated member machine defined, then"
-        #                     + " 1 machine gets the 2 members and the 3 remaining machines get 3 clients each.")
-
-        parser.add_argument('--clientType',
-                            nargs=1,
-                            default="javaclient",
-                            help="Defines the type of client e.g javaclient, litemember, etc.")
-
-        parser.add_argument('--targetCount',
-                            nargs=1,
-                            default=0,
-                            help="Defines the number of Workers which execute the RUN phase. The value 0 selects "
-                                 "all Workers.")
-
-        parser.add_argument('--runPath',
-                            nargs=1,
-                            help="The path where the result of the run need to be stored.")
-
-        parser.add_argument('--verifyEnabled',
-                            default="true",
-                            help="Defines if tests are verified.")
-
-        parser.add_argument('--failFast',
-                            default="true",
-                            help="Defines if the TestSuite should fail immediately when a test from a TestSuite fails "
-                                 "instead of continuing.")
-
-        parser.add_argument('--parallel',
-                            action='store_true',
-                            help="If defined tests are run in parallel.")
-
-        parser.add_argument('--memberArgs',
-                            nargs=1,
-                            default="-XX:+HeapDumpOnOutOfMemoryError",
-                            help="Member Worker JVM options (quotes can be used). ")
-
-        parser.add_argument('--clientArgs',
-                            nargs=1,
-                            default="-XX:+HeapDumpOnOutOfMemoryError",
-                            help="Client Worker JVM options (quotes can be used). ")
-
-        parser.add_argument('--licenseKey',
-                            nargs=1,
-                            default="",
-                            help="Sets the license key for Hazelcast Enterprise Edition.")
-
-        parser.add_argument('--skipDownload',
-                            action='store_true',
-                            help="Prevents downloading of the created worker artifacts.")
-
-        parser.add_argument('--nodeHosts',
-                            nargs=1,
-                            help="The name of the group that makes up the nodes.")
-
-        parser.add_argument('--loadGeneratorHosts',
-                            nargs=1,
-                            help="The name of the group that makes up the loadGenerator.")
-
-        parser.add_argument('--memberWorkerScript',
-                            nargs=1,
-                            help="The worker script to use for the members.")
-
-        parser.add_argument('--clientWorkerScript',
-                            nargs=1,
-                            help="The worker script to use for the clients.")
-
-        parser.add_argument('-t', '--tag', metavar="KEY=VALUE", nargs=1, action='append')
-        args = parser.parse_args(argv)
-        test = load_yaml_file(args.file)
-        tags = parse_tags(args.tag)
-
-        perftest = PerfTest()
-        run_path = perftest.exec(
-            test,
-            run_path=args.sessionId,
-            performance_monitor_interval_seconds=args.performanceMonitorInterval,
-            worker_vm_startup_delay_ms=args.workerVmStartupDelayMs,
-            parallel=args.parallel,
-            license_key=args.licenseKey,
-            driver=args.driver,
-            version=args.version,
-            duration=args.duration,
-            members=args.members,
-            member_args=args.memberArgs,
-            client_args=args.clientArgs,
-            clients=args.clients,
-            dedicated_member_machines=args.dedicatedMemberMachines,
-            node_hosts=args.nodeHosts,
-            loadgenerator_hosts=args.loadGeneratorHosts,
-            fail_fast=args.failFast,
-            verify_enabled=args.verifyEnabled,
-            client_type=args.clientType,
-            skip_download=args.skipDownload,
-            member_worker_script = args.memberWorkerScript,
-            client_worker_script = args.clientWorkerScript
-        )
-
-        perftest.collect(run_path,
-                         tags,
-                         warmup_seconds=test.get("warmup_seconds"),
-                         cooldown_seconds=test.get("cooldown_seconds"))
+        perftest.run(tests_file, tags, args.skip_report, args.commit, pattern, run_label)
 
 
 class PerftestKillJavaCli:
@@ -724,7 +561,7 @@ class PerftestCleanCli:
 
     def __init__(self, argv):
         parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-                                         description='Cleans to  load generators')
+                                         description='Cleans all the files generated by workers on the agents.')
         args = parser.parse_args(argv)
 
         log_header("perftest clean")

@@ -13,7 +13,7 @@ from signal_processing_algorithms.energy_statistics.energy_statistics import e_d
 
 import commit_sorter
 from simulator.log import info, log_header
-from simulator.util import load_yaml_file, validate_dir, mkdir, validate_git_dir, write, write_yaml, exit_with_error
+from simulator.util import load_yaml_file, validate_dir, mkdir, validate_git_dir, write_file, write_yaml, exit_with_error
 
 
 class TimeSeries:
@@ -325,7 +325,7 @@ class PerfRegressionAnalysisCli:
             for problem in commit_problems:
                 text += f"   {problem}\n"
             yaml_content[commit] = commit_problems
-        write(f"{self.output}/analysis.txt", text)
+        write_file(f"{self.output}/analysis.txt", text)
         write_yaml(f"{self.output}/analysis.yaml", yaml_content)
 
     def make_plots(self):
