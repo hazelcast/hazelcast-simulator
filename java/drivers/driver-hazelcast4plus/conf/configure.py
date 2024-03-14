@@ -93,14 +93,14 @@ def exec(args: DriverConfigureArgs):
     nodes_pattern = args.test.get("node_hosts")
     nodes = load_hosts(inventory_path=args.inventory_path, host_pattern=nodes_pattern)
 
-    members = args.test.get("members")
-    if members is not None:
+    node_count = args.test.get("node_count")
+    if node_count is not None:
         # For Hazelcast we need to have workers for both clients (load generators) and
-        # members (nodes). By setting the NODE_WORKER_COUNT, we control the number of
-        # passive members workers that are started.
+        # nodes (members). By setting the NODE_WORKER_COUNT, we control the number of
+        # passive member workers that are started.
         # There are also drivers like Redis OS that doesn't require any workers for the
-        # server, so NODE_WORKER_COUNT should be zero.
-        args.coordinator_params['NODE_WORKER_COUNT'] = members
+        # server, so NODE_WORKER_COUNT should be zero (which is the default).
+        args.coordinator_params['NODE_WORKER_COUNT'] = node_count
 
     _configure_log4j_xml(args)
     _configure_worker_sh(args)
