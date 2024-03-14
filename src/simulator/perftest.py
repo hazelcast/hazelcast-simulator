@@ -20,7 +20,7 @@ import simulator.util
 from agents_clean import agents_clean
 from agents_download import agents_download
 from inventory import load_hosts
-from simulator.driver import driver_install_and_configure
+from simulator.driver import driver_install_and_configure, driver_post_run
 from simulator.git import get_last_commit_hash, git_init, is_git_installed, is_inside_git_repo, \
     commit_modified_files
 from simulator.hosts import public_ip, ssh_user, ssh_options
@@ -200,9 +200,10 @@ class PerfTest:
 
             self.exitcode = self.__shell(f"{simulator_home}/bin/hidden/coordinator {coordinator_param} {tmp.name}")
             del test['run_path']
-            hosts = load_hosts(inventory_path=inventory_path, host_pattern="all:!mc")
+            hosts = load_hosts(inventory_path=inventory_path, host_pattern="all:!mc:!load_balancers")
             agents_download(hosts, run_path, test['RUN_ID'])
             agents_clean(hosts)
+            driver_post_run(driver, test, None, inventory_path)
             return self.exitcode, run_path
 
     def _sanitize_test(self, test: dict):
@@ -253,15 +254,24 @@ class PerfTest:
 
         node_hosts = test.get('node_hosts', 'all')
         if not node_hosts:
-            node_hosts = "all|!mc"
+            node_hosts = "all|!mc:!load_balancers"
             test['node_hosts'] = node_hosts
         self.verify_hosts(node_hosts)
 
         loadgenerator_hosts = test.get('loadgenerator_hosts')
         if not loadgenerator_hosts:
-            loadgenerator_hosts = "all|!mc"
+            loadgenerator_hosts = "all|!mc:!load_balancers"
             test['loadgenerator_hosts'] = loadgenerator_hosts
         self.verify_hosts(loadgenerator_hosts)
+
+        loadbalancer_count = test.get('loadbalancer_count')
+        if loadbalancer_count is None:
+            test['loadbalancer_count'] = -1
+
+        loadbalancer_hosts = test.get('loadbalancer_hosts', 'all')
+        if not loadbalancer_hosts:
+            loadbalancer_hosts = "all|!mc"
+            test['loadbalancer_hosts'] = loadbalancer_hosts
 
         if test.get("duration") is None:
             exit_with_error(f"The 'duration' property is not specified in test {test.get('name')}")
@@ -280,7 +290,7 @@ class PerfTest:
 
     def clean(self):
         # the !mc pattern is very ugly
-        hosts = load_hosts(inventory_path=inventory_path, host_pattern="all:!mc")
+        hosts = load_hosts(inventory_path=inventory_path, host_pattern="all:!mc:!load_balancers")
         agents_clean(hosts)
 
     def __shell(self, cmd):

@@ -97,6 +97,9 @@ class Ssh:
         sel = DefaultSelector()
         sel.register(process.stdout, EVENT_READ)
         sel.register(process.stderr, EVENT_READ)
+
+        output = ""
+
         while True:
             for key, _ in sel.select():
                 data = key.fileobj.read1().decode()
@@ -107,8 +110,10 @@ class Ssh:
                         if fail_on_error:
                             raise Exception(f"Failed to execute [{cmd_list}], exitcode={exitcode}")
                         else:
-                            return exitcode
-                    return exitcode
+                            return exitcode, output
+                    return exitcode, output
+
+                output += data
                 log_host(self.ip, data,  Level.info if key.fileobj is process.stdout else Level.warn)
 
     def scp_from_remote(self, src, dst_dir):

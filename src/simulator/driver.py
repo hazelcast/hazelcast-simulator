@@ -49,6 +49,12 @@ def driver_install_and_configure(driver: str, test: dict, is_loadgenerator: Opti
     _driver_exec(driver, "configure.py", configure_args)
 
 
+def driver_post_run(driver: str, test: dict, is_loadgenerator: Optional[bool], inventory_path: str):
+    info(f"Running post_run.py for driver {driver}")
+    args = DriverInstallArgs(test, is_loadgenerator, inventory_path)
+    _driver_exec(driver, "post_run.py", args)
+
+
 @dataclass
 class DriverInstallArgs:
     test: dict

@@ -151,7 +151,7 @@ class InventoryInstallCli:
                                          description='Install Java')
         parser.add_argument("--url", help="The url of the JDK tar.gz file", default=default_url)
         parser.add_argument("--examples", help="Shows example urls", action='store_true')
-        parser.add_argument("--hosts", help="The target hosts.", default="all:!mc")
+        parser.add_argument("--hosts", help="The target hosts.", default="all:!mc:!load_balancers")
 
         args = parser.parse_args(argv)
 
@@ -199,7 +199,7 @@ class InventoryInstallCli:
     def perf(self, argv):
         parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter,
                                          description='Install Linux Perf')
-        parser.add_argument("--hosts", help="The target hosts.", default="all:!mc")
+        parser.add_argument("--hosts", help="The target hosts.", default="all:!mc:!load_balancers")
 
         args = parser.parse_args(argv)
 
@@ -215,7 +215,7 @@ class InventoryInstallCli:
     def simulator(self, argv):
         parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter,
                                          description='Install Simulator')
-        parser.add_argument("--hosts", help="The target hosts.", default="all:!mc")
+        parser.add_argument("--hosts", help="The target hosts.", default="all:!mc:!load_balancers")
         args = parser.parse_args(argv)
 
         hosts = args.hosts
@@ -232,7 +232,7 @@ class InventoryInstallCli:
     def iperf3(self, argv):
         parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter,
                                          description='Install iperf3')
-        parser.add_argument("--hosts", help="The target hosts.", default="all:!mc")
+        parser.add_argument("--hosts", help="The target hosts.", default="all:!mc:!load_balancers")
         args = parser.parse_args(argv)
 
         hosts = args.hosts
