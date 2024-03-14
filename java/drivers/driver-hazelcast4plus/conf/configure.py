@@ -6,7 +6,7 @@ from simulator.log import info
 from simulator.util import read_file
 
 
-def _configure_hazelcast_xml(nodes, args: DriverConfigureArgs, is_lite_member:bool):
+def _configure_hazelcast_xml(nodes, args: DriverConfigureArgs, is_lite_member: bool):
     src_file = args.test.get("hazelcast_xml")
     if src_file is not None:
         if not os.path.exists(src_file):
@@ -42,6 +42,7 @@ def _configure_hazelcast_xml(nodes, args: DriverConfigureArgs, is_lite_member:bo
     else:
         args.coordinator_params['file:hazelcast.xml'] = config
 
+
 def _configure_client_hazelcast_xml(nodes, args: DriverConfigureArgs):
     src_file = args.test.get("client_hazelcast_xml")
     if src_file is not None:
@@ -60,10 +61,12 @@ def _configure_client_hazelcast_xml(nodes, args: DriverConfigureArgs):
     config = config.replace("<!--MEMBERS-->", members_config)
     args.coordinator_params['file:client-hazelcast.xml'] = config
 
+
 def _configure_log4j_xml(args: DriverConfigureArgs):
     driver = _get_driver(args)
     log4j_xml = read_file(find_driver_config_file(driver, "log4j.xml"))
     args.coordinator_params['file:log4j.xml'] = log4j_xml
+
 
 def _configure_worker_sh(args: DriverConfigureArgs):
     driver = _get_driver(args)
@@ -76,17 +79,28 @@ def _configure_worker_sh(args: DriverConfigureArgs):
 
     args.coordinator_params['file:worker.sh'] = worker_sh
 
+
 def _get_driver(args: DriverConfigureArgs):
     driver = args.test.get('driver')
     if driver is None:
         raise Exception(f"Could not find 'driver' in test {args.test['name']}")
     return driver
 
+
 def exec(args: DriverConfigureArgs):
     info("Configure")
 
     nodes_pattern = args.test.get("node_hosts")
     nodes = load_hosts(inventory_path=args.inventory_path, host_pattern=nodes_pattern)
+
+    members = args.test.get("members")
+    if members is not None:
+        # For Hazelcast we need to have workers for both clients (load generators) and
+        # members (nodes). By setting the NODE_WORKER_COUNT, we control the number of
+        # passive members workers that are started.
+        # There are also drivers like Redis OS that doesn't require any workers for the
+        # server, so NODE_WORKER_COUNT should be zero.
+        args.coordinator_params['NODE_WORKER_COUNT'] = members
 
     _configure_log4j_xml(args)
     _configure_worker_sh(args)
