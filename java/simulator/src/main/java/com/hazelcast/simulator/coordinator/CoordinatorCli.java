@@ -252,7 +252,7 @@ final class CoordinatorCli {
         if (nodeWorkerCount == -1) {
             nodeWorkerCount = registry.agentCount();
         } else if (nodeWorkerCount < -1) {
-            throw new CommandLineExitException("node_count must be a equal or larger than -1");
+            throw new CommandLineExitException("NODE_WORKER_COUNT must be a equal or larger than -1");
         }
 
         int loadGeneratorCount = properties.getInt("loadgenerator_count");
