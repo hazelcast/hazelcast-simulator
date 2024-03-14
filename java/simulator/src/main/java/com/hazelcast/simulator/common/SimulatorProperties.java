@@ -136,6 +136,14 @@ public class SimulatorProperties {
         return Integer.parseInt(get(property));
     }
 
+    public int getInt(String property, int defaultValue) {
+        String s = get(property);
+        if (s == null){
+            return defaultValue;
+        }
+        return Integer.parseInt(s);
+    }
+
     public boolean getBoolean(String property) {
         String s = get(property);
         String v = s.toLowerCase();
