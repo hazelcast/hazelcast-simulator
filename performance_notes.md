@@ -17,17 +17,17 @@ Make sure you have added the following JVM settings:
 
 And to run, execute the following if you want a `JFR` file which can be analyzed with Java Mission Control:
 ```shell
-profiler.sh collect -d 60 --jfrsync  ${JAVA_HOME}/lib/jfr/default.jfc  -f profile.jfr Worker
+asprof collect -d 60 --jfrsync  ${JAVA_HOME}/lib/jfr/default.jfc  -f profile.jfr Worker
 ```
 
 Use the following for more accurate profiling:
 ```shell
-profiler.sh collect -d 60 --jfrsync  ${JAVA_HOME}/lib/jfr/default.jfc  -e cycles --cstack lbr  -f profile.jfr Worker
+asprof collect -d 60 --jfrsync  ${JAVA_HOME}/lib/jfr/default.jfc  -e cycles --cstack lbr  -f profile.jfr Worker
 ```
 
 Or use the following if you do not care for a jfr file but want a flamegraph directly:
 ```shell
-profiler.sh collect -d 60 -f flamegraph.html Worker
+asprof collect -d 60 -f flamegraph.html Worker
 ```
 
 # Perf
