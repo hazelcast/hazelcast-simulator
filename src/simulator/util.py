@@ -223,9 +223,9 @@ def find_config_file(filename):
 
 def determine_package_manager(ssh):
     distro_info = get_linux_distribution(ssh)
-    if distro_info is "debian":
+    if distro_info == "debian":
         return "apt"
-    elif distro_info is "rpm":
+    elif distro_info == "rpm":
         return "yum"
     else:
         error(f"Unsupported distribution: {distro_info}")
