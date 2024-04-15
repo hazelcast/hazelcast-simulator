@@ -38,7 +38,7 @@
     lineinfile:
       dest: ~{{ console_user | default(ansible_user) }}/.bashrc
       state: present
-      line: "export PATH=$ASYNC_PROFILER_HOME/:$PATH"
+      line: "export PATH=$ASYNC_PROFILER_HOME/bin/:$PATH"
       insertbefore: BOF
 
   - name: Update ASYNC_PROFILER_HOME
@@ -48,5 +48,4 @@
       regexp: '^export ASYNC_PROFILER_HOME'
       line: "export ASYNC_PROFILER_HOME=~{{ console_user | default(ansible_user) }}/{{ archive_contents.files[0].split('/')[0] }}"
       insertbefore: BOF
-
 
