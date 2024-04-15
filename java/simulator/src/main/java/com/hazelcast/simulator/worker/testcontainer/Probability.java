@@ -88,6 +88,18 @@ public class Probability {
         return ratiosToMethodProbabilityArray(methodRatios);
     }
 
+
+    public static byte[] loadTimeStepProbabilityArray(List<Probability> methods) {
+        double[] methodProbabilities = new double[methods.size()];
+        for (int methodIndex = 0; methodIndex < methods.size(); methodIndex++) {
+            Probability probability = methods.get(methodIndex);
+            methodProbabilities[methodIndex] = probability.getValue();
+        }
+
+        int[] methodRatios = methodProbabilitiesToMethodRatios(methodProbabilities);
+        return ratiosToMethodProbabilityArray(methodRatios);
+    }
+
     public static int[] methodProbabilitiesToMethodRatios(double... methodProbabilities) {
         int[] roundedMethodProbabilities = new int[methodProbabilities.length];
 
