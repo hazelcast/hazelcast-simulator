@@ -36,6 +36,17 @@ import java.util.concurrent.CountDownLatch;
 
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateAsciiStrings;
 
+/**
+ * An IMap test that uses async calls to generate load which is much more efficient
+ * than using sync calls. So instead of having a set of threads calling blocking methods,
+ * just a few threads are needed that keep a level of concurrent request in flight.
+ * <p/>
+ * The big advantage is that a client can generate much higher levels of load without
+ * becoming the bottleneck itself.
+ * <p/>
+ * This is a POC implementation. In the future code generation should be used to do the
+ * actual work.
+ */
 public class AsyncLongStringMapTest extends HazelcastTest {
 
     private final static byte METHOD_GET = 0;
