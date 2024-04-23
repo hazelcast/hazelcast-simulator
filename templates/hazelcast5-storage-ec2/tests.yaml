@@ -4,7 +4,7 @@
   clients: 2
   members: 1
   driver: hazelcast-enterprise5
-  version: maven=5.4-SNAPSHOT
+  version: maven=5.4.0
   client_args: >
     -Xms3g
     -Xmx3g

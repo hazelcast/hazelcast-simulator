@@ -13,7 +13,7 @@
   clients: 1
   members: 1
   driver: hazelcast5
-  version: maven=5.3.0
+  version: maven=5.4.0
   client_args: >
     -Xms3g
     -Xmx3g
