@@ -8,8 +8,7 @@
   loadgenerator_hosts: &loadgenerator_hosts loadgenerators
   node_hosts: &node_hosts nodes
   driver: &driver hazelcast5
-  version: &version maven=5.3.2
-#  version: &version maven=5.4.0-SNAPSHOT # Tested functionality works since version 5.4
+  version: &version maven=5.4.0
   client_args: &client_args >
     -Xms8G
     -Xmx8G
