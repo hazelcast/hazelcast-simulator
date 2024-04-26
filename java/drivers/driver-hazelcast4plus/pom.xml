@@ -13,7 +13,7 @@
     </parent>
 
     <properties>
-        <hazelcast.version>5.4.0-SNAPSHOT</hazelcast.version>
+        <hazelcast.version>5.5.0-SNAPSHOT</hazelcast.version>
         <main.basedir>${project.parent.basedir}</main.basedir>
         <netty.version>4.1.94.Final</netty.version>
         <netty-tcnative.version>2.0.34.Final</netty-tcnative.version>
@@ -68,6 +68,12 @@
         <dependency>
             <groupId>com.hazelcast</groupId>
             <artifactId>hazelcast</artifactId>
+            <version>${hazelcast.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.hazelcast</groupId>
+            <artifactId>hazelcast-enterprise-vector</artifactId>
             <version>${hazelcast.version}</version>
         </dependency>
 
@@ -135,6 +141,37 @@
             <artifactId>netty-transport</artifactId>
             <version>${netty.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.14.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>${httpclient.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>ai.djl</groupId>
+            <artifactId>api</artifactId>
+            <version>0.27.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jetbrains.bio</groupId>
+            <artifactId>npy</artifactId>
+            <version>0.3.5</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.jhdf</groupId>
+            <artifactId>jhdf</artifactId>
+            <version>0.6.10</version>
+        </dependency>
+
 
     </dependencies>
 </project>

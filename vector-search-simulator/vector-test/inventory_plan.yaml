@@ -1,0 +1,53 @@
+provisioner: terraform
+terraform_plan: aws
+# Used for naming resources; give it some unique name specific to a set of benchmarks
+basename: oshultseva-hcbsg
+# Enter something here that identifies you.
+owner: oshultseva
+placement_group_name: None
+region: eu-central-1
+availability_zone: eu-central-1a
+vpc_id: vpc-002b5a4e5f8b8ece2
+internet_gateway_id: igw-02b8fe3ab75871205
+# Change the '20' to a different octet to prevent running into conflicts.
+cidr_block: 10.0.194.0/24
+
+keypair:
+    public_key: key.pub
+    private_key: key
+
+nodes:
+    count: 1
+    instance_type: i3en.2xlarge
+    # default AWS AMI
+    # ami: ami-05cafdf7c9f772ad2
+    # user: ec2-user
+    # ubuntu
+    ami: ami-04e601abe3e1a910f
+    user: ubuntu
+    placement_group: None
+    tenancy: null
+    
+loadgenerators:
+    count: 1
+    instance_type: i3en.2xlarge
+    # default AWS AMI
+    # ami: ami-05cafdf7c9f772ad2
+    # user: ec2-user
+    # ubuntu
+    ami: ami-04e601abe3e1a910f
+    user: ubuntu
+    placement_group: None
+    tenancy: null
+
+mc:
+    instance_type: c5.4xlarge
+    count: 0
+    # default AWS AMI
+    # ami: ami-05cafdf7c9f772ad2
+    # user: ec2-user
+    # ubuntu
+    ami: ami-04e601abe3e1a910f
+    user: ubuntu
+    placement_group: None
+    tenancy: null
