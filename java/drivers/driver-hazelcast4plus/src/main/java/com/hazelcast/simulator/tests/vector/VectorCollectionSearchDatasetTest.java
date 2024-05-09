@@ -3,23 +3,34 @@ package com.hazelcast.simulator.tests.vector;
 import com.hazelcast.config.vector.Metric;
 import com.hazelcast.config.vector.VectorCollectionConfig;
 import com.hazelcast.config.vector.VectorIndexConfig;
+import com.hazelcast.core.Pipelining;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.TimeStep;
+import com.hazelcast.simulator.tests.vector.model.TestDataset;
 import com.hazelcast.vector.SearchOptions;
 import com.hazelcast.vector.SearchOptionsBuilder;
+import com.hazelcast.vector.SearchResults;
 import com.hazelcast.vector.VectorCollection;
 import com.hazelcast.vector.VectorDocument;
 import com.hazelcast.vector.VectorValues;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
+import java.util.Queue;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 
-import static java.lang.String.format;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 public class VectorCollectionSearchDatasetTest extends HazelcastTest {
 
@@ -48,12 +59,18 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
     private static final String collectionName = "performance-collection";
 
     private static final int PUT_BATCH_SIZE = 10_000;
+
+    private static final int MAX_PUT_ALL_IN_FLIGHT = 5;
+
     private VectorCollection<Integer, Integer> collection;
 
     private final AtomicInteger searchCounter = new AtomicInteger(0);
 
     private final AtomicInteger putCounter = new AtomicInteger(0);
-    private float[][] testDataset;
+
+    private TestDataset testDataset;
+
+    private final Queue<TestSearchResult> searchResults = new ConcurrentLinkedQueue<>();
 
     @Setup
     public void setup() {
@@ -62,7 +79,7 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
         int dimension = reader.getDimension();
         assert dimension == reader.getTestDatasetDimension() : "dataset dimension does not correspond to query vector dimension";
         testDataset = reader.getTestDataset();
-        numberOfSearchIterations = Math.min(numberOfSearchIterations, testDataset.length);
+        numberOfSearchIterations = Math.min(numberOfSearchIterations, testDataset.size());
 
         collection = VectorCollection.getCollection(
                 targetInstance,
@@ -80,64 +97,139 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
 
         Map<Integer, VectorDocument<Integer>> buffer = new HashMap<>();
         int index;
+        Pipelining<Void> pipelining = new Pipelining<>(MAX_PUT_ALL_IN_FLIGHT);
         logger.info("Start loading data...");
+
         while ((index = putCounter.getAndIncrement()) < size) {
             buffer.put(index, VectorDocument.of(index, VectorValues.of(reader.getTrainVector(index))));
             if (buffer.size() % PUT_BATCH_SIZE == 0) {
-                var blockStart = System.currentTimeMillis();
-                collection.putAllAsync(buffer).toCompletableFuture().join();
+                addToPipelineWithLogging(pipelining, collection.putAllAsync(buffer));
                 logger.info(
-                        format(
-                                "Uploaded %s vectors from %s. Block size: %s. Delta (m): %s.  Total time (m): %s",
-                                index,
-                                size,
-                                buffer.size(),
-                                TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis() - blockStart),
-                                TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis() - start)
-                        )
+                        "Uploaded {} vectors from {}. Block size: {}. Total time (min): {}",
+                        index,
+                        size,
+                        buffer.size(),
+                        MILLISECONDS.toMinutes(System.currentTimeMillis() - start)
                 );
-                buffer.clear();
+                buffer = new HashMap<>();
             }
         }
         if (!buffer.isEmpty()) {
-            collection.putAllAsync(buffer).toCompletableFuture().join();
-            logger.info(format("Uploaded vectors. Last block size: %s.", buffer.size()));
+            addToPipelineWithLogging(pipelining, collection.putAllAsync(buffer));
+            logger.info("Uploading last vectors block. Last block size: {}.", buffer.size());
             buffer.clear();
         }
-        var startCleanup = System.currentTimeMillis();
-        collection.optimizeAsync().toCompletableFuture().join();
 
-        logger.info("Collection size: " + size);
-        logger.info("Collection dimension: " + reader.getDimension());
-        logger.info("Cleanup time(ms): " + (System.currentTimeMillis() - startCleanup));
-        logger.info("Index build time(m): " + TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis() - start));
+        logger.info("Start waiting pipeline results...");
+        var pipelineWaiting = withTimer(() -> {
+            try {
+                pipelining.results();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+        logger.info("Pipeline waiting finished in {} min", MILLISECONDS.toMinutes(pipelineWaiting));
+
+        var cleanupTimer = withTimer(() -> collection.optimizeAsync().toCompletableFuture().join());
+
+        logger.info("Collection size: {}", size);
+        logger.info("Collection dimension: {}", reader.getDimension());
+        logger.info("Cleanup time (min): {}", MILLISECONDS.toMinutes(cleanupTimer));
+        logger.info("Index build time (min): {}", MILLISECONDS.toMinutes(System.currentTimeMillis() - start));
     }
 
-    @TimeStep(prob = 1)
+    @TimeStep()
     public void search(ThreadState state) {
-        var iteration = searchCounter.incrementAndGet();
+        var iteration = searchCounter.getAndIncrement();
         if (iteration >= numberOfSearchIterations) {
             testContext.stop();
             return;
         }
-        var vector = testDataset[iteration];
-        SearchOptions options = new SearchOptionsBuilder().vector(vector).includePayload().limit(limit).build();
+        var vector = testDataset.getSearchVector(iteration);
+        SearchOptions options = new SearchOptionsBuilder().vector(vector).includePayload().includeVectors().limit(limit).build();
         var result = collection.searchAsync(options).toCompletableFuture().join();
-
-        var score = result.results().next().getScore();
-        ScoreMetrics.set((int) (score * 100));
-        logger.info("Found score: " + result.results().next().getScore());
+        searchResults.add(new TestSearchResult(iteration, vector, result));
     }
 
     @AfterRun
     public void afterRun() {
-        logger.info("Number of search iteration: " + searchCounter.get());
-        logger.info("Min score: " + ScoreMetrics.getMin());
-        logger.info("Max score: " + ScoreMetrics.getMax());
-        logger.info("Mean score: " + ScoreMetrics.getMean());
-        logger.info("Percent lower then 0.98: " + ScoreMetrics.getPercentLowerThen(98));
+        searchResults.forEach(testSearchResult -> {
+            int index = testSearchResult.index();
+            List<Integer> ids = new ArrayList<>();
+            VectorUtils.forEach(testSearchResult.results, r -> ids.add((Integer) r.getKey()));
+            ScoreMetrics.set((int) (testDataset.getPrecisionV1(ids, index, limit) * 100));
+        });
+
+        writePureResultsToFile("precision.out");
+        logger.info("Number of search iteration: {}", searchCounter.get());
+        logger.info("Min score: {}", ScoreMetrics.getMin());
+        logger.info("Max score: {}", ScoreMetrics.getMax());
+        logger.info("Mean score: {}", ScoreMetrics.getMean());
+        logger.info("Percent of results lower then 98% precision: {}", ScoreMetrics.getPercentLowerThen(98));
     }
 
     public static class ThreadState extends BaseThreadState {
     }
+
+    public record TestSearchResult(int index, float[] searchVector, SearchResults results) {
+    }
+
+    private void writePureResultsToFile(String fileName) {
+        try {
+            Function<Float, Float> restore = VectorUtils.restoreRealMetric(Metric.valueOf(metric));
+            var fileWriter = new FileWriter(fileName);
+            PrintWriter printWriter = new PrintWriter(fileWriter);
+            printWriter.println("index, searchVector0, foundVector0, foundVectorKey, foundVectorScore, restoredRealVectorScore");
+            searchResults.forEach(
+                    testSearchResult -> VectorUtils.forEach(
+                            testSearchResult.results,
+                            (result) -> printWriter.printf(
+                                    "%d, %s, %s, %s, %s, %s\n",
+                                    testSearchResult.index,
+                                    testSearchResult.searchVector[0],
+                                    getFirstCoordinate(result.getVectors()),
+                                    result.getKey(),
+                                    result.getScore(),
+                                    restore.apply(result.getScore())
+                            )
+                    )
+            );
+            printWriter.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    void addToPipelineWithLogging(Pipelining<Void> pipelining, CompletionStage<Void> asyncInvocation) {
+        var now = System.currentTimeMillis();
+        try {
+            pipelining.add(asyncInvocation);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        var msBlocked = System.currentTimeMillis() - now;
+        // log if we were blocked for more than 30 sec
+        if (msBlocked > 30_000) {
+            logger.info(
+                    "Thread was blocked for {} sec due to reaching max pipeline depth",
+                    MILLISECONDS.toSeconds(msBlocked)
+            );
+        }
+    }
+
+    private long withTimer(Runnable runnable) {
+        var start = System.currentTimeMillis();
+        runnable.run();
+        return System.currentTimeMillis() - start;
+    }
+
+    private float getFirstCoordinate(VectorValues vectorValues) {
+        var v = (VectorValues.SingleVectorValues) vectorValues;
+        if(v == null || v.vector().length == 0) {
+            return 0;
+        }
+        return v.vector()[0];
+    }
+
+
 }

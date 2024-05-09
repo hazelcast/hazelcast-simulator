@@ -25,7 +25,7 @@ public class DatasetReaderTest {
         assertEquals(1536, reader.getTestDatasetDimension());
 
         assertNotNull(reader.getTrainVector(1234));
-        assertNotNull(reader.getTestDataset());
+        assertEquals(5000, reader.getTestDataset().size());
     }
 
     @Test
@@ -39,6 +39,6 @@ public class DatasetReaderTest {
         assertEquals(960, reader.getTestDatasetDimension());
 
         assertNotNull(reader.getTrainVector(1234));
-        assertNotNull(reader.getTestDataset());
+        assertEquals(1000, reader.getTestDataset().size());
     }
 }

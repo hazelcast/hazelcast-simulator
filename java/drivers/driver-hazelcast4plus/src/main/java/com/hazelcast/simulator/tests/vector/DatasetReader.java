@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.tests.vector;
 
+import com.hazelcast.simulator.tests.vector.model.TestDataset;
 import com.hazelcast.simulator.tests.vector.readers.HDF5DatasetReader;
 import com.hazelcast.simulator.tests.vector.readers.NpyArchiveDatasetReader;
 import org.apache.commons.io.FileUtils;
@@ -32,7 +33,7 @@ public abstract class DatasetReader {
 
     protected float[][] trainDataset;
 
-    protected float[][] testDataset;
+    protected TestDataset testDataset;
 
     protected int dimension;
 
@@ -46,11 +47,11 @@ public abstract class DatasetReader {
             this.workingDirectory = Path.of(directory, FilenameUtils.getBaseName(datasetURL.getFile()));
             this.downloadedFile = Path.of(workingDirectory.toString(), FilenameUtils.getName(datasetURL.getFile())).toFile();
 
-            logger.info("Start downloading file from " + datasetURL);
+            logger.info("Start downloading file from {}", datasetURL);
             if (!downloadedFile.exists()) {
                 download();
             }
-            logger.info("File downloaded to " + downloadedFile + ". Start unpacking...");
+            logger.info("File downloaded to {}. Start unpacking...", downloadedFile);
 
             preprocessDatasetFile();
             parseTrainDataset();
@@ -63,7 +64,6 @@ public abstract class DatasetReader {
 
     protected abstract void preprocessDatasetFile();
     protected abstract void parseTrainDataset();
-
     protected abstract void parseTestDataset();
 
     private void cleanup() {
@@ -78,7 +78,7 @@ public abstract class DatasetReader {
         return trainDataset[index];
     }
 
-    public float[][] getTestDataset() {
+    public TestDataset getTestDataset() {
         return testDataset;
     }
 
@@ -91,10 +91,7 @@ public abstract class DatasetReader {
     }
 
     public int getTestDatasetDimension() {
-        if(testDataset.length == 0) {
-            return 0;
-        }
-        return testDataset[0].length;
+        return testDataset.getDimension();
     }
 
     private void download() {
@@ -112,21 +109,15 @@ public abstract class DatasetReader {
     }
 
 
-    private static class FileDownloadResponseHandler implements ResponseHandler<Void> {
-
-        private final File target;
-
-        public FileDownloadResponseHandler(File target) {
-            this.target = target;
-        }
+    private record FileDownloadResponseHandler(File target) implements ResponseHandler<Void> {
 
         @Override
-        public Void handleResponse(HttpResponse response) throws IOException {
-            InputStream source = response.getEntity().getContent();
-            FileUtils.copyInputStreamToFile(source, this.target);
-            return null;
+            public Void handleResponse(HttpResponse response) throws IOException {
+                InputStream source = response.getEntity().getContent();
+                FileUtils.copyInputStreamToFile(source, this.target);
+                return null;
+            }
         }
-    }
 
     public static DatasetReader create(String url, String directory) {
         try {

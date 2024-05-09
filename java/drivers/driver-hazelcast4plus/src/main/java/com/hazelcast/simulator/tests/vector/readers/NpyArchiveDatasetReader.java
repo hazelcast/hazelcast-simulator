@@ -3,6 +3,7 @@ package com.hazelcast.simulator.tests.vector.readers;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonParser;
 import com.hazelcast.simulator.tests.vector.DatasetReader;
+import com.hazelcast.simulator.tests.vector.model.TestDataset;
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.bio.npy.NpyArray;
 import org.jetbrains.bio.npy.NpyFile;
@@ -58,20 +59,40 @@ public class NpyArchiveDatasetReader extends DatasetReader {
         try {
             var parser = new JsonParser();
             List<String> queryList = FileUtils.readLines(testDatesetFilename.toFile(), Charset.defaultCharset());
-            testDataset = new float[queryList.size()][dimension];
+            int size = queryList.size();
+            var searchVectors = new float[size][dimension];
+            var searchClosestIds = new int[size][];
+            var searchClosestScore = new float[size][];
             for (int i = 0; i < queryList.size(); i++) {
-                var jsonArray = parser.parse(queryList.get(i)).getAsJsonObject().getAsJsonArray("query");
-                testDataset[i] = convert(jsonArray);
+                var queryObject = parser.parse(queryList.get(i)).getAsJsonObject();
+                var jsonArray = queryObject.getAsJsonArray("query");
+                var ids = queryObject.getAsJsonArray("closest_ids");
+                var scores = queryObject.getAsJsonArray("closest_scores");
+                searchVectors[i] = convertToFloatArray(jsonArray);
+                searchClosestIds[i] = convertToIntArray(ids);
+                searchClosestScore[i] = convertToFloatArray(scores);
+
             }
+            testDataset = new TestDataset(searchVectors, searchClosestIds, searchClosestScore);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private float[] convert(JsonArray array) {
+
+
+    private float[] convertToFloatArray(JsonArray array) {
         var result = new float[array.size()];
         for (int i = 0; i < array.size(); i++) {
             result[i] = array.get(i).getAsFloat();
+        }
+        return result;
+    }
+
+    private int[] convertToIntArray(JsonArray array) {
+        var result = new int[array.size()];
+        for (int i = 0; i < array.size(); i++) {
+            result[i] = array.get(i).getAsInt();
         }
         return result;
     }
