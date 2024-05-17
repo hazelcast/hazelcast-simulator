@@ -1,8 +1,10 @@
 package com.hazelcast.simulator.tests.vector.readers;
 
+import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonParser;
 import com.hazelcast.simulator.tests.vector.DatasetReader;
+import com.hazelcast.simulator.tests.vector.VectorUtils;
 import com.hazelcast.simulator.tests.vector.model.TestDataset;
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.bio.npy.NpyArray;
@@ -20,10 +22,8 @@ public class NpyArchiveDatasetReader extends DatasetReader {
     private Path trainDatasetFilename;
     private Path testDatesetFilename;
 
-    private float[] trainDatasetPlain;
-
-    public NpyArchiveDatasetReader(String url, String directory) {
-        super(url, directory);
+    public NpyArchiveDatasetReader(String url, String directory, boolean normalizeVector) {
+        super(url, directory, normalizeVector);
     }
 
     @Override
@@ -51,7 +51,15 @@ public class NpyArchiveDatasetReader extends DatasetReader {
         var shape = read.getShape();
         size = shape[0];
         dimension = shape[1];
-        trainDatasetPlain = read.asFloatArray();
+        trainDataset = new float[size][];
+        var trainDatasetPlain = read.asFloatArray();
+        for (int i = 0; i < size; i++) {
+            var vector = getTrainVectorPlain(i, trainDatasetPlain);
+            if (normalizeVector) {
+                VectorUtils.normalize(vector);
+            }
+            trainDataset[i] = vector;
+        }
     }
 
     @Override
@@ -69,16 +77,17 @@ public class NpyArchiveDatasetReader extends DatasetReader {
                 var ids = queryObject.getAsJsonArray("closest_ids");
                 var scores = queryObject.getAsJsonArray("closest_scores");
                 searchVectors[i] = convertToFloatArray(jsonArray);
+                if (normalizeVector) {
+                    VectorUtils.normalize(searchVectors[i]);
+                }
                 searchClosestIds[i] = convertToIntArray(ids);
                 searchClosestScore[i] = convertToFloatArray(scores);
-
             }
             testDataset = new TestDataset(searchVectors, searchClosestIds, searchClosestScore);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
-
 
 
     private float[] convertToFloatArray(JsonArray array) {
@@ -97,8 +106,7 @@ public class NpyArchiveDatasetReader extends DatasetReader {
         return result;
     }
 
-    @Override
-    public float[] getTrainVector(int index) {
+    private float[] getTrainVectorPlain(int index, float[] trainDatasetPlain) {
         if (index >= size) {
             throw new RuntimeException("invalid index");
         }

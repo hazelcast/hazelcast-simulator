@@ -39,13 +39,19 @@ public abstract class DatasetReader {
 
     protected int size;
 
+    protected Boolean normalizeVector = false;
+
     protected final Logger logger = LogManager.getLogger(getClass());
 
     public DatasetReader(String url, String directory) {
+        this(url, directory, false);
+    }
+    public DatasetReader(String url, String directory, Boolean normalizeVector) {
         try {
             this.datasetURL = URI.create(url).toURL();
             this.workingDirectory = Path.of(directory, FilenameUtils.getBaseName(datasetURL.getFile()));
             this.downloadedFile = Path.of(workingDirectory.toString(), FilenameUtils.getName(datasetURL.getFile())).toFile();
+            this.normalizeVector = normalizeVector;
 
             logger.info("Start downloading file from {}", datasetURL);
             if (!downloadedFile.exists()) {
@@ -119,18 +125,17 @@ public abstract class DatasetReader {
             }
         }
 
-    public static DatasetReader create(String url, String directory) {
+    public static DatasetReader create(String url, String directory, boolean normalizeVector) {
         try {
             URL datasetUrl = URI.create(url).toURL();
             var ext = FilenameUtils.getExtension(datasetUrl.getFile());
             return switch (ext) {
-                case "hdf5" -> new HDF5DatasetReader(url, directory);
-                case "tgz" -> new NpyArchiveDatasetReader(url, directory);
+                case "hdf5" -> new HDF5DatasetReader(url, directory, normalizeVector);
+                case "tgz" -> new NpyArchiveDatasetReader(url, directory, normalizeVector);
                 default -> throw new UnsupportedOperationException("File " + ext + " is not supported");
             };
         } catch (MalformedURLException e) {
             throw new RuntimeException(e);
         }
-
     }
 }

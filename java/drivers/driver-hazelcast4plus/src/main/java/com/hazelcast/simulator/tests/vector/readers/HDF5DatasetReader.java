@@ -1,6 +1,7 @@
 package com.hazelcast.simulator.tests.vector.readers;
 
 import com.hazelcast.simulator.tests.vector.DatasetReader;
+import com.hazelcast.simulator.tests.vector.VectorUtils;
 import com.hazelcast.simulator.tests.vector.model.TestDataset;
 import io.jhdf.HdfFile;
 import io.jhdf.api.Dataset;
@@ -9,8 +10,8 @@ public class HDF5DatasetReader extends DatasetReader {
 
     private static final int BULK_READER_SIZE = 50_000;
 
-    public HDF5DatasetReader(String url, String directory) {
-        super(url, directory);
+    public HDF5DatasetReader(String url, String directory, Boolean normalizeVector) {
+        super(url, directory, normalizeVector);
     }
 
     @Override
@@ -23,15 +24,24 @@ public class HDF5DatasetReader extends DatasetReader {
         trainDataset = getDatasetAsFloatMatrix("train");
         size = trainDataset.length;
         dimension = trainDataset[0].length;
+        if (normalizeVector) {
+            for (float[] vector : trainDataset) {
+                VectorUtils.normalize(vector);
+            }
+        }
     }
 
     @Override
     protected void parseTestDataset() {
         var searchVectors = getDatasetAsFloatMatrix("test");
-        // todo - now scores in reversed order
         var ids = getDatasetAsIntMatrix("neighbors");
         var scores = getDatasetAsFloatMatrix("distances");
         testDataset = new TestDataset(searchVectors, ids, scores);
+        if (normalizeVector) {
+            for (float[] vector : searchVectors) {
+                VectorUtils.normalize(vector);
+            }
+        }
     }
 
     private float[][] getDatasetAsFloatMatrix(String datasetName) {

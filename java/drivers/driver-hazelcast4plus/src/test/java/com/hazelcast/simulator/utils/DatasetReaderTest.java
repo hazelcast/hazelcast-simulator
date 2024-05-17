@@ -3,6 +3,8 @@ package com.hazelcast.simulator.utils;
 import com.hazelcast.simulator.tests.vector.DatasetReader;
 import org.junit.Test;
 
+import java.util.Arrays;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -15,10 +17,10 @@ public class DatasetReaderTest {
 
     String workingDirectory = "/Users/oshultseva/Downloads/dataset_output/";
     @Test
-    public void npyArchive() {
+    public void npy_dbpedia() {
         String url = "https://storage.googleapis.com/ann-filtered-benchmark/datasets/dbpedia_openai_1M.tgz";
 
-        DatasetReader reader = DatasetReader.create(url, workingDirectory);
+        DatasetReader reader = DatasetReader.create(url, workingDirectory, true);
 
         assertEquals(975_000, reader.getSize());
         assertEquals(1536, reader.getDimension());
@@ -26,13 +28,33 @@ public class DatasetReaderTest {
 
         assertNotNull(reader.getTrainVector(1234));
         assertEquals(5000, reader.getTestDataset().size());
+
+        assertEquals(0.01739898, reader.getTrainVector(0)[0], 0.0001);
+        assertEquals(-0.04525524, reader.getTrainVector(0)[1535], 0.0001);
     }
 
     @Test
-    public void hdf5() {
+    public void hdf5_angular() {
+        String url = "http://ann-benchmarks.com/glove-100-angular.hdf5";
+
+        DatasetReader reader = DatasetReader.create(url, workingDirectory, true);
+
+        assertEquals(1_183_514, reader.getSize());
+        assertEquals(100, reader.getDimension());
+        assertEquals(100, reader.getTestDatasetDimension());
+
+        assertEquals(10_000, reader.getTestDataset().size());
+        assertEquals(-0.02701984, reader.getTrainVector(0)[0], 0.0001);
+        assertEquals(-0.00503204, reader.getTrainVector(0)[99], 0.0001);
+
+        assertEquals(0.08828659, reader.getTestDataset().getSearchVector(0)[0], 0.0001);
+        assertEquals(-0.0329303, reader.getTestDataset().getSearchVector(0)[99], 0.0001);
+    }
+    @Test
+    public void hdf5_960_euclidean() {
         String url = "http://ann-benchmarks.com/gist-960-euclidean.hdf5";
 
-        DatasetReader reader = DatasetReader.create(url, workingDirectory);
+        DatasetReader reader = DatasetReader.create(url, workingDirectory, false);
 
         assertEquals(1_000_000, reader.getSize());
         assertEquals(960, reader.getDimension());

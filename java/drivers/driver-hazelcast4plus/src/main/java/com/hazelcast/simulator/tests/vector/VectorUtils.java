@@ -22,4 +22,15 @@ public class VectorUtils {
             default -> jMetric -> -1f;
         };
     }
+
+    public static void normalize(float[] vector) {
+        double length = 0;
+        for (float v : vector) {
+            length += v * v;
+        }
+        var scale = (float) (1 / Math.sqrt(length));
+        for (int i = 0; i < vector.length; i++) {
+            vector[i] *= scale;
+        }
+    }
 }

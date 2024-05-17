@@ -50,6 +50,8 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
 
     public int efConstruction = 50;
 
+    public boolean normalize = false;
+
     // search parameters
 
     public int limit = 1;
@@ -58,7 +60,7 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
 
     private static final String collectionName = "performance-collection";
 
-    private static final int PUT_BATCH_SIZE = 10_000;
+    private static final int PUT_BATCH_SIZE = 2_000;
 
     private static final int MAX_PUT_ALL_IN_FLIGHT = 5;
 
@@ -74,7 +76,8 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
 
     @Setup
     public void setup() {
-        DatasetReader reader = DatasetReader.create(datasetUrl, workingDirectory);
+        DatasetReader reader = DatasetReader.create(datasetUrl, workingDirectory, normalize);
+        logger.info("Use normalize: {}", normalize);
         var size = Math.min(reader.getSize(), loadFirst);
         int dimension = reader.getDimension();
         assert dimension == reader.getTestDatasetDimension() : "dataset dimension does not correspond to query vector dimension";
