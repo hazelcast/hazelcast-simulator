@@ -4,26 +4,39 @@ import org.HdrHistogram.Histogram;
 
 public class ScoreMetrics {
 
-    private static final Histogram scoreHistogram = new Histogram(100, 3);
+    private String name;
 
-    public static void set(int score) {
+    private final Histogram scoreHistogram = new Histogram(100, 3);
+
+    public ScoreMetrics() {
+    }
+
+    public void set(int score) {
         scoreHistogram.recordValue(score);
     }
 
-    public static long getMin() {
+    public long getMin() {
         return scoreHistogram.getMinValue();
     }
 
-    public static long getMax() {
+    public long getMax() {
         return scoreHistogram.getMaxValue();
     }
 
-    public static double getMean() {
+    public double getMean() {
         return scoreHistogram.getMean();
     }
 
-    public static long getPercentLowerThen(int value) {
+    public double getPercentile(double value) {
+        return scoreHistogram.getValueAtPercentile(value);
+    }
+
+    public long getPercentLowerThen(int value) {
         var lower = scoreHistogram.getCountBetweenValues(0, value);
         return (lower * 100) / scoreHistogram.getTotalCount();
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 }

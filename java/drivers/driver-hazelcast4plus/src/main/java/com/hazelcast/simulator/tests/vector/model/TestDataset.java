@@ -34,23 +34,10 @@ public class TestDataset {
         return searchVectors.length;
     }
 
-    public float getPrecisionV1(List<Integer> actualVectorsIds, int index, int top) {
+    public float getPrecision(List<Integer> actualVectorsIds, int index, int top) {
         var actualSet = new HashSet<>(actualVectorsIds);
         var expectedSet = Arrays.stream(Arrays.copyOfRange(closestIds[index], 0, top)).boxed().collect(Collectors.toSet());
         actualSet.retainAll(expectedSet);
         return ((float) actualSet.size()) / top;
-    }
-
-    public float getPrecisionV2(float[] actualVectorsScore, int index) {
-        var expected = Arrays.copyOfRange(closestScores[index], 0, actualVectorsScore.length);
-        return distance(actualVectorsScore, expected);
-    }
-
-    private float distance(float[] array1, float[] array2) {
-        double sum = 0f;
-        for (int i = 0; i < array1.length; i++) {
-            sum += Math.pow((array1[i] - array2[i]), 2.0);
-        }
-        return (float) Math.sqrt(sum);
     }
 }

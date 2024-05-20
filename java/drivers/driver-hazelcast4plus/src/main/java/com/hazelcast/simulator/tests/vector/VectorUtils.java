@@ -18,7 +18,7 @@ public class VectorUtils {
 
     public static Function<Float, Float> restoreRealMetric(Metric metric) {
         return switch (metric) {
-            case COSINE -> jMetric -> 2 * jMetric - 1;
+            case COSINE, DOT -> jMetric -> 2 * jMetric - 1;
             default -> jMetric -> -1f;
         };
     }
