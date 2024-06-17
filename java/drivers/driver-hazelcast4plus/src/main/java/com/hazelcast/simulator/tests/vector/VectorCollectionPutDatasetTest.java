@@ -25,25 +25,24 @@ public class VectorCollectionPutDatasetTest extends HazelcastTest {
 
     public String workingDirectory;
 
+    public String name;
+
     // common parameters
     public int loadFirst = Integer.MAX_VALUE;
 
     public int putBatchSize = 10_000;
 
     // graph parameters
-    public String metric = "COSINE";
+    public String metric;
 
-    public int maxDegree = 40;
+    public int maxDegree;
 
-    public int efConstruction = 50;
+    public int efConstruction;
 
     // inner test parameters
 
-    private static final String collectionName = "performance-collection";
-
     private static final TimeMetrics metrics = new TimeMetrics();
     private VectorCollection<Integer, Integer> collection;
-
     private final AtomicInteger counter = new AtomicInteger(0);
 
     private DatasetReader reader;
@@ -57,7 +56,7 @@ public class VectorCollectionPutDatasetTest extends HazelcastTest {
 
         collection = VectorCollection.getCollection(
                 targetInstance,
-                new VectorCollectionConfig(collectionName)
+                new VectorCollectionConfig(name)
                         .addVectorIndexConfig(
                                 new VectorIndexConfig()
                                         .setMetric(Metric.valueOf(metric))
@@ -66,6 +65,7 @@ public class VectorCollectionPutDatasetTest extends HazelcastTest {
                                         .setEfConstruction(efConstruction)
                         )
         );
+        logger.info("Use collection with name: {}", collection.getName());
     }
 
     @TimeStep(prob = 0)

@@ -172,6 +172,11 @@
             <version>0.6.10</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.jctools</groupId>
+            <artifactId>jctools-core</artifactId>
+            <version>4.0.3</version>
+        </dependency>
 
     </dependencies>
 </project>

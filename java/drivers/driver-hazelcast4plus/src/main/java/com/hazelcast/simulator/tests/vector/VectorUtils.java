@@ -9,7 +9,7 @@ import java.util.function.Function;
 
 public class VectorUtils {
 
-    public static void forEach(SearchResults searchResults, Consumer<SearchResult> consumer) {
+    public static void forEach(SearchResults<?, ?> searchResults, Consumer<SearchResult<?, ?>> consumer) {
         var resultsIterator = searchResults.results();
         while (resultsIterator.hasNext()) {
             consumer.accept(resultsIterator.next());
