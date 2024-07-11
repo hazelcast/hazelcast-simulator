@@ -69,7 +69,7 @@ def _get_remote_repo(is_enterprise:bool, version:str):
             return "https://oss.sonatype.org/content/repositories/releases"
     else:
         if version.endswith("-SNAPSHOT"):
-            return "https://repository.hazelcast.com/snapshot"
+            return "https://repository.hazelcast.com/snapshot-internal"
         else:
             return "https://repository.hazelcast.com/release"
 
