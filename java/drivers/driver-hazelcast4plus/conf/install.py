@@ -69,7 +69,9 @@ def _get_remote_repo(is_enterprise:bool, version:str):
             return "https://oss.sonatype.org/content/repositories/releases"
     else:
         if version.endswith("-SNAPSHOT"):
-            return "https://repository.hazelcast.com/snapshot-internal"
+            # maven ignores settings.xml authentication unless forced with fully qualified remoteRepositories construct
+            # https://maven.apache.org/plugins/maven-dependency-plugin/get-mojo.html
+            return "snapshot-internal::::https://repository.hazelcast.com/snapshot-internal"
         else:
             return "https://repository.hazelcast.com/release"
 
