@@ -80,6 +80,8 @@ class HTMLReport:
         self._aws_config_write()
 
     def _aws_config_write(self):
+        if "HZ_SIM_PUBLISH" not in os.environ:
+            return
         aws_publish_path: str = self.config.report_dir
         runs_path_component = aws_publish_path.find("runs")
         project_path = aws_publish_path[0:runs_path_component-1]

@@ -359,6 +359,9 @@ class PerfTest:
         self._aws_publish()
 
     def _aws_publish(self):
+        if "HZ_SIM_PUBLISH" not in os.environ:
+            return
+
         aws_cfg_path = f"{os.getcwd()}/aws.json"
         with open(aws_cfg_path) as f:
             cfg = json.loads(f.read())
