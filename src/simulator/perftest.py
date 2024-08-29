@@ -7,12 +7,14 @@ import re
 import shlex
 import shutil
 import random
+import json
 import string
 import tempfile
 import uuid
 from datetime import datetime
 import os
 from os import path
+import subprocess
 
 import csv
 
@@ -354,6 +356,36 @@ class PerfTest:
                 results[row[1]] = {'tags': tags, 'measurements': measurements}
 
         write_yaml(f"{dir}/results.yaml", results)
+        self._aws_publish()
+
+    def _aws_publish(self):
+        aws_cfg_path = f"{os.getcwd()}/aws.json"
+        with open(aws_cfg_path) as f:
+            cfg = json.loads(f.read())
+        project_path = cfg["project_path"]
+        run_path_relative = cfg["run_path"]
+        test_file = cfg["test_file"]
+        home = os.environ["HOME"]
+
+        subprocess.run([
+            "docker",
+            "run",
+            "--rm",
+            "-it",
+            "-v",
+            f"{home}/.aws:/root/.aws:ro",
+            "-v",
+            f"{project_path}:/app/project",
+            "-e",
+            f"HZ_TEST={test_file}",
+            "-e",
+            f"HZ_RUN={run_path_relative}", 
+            "sim-publish:latest"
+        ])
+
+        os.remove(aws_cfg_path)
+
+
 
 
 class PerftestCreateCli:
@@ -527,6 +559,7 @@ class PerftestRunCli:
         tests_file = args.file
         perftest = PerfTest()
 
+        os.environ["HZ_SIM_TEST_FILE"] = tests_file
         perftest.run(tests_file, tags, args.skip_report, args.commit, pattern, run_label)
 
 

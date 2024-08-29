@@ -4,6 +4,7 @@ import math
 import os
 import base64
 from pathlib import Path
+import json
 
 import pandas as pd
 
@@ -75,6 +76,20 @@ class HTMLReport:
             f.write(summary)
 
             f.write(html_template[overview_index + len("[summary]"):])
+
+        self._aws_config_write()
+
+    def _aws_config_write(self):
+        aws_publish_path: str = self.config.report_dir
+        runs_path_component = aws_publish_path.find("runs")
+        project_path = aws_publish_path[0:runs_path_component-1]
+        report_path_component = aws_publish_path.find("report")
+        run_path_relative = aws_publish_path[runs_path_component:report_path_component-1]
+        test_file = os.environ["HZ_SIM_TEST_FILE"]
+        aws_data = { "project_path": project_path, "run_path": run_path_relative, "test_file": test_file}
+        aws_cfg_path = f"{project_path}/aws.json"
+        with open(aws_cfg_path, "w") as f:
+            f.write(json.dumps(aws_data))
 
     def __load_report_csv(self):
         path = self.config.report_dir + "/report.csv"
