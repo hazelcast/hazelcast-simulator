@@ -361,6 +361,8 @@ class PerfTest:
     def _aws_publish(self):
         if "HZ_SIM_PUBLISH" not in os.environ:
             return
+        aws_region = os.environ["HZ_SIM_REGION"]
+        aws_table = os.environ["HZ_SIM_TABLE"]
 
         aws_cfg_path = f"{os.getcwd()}/aws.json"
         with open(aws_cfg_path) as f:
@@ -383,6 +385,10 @@ class PerfTest:
             f"HZ_TEST={test_file}",
             "-e",
             f"HZ_RUN={run_path_relative}", 
+            "-e",
+            f"HZ_SIM_REGION={aws_region}", 
+            "-e",
+            f"HZ_SIM_TABLE={aws_table}", 
             "sim-publish:latest"
         ])
 
