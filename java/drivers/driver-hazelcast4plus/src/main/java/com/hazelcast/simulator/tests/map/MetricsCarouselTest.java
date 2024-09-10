@@ -36,11 +36,13 @@
      private final Map<String, ObjectInfo> createdObjects = new ConcurrentHashMap<>();
      public int keyDomain = 10000;
      public int valueCount = 10000;
+     public int sleepTimeInSeconds = 5000;
+     public int eligibleForCleanupTimeInSeconds = 30_000;
 
     @Setup
     public void setUp() {
         targetInstance.getDistributedObjects()
-                .forEach(it -> it.destroy());
+                .forEach(DistributedObject::destroy);
     }
 
      @TimeStep(prob = 1)
@@ -72,7 +74,7 @@
 
          ObjectInfo objectInfo = new ObjectInfo(System.currentTimeMillis(), map, multiMap, list, set);
          createdObjects.put(name, objectInfo);
-         Thread.sleep(5_000);
+         Thread.sleep(sleepTimeInSeconds);
      }
 
      private static class ObjectInfo {
@@ -90,7 +92,7 @@
          synchronized (createdObjects) {
              createdObjects.entrySet().removeIf(entry -> {
                  ObjectInfo info = entry.getValue();
-                 if ((currentTime - info.creationTime) > 30_000) {
+                 if ((currentTime - info.creationTime) > eligibleForCleanupTimeInSeconds) {
                      Arrays.stream(info.dataStructures).forEach(DistributedObject::destroy);
                      return true;
                  }
