@@ -61,7 +61,7 @@ public abstract class DatasetReader {
             logger.info("File downloaded to {}. Start unpacking...", downloadedFile);
 
             preprocessDatasetFile();
-            if (testOnly) {
+            if (!testOnly) {
                 parseTrainDataset();
             }
             parseTestDataset();
