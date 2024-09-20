@@ -1,0 +1,75 @@
+- name: read_only
+  duration: 2m
+  repetitions: 1
+  clients: 1
+  members: 3
+  driver: hazelcast-enterprise5
+  version: maven=6.0.0-SNAPSHOT
+  client_args: >
+    -Xms31g
+    -Xmx31g
+    --add-modules jdk.incubator.vector
+    --add-modules java.se 
+    --add-exports java.base/jdk.internal.ref=ALL-UNNAMED 
+    --add-opens java.base/java.lang=ALL-UNNAMED 
+    --add-opens java.base/sun.nio.ch=ALL-UNNAMED 
+    --add-opens java.management/sun.management=ALL-UNNAMED 
+    --add-opens jdk.management/com.sun.management.internal=ALL-UNNAMED
+  member_args: >
+    -Xms31g
+    -Xmx31g
+    --add-modules jdk.incubator.vector
+    --add-modules java.se 
+    --add-exports java.base/jdk.internal.ref=ALL-UNNAMED 
+    --add-opens java.base/java.lang=ALL-UNNAMED 
+    --add-opens java.base/sun.nio.ch=ALL-UNNAMED 
+    --add-opens java.management/sun.management=ALL-UNNAMED 
+    --add-opens jdk.management/com.sun.management.internal=ALL-UNNAMED
+  loadgenerator_hosts: loadgenerators
+  node_hosts: nodes
+  verify_enabled: False
+  performance_monitor_interval_seconds: 1
+  warmup_seconds: 30
+  cooldown_seconds: 0
+  license_key: LICENSE
+  test:
+    - class: com.hazelcast.simulator.tests.vector.VectorCollectionSearchDatasetTest
+      name: vector
+      threadCount: 8
+      logRateMs: 10_000
+      searchProb: 1
+      #      numberOfIterations: 1_000_000
+      # generated data parameters
+      datasetUrl: https://storage.googleapis.com/ann-filtered-benchmark/datasets/dbpedia_openai_1M.tgz
+      testDatasetUrl: https://projectx-semantic-cache.s3.eu-central-1.amazonaws.com/dbpedia_openai_search_vectors_1k.tar.gz
+      loadFirst: 990000
+      normalize: true
+      workingDirectory: /home/ubuntu/workingDirectory/
+      # loadFirst: 32_123
+      # index params
+      metric: COSINE
+      maxDegree: 64
+      efConstruction: 512
+      # search param
+      limit: 10
+    - class: com.hazelcast.simulator.tests.vector.VectorCollectionSearchDatasetTest
+      name: vector-cached
+      threadCount: 8
+      logRateMs: 10_000
+      searchProb: 1
+      #      numberOfIterations: 1_000_000
+      # generated data parameters
+      datasetUrl: https://storage.googleapis.com/ann-filtered-benchmark/datasets/dbpedia_openai_1M.tgz
+      testDatasetUrl: https://projectx-semantic-cache.s3.eu-central-1.amazonaws.com/dbpedia_openai_search_vectors_1k.tar.gz
+      loadFirst: 990000
+      normalize: true
+      workingDirectory: /home/ubuntu/workingDirectory/
+      # loadFirst: 32_123
+      # index params
+      metric: COSINE
+      maxDegree: 64
+      efConstruction: 512
+      # search param
+      limit: 10
+      useCache: true
+

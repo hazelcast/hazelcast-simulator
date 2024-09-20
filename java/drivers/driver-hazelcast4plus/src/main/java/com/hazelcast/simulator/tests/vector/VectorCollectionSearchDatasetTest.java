@@ -17,6 +17,8 @@ import com.hazelcast.vector.SearchResults;
 import com.hazelcast.vector.VectorCollection;
 import com.hazelcast.vector.VectorDocument;
 import com.hazelcast.vector.VectorValues;
+import com.hazelcast.vector.impl.Hints;
+import org.apache.commons.io.FileDeleteStrategy;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -28,6 +30,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -37,6 +40,7 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
     public String name;
 
     public String datasetUrl;
+    public String testDatasetUrl;
 
     public String workingDirectory;
 
@@ -57,16 +61,18 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
     // search parameters
 
     public int limit;
+    public boolean useCache = false;
 
     // inner test parameters
 
     private static final int PUT_BATCH_SIZE = 2_000;
 
-    private static final int MAX_PUT_ALL_IN_FLIGHT = 5;
+    private static final int MAX_PUT_ALL_IN_FLIGHT = 24;
 
     private VectorCollection<Integer, Integer> collection;
 
     private DatasetReader reader;
+    private DatasetReader testReader;
 
     private TestDataset testDataset;
 
@@ -75,17 +81,26 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
     private final ScoreMetrics scoreMetrics = new ScoreMetrics();
 
     private long indexBuildTime = 0;
+    private SearchOptions options;
 
 
     @Setup
     public void setup() {
         scoreMetrics.setName(name);
         reader = DatasetReader.create(datasetUrl, workingDirectory, normalize);
+        if (testDatasetUrl != null) {
+            testReader = DatasetReader.create(testDatasetUrl, workingDirectory, normalize, true);
+        }
 
         int dimension = reader.getDimension();
         assert dimension == reader.getTestDatasetDimension() : "dataset dimension does not correspond to query vector dimension";
-        testDataset = reader.getTestDataset();
-        numberOfSearchIterations = Math.min(numberOfSearchIterations, testDataset.size());
+        if (testDatasetUrl != null) {
+            testDataset = testReader.getTestDataset();
+        } else {
+            testDataset = reader.getTestDataset();
+        }
+
+//        numberOfSearchIterations = Math.min(numberOfSearchIterations, testDataset.size());
 
         logger.info("Vector collection name: {}", name);
         logger.info("Use normalize: {}", normalize);
@@ -100,6 +115,18 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
                                         .setEfConstruction(efConstruction)
                         )
         );
+
+        SearchOptionsBuilder builder = new SearchOptionsBuilder()
+                .includeValue()
+                .includeVectors()
+                .limit(limit);
+
+        if (useCache) {
+            builder.hint(Hints.CACHE_ENABLED, true)
+                    .hint(Hints.CACHE_METRIC, Metric.valueOf(metric))
+                    .hint(Hints.CACHE_SIMILARITY, 0.8f);
+        }
+        options = builder.build();
     }
 
     @Prepare(global = true)
@@ -150,7 +177,7 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
         logger.info("Index build time (min): {}", MILLISECONDS.toMinutes(indexBuildTime));
     }
 
-    @TimeStep()
+    @TimeStep
     public void search(ThreadState state) {
         var iteration = state.getAndIncrementIteration();
         if (iteration >= numberOfSearchIterations) {
@@ -158,7 +185,7 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
             return;
         }
         var vector = testDataset.getSearchVector(iteration);
-        SearchOptions options = new SearchOptionsBuilder().includeValue().includeVectors().limit(limit).build();
+
         var result = collection.searchAsync(
                 VectorValues.of(vector),
                 options
@@ -189,12 +216,10 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
 
     public static class ThreadState extends BaseThreadState {
 
-        private int iteration = 0;
+        private AtomicInteger counter = new AtomicInteger(0);
 
         public int getAndIncrementIteration() {
-            var it = iteration;
-            iteration++;
-            return it;
+            return counter.getAndIncrement();
         }
     }
 

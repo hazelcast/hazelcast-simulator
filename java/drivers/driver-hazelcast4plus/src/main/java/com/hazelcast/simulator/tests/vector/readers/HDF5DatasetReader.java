@@ -10,8 +10,8 @@ public class HDF5DatasetReader extends DatasetReader {
 
     private static final int BULK_READER_SIZE = 50_000;
 
-    public HDF5DatasetReader(String url, String directory, Boolean normalizeVector) {
-        super(url, directory, normalizeVector);
+    public HDF5DatasetReader(String url, String directory, boolean normalizeVector, boolean testOnly) {
+        super(url, directory, normalizeVector, testOnly);
     }
 
     @Override
