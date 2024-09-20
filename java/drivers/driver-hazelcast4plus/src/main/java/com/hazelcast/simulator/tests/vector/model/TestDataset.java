@@ -30,6 +30,14 @@ public class TestDataset {
         return searchVectors[0].length;
     }
 
+    public int[] getClosestIds(int i) {
+        return closestIds[i];
+    }
+
+    public float[] getClosestScores(int i) {
+        return closestScores[i];
+    }
+
     public int size() {
         return searchVectors.length;
     }
@@ -40,4 +48,5 @@ public class TestDataset {
         actualSet.retainAll(expectedSet);
         return ((float) actualSet.size()) / top;
     }
+
 }
