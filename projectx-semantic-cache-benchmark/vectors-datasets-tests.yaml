@@ -53,7 +53,7 @@
       # search param
       limit: 10
     - class: com.hazelcast.simulator.tests.vector.VectorCollectionSearchDatasetTest
-      name: vector-cached
+      name: vectorCached
       threadCount: 8
       logRateMs: 10_000
       searchProb: 1
