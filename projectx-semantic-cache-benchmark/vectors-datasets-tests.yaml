@@ -30,7 +30,7 @@
   verify_enabled: False
   performance_monitor_interval_seconds: 1
   warmup_seconds: 30
-  cooldown_seconds: 0
+  cooldown_seconds: 10
   license_key: LICENSE
   test:
     - class: com.hazelcast.simulator.tests.vector.VectorCollectionSearchDatasetTest

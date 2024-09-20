@@ -9,6 +9,7 @@ import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.tests.vector.model.TestDataset;
 import com.hazelcast.vector.SearchOptions;
@@ -193,7 +194,7 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
         searchResults.add(new TestSearchResult(iteration, vector, result));
     }
 
-    @AfterRun
+    @Teardown(global = true)
     public void afterRun() {
         searchResults.forEach(testSearchResult -> {
             int index = testSearchResult.index();
