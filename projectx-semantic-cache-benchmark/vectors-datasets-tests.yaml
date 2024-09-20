@@ -41,15 +41,15 @@
       #      numberOfIterations: 1_000_000
       # generated data parameters
       datasetUrl: https://storage.googleapis.com/ann-filtered-benchmark/datasets/dbpedia_openai_1M.tgz
-      testDatasetUrl: https://projectx-semantic-cache.s3.eu-central-1.amazonaws.com/dbpedia_openai_search_vectors_1k.tar.gz
-      loadFirst: 990000
+      testDatasetUrl: https://projectx-semantic-cache.s3.eu-central-1.amazonaws.com/dbpedia_openai_search_vectors_1k.tgz
+      loadFirst: 99000
       normalize: true
       workingDirectory: /home/ubuntu/workingDirectory/
       # loadFirst: 32_123
       # index params
       metric: COSINE
-      maxDegree: 64
-      efConstruction: 512
+      maxDegree: 32
+      efConstruction: 128
       # search param
       limit: 10
     - class: com.hazelcast.simulator.tests.vector.VectorCollectionSearchDatasetTest
@@ -60,15 +60,15 @@
       #      numberOfIterations: 1_000_000
       # generated data parameters
       datasetUrl: https://storage.googleapis.com/ann-filtered-benchmark/datasets/dbpedia_openai_1M.tgz
-      testDatasetUrl: https://projectx-semantic-cache.s3.eu-central-1.amazonaws.com/dbpedia_openai_search_vectors_1k.tar.gz
-      loadFirst: 990000
+      testDatasetUrl: https://projectx-semantic-cache.s3.eu-central-1.amazonaws.com/dbpedia_openai_search_vectors_1k.tgz
+      loadFirst: 99000
       normalize: true
       workingDirectory: /home/ubuntu/workingDirectory/
       # loadFirst: 32_123
       # index params
       metric: COSINE
-      maxDegree: 64
-      efConstruction: 512
+      maxDegree: 32
+      efConstruction: 128
       # search param
       limit: 10
       useCache: true
