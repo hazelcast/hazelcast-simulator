@@ -28,9 +28,9 @@ import static com.hazelcast.simulator.utils.GeneratorUtils.generateAsciiString;
 
 public class IAtomicReferenceTest extends HazelcastTest {
     //the size of the value in bytes.
-    public int valueSize = 1;
+    public int valueSize = 10_000;
     // the number of IAtomicReferences
-    public int referenceCount = 1;
+    public int referenceCount = 100_000;
     // the number of CPGroups. 0 means that the default CPGroup is used.
     // The AtomicRefs will be placed over the different CPGroups in round robin fashion.
     public int cpGroupCount = 0;
