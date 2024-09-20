@@ -44,7 +44,7 @@ public class TestDataset {
 
     public float getPrecision(List<Integer> actualVectorsIds, int index, int top) {
         var actualSet = new HashSet<>(actualVectorsIds);
-        var expectedSet = Arrays.stream(Arrays.copyOfRange(closestIds[index], 0, top)).boxed().collect(Collectors.toSet());
+        var expectedSet = Arrays.stream(Arrays.copyOfRange(closestIds[index % closestIds.length], 0, top)).boxed().collect(Collectors.toSet());
         actualSet.retainAll(expectedSet);
         return ((float) actualSet.size()) / top;
     }
