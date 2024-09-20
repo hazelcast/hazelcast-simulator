@@ -57,6 +57,11 @@ def _get_artifact_ids(enterprise:bool, version:str):
             return ['hazelcast-enterprise', 'hazelcast-sql', 'hazelcast-spring']
         else:
             return ['hazelcast', 'hazelcast-sql', 'hazelcast-spring']
+    elif version.startswith("6"):
+        if enterprise:
+            return ['hazelcast-enterprise', 'hazelcast-sql', 'hazelcast-spring']
+        else:
+            return ['hazelcast', 'hazelcast-sql', 'hazelcast-spring']
     else:
         print(f"[ERROR] Unrecognized version {version}")
 
