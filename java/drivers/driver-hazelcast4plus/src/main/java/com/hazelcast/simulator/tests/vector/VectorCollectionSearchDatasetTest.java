@@ -191,7 +191,9 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
                 VectorValues.of(vector),
                 options
         ).toCompletableFuture().join();
-        searchResults.add(new TestSearchResult(iteration, vector, result));
+        if (iteration < testDataset.size()) {
+            searchResults.add(new TestSearchResult(iteration, vector, result));
+        }
     }
 
     @Teardown(global = true)
