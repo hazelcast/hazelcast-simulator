@@ -1,0 +1,43 @@
+provisioner: terraform
+terraform_plan: aws
+# Used for naming resources; give it some unique name specific to a set of benchmarks
+basename: projectx-semantic-caching
+# Enter something here that identifies you.
+owner: frantisek
+region: eu-central-1
+availability_zone: eu-central-1a
+vpc_id: vpc-01d2f66680d436970
+internet_gateway_id: igw-0e6894abdc6cbd054
+# Change the '20' to a different octet to prevent running into conflicts.
+cidr_block: 10.0.0.0/24
+
+keypair:
+    public_key: key.pub
+    private_key: key
+
+nodes:
+    count: 3
+    instance_type: r5.8xlarge
+    # Ubuntu 22.04
+    ami: ami-07652eda1fbad7432
+    user: ubuntu
+    tenancy: null
+    
+loadgenerators:
+    count: 1
+    instance_type: r5.8xlarge
+    # Ubuntu 22.04
+    ami: ami-07652eda1fbad7432 
+    user: ubuntu
+    tenancy: null
+
+mc:
+    instance_type: c5.4xlarge
+    count: 0
+    # default AWS AMI
+    # ami: ami-05cafdf7c9f772ad2
+    # user: ec2-user
+    # ubuntu
+    ami: ami-04e601abe3e1a910f
+    user: ubuntu
+    tenancy: null
