@@ -184,7 +184,7 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
             testContext.stop();
             return;
         }
-        var vector = testDataset.getSearchVector(iteration);
+        var vector = testDataset.getSearchVector(iteration % testDataset.size());
 
         var result = collection.searchAsync(
                 VectorValues.of(vector),
