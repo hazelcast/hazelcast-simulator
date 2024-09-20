@@ -90,7 +90,7 @@ public class TestDatasetGenerator {
 
         TestDataset testDataset = new TestDataset(searchVectorsF, closestIds, closestScores);
 
-        write("/home/frantisek/work/hz/project-x/semantic-cache/test.jsonl", testDataset);
+        write("/home/frantisek/work/hz/project-x/semantic-cache/tests.jsonl", testDataset);
     }
 
     public static void write(String path, TestDataset dataset) {
