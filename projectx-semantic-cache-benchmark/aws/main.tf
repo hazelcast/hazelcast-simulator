@@ -151,7 +151,7 @@ resource "aws_instance" "nodes" {
     instance_type           = local.settings.nodes.instance_type
     count                   = local.settings.nodes.count
     availability_zone       = local.settings.availability_zone
-    #placement_group         = aws_placement_group.cluster_placement_group.name
+    placement_group         = aws_placement_group.cluster_placement_group.name
     vpc_security_group_ids  = [ aws_security_group.node-sg.id ]
     subnet_id               = aws_subnet.subnet.id
     tenancy                 = local.settings.nodes.tenancy
