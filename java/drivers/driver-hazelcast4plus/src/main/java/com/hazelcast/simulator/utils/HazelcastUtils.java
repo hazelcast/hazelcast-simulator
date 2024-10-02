@@ -16,10 +16,16 @@
 package com.hazelcast.simulator.utils;
 
 import com.hazelcast.cluster.Member;
+import com.hazelcast.config.Config;
 import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.shaded.org.json.JSONArray;
+import com.hazelcast.shaded.org.json.JSONObject;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.net.InetSocketAddress;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
@@ -30,6 +36,7 @@ import java.util.concurrent.TimeoutException;
 public final class HazelcastUtils {
 
     private static final int TIMEOUT_SECONDS = 60;
+    private static final Logger LOGGER = LogManager.getLogger(HazelcastUtils.class);
 
     private HazelcastUtils() {
     }
@@ -51,6 +58,36 @@ public final class HazelcastUtils {
     public static boolean isOldestMember(HazelcastInstance hazelcastInstance) {
         Iterator<Member> memberIterator = hazelcastInstance.getCluster().getMembers().iterator();
         return memberIterator.hasNext() && memberIterator.next().equals(hazelcastInstance.getLocalEndpoint());
+    }
+
+    /**
+     * Handler to set the member configuration with specific properties which
+     * are bound to an agent by internal IP.
+     * <p>
+     *     Sets CP priority for member based on the agent's private address
+     *     if provided.
+     * </p>
+     * @param properties
+     * @param config
+     */
+    public static void handlePerAgentConfig(Map<String, String> properties, Config config) {
+        String cpPriorities = properties.get("cp_priority");
+        if (cpPriorities == null) {
+            return;
+        }
+
+        String agentPrivateAddress = properties.get("PRIVATE_ADDRESS");
+        JSONArray cpPriorityArray = new JSONArray(cpPriorities);
+
+        cpPriorityArray.forEach(item -> {
+            JSONObject jsonObject = (JSONObject) item;
+            String address = jsonObject.getString("address");
+            int priority = jsonObject.getInt("priority");
+            if (address.equals(agentPrivateAddress)) {
+                LOGGER.info("Setting CP member priority to " + priority + " for agent " + agentPrivateAddress);
+                config.getCPSubsystemConfig().setCPMemberCount(priority);
+            }
+        });
     }
 
     public static String getHazelcastAddress(String workerType, String publicAddress, HazelcastInstance hazelcastInstance) {

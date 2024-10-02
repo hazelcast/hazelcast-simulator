@@ -425,6 +425,7 @@ should be conducted in.
 | `cooldown_seconds`                     | `0`              | The number of seconds before the end of the test to exclude in reporting (only used for report generation)                                  |
 | `license_key`                          | `your_ee_key`    | The Hazelcast Enterprise Edition license to use in your test, if using `hazelcast-enterprise5` drivers                                      |
 | `parallel`                             | `True`           | Defines whether tests should be run in parallel when multiple tests are defined within 1 suite (default false)                              |
+| `cp_priorities` | <pre>- address: internalIp<br> &nbsp;priority: 1</pre> | Defines the priority of the CP Subsystem members in the cluster. The priority is used to determine the order of the members in the CP Subsystem. |
 
 ### Specify test class(es) and number of threads per worker
 
