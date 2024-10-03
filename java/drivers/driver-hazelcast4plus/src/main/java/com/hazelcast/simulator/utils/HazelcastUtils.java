@@ -63,7 +63,7 @@ public final class HazelcastUtils {
     /**
      * Handles configuration settings for a member, based on properties bound to an agent's internal IP address.
      * <p>
-     * This method should is designed to be extendable for future configuration
+     * This method is designed to be extendable for future configuration
      * properties that may be applied on exclusive agents.
      * </p>
      *
