@@ -61,14 +61,24 @@ public final class HazelcastUtils {
     }
 
     /**
-     * Handler to set the member configuration with specific properties which
-     * are bound to an agent by internal IP.
+     * Handles configuration settings for a member, based on properties bound to an agent's internal IP address.
      * <p>
-     *     Sets CP priority for member based on the agent's private address
-     *     if provided.
+     * This method should is designed to be extendable for future configuration
+     * properties that may be applied on exclusive agents.
      * </p>
-     * @param properties
-     * @param config
+     *
+     * <p>
+     * Currently, the method supports the following configuration:
+     * </p>
+     * <ul>
+     *   <li><b>CP Member Priority:</b> If the "cp_priority" property is provided,
+     *   the method will set the CP member priority for the agent based on the agent's private IP address.</li>
+     * </ul>
+     *
+     * <p>
+     * Future configurations may extend the use of additional properties in a similar manner.
+     * </p>
+     *
      */
     public static void handlePerAgentConfig(Map<String, String> properties, Config config) {
         String cpPriorities = properties.get("cp_priority");
@@ -85,7 +95,7 @@ public final class HazelcastUtils {
             int priority = jsonObject.getInt("priority");
             if (address.equals(agentPrivateAddress)) {
                 LOGGER.info("Setting CP member priority to " + priority + " for agent " + agentPrivateAddress);
-                config.getCPSubsystemConfig().setCPMemberCount(priority);
+                config.getCPSubsystemConfig().setCPMemberPriority(priority);
             }
         });
     }
