@@ -1742,7 +1742,7 @@ Here is an example of usage in the `tests.yaml` file:
       priority: 1
     - address: 10.0.55.179
       priority: 2
-      test:
+  test:
     - class: com.hazelcast.simulator.tests.cp.IAtomicLongTest
       threadCount: 135
       getProb: .8
