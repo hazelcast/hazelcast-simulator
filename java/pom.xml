@@ -31,7 +31,18 @@
             <snapshots>
                 <enabled>true</enabled>
             </snapshots>
-        </repository>
+          </repository>
+          <repository>
+            <id>releaese-internal</id>
+            <name>Hazelcast Internal</name>
+            <url>https://repository.hazelcast.com/release</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+          </repository>
     </repositories>
 
     <properties>
