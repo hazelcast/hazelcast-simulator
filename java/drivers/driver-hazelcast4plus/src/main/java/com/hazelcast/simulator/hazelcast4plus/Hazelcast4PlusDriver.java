@@ -27,6 +27,7 @@ import com.hazelcast.partition.Partition;
 import com.hazelcast.partition.PartitionService;
 import com.hazelcast.simulator.coordinator.registry.AgentData;
 import com.hazelcast.simulator.drivers.Driver;
+import com.hazelcast.simulator.utils.HazelcastUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -90,6 +91,7 @@ public class Hazelcast4PlusDriver extends Driver<HazelcastInstance> {
                 // this way of loading is preferred so that env-variables and sys properties are picked up
                 System.setProperty("hazelcast.config", configFile.getAbsolutePath());
                 Config config = Config.load();
+                HazelcastUtils.handlePerAgentConfig(properties, config);
                 hazelcastInstance = Hazelcast.newHazelcastInstance(config);
             } catch (NoSuchMethodError e) {
                 // Fall back in case Config.load doesn't exist (pre 4.2)

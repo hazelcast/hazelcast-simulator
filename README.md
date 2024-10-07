@@ -413,7 +413,7 @@ should be conducted in.
 
 | Property                               | Example value    | Description                                                                                                                                 |
 |----------------------------------------|------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
-| `name`                                 | `read_only`      | The name of the test suite (overriden by test-specific values)                                                                               |
+| `name`                                 | `read_only`      | The name of the test suite (overriden by test-specific values)                                                                              |
 | `repititions`                          | `1`              | The number of times this test suite should run (1 or more)                                                                                  |
 | `duration`                             | `300s`           | The amount of time this test suite should run for (45m, 1h, 2d, etc.)                                                                       |
 | `clients`                              | `1`              | The number of Hazelcast Clients to use in this test suite (hosted on `loadgenerator_hosts`                                                  |
@@ -430,6 +430,7 @@ should be conducted in.
 | `cooldown_seconds`                     | `0`              | The number of seconds before the end of the test to exclude in reporting (only used for report generation)                                  |
 | `license_key`                          | `your_ee_key`    | The Hazelcast Enterprise Edition license to use in your test, if using `hazelcast-enterprise5` drivers                                      |
 | `parallel`                             | `True`           | Defines whether tests should be run in parallel when multiple tests are defined within 1 suite (default false)                              |
+| `cp_priorities` | <pre>- address: internalIp<br> &nbsp;priority: 1</pre> | Defines the leadership priority of the CP Subsystem members in the cluster. Use the internal IP address of the agent(s) you wish to configure. |
 
 ### Specify test class(es) and number of threads per worker
 
@@ -1730,6 +1731,30 @@ but on the server side `pps_allowance_exceeded` might show 0 events/s.
 For any pair of instances A and B, it is advised to run the PPS test for both A and B as the server.
 This ensure a clear picture of all the PPS limits across instances.
 
+### CP subsystem leader priority
+
+It is possible to assign leadership priority to a member or list of members in a CP group(s). This is useful when 
+you want to attribute certain behaviours to an agent in the cluster. For example, you may wish to inject a latency 
+on the leader of a CP group. Ensure the internal IP of the agent(s) are used. 
+
+Here is an example of usage in the `tests.yaml` file:
+
+```yaml
+- name: my-test
+  <<: *defaults
+  cp_priorities:
+    - address: 10.0.55.178
+      priority: 1
+    - address: 10.0.55.179
+      priority: 2
+  test:
+    - class: com.hazelcast.simulator.tests.cp.IAtomicLongTest
+      threadCount: 135
+      getProb: .8
+```
+
+Consult [Configuring Leadership Priority](https://docs.hazelcast.com/hazelcast/5.5/cp-subsystem/configuration#configuring-leadership-priority
+) for more information about the CP subsystem priority.
 
 # Get Help
 
