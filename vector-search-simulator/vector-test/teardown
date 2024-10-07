@@ -1,7 +1,0 @@
-#!/bin/bash
-
-# This script will teardown the environment
-
-set -e
-
-inventory destroy
