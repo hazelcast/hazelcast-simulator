@@ -195,6 +195,11 @@ To install Java on the remote machines call:
    inventory install java
    ```
 
+Note that starting from 5.5.0-SNAPSHOT onwards, the private snapshots repository is used, so access to this repository 
+needs to be configured both locally (where simulator is being built and perftest is kicked off) and remotely (on load 
+generators and so on...).
+See [here](https://hazelcast.atlassian.net/wiki/spaces/DI/pages/5116493883/How+to+access+private+snapshot+maven+artifacts+and+docker+images) for details.
+
 You can pass a custom URL to configure the correct JVM. To get a listing of examples URL's call:
 
    ```shell

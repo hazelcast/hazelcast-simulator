@@ -1,0 +1,188 @@
+- name: dbpedia_openai_1M
+  duration: 60m
+  repetitions: 1
+  clients: 1
+  members: 1
+  driver: hazelcast-enterprise5
+  version: maven=5.5.0-SNAPSHOT
+  client_args: >
+    -Xms30g
+    -Xmx30g
+    --add-modules jdk.incubator.vector
+    --enable-preview
+    --enable-native-access=ALL-UNNAMED
+    --add-modules java.se 
+    --add-exports java.base/jdk.internal.ref=ALL-UNNAMED 
+    --add-opens java.base/java.lang=ALL-UNNAMED 
+    --add-opens java.base/sun.nio.ch=ALL-UNNAMED 
+    --add-opens java.management/sun.management=ALL-UNNAMED 
+    --add-opens jdk.management/com.sun.management.internal=ALL-UNNAMED
+  member_args: >
+    -Xms60g
+    -Xmx60g
+    --add-modules jdk.incubator.vector
+    --enable-preview
+    --enable-native-access=ALL-UNNAMED
+    --add-modules java.se 
+    --add-exports java.base/jdk.internal.ref=ALL-UNNAMED 
+    --add-opens java.base/java.lang=ALL-UNNAMED 
+    --add-opens java.base/sun.nio.ch=ALL-UNNAMED 
+    --add-opens java.management/sun.management=ALL-UNNAMED 
+    --add-opens jdk.management/com.sun.management.internal=ALL-UNNAMED
+  loadgenerator_hosts: loadgenerators
+  node_hosts: nodes
+  verify_enabled: False
+  performance_monitor_interval_seconds: 1
+  warmup_seconds: 0
+  cooldown_seconds: 0
+  license_key: [LICENCE]
+  parallel: False
+  test:
+    - class: com.hazelcast.simulator.tests.vector.VectorCollectionSearchDatasetTest
+      name: vector_m_16_ef_128
+      threadCount: 1
+      # ratePerSecond: 5_000
+      # interval: 100us
+      logRateMs: 60_000
+      searchProb: 1
+      # data parameters
+      datasetUrl: https://storage.googleapis.com/ann-filtered-benchmark/datasets/dbpedia_openai_1M.tgz
+      workingDirectory: /mnt/nvme1n1/workingDirectory/
+      # loadFirst: 10_
+      # index params
+      metric: DOT
+      maxDegree: 16
+      efConstruction: 128
+      normalize: false
+      # search params
+      limit: 10
+    - class: com.hazelcast.simulator.tests.vector.VectorCollectionSearchDatasetTest
+      name: vector_m_32_ef_128
+      threadCount: 1
+      # ratePerSecond: 5_000
+      # interval: 100us
+      logRateMs: 60_000
+      searchProb: 1
+      # data parameters
+      datasetUrl: https://storage.googleapis.com/ann-filtered-benchmark/datasets/dbpedia_openai_1M.tgz
+      workingDirectory: /mnt/nvme1n1/workingDirectory/
+      # loadFirst: 10_
+      # index params
+      metric: DOT
+      maxDegree: 32
+      efConstruction: 128
+      normalize: false
+      # search params
+      limit: 10
+    - class: com.hazelcast.simulator.tests.vector.VectorCollectionSearchDatasetTest
+      name: vector_m_64_ef_128
+      threadCount: 1
+      logRateMs: 60_000
+      searchProb: 1
+      # data parameters
+      datasetUrl: https://storage.googleapis.com/ann-filtered-benchmark/datasets/dbpedia_openai_1M.tgz
+      workingDirectory: /mnt/nvme1n1/workingDirectory/
+      # loadFirst: 10_
+      # index params
+      metric: DOT
+      maxDegree: 64
+      efConstruction: 128
+      normalize: false
+      # search params
+      limit: 10
+    - class: com.hazelcast.simulator.tests.vector.VectorCollectionSearchDatasetTest
+      name: vector_m_16_ef_256
+      threadCount: 1
+      logRateMs: 60_000
+      searchProb: 1
+      # data parameters
+      datasetUrl: https://storage.googleapis.com/ann-filtered-benchmark/datasets/dbpedia_openai_1M.tgz
+      workingDirectory: /mnt/nvme1n1/workingDirectory/
+      # loadFirst: 10_
+      # index params
+      metric: DOT
+      maxDegree: 16
+      efConstruction: 256
+      normalize: false
+      # search params
+      limit: 10
+    - class: com.hazelcast.simulator.tests.vector.VectorCollectionSearchDatasetTest
+      name: vector_m_32_ef_256
+      threadCount: 1
+      logRateMs: 60_000
+      searchProb: 1
+      # data parameters
+      datasetUrl: https://storage.googleapis.com/ann-filtered-benchmark/datasets/dbpedia_openai_1M.tgz
+      workingDirectory: /mnt/nvme1n1/workingDirectory/
+      # loadFirst: 10_
+      # index params
+      metric: DOT
+      maxDegree: 32
+      efConstruction: 256
+      normalize: false
+      # search params
+      limit: 10
+    - class: com.hazelcast.simulator.tests.vector.VectorCollectionSearchDatasetTest
+      name: vector_m_64_ef_256
+      threadCount: 1
+      logRateMs: 60_000
+      searchProb: 1
+      # data parameters
+      datasetUrl: https://storage.googleapis.com/ann-filtered-benchmark/datasets/dbpedia_openai_1M.tgz
+      workingDirectory: /mnt/nvme1n1/workingDirectory/
+      # loadFirst: 10_
+      # index params
+      metric: DOT
+      maxDegree: 64
+      efConstruction: 256
+      normalize: false
+      # search params
+      limit: 10
+    - class: com.hazelcast.simulator.tests.vector.VectorCollectionSearchDatasetTest
+      name: vector_m_16_ef_512
+      threadCount: 1
+      logRateMs: 60_000
+      searchProb: 1
+      # data parameters
+      datasetUrl: https://storage.googleapis.com/ann-filtered-benchmark/datasets/dbpedia_openai_1M.tgz
+      workingDirectory: /mnt/nvme1n1/workingDirectory/
+      # loadFirst: 10_
+      # index params
+      metric: DOT
+      maxDegree: 16
+      efConstruction: 512
+      normalize: false
+      # search params
+      limit: 10
+    - class: com.hazelcast.simulator.tests.vector.VectorCollectionSearchDatasetTest
+      name: vector_m_32_ef_512
+      threadCount: 1
+      logRateMs: 60_000
+      searchProb: 1
+      # data parameters
+      datasetUrl: https://storage.googleapis.com/ann-filtered-benchmark/datasets/dbpedia_openai_1M.tgz
+      workingDirectory: /mnt/nvme1n1/workingDirectory/
+      # loadFirst: 10_
+      # index params
+      metric: DOT
+      maxDegree: 32
+      efConstruction: 512
+      normalize: false
+      # search params
+      limit: 10
+    - class: com.hazelcast.simulator.tests.vector.VectorCollectionSearchDatasetTest
+      name: vector_m_64_ef_512
+      threadCount: 1
+      logRateMs: 60_000
+      searchProb: 1
+      # data parameters
+      datasetUrl: https://storage.googleapis.com/ann-filtered-benchmark/datasets/dbpedia_openai_1M.tgz
+      workingDirectory: /mnt/nvme1n1/workingDirectory/
+      # loadFirst: 10_
+      # index params
+      metric: DOT
+      maxDegree: 64
+      efConstruction: 512
+      normalize: false
+      # search params
+      limit: 10
