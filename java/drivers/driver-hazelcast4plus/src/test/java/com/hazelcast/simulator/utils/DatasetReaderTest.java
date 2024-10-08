@@ -4,8 +4,6 @@ import com.hazelcast.simulator.tests.vector.DatasetReader;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.util.Arrays;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -17,7 +15,9 @@ public class DatasetReaderTest {
     //String url = "https://storage.googleapis.com/ann-filtered-benchmark/datasets/yandex_t2i_gt_100k.tgz"; // not vectors in archive
     //String url = "https://storage.googleapis.com/ann-filtered-benchmark/datasets/laion-small-clip.tgz"; // broken?
 
-    String workingDirectory = "/Users/oshultseva/Downloads/dataset_output/";
+    // downloaded dataset can be reused, adjust directory if needed
+    private String workingDirectory = "/tmp/dataset_output/";
+
     @Test
     public void npy_dbpedia() {
         String url = "https://storage.googleapis.com/ann-filtered-benchmark/datasets/dbpedia_openai_1M.tgz";
