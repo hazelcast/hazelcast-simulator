@@ -1,6 +1,7 @@
 package com.hazelcast.simulator.utils;
 
 import com.hazelcast.simulator.tests.vector.DatasetReader;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -8,6 +9,7 @@ import java.util.Arrays;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+@Ignore("Manual tests")
 public class DatasetReaderTest {
 
     //String url = "https://storage.googleapis.com/ann-filtered-benchmark/datasets/random_keywords_1m.tgz";

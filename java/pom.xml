@@ -182,6 +182,9 @@
                 <configuration>
                     <redirectTestOutputToFile>true</redirectTestOutputToFile>
                     <workingDirectory>${main.basedir}</workingDirectory>
+                    <!-- Hazelcast-enterprise JAR is needed to compile some simulator test cases,
+                         but it causes JUnit test failures without license -->
+                    <classpathDependencyExcludes>com.hazelcast:hazelcast-enterprise</classpathDependencyExcludes>
                 </configuration>
             </plugin>
             <plugin>
