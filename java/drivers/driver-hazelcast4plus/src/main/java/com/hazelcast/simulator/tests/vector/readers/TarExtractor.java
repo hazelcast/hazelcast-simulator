@@ -3,6 +3,8 @@ package com.hazelcast.simulator.tests.vector.readers;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -12,6 +14,8 @@ import java.io.InputStream;
 import java.nio.file.Path;
 
 public class TarExtractor {
+
+    private static final Logger logger = LogManager.getLogger();
 
     private static final int BUFFER_SIZE = 100_000;
 
@@ -26,7 +30,7 @@ public class TarExtractor {
                     File f = new File(entry.getName());
                     boolean created = f.mkdir();
                     if (!created) {
-                        System.out.printf("Unable to create directory '%s', during extraction of archive contents.\n",
+                        logger.warn("Unable to create directory '{}', during extraction of archive contents.",
                                 f.getAbsolutePath());
                     }
                 } else {
@@ -42,7 +46,7 @@ public class TarExtractor {
                 }
             }
 
-            System.out.println("Untar completed successfully!");
+            logger.info("Untar completed successfully!");
         }
     }
 }
