@@ -21,12 +21,28 @@
             <name>Backup Repository</name>
             <url>https://repo2.maven.org/maven2/</url>
         </repository>
-
         <repository>
-            <id>snapshot-repository</id>
-            <name>Hazelcast Snapshot Repository</name>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-        </repository>
+            <id>snapshot-internal</id>
+            <name>Hazelcast Internal Snapshots</name>
+            <url>https://repository.hazelcast.com/snapshot-internal/</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+          </repository>
+          <repository>
+            <id>releaese-internal</id>
+            <name>Hazelcast Internal</name>
+            <url>https://repository.hazelcast.com/release</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+          </repository>
     </repositories>
 
     <properties>
@@ -73,13 +89,13 @@
 
         <maven.surefire.plugin.version>3.1.2</maven.surefire.plugin.version>
         <maven.checkstyle.plugin.version>3.3.0</maven.checkstyle.plugin.version>
-        <maven.sonar.plugin.version>3.10</maven.sonar.plugin.version>
+        <maven.sonar.plugin.version>3.3.0.603</maven.sonar.plugin.version>
         <maven.jacoco.plugin.version>0.8.10</maven.jacoco.plugin.version>
 
         <maven.git-commit-id.plugin.version>4.9.10</maven.git-commit-id.plugin.version>
         <maven.versions.plugin.version>2.16.1</maven.versions.plugin.version>
 
-        <maven.release.plugin.version>2.16.1</maven.release.plugin.version>
+        <maven.release.plugin.version>3.0.1</maven.release.plugin.version>
         <maven.scm.provider.gitexe.version>1.9.4</maven.scm.provider.gitexe.version>
         <maven-dependency-plugin.version>3.6.0</maven-dependency-plugin.version>
     </properties>
@@ -166,6 +182,9 @@
                 <configuration>
                     <redirectTestOutputToFile>true</redirectTestOutputToFile>
                     <workingDirectory>${main.basedir}</workingDirectory>
+                    <!-- Hazelcast-enterprise JAR is needed to compile some simulator test cases,
+                         but it causes JUnit test failures without license -->
+                    <classpathDependencyExcludes>com.hazelcast:hazelcast-enterprise</classpathDependencyExcludes>
                 </configuration>
             </plugin>
             <plugin>
