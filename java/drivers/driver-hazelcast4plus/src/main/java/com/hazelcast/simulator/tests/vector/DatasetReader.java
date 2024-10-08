@@ -46,6 +46,7 @@ public abstract class DatasetReader {
     public DatasetReader(String url, String directory) {
         this(url, directory, false);
     }
+
     public DatasetReader(String url, String directory, Boolean normalizeVector) {
         try {
             this.datasetURL = URI.create(url).toURL();
