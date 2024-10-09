@@ -176,8 +176,8 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
 
         logger.info("Collection size: {}", size);
         logger.info("Collection dimension: {}", reader.getDimension());
-        logger.info("Cleanup time (min): {}", MILLISECONDS.toMinutes(cleanupTimer));
-        logger.info("Index build time (min): {}", MILLISECONDS.toMinutes(indexBuildTime));
+        logger.info("Cleanup time: {}s", MILLISECONDS.toSeconds(cleanupTimer));
+        logger.info("Index build time: {}s", MILLISECONDS.toSeconds(indexBuildTime));
 
         // reader will no longer be needed
         reader = null;
