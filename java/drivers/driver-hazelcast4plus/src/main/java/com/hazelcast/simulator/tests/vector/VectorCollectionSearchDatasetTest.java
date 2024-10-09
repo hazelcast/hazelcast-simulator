@@ -35,7 +35,6 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 public class VectorCollectionSearchDatasetTest extends HazelcastTest {
 
     public String name;
-    public String collectionName;
 
     public String datasetUrl;
     public String testDatasetUrl;
@@ -57,6 +56,9 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
 
     public boolean normalize = false;
 
+    // collection parameters
+    public String collectionName;
+
     // search parameters
 
     public int limit;
@@ -70,7 +72,6 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
     private VectorCollection<Integer, Integer> collection;
 
     private DatasetReader reader;
-    private DatasetReader testReader;
 
     private TestDataset testDataset;
 
@@ -91,13 +92,11 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
         }
         scoreMetrics.setName(name);
         reader = DatasetReader.create(datasetUrl, workingDirectory, normalize);
-        if (testDatasetUrl != null) {
-            testReader = DatasetReader.create(testDatasetUrl, workingDirectory, normalize, true);
-        }
 
         int dimension = reader.getDimension();
         assert dimension == reader.getTestDatasetDimension() : "dataset dimension does not correspond to query vector dimension";
         if (testDatasetUrl != null) {
+            var testReader = DatasetReader.create(testDatasetUrl, workingDirectory, normalize, true);
             testDataset = testReader.getTestDataset();
         } else {
             testDataset = reader.getTestDataset();
@@ -175,6 +174,9 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
         logger.info("Collection dimension: {}", reader.getDimension());
         logger.info("Cleanup time (min): {}", MILLISECONDS.toMinutes(cleanupTimer));
         logger.info("Index build time (min): {}", MILLISECONDS.toMinutes(indexBuildTime));
+
+        // reader will no longer be needed
+        reader = null;
     }
 
     @TimeStep
@@ -214,6 +216,10 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
         logger.info("10pt: {}", scoreMetrics.getPercentile(10));
         logger.info("The percentage of results with precision lower than 98%: {}", scoreMetrics.getPercentLowerThen(98));
         logger.info("The percentage of results with precision lower than 99%: {}", scoreMetrics.getPercentLowerThen(99));
+
+        // test dataset will no longer be needed
+        testDataset = null;
+        searchResults.clear();
     }
 
     public record TestSearchResult(int index, float[] searchVector, SearchResults<?, ?> results) {
