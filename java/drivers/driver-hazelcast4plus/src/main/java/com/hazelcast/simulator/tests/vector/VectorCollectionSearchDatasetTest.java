@@ -59,6 +59,9 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
     // collection parameters
     public String collectionName;
 
+    // by default do not use backups to get faster upload
+    public int backupCount = 0;
+
     // search parameters
 
     public int limit;
@@ -107,6 +110,7 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
         collection = VectorCollection.getCollection(
                 targetInstance,
                 new VectorCollectionConfig(collectionName)
+                        .setBackupCount(backupCount)
                         .addVectorIndexConfig(
                                 new VectorIndexConfig()
                                         .setMetric(Metric.valueOf(metric))
