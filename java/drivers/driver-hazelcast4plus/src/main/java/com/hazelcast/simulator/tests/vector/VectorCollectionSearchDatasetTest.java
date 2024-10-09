@@ -35,6 +35,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 public class VectorCollectionSearchDatasetTest extends HazelcastTest {
 
     public String name;
+    public String collectionName;
 
     public String datasetUrl;
     public String testDatasetUrl;
@@ -42,6 +43,7 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
     public String workingDirectory;
 
     // common parameters
+
     public int numberOfSearchIterations = Integer.MAX_VALUE;
 
     public int loadFirst = Integer.MAX_VALUE;
@@ -84,6 +86,9 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
 
     @Setup
     public void setup() {
+        if (collectionName == null) {
+            collectionName = name;
+        }
         scoreMetrics.setName(name);
         reader = DatasetReader.create(datasetUrl, workingDirectory, normalize);
         if (testDatasetUrl != null) {
@@ -98,11 +103,11 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
             testDataset = reader.getTestDataset();
         }
 
-        logger.info("Vector collection name: {}", name);
+        logger.info("Vector collection name: {}", collectionName);
         logger.info("Use normalize: {}", normalize);
         collection = VectorCollection.getCollection(
                 targetInstance,
-                new VectorCollectionConfig(name)
+                new VectorCollectionConfig(collectionName)
                         .addVectorIndexConfig(
                                 new VectorIndexConfig()
                                         .setMetric(Metric.valueOf(metric))
@@ -122,6 +127,11 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
     @Prepare(global = true)
     public void prepare() {
         var size = Math.min(reader.getSize(), loadFirst);
+
+        if (collection.size() == size) {
+            logger.info("Collection seems to be already filled - reusing existing data.");
+            return;
+        }
 
         var indexBuildTimeStart = System.currentTimeMillis();
 
