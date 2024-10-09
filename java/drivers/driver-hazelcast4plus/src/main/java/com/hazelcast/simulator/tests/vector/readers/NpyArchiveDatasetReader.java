@@ -22,8 +22,8 @@ public class NpyArchiveDatasetReader extends DatasetReader {
     private Path trainDatasetFilename;
     private Path testDatesetFilename;
 
-    public NpyArchiveDatasetReader(String url, String directory, boolean normalizeVector) {
-        super(url, directory, normalizeVector);
+    public NpyArchiveDatasetReader(String url, String directory, boolean normalizeVector, boolean testOnly) {
+        super(url, directory, normalizeVector, testOnly);
     }
 
     @Override
