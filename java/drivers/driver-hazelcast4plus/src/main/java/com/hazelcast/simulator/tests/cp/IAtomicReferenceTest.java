@@ -62,31 +62,31 @@ public class IAtomicReferenceTest extends HazelcastTest {
 
     @TimeStep(prob = 0)
     public String get(ThreadState state) {
-        IAtomicReference<String> reference = state.randomRef();
+        IAtomicReference<String> reference = state.getNextAtomicReference();
         return reference.get();
     }
 
     @TimeStep(prob = 1)
     public void set(ThreadState state) {
-        IAtomicReference<String> reference = state.randomRef();
+        IAtomicReference<String> reference = state.getNextAtomicReference();
         reference.set(value);
     }
 
     @TimeStep(prob = 0)
     public void alter(ThreadState state) {
-        IAtomicReference<String> reference = state.randomRef();
+        IAtomicReference<String> reference = state.getNextAtomicReference();
         reference.alter(state.identity);
     }
 
     @TimeStep(prob = 0)
     public boolean cas(ThreadState state) {
-        IAtomicReference<String> reference = state.randomRef();
+        IAtomicReference<String> reference = state.getNextAtomicReference();
         return reference.compareAndSet(value, value);
     }
 
     @TimeStep(prob = 0)
     public void casOptimisticConcurrencyControl(ThreadState state) {
-        IAtomicReference<String> reference = state.randomRef();
+        IAtomicReference<String> reference = state.getNextAtomicReference();
 
         // todo: what is the point of the loop? It will always succeed because there is just a single value.
         // So the performance will be exactly the same as the cas timestep method.
@@ -100,8 +100,13 @@ public class IAtomicReferenceTest extends HazelcastTest {
 
     public class ThreadState extends BaseThreadState {
 
-        public IAtomicReference<String> randomRef() {
-            return references[randomInt(referenceCount)];
+        private int currentReferenceIndex = 0;
+
+        public IAtomicReference<String> getNextAtomicReference() {
+            if (currentReferenceIndex == referenceCount) {
+                currentReferenceIndex = 0;
+            }
+            return references[currentReferenceIndex++];
         }
 
         final IFunction<String, String> identity = s -> s;
