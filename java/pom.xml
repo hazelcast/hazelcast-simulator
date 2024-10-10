@@ -17,9 +17,15 @@
             <url>https://repo1.maven.org/maven2</url>
         </repository>
         <repository>
-            <id>backup-repo</id>
-            <name>Backup Repository</name>
-            <url>https://repo2.maven.org/maven2/</url>
+            <id>snapshot-private</id>
+            <name>Hazelcast Private Snapshot Repository</name>
+            <url>https://repository.hazelcast.com/snapshot/</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
         </repository>
         <repository>
             <id>snapshot-internal</id>
@@ -33,7 +39,7 @@
             </snapshots>
           </repository>
           <repository>
-            <id>releaese-internal</id>
+            <id>release-internal</id>
             <name>Hazelcast Internal</name>
             <url>https://repository.hazelcast.com/release</url>
             <releases>
