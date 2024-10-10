@@ -5,10 +5,9 @@ import com.hazelcast.config.vector.VectorCollectionConfig;
 import com.hazelcast.config.vector.VectorIndexConfig;
 import com.hazelcast.core.Pipelining;
 import com.hazelcast.simulator.hz.HazelcastTest;
-import com.hazelcast.simulator.test.BaseThreadState;
-import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.tests.vector.model.TestDataset;
 import com.hazelcast.vector.SearchOptions;
@@ -28,6 +27,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -37,6 +37,7 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
     public String name;
 
     public String datasetUrl;
+    public String testDatasetUrl;
 
     public String workingDirectory;
 
@@ -62,11 +63,12 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
 
     private static final int PUT_BATCH_SIZE = 2_000;
 
-    private static final int MAX_PUT_ALL_IN_FLIGHT = 5;
+    private static final int MAX_PUT_ALL_IN_FLIGHT = 24;
 
     private VectorCollection<Integer, Integer> collection;
 
     private DatasetReader reader;
+    private DatasetReader testReader;
 
     private TestDataset testDataset;
 
@@ -75,17 +77,26 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
     private final ScoreMetrics scoreMetrics = new ScoreMetrics();
 
     private long indexBuildTime = 0;
+    private SearchOptions options;
+
+    private final AtomicInteger counter = new AtomicInteger(0);
 
 
     @Setup
     public void setup() {
         scoreMetrics.setName(name);
         reader = DatasetReader.create(datasetUrl, workingDirectory, normalize);
+        if (testDatasetUrl != null) {
+            testReader = DatasetReader.create(testDatasetUrl, workingDirectory, normalize, true);
+        }
 
         int dimension = reader.getDimension();
         assert dimension == reader.getTestDatasetDimension() : "dataset dimension does not correspond to query vector dimension";
-        testDataset = reader.getTestDataset();
-        numberOfSearchIterations = Math.min(numberOfSearchIterations, testDataset.size());
+        if (testDatasetUrl != null) {
+            testDataset = testReader.getTestDataset();
+        } else {
+            testDataset = reader.getTestDataset();
+        }
 
         logger.info("Vector collection name: {}", name);
         logger.info("Use normalize: {}", normalize);
@@ -100,6 +111,12 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
                                         .setEfConstruction(efConstruction)
                         )
         );
+
+        options = new SearchOptionsBuilder()
+                .includeValue()
+                .includeVectors()
+                .limit(limit)
+                .build();
     }
 
     @Prepare(global = true)
@@ -150,23 +167,25 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
         logger.info("Index build time (min): {}", MILLISECONDS.toMinutes(indexBuildTime));
     }
 
-    @TimeStep()
-    public void search(ThreadState state) {
-        var iteration = state.getAndIncrementIteration();
+    @TimeStep
+    public void search() {
+        var iteration = counter.getAndIncrement();
         if (iteration >= numberOfSearchIterations) {
             testContext.stop();
             return;
         }
-        var vector = testDataset.getSearchVector(iteration);
-        SearchOptions options = new SearchOptionsBuilder().includeValue().includeVectors().limit(limit).build();
+        var vector = testDataset.getSearchVector(iteration % testDataset.size());
+
         var result = collection.searchAsync(
                 VectorValues.of(vector),
                 options
         ).toCompletableFuture().join();
-        searchResults.add(new TestSearchResult(iteration, vector, result));
+        if (iteration < testDataset.size()) {
+            searchResults.add(new TestSearchResult(iteration, vector, result));
+        }
     }
 
-    @AfterRun
+    @Teardown(global = true)
     public void afterRun() {
         searchResults.forEach(testSearchResult -> {
             int index = testSearchResult.index();
@@ -185,17 +204,6 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
         logger.info("10pt: {}", scoreMetrics.getPercentile(10));
         logger.info("The percentage of results with precision lower than 98%: {}", scoreMetrics.getPercentLowerThen(98));
         logger.info("The percentage of results with precision lower than 99%: {}", scoreMetrics.getPercentLowerThen(99));
-    }
-
-    public static class ThreadState extends BaseThreadState {
-
-        private int iteration = 0;
-
-        public int getAndIncrementIteration() {
-            var it = iteration;
-            iteration++;
-            return it;
-        }
     }
 
     public record TestSearchResult(int index, float[] searchVector, SearchResults<?, ?> results) {
