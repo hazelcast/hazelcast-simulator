@@ -1730,8 +1730,103 @@ but on the server side `pps_allowance_exceeded` might show 0 events/s.
 
 For any pair of instances A and B, it is advised to run the PPS test for both A and B as the server.
 This ensure a clear picture of all the PPS limits across instances.
+___
+### Injecting latencies
 
-### CP subsystem leader priority
+It's often useful to simulate the effects of network latency between nodes and clients, especially in scenarios where you want to test performance across multiple data centers (DCs) or regions.
+
+Simulator provides a convenience command to inject network latencies between groups of clients and nodes using the inventory inject_latencies command. 
+This allows you to simulate different network conditions in a simple setup.
+
+There are two methods to inject latencies: 
+
+1. Basic global assignment: Assign a single latency value that will be applied bi-directionally between all groups.
+2. Advanced group assignment: Assign different latency values between different groups.
+
+For both methods you must have created your machines using the `inventory apply` command and edit the generated 
+`inventory.yaml`in your project root to assign each host to a group.
+
+```yaml
+loadgenerators:
+  hosts:
+    3.121.207.133:
+      ansible_ssh_private_key_file: key
+      ansible_user: ec2-user
+      private_ip: 10.0.55.38
+      group: group1
+
+nodes:
+  hosts:
+    3.122.199.101:
+      ansible_ssh_private_key_file: key
+      ansible_user: ec2-user
+      private_ip: 10.0.44.25
+      group: group2
+```
+In this example, we have two hosts, each belonging to a different group (group1 and group2). Latencies will only be applied between different groups.
+If a host is not assigned a group, no direction of latency will be applied to that host.
+___
+**Method 1: Basic Global Assignment**
+
+Once your hosts are grouped, you can inject latencies by running the following command:
+
+```bash
+inventory inject_latencies --latency 10 --interface eth0 --rtt
+````
+This command will:
+
+Apply a round-trip time (RTT) latency of 10ms between hosts in different groups (e.g., between group1 and group2).
+No latency will be applied between hosts in the same group (e.g., clients or members within group1 or group2 will communicate without added delay).
+
+Explanation of Flags:
+
+`--latency`: The desired latency in milliseconds (in this case, 10ms).
+
+`--interface`: The network interface where the latency should be applied (default is eth0).
+
+`--rtt`: When set, this flag indicates the latency is a round-trip time (RTT), meaning 10ms latency will be split into 5ms each way.
+
+___
+**Method 2: Advanced Group Assignment**
+
+If you want to assign different latencies between different groups, you can do so by supplying a latency profile in a YAML file.
+
+Create a YAML file with the following format:
+
+
+```yaml
+latency_profiles:
+  relationships:
+    - source: group1
+      target: group2
+      latency: 5
+    - source: group2
+      target: group1
+      latency: 2
+  default_latency: 0
+```
+
+In this example, we have two groups (group1 and group2) with different latencies between them. 
+Communication from group1 to group2 will have a 5ms latency, while communication from group2 to group1 will have a 2ms latency.
+
+The default_latency serves as a fallback value in case no specific latency is defined between two groups.
+
+To apply these latencies, run the following command:
+
+```bash 
+inventory inject_latencies --interface eth0 --profiles latency_profile.yaml     
+````
+
+Explanation of Flags:
+
+`--interface`: The network interface where the latency should be applied (default is eth0).
+
+`--profiles`: The path to the YAML file containing the latency profiles.
+
+Note that if the latency profile file is not provided, the command will default to the basic global assignment method.
+---
+
+## CP subsystem leader priority
 
 It is possible to assign leadership priority to a member or list of members in a CP group(s). This is useful when 
 you want to attribute certain behaviours to an agent in the cluster. For example, you may wish to inject a latency 
