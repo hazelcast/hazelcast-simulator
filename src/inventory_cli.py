@@ -4,6 +4,7 @@ import sys
 import argparse
 from os import path
 
+from apply_latencies import inject_latencies
 from simulator.inventory_terraform import terraform_import, terraform_destroy, terraform_apply
 from simulator.util import load_yaml_file, exit_with_error, simulator_home, shell, now_seconds
 from simulator.log import info, log_header
@@ -21,6 +22,7 @@ The available commands are:
     new_key             Creates a new public/private keypair
     shell               Executes a shell command on the inventory
     tune                Tunes the environment
+    inject_latencies    Injects latencies between inventory nodes
 '''
 
 # for git like arg parsing:
@@ -416,6 +418,28 @@ class InventoryNewKeyCli:
         new_key(args.name[0])
 
 
+class InventoryInjectLatenciesCli:
+
+    def __init__(self, argv):
+        parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+                                         description='Injects latencies between inventory nodes')
+        parser.add_argument("--latency", help="The target latency to apply (in ms)", type=int)
+        parser.add_argument("--interface", default="eth0", help="Network interface to apply latency on (default: eth0)")
+        parser.add_argument("--rtt", action='store_true', help="Specify this flag to apply round-trip latency")
+        parser.add_argument("--profiles", help="Path to the latency profiles YAML file")
+
+        args = parser.parse_args(argv)
+
+        self.target_latency = args.latency
+        self.network_interface = args.interface
+        self.rtt = args.rtt
+        self.profiles = args.profiles
+
+        log_header("Injecting Latencies")
+        inject_latencies(self.target_latency, self.network_interface, self.rtt, self.profiles)
+        log_header("Injecting Latencies: Done")
+
+
 class InventoryCli:
 
     def __init__(self):
@@ -455,6 +479,9 @@ class InventoryCli:
 
     def tune(self, argv):
         TuneCli(argv)
+
+    def inject_latencies(self, argv):
+        InventoryInjectLatenciesCli(argv)
 
 
 if __name__ == '__main__':
