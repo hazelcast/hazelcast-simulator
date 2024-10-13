@@ -1740,7 +1740,7 @@ This allows you to simulate different network conditions in a simple setup.
 
 There are two methods to inject latencies: 
 
-1. Basic global assignment: Assign a single latency value that will be applied bi-directionally between all groups.
+1. Basic global assignment: Assign a single latency value that will be applied bi-directionally between groups.
 2. Advanced group assignment: Assign different latency values between different groups.
 
 For both methods you must have created your machines using the `inventory apply` command and edit the generated 
@@ -1765,6 +1765,8 @@ nodes:
 ```
 In this example, we have two hosts, each belonging to a different group (group1 and group2). Latencies will only be applied between different groups.
 If a host is not assigned a group, no direction of latency will be applied to that host.
+
+Note that the latency is applied to the outbound traffic from a source group to the target group.
 ___
 **Method 1: Basic Global Assignment**
 
@@ -1785,6 +1787,7 @@ Explanation of Flags:
 `--interface`: The network interface where the latency should be applied (default is eth0).
 
 `--rtt`: When set, this flag indicates the latency is a round-trip time (RTT), meaning 10ms latency will be split into 5ms each way.
+ Otherwise, 10ms will be applied in each direction.
 
 ___
 **Method 2: Advanced Group Assignment**
@@ -1810,6 +1813,9 @@ In this example, we have two groups (group1 and group2) with different latencies
 Communication from group1 to group2 will have a 5ms latency, while communication from group2 to group1 will have a 2ms latency.
 
 The default_latency serves as a fallback value in case no specific latency is defined between two groups.
+
+`source`: The group of nodes where the latency will be applied to outgoing traffic.
+`target`: The group of nodes to which the outgoing traffic from the source group will experience a delay.
 
 To apply these latencies, run the following command:
 
