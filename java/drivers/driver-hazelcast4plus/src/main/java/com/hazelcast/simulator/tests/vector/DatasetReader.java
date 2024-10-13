@@ -44,10 +44,10 @@ public abstract class DatasetReader {
     protected final Logger logger = LogManager.getLogger(getClass());
 
     public DatasetReader(String url, String directory) {
-        this(url, directory, false);
+        this(url, directory, false, false);
     }
 
-    public DatasetReader(String url, String directory, Boolean normalizeVector) {
+    public DatasetReader(String url, String directory, boolean normalizeVector, boolean testOnly) {
         try {
             this.datasetURL = URI.create(url).toURL();
             this.workingDirectory = Path.of(directory, FilenameUtils.getBaseName(datasetURL.getFile()));
@@ -61,7 +61,9 @@ public abstract class DatasetReader {
             logger.info("File downloaded to {}. Start unpacking...", downloadedFile);
 
             preprocessDatasetFile();
-            parseTrainDataset();
+            if (!testOnly) {
+                parseTrainDataset();
+            }
             parseTestDataset();
             logger.info("Dataset reader is initialized");
         } catch (IOException e) {
@@ -127,12 +129,16 @@ public abstract class DatasetReader {
         }
 
     public static DatasetReader create(String url, String directory, boolean normalizeVector) {
+        return create(url, directory, normalizeVector, false);
+    }
+
+    public static DatasetReader create(String url, String directory, boolean normalizeVector, boolean testOnly) {
         try {
             URL datasetUrl = URI.create(url).toURL();
             var ext = FilenameUtils.getExtension(datasetUrl.getFile());
             return switch (ext) {
-                case "hdf5" -> new HDF5DatasetReader(url, directory, normalizeVector);
-                case "tgz" -> new NpyArchiveDatasetReader(url, directory, normalizeVector);
+                case "hdf5" -> new HDF5DatasetReader(url, directory, normalizeVector, testOnly);
+                case "tgz" -> new NpyArchiveDatasetReader(url, directory, normalizeVector, testOnly);
                 default -> throw new UnsupportedOperationException("File " + ext + " is not supported");
             };
         } catch (MalformedURLException e) {
