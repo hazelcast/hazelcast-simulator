@@ -42,6 +42,7 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
     public String workingDirectory;
 
     // common parameters
+
     public int numberOfSearchIterations = Integer.MAX_VALUE;
 
     public int loadFirst = Integer.MAX_VALUE;
@@ -54,6 +55,12 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
     public int efConstruction;
 
     public boolean normalize = false;
+
+    // collection parameters
+    public String collectionName;
+
+    // by default do not use backups to get faster upload
+    public int backupCount = 0;
 
     // search parameters
 
@@ -68,7 +75,6 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
     private VectorCollection<Integer, Integer> collection;
 
     private DatasetReader reader;
-    private DatasetReader testReader;
 
     private TestDataset testDataset;
 
@@ -84,25 +90,27 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
 
     @Setup
     public void setup() {
+        if (collectionName == null) {
+            collectionName = name;
+        }
         scoreMetrics.setName(name);
         reader = DatasetReader.create(datasetUrl, workingDirectory, normalize);
-        if (testDatasetUrl != null) {
-            testReader = DatasetReader.create(testDatasetUrl, workingDirectory, normalize, true);
-        }
 
         int dimension = reader.getDimension();
         assert dimension == reader.getTestDatasetDimension() : "dataset dimension does not correspond to query vector dimension";
         if (testDatasetUrl != null) {
+            var testReader = DatasetReader.create(testDatasetUrl, workingDirectory, normalize, true);
             testDataset = testReader.getTestDataset();
         } else {
             testDataset = reader.getTestDataset();
         }
 
-        logger.info("Vector collection name: {}", name);
+        logger.info("Vector collection name: {}", collectionName);
         logger.info("Use normalize: {}", normalize);
         collection = VectorCollection.getCollection(
                 targetInstance,
-                new VectorCollectionConfig(name)
+                new VectorCollectionConfig(collectionName)
+                        .setBackupCount(backupCount)
                         .addVectorIndexConfig(
                                 new VectorIndexConfig()
                                         .setMetric(Metric.valueOf(metric))
@@ -122,6 +130,11 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
     @Prepare(global = true)
     public void prepare() {
         var size = Math.min(reader.getSize(), loadFirst);
+
+        if (collection.size() == size) {
+            logger.info("Collection seems to be already filled - reusing existing data.");
+            return;
+        }
 
         var indexBuildTimeStart = System.currentTimeMillis();
 
@@ -163,8 +176,11 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
 
         logger.info("Collection size: {}", size);
         logger.info("Collection dimension: {}", reader.getDimension());
-        logger.info("Cleanup time (min): {}", MILLISECONDS.toMinutes(cleanupTimer));
-        logger.info("Index build time (min): {}", MILLISECONDS.toMinutes(indexBuildTime));
+        logger.info("Cleanup time: {}s", MILLISECONDS.toSeconds(cleanupTimer));
+        logger.info("Index build time: {}s", MILLISECONDS.toSeconds(indexBuildTime));
+
+        // reader will no longer be needed
+        reader = null;
     }
 
     @TimeStep
@@ -204,6 +220,10 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
         logger.info("10pt: {}", scoreMetrics.getPercentile(10));
         logger.info("The percentage of results with precision lower than 98%: {}", scoreMetrics.getPercentLowerThen(98));
         logger.info("The percentage of results with precision lower than 99%: {}", scoreMetrics.getPercentLowerThen(99));
+
+        // test dataset will no longer be needed
+        testDataset = null;
+        searchResults.clear();
     }
 
     public record TestSearchResult(int index, float[] searchVector, SearchResults<?, ?> results) {
