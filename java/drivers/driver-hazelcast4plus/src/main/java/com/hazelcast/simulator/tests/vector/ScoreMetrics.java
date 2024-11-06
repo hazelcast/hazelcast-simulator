@@ -36,6 +36,10 @@ public class ScoreMetrics {
         return (lower * 100) / scoreHistogram.getTotalCount();
     }
 
+    public long getTotalCount() {
+        return scoreHistogram.getTotalCount();
+    }
+
     public void setName(String name) {
         this.name = name;
     }

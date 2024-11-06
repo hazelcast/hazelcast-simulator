@@ -16,6 +16,7 @@ import com.hazelcast.vector.SearchResults;
 import com.hazelcast.vector.VectorCollection;
 import com.hazelcast.vector.VectorDocument;
 import com.hazelcast.vector.VectorValues;
+import com.hazelcast.vector.impl.Hints;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -65,6 +66,10 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
     // search parameters
 
     public int limit;
+    public boolean includeVectors = true;
+    public boolean includeValue = true;
+    public boolean singleStage = false;
+    public Integer efSearch = null;
 
     // inner test parameters
 
@@ -120,11 +125,17 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
                         )
         );
 
-        options = new SearchOptionsBuilder()
-                .includeValue()
-                .includeVectors()
-                .limit(limit)
-                .build();
+        SearchOptionsBuilder optionsBuilder = SearchOptions.builder()
+                .setIncludeValue(includeValue)
+                .setIncludeVectors(includeVectors)
+                .limit(limit);
+        if (efSearch != null) {
+            optionsBuilder.hint(Hints.EF_SEARCH, efSearch);
+        }
+        if (singleStage) {
+            optionsBuilder.hint(Hints.FORCE_SINGLE_STAGE_SEARCH, true);
+        }
+        options = optionsBuilder.build();
     }
 
     @Prepare(global = true)
@@ -220,6 +231,7 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
         logger.info("10pt: {}", scoreMetrics.getPercentile(10));
         logger.info("The percentage of results with precision lower than 98%: {}", scoreMetrics.getPercentLowerThen(98));
         logger.info("The percentage of results with precision lower than 99%: {}", scoreMetrics.getPercentLowerThen(99));
+        logger.info("Total results: {}", scoreMetrics.getTotalCount());
 
         // test dataset will no longer be needed
         testDataset = null;
