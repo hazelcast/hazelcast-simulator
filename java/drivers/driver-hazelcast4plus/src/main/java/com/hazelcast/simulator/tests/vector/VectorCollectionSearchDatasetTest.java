@@ -46,7 +46,9 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
 
     public int numberOfSearchIterations = Integer.MAX_VALUE;
 
-    public int loadFirst = Integer.MAX_VALUE;
+    // allows inflating the collection to arbitrary size by repeatedly adding the entries.
+    // if smaller than size of the dataset, loads only a subset of it
+    public int targetCollectionSize = -1;
 
     // graph parameters
     public String metric;
@@ -54,6 +56,8 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
     public int maxDegree;
 
     public int efConstruction;
+
+    public boolean useDeduplication = true;
 
     public boolean normalize = false;
 
@@ -91,6 +95,8 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
     private SearchOptions options;
 
     private final AtomicInteger counter = new AtomicInteger(0);
+    // for inflated collection precision calculation are wrong due to duplicated vectors
+    private boolean collectionInflated;
 
 
     @Setup
@@ -122,6 +128,7 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
                                         .setDimension(dimension)
                                         .setMaxDegree(maxDegree)
                                         .setEfConstruction(efConstruction)
+                                        .setUseDeduplication(useDeduplication)
                         )
         );
 
@@ -140,7 +147,9 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
 
     @Prepare(global = true)
     public void prepare() {
-        var size = Math.min(reader.getSize(), loadFirst);
+        int testDataSetSize = reader.getSize();
+        var size = targetCollectionSize > 0 ? targetCollectionSize : testDataSetSize;
+        collectionInflated = size > testDataSetSize;
 
         if (collection.size() == size) {
             logger.info("Collection seems to be already filled - reusing existing data.");
@@ -155,7 +164,7 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
 
         int index = 0;
         while (index < size) {
-            buffer.put(index, VectorDocument.of(index, VectorValues.of(reader.getTrainVector(index))));
+            buffer.put(index, VectorDocument.of(index % testDataSetSize, VectorValues.of(reader.getTrainVector(index % testDataSetSize))));
             index++;
             if (buffer.size() % PUT_BATCH_SIZE == 0) {
                 addToPipelineWithLogging(pipelining, collection.putAllAsync(buffer));
@@ -185,7 +194,13 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
         var cleanupTimer = withTimer(() -> collection.optimizeAsync().toCompletableFuture().join());
         indexBuildTime = System.currentTimeMillis() - indexBuildTimeStart;
 
-        logger.info("Collection size: {}", size);
+        logger.info("Collection size: {}", collection.size());
+        if (testDataSetSize != size) {
+            logger.info("Test dataset size: {}", testDataSetSize);
+            if (collectionInflated) {
+                logger.warn("Collection was inflated, precision calculation can be wrong");
+            }
+        }
         logger.info("Collection dimension: {}", reader.getDimension());
         logger.info("Cleanup time: {}s", MILLISECONDS.toSeconds(cleanupTimer));
         logger.info("Index build time: {}s", MILLISECONDS.toSeconds(indexBuildTime));
