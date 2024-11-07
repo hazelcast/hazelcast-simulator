@@ -29,7 +29,6 @@ import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.cache.HazelcastCachingProvider.propertiesByInstanceName;
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepTimeUnit;
 import static java.lang.String.format;
 
@@ -47,11 +46,6 @@ public final class CacheUtils {
         long timeout = duration.getDurationAmount() * 2;
         logger.info(format("Sleeping for %d %s...", timeout, timeUnit));
         sleepTimeUnit(timeUnit, timeout);
-    }
-
-    public static <K, V> ICache<K, V> getCache(HazelcastInstance hazelcastInstance, String cacheName) {
-        HazelcastCacheManager cacheManager = createCacheManager(hazelcastInstance);
-        return getCache(cacheManager, cacheName);
     }
 
     @SuppressWarnings("unchecked")
@@ -79,15 +73,11 @@ public final class CacheUtils {
      */
     public static HazelcastCacheManager createCacheManager(HazelcastInstance hazelcastInstance, URI uri) {
         Properties properties = propertiesByInstanceName(hazelcastInstance.getName());
-        CachingProvider cachingProvider = getCachingProvider(hazelcastInstance);
+        CachingProvider cachingProvider = getCachingProvider();
         return (HazelcastCacheManager) cachingProvider.getCacheManager(uri, null, properties);
     }
 
-    public static CachingProvider getCachingProvider(HazelcastInstance hazelcastInstance) {
-        if (isMemberNode(hazelcastInstance)) {
-            return Caching.getCachingProvider("com.hazelcast.cache.impl.HazelcastServerCachingProvider");
-        } else {
-            return Caching.getCachingProvider("com.hazelcast.client.cache.impl.HazelcastClientCachingProvider");
-        }
+    public static CachingProvider getCachingProvider() {
+        return Caching.getCachingProvider("com.hazelcast.client.cache.impl.HazelcastClientCachingProvider");
     }
 }

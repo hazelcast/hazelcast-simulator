@@ -13,21 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.hazelcast4plus;
+package com.hazelcast.simulator.standaloneClient4plus;
 
 import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.client.config.XmlClientConfigBuilder;
-import com.hazelcast.config.Config;
-import com.hazelcast.config.XmlConfigBuilder;
-import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.instance.BuildInfoProvider;
 import com.hazelcast.partition.Partition;
 import com.hazelcast.partition.PartitionService;
 import com.hazelcast.simulator.coordinator.registry.AgentData;
 import com.hazelcast.simulator.drivers.Driver;
-import com.hazelcast.simulator.utils.HazelcastUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -83,23 +79,9 @@ public class StandaloneClient4PlusDriver extends Driver<HazelcastInstance> {
                 hazelcastInstance = HazelcastClient.newHazelcastClient(clientConfig);
             }
         } else {
-            String configFileName = "litemember".equals(workerType)
-                    ? "litemember-hazelcast.xml"
-                    : "hazelcast.xml";
-            File configFile = new File(getUserDir(), configFileName);
-            try {
-                // this way of loading is preferred so that env-variables and sys properties are picked up
-                System.setProperty("hazelcast.config", configFile.getAbsolutePath());
-                Config config = Config.load();
-                HazelcastUtils.handlePerAgentConfig(properties, config);
-                hazelcastInstance = Hazelcast.newHazelcastInstance(config);
-            } catch (NoSuchMethodError e) {
-                // Fall back in case Config.load doesn't exist (pre 4.2)
-                LOGGER.warn("Fail back to old XmlConfigBuilder style config loading");
-                XmlConfigBuilder configBuilder = new XmlConfigBuilder(configFile.getAbsolutePath());
-                Config config = configBuilder.build();
-                hazelcastInstance = Hazelcast.newHazelcastInstance(config);
-            }
+            // member creation is not supported. Fail fast.
+            LOGGER.fatal("The worker type can only be \"javaclient\" while using standaloneClient4Plus driver.");
+            System.exit(1);
         }
         LOGGER.info(format("%s HazelcastInstance started", workerType));
         warmupPartitions(hazelcastInstance);

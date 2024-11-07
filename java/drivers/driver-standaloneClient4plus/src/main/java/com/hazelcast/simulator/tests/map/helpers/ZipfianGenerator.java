@@ -20,7 +20,6 @@ package com.hazelcast.simulator.tests.map.helpers;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-
 import static com.hazelcast.simulator.tests.map.helpers.ZipfianUtils.random;
 import static java.lang.String.format;
 

@@ -18,22 +18,12 @@ package com.hazelcast.simulator.tests.helpers;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.instance.BuildInfo;
 import com.hazelcast.instance.BuildInfoProvider;
-import com.hazelcast.instance.impl.HazelcastInstanceImpl;
-import com.hazelcast.instance.impl.HazelcastInstanceProxy;
-import com.hazelcast.instance.impl.Node;
 import com.hazelcast.simulator.test.TestException;
-import com.hazelcast.spi.impl.NodeEngineImpl;
-import com.hazelcast.spi.impl.operationservice.OperationService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
-import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
-import static com.hazelcast.simulator.utils.ReflectionUtils.getFieldValue;
 import static com.hazelcast.simulator.utils.VersionUtils.isMinVersion;
 import static java.lang.String.format;
 import static org.junit.Assert.fail;
@@ -62,49 +52,6 @@ public final class HazelcastTestUtils {
             logger.info("waiting cluster == " + clusterSize);
             sleepSeconds(1);
         }
-    }
-
-    public static OperationService getOperationService(HazelcastInstance hz) {
-        Node node = checkNotNull(getNode(hz), "node is null in Hazelcast instance " + hz);
-        NodeEngineImpl nodeEngine = node.getNodeEngine();
-        try {
-            return nodeEngine.getOperationService();
-        } catch (NoSuchMethodError e) {
-            // fallback for a binary incompatible change (see commit http://git.io/vtfKU)
-            return getOperationServiceViaReflection(nodeEngine);
-        }
-    }
-
-    private static OperationService getOperationServiceViaReflection(NodeEngineImpl nodeEngine) {
-        try {
-            Method method = NodeEngineImpl.class.getMethod("getOperationService");
-            return (OperationService) method.invoke(nodeEngine);
-        } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
-            throw new IllegalStateException(e);
-        }
-    }
-
-    public static Node getNode(HazelcastInstance hz) {
-        HazelcastInstanceImpl impl = getHazelcastInstanceImpl(hz);
-        return impl != null ? impl.node : null;
-    }
-
-    private static HazelcastInstanceImpl getHazelcastInstanceImpl(HazelcastInstance hz) {
-        HazelcastInstanceImpl impl = null;
-        if (hz instanceof HazelcastInstanceProxy) {
-            return getFieldValue(hz, "original");
-        } else if (hz instanceof HazelcastInstanceImpl) {
-            impl = (HazelcastInstanceImpl) hz;
-        }
-        return impl;
-    }
-
-    public static boolean isMemberNode(HazelcastInstance instance) {
-        return instance instanceof HazelcastInstanceProxy;
-    }
-
-    public static boolean isClient(HazelcastInstance instance) {
-        return !isMemberNode(instance);
     }
 
     public static void failOnVersionMismatch(String minVersion, String message) {

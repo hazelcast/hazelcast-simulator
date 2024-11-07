@@ -26,7 +26,7 @@ import java.util.concurrent.Semaphore;
  * @param <K> key type
  * @param <V> value type
  */
-final class AsyncCacheStreamer<K, V> extends AbstractAsyncStreamer<K, V> {
+final class AsyncCacheStreamer<K, V> extends com.hazelcast.simulator.worker.loadsupport.AbstractAsyncStreamer<K, V> {
 
     private final ICache<K, V> cache;
 

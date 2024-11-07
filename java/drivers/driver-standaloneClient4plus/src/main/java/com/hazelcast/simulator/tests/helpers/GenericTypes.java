@@ -21,8 +21,8 @@ import java.util.Random;
 
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntegerKeys;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKeys;
-import static com.hazelcast.simulator.utils.GeneratorUtils.generateByteArray;
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateAsciiString;
+import static com.hazelcast.simulator.utils.GeneratorUtils.generateByteArray;
 
 public enum GenericTypes {
 

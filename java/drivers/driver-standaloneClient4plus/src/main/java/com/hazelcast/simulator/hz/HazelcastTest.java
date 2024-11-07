@@ -18,8 +18,8 @@ package com.hazelcast.simulator.hz;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.cp.IAtomicLong;
 import com.hazelcast.simulator.test.TestContext;
-import com.hazelcast.simulator.test.annotations.InjectTestContext;
 import com.hazelcast.simulator.test.annotations.InjectDriver;
+import com.hazelcast.simulator.test.annotations.InjectTestContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

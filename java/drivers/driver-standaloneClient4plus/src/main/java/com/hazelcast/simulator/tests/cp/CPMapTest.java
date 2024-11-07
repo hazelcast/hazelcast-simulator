@@ -1,4 +1,4 @@
-/*
+package com.hazelcast.simulator.tests.cp;/*
  * Copyright (c) 2008-2023, Hazelcast, Inc. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.tests.cp;
 
 import com.hazelcast.collection.IList;
 import com.hazelcast.cp.CPMap;
@@ -29,6 +28,7 @@ import com.hazelcast.simulator.utils.GeneratorUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+
 import static org.junit.Assert.assertTrue;
 
 /**
