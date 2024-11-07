@@ -43,9 +43,9 @@ def upload_driver(driver, hosts):
 
 
 def driver_install_and_configure(driver: str, test: dict, is_loadgenerator: Optional[bool], params: dict, inventory_path: str):
-    install_args = DriverInstallArgs(test, is_loadgenerator, inventory_path)
+    install_args = DriverInstallArgs(test, is_loadgenerator, inventory_path, driver)
     _driver_exec(driver, "install.py", install_args)
-    configure_args = DriverConfigureArgs(test, is_loadgenerator, inventory_path, params)
+    configure_args = DriverConfigureArgs(test, is_loadgenerator, inventory_path, params, driver)
     _driver_exec(driver, "configure.py", configure_args)
 
 
@@ -60,6 +60,7 @@ class DriverInstallArgs:
     test: dict
     is_loadgenerator: Optional[bool]
     inventory_path: str
+    driver: str
 
 
 @dataclass
@@ -68,6 +69,7 @@ class DriverConfigureArgs:
     is_loadgenerator: Optional[bool]
     inventory_path: str
     coordinator_params: dict
+    driver: str
 
 
 def _driver_exec(driver: str, module: str, *args, **kwargs):

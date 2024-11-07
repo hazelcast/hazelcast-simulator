@@ -79,6 +79,7 @@ def _configure_worker_sh(args: DriverConfigureArgs):
 
     args.coordinator_params['file:worker.sh'] = worker_sh
 
+
 def exec(args: DriverConfigureArgs):
     info("Configure")
 
