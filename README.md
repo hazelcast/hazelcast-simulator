@@ -96,19 +96,23 @@ Also contains pointers where to go next.
     - JDK 17 or newer
     - [Maven](https://maven.apache.org/download.cgi)
     - [Terraform](https://developer.hashicorp.com/terraform/downloads)
-    - [Python 3.8 or newer](https://www.python.org/downloads/)
+    - Python 3.8
     - Python3-pip
     - python3-gobject
     - rsync
 
-3. Install Python libraries:
+3. Create a virtual environment, activate it and install dependencies
 
     ```shell
-    pip3 install -U ansible pyyaml matplotlib signal-processing-algorithms pandas plotly boto3
-    ```
+   python3.8 -m venv venv && source ./venv/bin/activate
+   ```
+
+ ```shell
+   pip install -U -r requirements.txt
+   ```
 
    `signal-processing-algorithms` is only needed when you are going to do performance regression testing. The library is
-   used for change point detection.
+   used for change point detection:
 
 
 4. Build Simulator:
