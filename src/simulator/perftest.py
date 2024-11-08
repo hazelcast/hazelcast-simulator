@@ -167,6 +167,8 @@ class PerfTest:
                 coordinator_params[key] = value
 
         driver = test.get('driver')
+        node_driver = None
+        loadgenerator_driver = None
         if driver is not None:
             driver_install_and_configure(driver, test, None, coordinator_params, inventory_path)
         else:
@@ -203,7 +205,15 @@ class PerfTest:
             hosts = load_hosts(inventory_path=inventory_path, host_pattern="all:!mc:!load_balancers")
             agents_download(hosts, run_path, test['RUN_ID'])
             agents_clean(hosts)
-            driver_post_run(driver, test, None, inventory_path)
+
+
+            if driver is not None:
+                driver_post_run(driver, test, None, inventory_path)
+            if node_driver is not None:
+                driver_post_run(node_driver, test, False, inventory_path)
+            if loadgenerator_driver is not None:
+                driver_post_run(loadgenerator_driver, test, True, inventory_path)
+
             return self.exitcode, run_path
 
     def _sanitize_test(self, test: dict):

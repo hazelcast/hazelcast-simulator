@@ -77,9 +77,9 @@ def _get_remote_repo(is_enterprise:bool, version:str):
 
 
 def _get_is_enterprise(driver:str):
-    if driver in ['hazelcast4', 'hazelcast5']:
+    if driver in ['hazelcast4', 'hazelcast5', 'standaloneclient4plus']:
         return False
-    elif driver in ['hazelcast-enterprise4', 'hazelcast-enterprise5']:
+    elif driver in ['hazelcast-enterprise4', 'hazelcast-enterprise5', 'standaloneclient4plus-enterprise']:
         return True
     else:
         print(f"Unknown driver {driver}")

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.standaloneClient4plus;
+package com.hazelcast.simulator.standaloneclient4plus;
 
 import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.client.config.ClientConfig;
@@ -26,7 +26,6 @@ import com.hazelcast.simulator.coordinator.registry.AgentData;
 import com.hazelcast.simulator.drivers.Driver;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -36,10 +35,10 @@ import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
-public class StandaloneClient4PlusDriver extends Driver<HazelcastInstance> {
+public class Standaloneclient4plusDriver extends Driver<HazelcastInstance> {
     private static final long PARTITION_WARMUP_TIMEOUT_NANOS = MINUTES.toNanos(5);
     private static final int PARTITION_WARMUP_SLEEP_INTERVAL_MILLIS = 500;
-    private static final Logger LOGGER = LogManager.getLogger(StandaloneClient4PlusDriver.class);
+    private static final Logger LOGGER = LogManager.getLogger(Standaloneclient4plusDriver.class);
     private HazelcastInstance hazelcastInstance;
 
     @Override
@@ -80,7 +79,7 @@ public class StandaloneClient4PlusDriver extends Driver<HazelcastInstance> {
             }
         } else {
             // member creation is not supported. Fail fast.
-            LOGGER.fatal("The worker type can only be \"javaclient\" while using standaloneClient4Plus driver.");
+            LOGGER.fatal("The worker type can only be \"javaclient\" while using standaloneclient4Plus driver.");
             System.exit(1);
         }
         LOGGER.info(format("%s HazelcastInstance started", workerType));
