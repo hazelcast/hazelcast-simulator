@@ -28,15 +28,11 @@ import com.hazelcast.simulator.test.annotations.Verify;
 
 import static org.junit.Assert.assertEquals;
 
-public class ProducerConsumerTest extends HazelcastTest {
-
-    // properties
-    public int maxIntervalMillis = 2;
-    public boolean usePoll = false;
+public class QueueLatencyTest extends HazelcastTest {
 
     private IAtomicLong produced;
-    private IQueue<Long> workQueue;
     private IAtomicLong consumed;
+    private IQueue<Long> workQueue;
 
     @Setup
     public void setup() {
@@ -46,8 +42,7 @@ public class ProducerConsumerTest extends HazelcastTest {
     }
 
     @TimeStep(executionGroup = "producer")
-    public void produce(ProducerState state) throws Exception {
-        Thread.sleep(state.randomInt(maxIntervalMillis));
+    public void produce(ProducerState state) {
         workQueue.offer(0L);
         state.produced++;
     }
@@ -63,13 +58,8 @@ public class ProducerConsumerTest extends HazelcastTest {
     }
 
     @TimeStep(executionGroup = "consumer")
-    public void consume(ConsumerState state) throws Exception {
-        Long item;
-        if (usePoll) {
-            item = workQueue.poll();
-        } else {
-            item = workQueue.take();
-        }
+    public void consume(ConsumerState state) {
+        Long item = workQueue.poll();
 
         if (item != null) {
             if (item.equals(-1L)) {
@@ -79,8 +69,6 @@ public class ProducerConsumerTest extends HazelcastTest {
 
             state.consumed++;
         }
-
-        Thread.sleep(state.randomInt(maxIntervalMillis));
     }
 
     @AfterRun(executionGroup = "consumer")
