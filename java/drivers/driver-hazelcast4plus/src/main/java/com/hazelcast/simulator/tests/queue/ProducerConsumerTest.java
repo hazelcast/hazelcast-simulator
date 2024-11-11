@@ -32,6 +32,7 @@ public class ProducerConsumerTest extends HazelcastTest {
 
     // properties
     public int maxIntervalMillis = 2;
+    public boolean usePoll = false;
 
     private IAtomicLong produced;
     private IQueue<Long> workQueue;
@@ -63,13 +64,22 @@ public class ProducerConsumerTest extends HazelcastTest {
 
     @TimeStep(executionGroup = "consumer")
     public void consume(ConsumerState state) throws Exception {
-        Long item = workQueue.take();
-        if (item.equals(-1L)) {
-            workQueue.add(item);
-            throw new StopException();
+        Long item;
+        if (usePoll) {
+            item = workQueue.poll();
+        } else {
+            item = workQueue.take();
         }
 
-        state.consumed++;
+        if (item != null) {
+            if (item.equals(-1L)) {
+                workQueue.add(item);
+                throw new StopException();
+            }
+
+            state.consumed++;
+        }
+
         Thread.sleep(state.randomInt(maxIntervalMillis));
     }
 
