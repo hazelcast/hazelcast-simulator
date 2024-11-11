@@ -1806,13 +1806,10 @@ latency_profiles:
     - source: group2
       target: group1
       latency: 2
-  default_latency: 0
 ```
 
 In this example, we have two groups (group1 and group2) with different latencies between them. 
 Communication from group1 to group2 will have a 5ms latency, while communication from group2 to group1 will have a 2ms latency.
-
-The default_latency serves as a fallback value in case no specific latency is defined between two groups.
 
 `source`: The group of nodes where the latency will be applied to outgoing traffic.
 `target`: The group of nodes to which the outgoing traffic from the source group will experience a delay.
