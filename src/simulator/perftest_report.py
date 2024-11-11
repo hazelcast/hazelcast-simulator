@@ -260,7 +260,6 @@ class PerfTestReportCli:
         collect_runs(args.benchmarks, config)
         lookup_periods(config)
         prepare(config)
-        print(config.periods)
         df = analyze(config)
         report(config, df)
 

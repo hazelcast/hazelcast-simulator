@@ -13,7 +13,7 @@
     </parent>
 
     <properties>
-        <hazelcast.version>5.5.0-BETA</hazelcast.version>
+        <hazelcast.version>5.5.1-SNAPSHOT</hazelcast.version>
         <main.basedir>${project.parent.basedir}</main.basedir>
         <netty.version>4.1.94.Final</netty.version>
         <netty-tcnative.version>2.0.34.Final</netty-tcnative.version>
