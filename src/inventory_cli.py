@@ -4,7 +4,6 @@ import sys
 import argparse
 from os import path
 
-from apply_latencies import inject_latencies
 from simulator.inventory_terraform import terraform_import, terraform_destroy, terraform_apply
 from simulator.util import load_yaml_file, exit_with_error, simulator_home, shell, now_seconds
 from simulator.log import info, log_header
@@ -437,8 +436,6 @@ class InventoryInjectLatenciesCli:
         self.rtt = args.rtt
         self.profiles = args.profiles
 
-        # Run the Ansible playbook with the provided arguments
-        log_header("Injecting Latencies via Ansible Playbook")
 
         # Construct the base command
         cmd = f"ansible-playbook --inventory inventory.yaml {simulator_home}/playbooks/inject_latencies.yaml"
@@ -452,7 +449,6 @@ class InventoryInjectLatenciesCli:
         if self.profiles:
             cmd += f" -e latency_profiles_file='{self.profiles}'"
 
-        # Execute the command
         info(f"Running command: {cmd}")
         exitcode = shell(cmd)
         if exitcode != 0:
@@ -474,10 +470,6 @@ class InventoryClearLatenciesCli:
 
         self.network_interface = args.interface
 
-        # Run the Ansible playbook with the provided arguments
-        log_header("Clearing Latencies via Ansible Playbook")
-
-        # Construct the base command
         cmd = f"ansible-playbook --inventory inventory.yaml {simulator_home}/playbooks/clear_latencies.yaml"
 
         # Add variables to the command
