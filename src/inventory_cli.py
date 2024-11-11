@@ -60,7 +60,7 @@ OpenJDK jdk.java.net:
         --url=https://download.java.net/java/GA/jdk20.0.2/6e380f22cbe7469fa75fb448bd903d8e/9/GPL/openjdk-20.0.2_linux-x64_bin.tar.gz
         --url=https://download.java.net/java/GA/jdk21/fd2272bbf8e04c3dbaee13770090416c/35/GPL/openjdk-21_linux-x64_bin.tar.gz
         --url=https://download.java.net/java/GA/jdk22.0.1/c7ec1332f7bb44aeba2eb341ae18aca4/8/GPL/openjdk-22.0.1_linux-x64_bin.tar.gz
-        
+
 AdoptOpenJDK:
 
         https://github.com/AdoptOpenJDK/
@@ -114,14 +114,14 @@ Bellsoft:
         Examples:
         --url=https://download.bell-sw.com/java/11.0.8+10/bellsoft-jdk11.0.8+10-linux-amd64.tar.gz
         --url=https://download.bell-sw.com/java/17.0.2+9/bellsoft-jdk17.0.2+9-linux-amd64.tar.gz
-        
+
 Microsoft
 
         https://docs.microsoft.com/en-us/java/openjdk/download
-        
+
         Examples:
         --url=https://aka.ms/download-jdk/microsoft-jdk-11.0.14.1_1-31205-linux-x64.tar.gz
-        --url=https://aka.ms/download-jdk/microsoft-jdk-17.0.2.8.1-linux-x64.tar.gz        
+        --url=https://aka.ms/download-jdk/microsoft-jdk-17.0.2.8.1-linux-x64.tar.gz
 """
 
 
@@ -421,24 +421,75 @@ class InventoryNewKeyCli:
 class InventoryInjectLatenciesCli:
 
     def __init__(self, argv):
-        parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-                                         description='Injects latencies between inventory nodes')
-        parser.add_argument("--latency", help="The target latency to apply (in ms)", type=int)
+        parser = argparse.ArgumentParser(
+            formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+            description='Injects latencies between inventory nodes'
+        )
+        parser.add_argument("--latency", type=int, help="The target latency to apply (in ms)")
         parser.add_argument("--interface", default="eth0", help="Network interface to apply latency on (default: eth0)")
-        parser.add_argument("--rtt", action='store_true', help="Specify this flag to apply round-trip latency")
-        parser.add_argument("--profiles", help="Path to the latency profiles YAML file")
+        parser.add_argument("--rtt", action='store_true', help="Apply latency as round-trip time (halved for one-way)")
+        parser.add_argument("--profiles", help="Path to the YAML file with advanced latency profiles")
 
         args = parser.parse_args(argv)
 
-        self.target_latency = args.latency
+        self.latency = args.latency  # Renamed from target_latency to latency
         self.network_interface = args.interface
         self.rtt = args.rtt
         self.profiles = args.profiles
 
-        log_header("Injecting Latencies")
-        inject_latencies(self.target_latency, self.network_interface, self.rtt, self.profiles)
+        # Run the Ansible playbook with the provided arguments
+        log_header("Injecting Latencies via Ansible Playbook")
+
+        # Construct the base command
+        cmd = f"ansible-playbook --inventory inventory.yaml {simulator_home}/playbooks/inject_latencies.yaml"
+
+        # Add variables to the command
+        cmd += f" -e interface='{self.network_interface}'"
+        if self.latency is not None:  # Changed condition to allow 0 latency
+            cmd += f" -e latency={self.latency}"
+        if self.rtt:
+            cmd += " -e rtt=true"
+        if self.profiles:
+            cmd += f" -e latency_profiles_file='{self.profiles}'"
+
+        # Execute the command
+        info(f"Running command: {cmd}")
+        exitcode = shell(cmd)
+        if exitcode != 0:
+            exit_with_error(f"Failed to inject latencies, exitcode={exitcode}, command=[{cmd}])")
+
         log_header("Injecting Latencies: Done")
 
+
+class InventoryClearLatenciesCli:
+
+    def __init__(self, argv):
+        parser = argparse.ArgumentParser(
+            formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+            description='Clears latencies between inventory nodes'
+        )
+        parser.add_argument("--interface", default="eth0", help="Network interface to clear latency on (default: eth0)")
+
+        args = parser.parse_args(argv)
+
+        self.network_interface = args.interface
+
+        # Run the Ansible playbook with the provided arguments
+        log_header("Clearing Latencies via Ansible Playbook")
+
+        # Construct the base command
+        cmd = f"ansible-playbook --inventory inventory.yaml {simulator_home}/playbooks/clear_latencies.yaml"
+
+        # Add variables to the command
+        cmd += f" -e interface='{self.network_interface}'"
+
+        # Execute the command
+        info(f"Running command: {cmd}")
+        exitcode = shell(cmd)
+        if exitcode != 0:
+            exit_with_error(f"Failed to clear latencies, exitcode={exitcode}, command=[{cmd}])")
+
+        log_header("Clearing Latencies: Done")
 
 class InventoryCli:
 
@@ -482,6 +533,9 @@ class InventoryCli:
 
     def inject_latencies(self, argv):
         InventoryInjectLatenciesCli(argv)
+
+    def clear_latencies(self, argv):
+        InventoryClearLatenciesCli(argv)
 
 
 if __name__ == '__main__':

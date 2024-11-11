@@ -1,0 +1,270 @@
+---
+- name: Inject network latencies between inventory groups based on 'group' variable
+  hosts: all
+  become: yes
+  vars:
+    # Define the network interface to apply latency rules
+    network_interface: "{{ interface | default('eth0') }}"
+    # Define whether RTT is enabled
+    rtt_enabled: "{{ rtt | default(false) }}"
+    # Define a global latency value if no group-based profiles are applied
+    global_latency: "{{ latency | default(10) }}"
+    # Initialize unique_latencies with an empty list
+    unique_latencies: []
+
+  tasks:
+    - name: Ensure iproute2 is installed (Debian-based systems)
+      ansible.builtin.apt:
+        name: iproute2
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Ensure iproute-tc is installed (Red Hat-based systems)
+      ansible.builtin.yum:
+        name: iproute-tc
+        state: present
+      when: ansible_os_family == "RedHat"
+
+    - name: Load custom latency profiles from file if specified
+      ansible.builtin.include_vars:
+        file: "{{ latency_profiles_file }}"
+      when: latency_profiles_file | default('') != ''
+
+    - name: Validate custom latency profiles are provided when file is specified
+      ansible.builtin.assert:
+        that:
+          - latency_profiles_file | default('') != ''
+          - latency_profiles is defined
+          - latency_profiles.relationships is defined
+          - latency_profiles.relationships | length > 0
+        fail_msg: >
+          Custom latency profiles must be provided via 'latency_profiles_file' with at least one relationship.
+      when: latency_profiles_file | default('') != ''
+
+    - name: Fail if no custom profiles and no global latency are provided
+      ansible.builtin.fail:
+        msg: "Either a 'latency_profiles_file' must be provided or a global 'latency' value must be specified."
+      when:
+        - latency_profiles_file | default('') == ''
+        - latency is not defined
+
+    - name: Determine current host's group
+      set_fact:
+        current_host_group: "{{ group }}"
+
+    - name: Identify target relationships based on current host's group
+      set_fact:
+        target_relationships: "{{ latency_profiles.relationships | selectattr('source', 'equalto', current_host_group) | list }}"
+      when: latency_profiles_file | default('') != ''
+
+    - name: Debug target_relationships
+      ansible.builtin.debug:
+        msg: "Target relationships: {{ target_relationships }}"
+      when: target_relationships is defined
+
+    - name: Debug target group hosts
+      ansible.builtin.debug:
+        msg: "Group '{{ item.target }}' has hosts: {{ hostvars | dict2items | selectattr('value.group', 'equalto', item.target) | map(attribute='value.inventory_hostname') | list }}"
+      loop: "{{ target_relationships }}"
+      when: target_relationships is defined
+
+    - name: Debug private_ips of target group hosts
+      ansible.builtin.debug:
+        msg: "Target group '{{ item.target }}' private IPs: {{ hostvars | dict2items | selectattr('value.group', 'equalto', item.target) | map(attribute='value.private_ip') | list }}"
+      loop: "{{ target_relationships }}"
+      when: target_relationships is defined
+
+    - name: Collect target IPs grouped by latency
+      set_fact:
+        latency_to_ips: "{{ latency_to_ips | default({}) | combine({ item.latency | int: (latency_to_ips[item.latency | int] | default([]) + target_ips ) }) }}"
+      loop: "{{ target_relationships }}"
+      when: target_relationships is defined
+      vars:
+        target_ips: "{{ hostvars | dict2items | selectattr('value.group', 'equalto', item.target) | map(attribute='value.private_ip') | list }}"
+
+    - name: Remove duplicate IPs per latency
+      set_fact:
+        latency_to_ips: "{{ latency_to_ips | combine({ item.key: (item.value | unique) }) }}"
+      loop: "{{ latency_to_ips | dict2items }}"
+      loop_control:
+        loop_var: item
+      when: latency_to_ips is defined
+
+    - name: Debug latency_to_ips
+      ansible.builtin.debug:
+        msg: "Latency to IPs: {{ latency_to_ips }}"
+      when: latency_to_ips is defined
+
+    - name: Remove own IP from all latency_to_ips
+      set_fact:
+        latency_to_ips: "{{ latency_to_ips | combine({ item.key: (item.value | reject('equalto', private_ip) | list) }) }}"
+      loop: "{{ latency_to_ips | dict2items }}"
+      loop_control:
+        loop_var: item
+      when:
+        - latency_to_ips is defined
+        - private_ip in item.value
+
+    - name: Debug latency_to_ips after removing own IP
+      ansible.builtin.debug:
+        msg: "Latency to IPs after removing own IP: {{ latency_to_ips }}"
+      when: latency_to_ips is defined
+
+    - name: Collect unique latencies
+      set_fact:
+        unique_latencies: "{{ latency_to_ips.keys() | list }}"
+      when: latency_to_ips is defined
+
+    - name: Debug unique_latencies
+      ansible.builtin.debug:
+        msg: "Unique latencies: {{ unique_latencies }}"
+      when: unique_latencies is defined
+
+    - name: Initialize latency_classes
+      set_fact:
+        latency_classes: {}
+      when: unique_latencies is defined
+
+    - name: Assign classids to unique latencies
+      set_fact:
+        latency_classes: "{{ latency_classes | combine({ item: '1:' + (10 + index * 10) | string }) }}"
+      loop: "{{ unique_latencies }}"
+      loop_control:
+        index_var: index
+        loop_var: item
+      when: unique_latencies is defined
+
+    - name: Debug latency_classes
+      ansible.builtin.debug:
+        msg: "Latency Classes: {{ latency_classes }}"
+      when: latency_classes is defined
+
+    - name: Apply group-based latency rules
+      block:
+        - name: Flush all existing qdiscs
+          ansible.builtin.command:
+            cmd: "tc qdisc del dev {{ network_interface }} root"
+          ignore_errors: true
+
+        - name: Add htb root qdisc
+          ansible.builtin.command:
+            cmd: "tc qdisc add dev {{ network_interface }} root handle 1: htb default 30"
+          ignore_errors: true
+
+        - name: Add htb class for traffic
+          ansible.builtin.command:
+            cmd: "tc class add dev {{ network_interface }} parent 1: classid 1:1 htb rate 100mbit"
+          ignore_errors: true
+
+        # Create a class for each unique latency
+        - name: Create htb classes with netem for each unique latency
+          ansible.builtin.command:
+            cmd: "tc class add dev {{ network_interface }} parent 1:1 classid {{ latency_classes[item] }} htb rate 100mbit"
+          loop: "{{ unique_latencies }}"
+          loop_control:
+            loop_var: item
+            label: "Creating class for latency {{ item }}ms"
+
+        # Add netem qdisc to each latency class
+        - name: Add netem qdisc to each latency class
+          ansible.builtin.command:
+            cmd: "tc qdisc add dev {{ network_interface }} parent {{ latency_classes[item] }} handle {{ 10 + unique_latencies.index(item) * 10 }}: netem delay {{ ((item) / 2) | int if rtt_enabled else (item) }}ms"
+          loop: "{{ unique_latencies }}"
+          loop_control:
+            loop_var: item
+            label: "Adding netem delay {{ item }}ms to class {{ latency_classes[item] }}"
+
+        # Add IP filters for target IPs with respective classes
+        - name: Add IP filters for target IPs with respective classes
+          ansible.builtin.command:
+            cmd: "tc filter add dev {{ network_interface }} protocol ip parent 1: prio 1 u32 match ip dst {{ item.1 }}/32 flowid {{ latency_classes[item.0.key] }}"
+          loop: "{{ latency_to_ips | dict2items | subelements('value') }}"
+          loop_control:
+            loop_var: item
+            label: "Filtering traffic to IP {{ item.1 }} with latency {{ item.0.key }}ms"
+          when: latency_to_ips is defined
+
+      when:
+        - unique_latencies | length > 0
+        - latency_to_ips is defined
+
+    - name: Inject latency globally if no group-based latency is defined
+      block:
+        - name: Flush all existing qdiscs (Global)
+          ansible.builtin.command:
+            cmd: "tc qdisc del dev {{ network_interface }} root"
+          ignore_errors: true
+
+        - name: Add htb root qdisc with default class for delayed traffic
+          ansible.builtin.command:
+            cmd: "tc qdisc add dev {{ network_interface }} root handle 1: htb default 10"
+          ignore_errors: true
+
+        - name: Add htb class for delayed traffic (classid 1:10)
+          ansible.builtin.command:
+            cmd: "tc class add dev {{ network_interface }} parent 1: classid 1:10 htb rate 100mbit"
+          ignore_errors: true
+
+        - name: Calculate precise delay in microseconds
+          set_fact:
+            precise_delay_us: >-
+              {{
+                (
+                  ((global_latency | float) / 2) if rtt_enabled else (global_latency | float)
+                ) * 1000
+              }}
+
+        - name: Add netem qdisc to class 1:10 for global latency
+          ansible.builtin.command:
+            cmd: "tc qdisc add dev {{ network_interface }} parent 1:10 handle 10: netem delay {{ precise_delay_us | int }}us"
+
+        - name: Add htb class for intra-group traffic without delay (classid 1:20)
+          ansible.builtin.command:
+            cmd: "tc class add dev {{ network_interface }} parent 1: classid 1:20 htb rate 100mbit"
+          ignore_errors: true
+
+        - name: Get IPs of hosts in the same group
+          set_fact:
+            intra_group_ips: >-
+              {{
+                hostvars | dict2items |
+                selectattr('value.group', 'equalto', current_host_group) |
+                selectattr('value.private_ip', 'defined') |
+                map(attribute='value.private_ip') |
+                reject('equalto', private_ip) |
+                list
+              }}
+          when: current_host_group is defined
+
+        - name: Assign intra-group traffic to class 1:20 (no delay)
+          ansible.builtin.command:
+            cmd: "tc filter add dev {{ network_interface }} protocol ip parent 1: prio 1 u32 match ip dst {{ item }}/32 flowid 1:20"
+          loop: "{{ intra_group_ips }}"
+          loop_control:
+            label: "Assigning intra-group traffic to IP {{ item }} to no-delay class"
+
+      when:
+        - unique_latencies | length == 0
+        - latency_profiles_file | default('') == ''
+
+    - name: Debug latency value
+      ansible.builtin.debug:
+        msg: "Latency value: {{ global_latency | default(10) }}ms"
+      when:
+        - unique_latencies | length == 0
+
+    - name: Check latency variable type
+      ansible.builtin.debug:
+        msg: "Type of latency: {{ global_latency | default(10) | type_debug }}"
+      when:
+        - unique_latencies | length == 0
+
+    - name: Verify current qdisc settings
+      ansible.builtin.command:
+        cmd: "tc qdisc show dev {{ network_interface }}"
+      register: tc_qdisc_output
+      ignore_errors: true
+
+    - name: Display current qdisc settings
+      ansible.builtin.debug:
+        var: tc_qdisc_output.stdout
