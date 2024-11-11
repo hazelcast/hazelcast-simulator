@@ -1830,6 +1830,15 @@ Explanation of Flags:
 `--profiles`: The path to the YAML file containing the latency profiles.
 
 Note that if the latency profile file is not provided, the command will default to the basic global assignment method.
+
+
+### Removing Latencies
+
+To remove the injected latencies, run the following command:
+
+```bash 
+inventory clear_latencies
+````
 ---
 
 ## CP subsystem leader priority
