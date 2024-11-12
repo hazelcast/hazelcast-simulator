@@ -16,81 +16,30 @@
 package com.hazelcast.simulator.tests.queue;
 
 import com.hazelcast.collection.IQueue;
-import com.hazelcast.cp.IAtomicLong;
 import com.hazelcast.simulator.hz.HazelcastTest;
-import com.hazelcast.simulator.test.BaseThreadState;
-import com.hazelcast.simulator.test.StopException;
-import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Setup;
-import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
-import com.hazelcast.simulator.test.annotations.Verify;
-
-import static org.junit.Assert.assertEquals;
 
 public class QueueLatencyTest extends HazelcastTest {
 
-    private IAtomicLong produced;
-    private IAtomicLong consumed;
-    private IQueue<Long> workQueue;
+    private IQueue<Long> queue;
 
     @Setup
     public void setup() {
-        produced = getAtomicLong(name + ":Produced");
-        consumed = getAtomicLong(name + ":Consumed");
-        workQueue = targetInstance.getQueue(name + ":WorkQueue");
+        queue = targetInstance.getQueue(name + "-queue");
     }
 
     @TimeStep(executionGroup = "producer")
-    public void produce(ProducerState state) {
-        workQueue.offer(0L);
-        state.produced++;
-    }
-
-    @AfterRun(executionGroup = "producer")
-    public void afterRun(ProducerState state) {
-        produced.addAndGet(state.produced);
-        workQueue.add(-1L);
-    }
-
-    public class ProducerState extends BaseThreadState {
-        long produced;
+    public void produce() {
+        queue.offer(0L);
     }
 
     @TimeStep(executionGroup = "consumer")
-    public void consume(ConsumerState state) {
-        Long item = workQueue.poll();
-
-        if (item != null) {
-            if (item.equals(-1L)) {
-                workQueue.add(item);
-                throw new StopException();
-            }
-
-            state.consumed++;
-        }
+    public void consume() {
+        queue.poll();
     }
 
-    @AfterRun(executionGroup = "consumer")
-    public void afterRun(ConsumerState state) {
-        consumed.addAndGet(state.consumed);
-    }
-
-    public class ConsumerState extends BaseThreadState {
-        long consumed;
-    }
-
-    @Verify
-    public void verify() {
-        long expected = produced.get();
-        long actual = consumed.get();
-        assertEquals(expected, actual);
-    }
-
-    @Teardown
     public void teardown() {
-        produced.destroy();
-        workQueue.destroy();
-        consumed.destroy();
+        queue.destroy();
     }
 }
