@@ -1,0 +1,41 @@
+---
+- name: Clear custom network latencies only
+  hosts: all
+  become: yes
+  vars:
+    network_interface: "{{ interface | default('eth0') }}"
+
+  tasks:
+    - name: Check for existing custom qdiscs added for latency control
+      ansible.builtin.command:
+        cmd: "tc qdisc show dev {{ network_interface }}"
+      register: qdisc_check
+      ignore_errors: true
+
+    - name: Display current qdisc settings
+      ansible.builtin.debug:
+        var: qdisc_check.stdout
+
+    - name: Remove root qdisc if it custom
+      ansible.builtin.command:
+        cmd: "tc qdisc del dev {{ network_interface }} root"
+      when: "'htb' in qdisc_check.stdout or 'netem' in qdisc_check.stdout"
+      ignore_errors: true
+
+    - name: Verify remaining qdisc settings after clearing custom qdiscs
+      ansible.builtin.command:
+        cmd: "tc qdisc show dev {{ network_interface }}"
+      register: tc_qdisc_output
+      ignore_errors: true
+
+    - name: Display final qdisc settings after clearing custom ones
+      ansible.builtin.debug:
+        var: tc_qdisc_output.stdout
+
+    - name: Ensure only default qdisc remains
+      ansible.builtin.assert:
+        that:
+          - "'htb' not in tc_qdisc_output.stdout"
+          - "'netem' not in tc_qdisc_output.stdout"
+        fail_msg: "Custom qdiscs (htb or netem) were not fully cleared."
+        success_msg: "Custom qdiscs cleared, system defaults preserved."
