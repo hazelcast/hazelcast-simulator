@@ -87,7 +87,6 @@ mount_persistence_volume() {
     fi
 }
 
-# Function to handle persistence volume mounting logic
 handle_persistence_volume() {
     # Validate that if one of mount_path or mount_volume is set, the other must be as well
     validate_mount_params
@@ -109,7 +108,7 @@ handle_persistence_volume() {
     fi
 }
 
-# Handle persistence volume mounting if member
+# Handle persistence volume mounting for members only
 if [[ "${WORKER_TYPE}" = "member" ]]; then
   handle_persistence_volume
 fi
