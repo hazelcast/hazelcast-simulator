@@ -7,19 +7,112 @@
 # See the end of this file for examples for different profilers.
 #
 
-# automatic exit on script failure
-set -e
+# Enable strict error handling
+set -euo pipefail
+
 # printing the command being executed (useful for debugging)
 #set -x
 
-# redirecting output/error to the right log files
-exec > worker.out
-exec 2> worker.err
+# Redirecting output and error to log files with timestamps
+exec > >(tee -a worker.out) 2> >(tee -a worker.err >&2)
+
+log() {
+    local level="$1"
+    shift
+    echo "$(date '+%Y-%m-%d %H:%M:%S') [$level] $*"
+}
 
 # Read the parameters file and add it to the environment
 while IFS='=' read -r key value; do
     export "$key"="$value"
 done < "parameters"
+
+validate_mount_params() {
+    if [[ -n "${mount_path:-}" && -z "${mount_volume:-}" ]]; then
+        log "ERROR" "mount_path is set but mount_volume is not set."
+        exit 1
+    fi
+
+    if [[ -z "${mount_path:-}" && -n "${mount_volume:-}" ]]; then
+        log "ERROR" "mount_volume is set but mount_path is not set."
+        exit 1
+    fi
+}
+
+validate_mount_path_safety() {
+    local path="$1"
+    case "$path" in
+        / | /home | /var | /etc)
+            log "WARNING" "mount_path $path is not allowed. Aborting."
+            exit 1
+            ;;
+    esac
+}
+
+mount_persistence_volume() {
+    log "INFO" "Setting up $mount_path for persistence volume..."
+
+    # Unmount volume if mounted elsewhere
+    if findmnt -S "$mount_volume" | grep -qv "$mount_path"; then
+        log "INFO" "Unmounting $mount_volume from previous mount point..."
+        sudo umount "$mount_volume" || { log "ERROR" "Failed to unmount $mount_volume"; exit 1; }
+    fi
+
+    if ! blkid "$mount_volume" | grep -q 'TYPE="xfs"'; then
+        log "INFO" "Creating XFS filesystem on $mount_volume..."
+        sudo mkfs.xfs -f "$mount_volume" || { log "ERROR" "Failed to format $mount_volume"; exit 1; }
+    else
+        log "INFO" "$mount_volume already has an XFS filesystem."
+    fi
+
+    # Create mount directory if it doesn't exist
+    if [[ ! -d "$mount_path" ]]; then
+        log "INFO" "Creating mount directory $mount_path..."
+        sudo mkdir -p "$mount_path" || { log "ERROR" "Failed to create directory $mount_path"; exit 1; }
+    fi
+
+    log "INFO" "Setting ownership and permissions for $mount_path..."
+    sudo chown "$members_user:$members_user" "$mount_path" || { log "ERROR" "Failed to change ownership of $mount_path"; exit 1; }
+    sudo chmod 755 "$mount_path" || { log "ERROR" "Failed to set permissions for $mount_path"; exit 1; }
+
+    log "INFO" "Mounting $mount_volume to $mount_path..."
+    sudo mount "$mount_volume" "$mount_path" || { log "ERROR" "Failed to mount $mount_volume to $mount_path"; exit 1; }
+
+    if mountpoint -q "$mount_path"; then
+        log "INFO" "Successfully mounted $mount_volume to $mount_path."
+        sudo chown "$members_user:$members_user" "$mount_path" || { log "ERROR" "Failed to change ownership of mounted filesystem"; exit 1; }
+    else
+        log "ERROR" "Mounting $mount_volume to $mount_path failed."
+        exit 1
+    fi
+}
+
+# Function to handle persistence volume mounting logic
+handle_persistence_volume() {
+    # Validate that if one of mount_path or mount_volume is set, the other must be as well
+    validate_mount_params
+
+    if [[ -n "${mount_path:-}" && -n "${mount_volume:-}" ]]; then
+        # Ensure mount_path is safe
+        validate_mount_path_safety "$mount_path"
+
+        # Check if mount_path is already a mount point
+        if mountpoint -q "$mount_path"; then
+            log "INFO" "Clearing contents of $mount_path directory..."
+            sudo rm -rf "${mount_path:?}/"*
+        else
+            # Proceed with mounting
+            mount_persistence_volume
+        fi
+    else
+        log "INFO" "No persistence volume parameters provided. Skipping mounting process."
+    fi
+}
+
+# Handle persistence volume mounting if member
+if [[ "${WORKER_TYPE}" = "member" ]]; then
+  handle_persistence_volume
+fi
 
 # If you want to be sure that you have the right governor installed; uncomment
 # the following 3 lines. They will force the right governor to be used.
