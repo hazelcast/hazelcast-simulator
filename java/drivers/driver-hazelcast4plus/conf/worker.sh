@@ -22,20 +22,87 @@ log() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') [$level] $*"
 }
 
+# Initialize variables to track cleanup actions for persistence volume setup
+MOUNTED=false
+DIR_CREATED=false
+
+# Cleanup function to revert partial changes if persistent volume setup fails
+cleanup() {
+    local exit_code=$?
+    if [[ $MOUNTED == true ]]; then
+        log "INFO" "Attempting to unmount '$mount_path'..."
+        sudo umount "$mount_path" && log "INFO" "Successfully unmounted '$mount_path'." || log "WARNING" "Failed to unmount '$mount_path'. Please unmount manually."
+    fi
+
+    if [[ $DIR_CREATED == true ]]; then
+        log "INFO" "Attempting to remove mount directory '$mount_path'..."
+        sudo rmdir "$mount_path" && log "INFO" "Successfully removed directory '$mount_path'." || log "WARNING" "Failed to remove directory '$mount_path'. It may not be empty or you may not have permissions."
+    fi
+
+    if [[ $exit_code -ne 0 ]]; then
+        log "ERROR" "Script exited with code $exit_code. Cleanup performed."
+    fi
+
+    exit $exit_code
+}
+
+trap cleanup EXIT
+trap cleanup ERR
+trap cleanup INT
+
 # Read the parameters file and add it to the environment
 while IFS='=' read -r key value; do
     export "$key"="$value"
 done < "parameters"
 
-validate_mount_params() {
-    if [[ -n "${mount_path:-}" && -z "${mount_volume:-}" ]]; then
-        log "ERROR" "mount_path is set but mount_volume is not set."
-        exit 1
-    fi
+# Determine if persistence is enabled based on mount_volume and mount_path
+# If ony one is set, this is a misconfiguration and we exit to warn the user.
+PERSISTENCE_ENABLED=false
+if [[ -n "${mount_volume:-}" && -n "${mount_path:-}" ]]; then
+    PERSISTENCE_ENABLED=true
+elif [[ -n "${mount_volume:-}" || -n "${mount_path:-}" ]]; then
+    log "ERROR" "Both 'mount_volume' and 'mount_path' must be set to enable persistence mounting."
+    exit 1
+fi
 
-    if [[ -z "${mount_path:-}" && -n "${mount_volume:-}" ]]; then
-        log "ERROR" "mount_volume is set but mount_path is not set."
-        exit 1
+validate_mount_params() {
+    if [[ $PERSISTENCE_ENABLED == true ]]; then
+        # Validate that mount_volume is a valid device path under /dev/
+        if [[ ! "$mount_volume" =~ ^/dev/[a-zA-Z0-9]+$ ]]; then
+            log "ERROR" "mount_volume '$mount_volume' is not a valid device path. It should start with '/dev/' followed by the device name."
+            exit 1
+        fi
+
+        # Check if the device exists and is a block device
+        if [[ ! -b "$mount_volume" ]]; then
+            log "ERROR" "Device '$mount_volume' does not exist or is not a block device."
+            exit 1
+        fi
+
+        # Validate that mount_path is an absolute path
+        if [[ ! "$mount_path" =~ ^/ ]]; then
+            log "ERROR" "mount_path '$mount_path' is not an absolute path. It should start with '/'."
+            exit 1
+        fi
+
+        # Prevent mounting to certain system directories
+        case "$mount_path" in
+            "/" | "/home" | "/var" | "/etc" | "/usr" | "/bin" | "/sbin" | "/lib" | "/opt")
+                log "ERROR" "mount_path '$mount_path' is a critical system directory and cannot be used."
+                exit 1
+                ;;
+        esac
+
+        # Check for invalid characters in mount_path
+        if [[ "$mount_path" =~ [^a-zA-Z0-9/_\-] ]]; then
+            log "ERROR" "mount_path '$mount_path' contains invalid characters. Allowed characters are letters, numbers, '/', '_', and '-'."
+            exit 1
+        fi
+
+        if [[ -e "$mount_path" && ! -d "$mount_path" ]]; then
+            log "ERROR" "mount_path '$mount_path' exists but is not a directory."
+            exit 1
+        fi
     fi
 }
 
@@ -43,74 +110,78 @@ validate_mount_path_safety() {
     local path="$1"
     case "$path" in
         / | /home | /var | /etc)
-            log "WARNING" "mount_path $path is not allowed. Aborting."
+            log "WARNING" "mount_path '$path' is not allowed. Aborting."
             exit 1
             ;;
     esac
 }
 
 mount_persistence_volume() {
-    log "INFO" "Setting up $mount_path for persistence volume..."
+    # Check if blkid command exists
+    if ! command -v blkid &> /dev/null; then
+        log "ERROR" "blkid not found."
+        exit 1
+    fi
+
+    log "INFO" "Setting up '$mount_path' for persistence volume..."
 
     # Unmount volume if mounted elsewhere
     if findmnt -S "$mount_volume" | grep -qv "$mount_path"; then
-        log "INFO" "Unmounting $mount_volume from previous mount point..."
-        sudo umount "$mount_volume" || { log "ERROR" "Failed to unmount $mount_volume"; exit 1; }
+        log "INFO" "Unmounting '$mount_volume' from previous mount point..."
+        sudo umount "$mount_volume" || { log "ERROR" "Failed to unmount '$mount_volume'"; exit 1; }
     fi
 
+    # Check if the filesystem is XFS, if not, format it
     if ! blkid "$mount_volume" | grep -q 'TYPE="xfs"'; then
-        log "INFO" "Creating XFS filesystem on $mount_volume..."
-        sudo mkfs.xfs -f "$mount_volume" || { log "ERROR" "Failed to format $mount_volume"; exit 1; }
+        log "INFO" "Creating XFS filesystem on '$mount_volume'..."
+        sudo mkfs.xfs -f "$mount_volume" || { log "ERROR" "Failed to format '$mount_volume'"; exit 1; }
     else
-        log "INFO" "$mount_volume already has an XFS filesystem."
+        log "INFO" "'$mount_volume' already has an XFS filesystem."
     fi
 
     # Create mount directory if it doesn't exist
     if [[ ! -d "$mount_path" ]]; then
-        log "INFO" "Creating mount directory $mount_path..."
-        sudo mkdir -p "$mount_path" || { log "ERROR" "Failed to create directory $mount_path"; exit 1; }
+        log "INFO" "Creating mount directory '$mount_path'..."
+        sudo mkdir -p "$mount_path" || { log "ERROR" "Failed to create directory '$mount_path'"; exit 1; }
+        DIR_CREATED=true
     fi
 
-    log "INFO" "Setting ownership and permissions for $mount_path..."
-    sudo chown "$members_user:$members_user" "$mount_path" || { log "ERROR" "Failed to change ownership of $mount_path"; exit 1; }
-    sudo chmod 755 "$mount_path" || { log "ERROR" "Failed to set permissions for $mount_path"; exit 1; }
+    log "INFO" "Setting ownership and permissions for '$mount_path'..."
+    sudo chown "$members_user:$members_user" "$mount_path" || { log "ERROR" "Failed to change ownership of '$mount_path'"; exit 1; }
+    sudo chmod 755 "$mount_path" || { log "ERROR" "Failed to set permissions for '$mount_path'"; exit 1; }
 
-    log "INFO" "Mounting $mount_volume to $mount_path..."
-    sudo mount "$mount_volume" "$mount_path" || { log "ERROR" "Failed to mount $mount_volume to $mount_path"; exit 1; }
+    log "INFO" "Mounting '$mount_volume' to '$mount_path'..."
+    sudo mount "$mount_volume" "$mount_path" || { log "ERROR" "Failed to mount '$mount_volume' to '$mount_path'"; exit 1; }
+    MOUNTED=true
 
     if mountpoint -q "$mount_path"; then
-        log "INFO" "Successfully mounted $mount_volume to $mount_path."
+        log "INFO" "Successfully mounted '$mount_volume' to '$mount_path'."
         sudo chown "$members_user:$members_user" "$mount_path" || { log "ERROR" "Failed to change ownership of mounted filesystem"; exit 1; }
     else
-        log "ERROR" "Mounting $mount_volume to $mount_path failed."
+        log "ERROR" "Mounting '$mount_volume' to '$mount_path' failed."
         exit 1
     fi
 }
 
 handle_persistence_volume() {
-    # Validate that if one of mount_path or mount_volume is set, the other must be as well
     validate_mount_params
-
-    if [[ -n "${mount_path:-}" && -n "${mount_volume:-}" ]]; then
-        # Ensure mount_path is safe
+    if [[ $PERSISTENCE_ENABLED == true ]]; then
         validate_mount_path_safety "$mount_path"
-
         # Check if mount_path is already a mount point
         if mountpoint -q "$mount_path"; then
-            log "INFO" "Clearing contents of $mount_path directory..."
-            sudo rm -rf "${mount_path:?}/"*
+            log "INFO" "Clearing contents of '$mount_path' directory..."
+            sudo rm -rf "${mount_path:?}/"* || { log "WARNING" "Failed to clear contents of '$mount_path'."; }
         else
-            # Proceed with mounting
             mount_persistence_volume
         fi
     else
-        log "INFO" "No persistence volume parameters provided. Skipping mounting process."
+        log "INFO" "Persistence is not enabled. Skipping persistence volume setup."
     fi
 }
 
 # Handle persistence volume mounting for members only
-if [[ "${WORKER_TYPE}" = "member" ]]; then
-  handle_persistence_volume
+if [[ "${WORKER_TYPE:-}" = "member" ]]; then
+    handle_persistence_volume
 fi
 
 # If you want to be sure that you have the right governor installed; uncomment
