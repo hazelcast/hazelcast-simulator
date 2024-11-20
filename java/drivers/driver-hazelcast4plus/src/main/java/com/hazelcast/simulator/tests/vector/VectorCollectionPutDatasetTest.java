@@ -1,155 +1,65 @@
 package com.hazelcast.simulator.tests.vector;
 
-import com.hazelcast.config.vector.Metric;
-import com.hazelcast.config.vector.VectorCollectionConfig;
-import com.hazelcast.config.vector.VectorIndexConfig;
-import com.hazelcast.simulator.hz.HazelcastTest;
-import com.hazelcast.simulator.test.BaseThreadState;
-import com.hazelcast.simulator.test.annotations.AfterRun;
-import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.TimeStep;
-import com.hazelcast.vector.VectorCollection;
 import com.hazelcast.vector.VectorDocument;
 import com.hazelcast.vector.VectorValues;
-import org.HdrHistogram.Histogram;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class VectorCollectionPutDatasetTest extends HazelcastTest {
+public class VectorCollectionPutDatasetTest extends VectorCollectionDatasetTestBase {
 
-    public String datasetUrl;
+    public int putBatchSize = 2_000;
 
-    public String workingDirectory;
-
-    public String name;
-
-    // common parameters
-    public int loadFirst = Integer.MAX_VALUE;
-
-    public int putBatchSize = 10_000;
-
-    // graph parameters
-    public String metric;
-
-    public int maxDegree;
-
-    public int efConstruction;
-
-    // inner test parameters
-
-    private static final TimeMetrics metrics = new TimeMetrics();
-    private VectorCollection<Integer, Integer> collection;
     private final AtomicInteger counter = new AtomicInteger(0);
 
-    private DatasetReader reader;
-    private List<Map<Integer, VectorDocument<Integer>>> buffers = new ArrayList<>();
-
-    @Setup
-    public void setup() {
-        reader = DatasetReader.create(datasetUrl, workingDirectory, false);
-        int dimension = reader.getDimension();
-        loadFirst = Math.min(loadFirst, reader.getSize());
-
-        collection = VectorCollection.getCollection(
-                targetInstance,
-                new VectorCollectionConfig(name)
-                        .addVectorIndexConfig(
-                                new VectorIndexConfig()
-                                        .setMetric(Metric.valueOf(metric))
-                                        .setDimension(dimension)
-                                        .setMaxDegree(maxDegree)
-                                        .setEfConstruction(efConstruction)
-                        )
-        );
-        logger.info("Use collection with name: {}", collection.getName());
-    }
-
     @TimeStep(prob = 0)
-    public void put(ThreadState state) {
-        var iteration = counter.getAndIncrement();
-        if (iteration >= loadFirst) {
+    public void put() {
+        int testDataSetSize = reader.getSize();
+        var size = targetCollectionSize > 0 ? targetCollectionSize : testDataSetSize;
+
+        var index = counter.getAndIncrement();
+        if (index >= size) {
             testContext.stop();
             return;
         }
-        var vector = reader.getTrainVector(iteration);
-        metrics.recordPut(
-                () -> collection.putAsync(
-                                iteration,
-                                VectorDocument.of(iteration, VectorValues.of(vector))
-                        )
-                        .toCompletableFuture()
-                        .join()
-        );
+        var vector = reader.getTrainVector(index % testDataSetSize);
+        collection.putAsync(index, VectorDocument.of(index % testDataSetSize, VectorValues.of(vector)))
+                .toCompletableFuture()
+                .join();
     }
 
-    @TimeStep(prob = 1)
-    public void putAll(ThreadState state) {
+    @TimeStep(prob = 0)
+    public void putAll() {
+        int testDataSetSize = reader.getSize();
+        var size = targetCollectionSize > 0 ? targetCollectionSize : testDataSetSize;
+
         var iteration = counter.getAndAdd(putBatchSize);
-        if (iteration >= loadFirst) {
+        if (iteration >= size) {
             testContext.stop();
             return;
         }
         Map<Integer, VectorDocument<Integer>> buffer = new HashMap<>();
-        metrics.recordBuffer(
-                () -> {
-                    for (int i = 0; i < putBatchSize; i++) {
-                        var key = iteration + i;
-                        if (key >= reader.size) {
-                            break;
-                        }
-                        var vector = reader.getTrainVector(key);
-                        buffer.put(key, VectorDocument.of(key, VectorValues.of(vector)));
-                    }
-                }
-        );
-
-        metrics.recordPut(
-                () -> collection.putAllAsync(buffer)
-                        .toCompletableFuture()
-                        .join()
-        );
-    }
-
-    @AfterRun
-    public void afterRun() {
-        logger.info("****CUSTOM STATISTICS****");
-        logger.info(metrics.getStatistics());
-    }
-
-    public static class ThreadState extends BaseThreadState {
-    }
-
-
-    public static class TimeMetrics {
-        private static final Histogram bufferTimer = new Histogram(2);
-        private static final Histogram putTimer = new Histogram(2);
-
-
-        public void recordBuffer(Runnable action) {
-            var start = System.currentTimeMillis();
-            action.run();
-            bufferTimer.recordValue(System.currentTimeMillis() - start);
+        for (int i = 0; i < putBatchSize; i++) {
+            var key = iteration + i;
+            if (key >= reader.size) {
+                break;
+            }
+            var vector = reader.getTrainVector(key % testDataSetSize);
+            buffer.put(key, VectorDocument.of(key, VectorValues.of(vector)));
         }
 
-        public void recordPut(Runnable action) {
-            var start = System.currentTimeMillis();
-            action.run();
-            putTimer.recordValue(System.currentTimeMillis() - start);
-        }
+        collection.putAllAsync(buffer)
+                .toCompletableFuture()
+                .join();
+    }
 
-        public String getStatistics() {
-            return "\nBuffer 95p: " + bufferTimer.getValueAtPercentile(95) + "\n"
-                    + "Buffer max: " + bufferTimer.getMaxValue() + "\n"
-                    + "Buffer min: " + bufferTimer.getMinValue() + "\n"
-                    + "Buffer mean: " + bufferTimer.getMean() + "\n"
-                    + "Put 95p: " + putTimer.getValueAtPercentile(95) + "\n"
-                    + "Put max: " + putTimer.getMaxValue() + "\n"
-                    + "Put min: " + putTimer.getMinValue() + "\n"
-                    + "Put mean: " + putTimer.getMean() + "\n";
-        }
+    @TimeStep(prob = 0)
+    public void optimize() {
+        // note: this may fail with > 1 client
+        var cleanupTimer = withTimer(() -> collection.optimizeAsync().toCompletableFuture().join());
+        logger.info("Cleanup time: {} ms", cleanupTimer);
+        testContext.stop();
     }
 }
