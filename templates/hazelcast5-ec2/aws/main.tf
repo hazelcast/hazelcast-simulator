@@ -13,6 +13,8 @@ provider "aws" {
 resource "aws_default_vpc" "vpc" {
   tags = {
     Name = "Default VPC"
+    team  = local.settings.team
+    type  = local.settings.type
   }
 }
 
@@ -25,6 +27,8 @@ resource "aws_default_vpc" "vpc" {
 #    
 #    tags = {
 #        Name = "prod-vpc"
+#        team  = local.settings.team
+#        type  = local.settings.type
 #    }
 #}
 
@@ -33,6 +37,8 @@ resource "aws_default_vpc" "vpc" {
 #
 #  tags = {
 #    Name = "My VPC - Internet Gateway"
+#    team  = local.settings.team
+#    type  = local.settings.type
 #  }
 #}
 
@@ -48,6 +54,8 @@ resource "aws_subnet" "subnet" {
     map_public_ip_on_launch = true
     tags = {
         Name = "Simulator Public Subnet ${local.settings.basename}"
+        team  = local.settings.team
+        type  = local.settings.type
     }
 }
 
@@ -60,6 +68,8 @@ resource "aws_route_table" "route_table" {
 
     tags = {
         Name = "Simulator Public Subnet Route Table ${local.settings.basename}"
+        team  = local.settings.team
+        type  = local.settings.type
     }
 }
 
@@ -86,6 +96,8 @@ resource "aws_security_group" "node-sg" {
     tags = {
         Name = "Simulator Node Security Group ${local.settings.basename}",
         Owner = local.settings.owner
+        team  = local.settings.team
+        type  = local.settings.type
     }
     
     ingress {
@@ -159,6 +171,8 @@ resource "aws_instance" "nodes" {
     tags = {
         Name  = "Simulator Node ${local.settings.basename}"
         Owner = local.settings.owner
+        team  = local.settings.team
+        type  = local.settings.type
         "passthrough:ansible_ssh_private_key_file" = local.settings.keypair.private_key
         "passthrough:ansible_user" = local.settings.nodes.user
     }
@@ -178,6 +192,8 @@ resource "aws_security_group" "loadgenerator-sg" {
     tags = {
         Name = "Simulator Load Balancer Security Group ${local.settings.basename}",
         Owner = local.settings.owner
+        team  = local.settings.team
+        type  = local.settings.type
     }
     
     ingress {
@@ -242,6 +258,8 @@ resource "aws_instance" "loadgenerators" {
     tags = {
         Name  = "Simulator Load Generator ${local.settings.basename}"
         Owner = local.settings.owner
+        team  = local.settings.team
+        type  = local.settings.type
         "passthrough:ansible_ssh_private_key_file" = local.settings.keypair.private_key
         "passthrough:ansible_user" = local.settings.loadgenerators.user
     }
@@ -261,6 +279,8 @@ resource "aws_security_group" "mc-sg" {
     tags = {
         Name = "Simulator MC Security Group ${local.settings.basename}",
         Owner = local.settings.owner
+        team  = local.settings.team
+        type  = local.settings.type
     }
 
     ingress {
@@ -307,6 +327,8 @@ resource "aws_instance" "mc" {
     tags = {
         Name  = "Simulator MC ${local.settings.basename}"
         Owner = local.settings.owner
+        team  = local.settings.team
+        type  = local.settings.type
         "passthrough:ansible_ssh_private_key_file" = local.settings.keypair.private_key
         "passthrough:ansible_user" = local.settings.mc.user
     }
