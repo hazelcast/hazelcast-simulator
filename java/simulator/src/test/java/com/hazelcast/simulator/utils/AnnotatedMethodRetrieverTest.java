@@ -117,6 +117,19 @@ public class AnnotatedMethodRetrieverTest {
         assertEquals("tearDown", methodList.get(0).getName());
     }
 
+    @Test
+    public void testSubClass_methodFoundInSuperAndSubclass() {
+        List<Method> methodList = new AnnotatedMethodRetriever(Subclass.class, Verify.class)
+                .withFilter(new AnnotationFilter.VerifyFilter(true))
+                .withVoidReturnType()
+                .withoutArgs()
+                .findAll();
+
+        assertEquals(2, methodList.size());
+        assertEquals("verify2", methodList.get(0).getName());
+        assertEquals("verify", methodList.get(1).getName());
+    }
+
     public static class SuperClass {
         @Verify
         public void verify() {

@@ -168,6 +168,7 @@ public class TimeStepModel {
 
     private void loadAfterRunMethods() {
         List<Method> methods = new AnnotatedMethodRetriever(testClass, AfterRun.class)
+                .withSubclassFirst()
                 .findAll();
 
         validateModifiers(methods);
