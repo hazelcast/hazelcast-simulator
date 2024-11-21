@@ -131,6 +131,32 @@ public class AnnotatedMethodRetrieverTest {
 
     @Test
     public void testSubClass_methodFoundInSuperAndSubclassFirst() {
+        List<Method> methodList = new AnnotatedMethodRetriever(Subclass.class, Setup.class)
+                .withVoidReturnType()
+                .withoutArgs()
+                .withSubclassFirst()
+                .findAll();
+
+        assertEquals(2, methodList.size());
+        assertEquals("setupSubclass", methodList.get(0).getName());
+        assertEquals("setupBase", methodList.get(1).getName());
+    }
+
+    @Test
+    public void testSubClass_overriddenMethodFoundInSuperFirstAndSubclass_usesSubclass() {
+        List<Method> methodList = new AnnotatedMethodRetriever(Subclass.class, Verify.class)
+                .withFilter(new AnnotationFilter.VerifyFilter(true))
+                .withVoidReturnType()
+                .withoutArgs()
+                .findAll();
+
+        assertEquals(2, methodList.size());
+        assertEquals("verify2", methodList.get(0).getName());
+        assertEquals("verify", methodList.get(1).getName());
+    }
+
+    @Test
+    public void testSubClass_overriddenMethodFoundInSuperAndSubclassFirst() {
         List<Method> methodList = new AnnotatedMethodRetriever(Subclass.class, Verify.class)
                 .withFilter(new AnnotationFilter.VerifyFilter(true))
                 .withVoidReturnType()

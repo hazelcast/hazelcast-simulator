@@ -132,7 +132,6 @@ public class AnnotatedMethodRetriever {
         List<Method> methods = new ArrayList<>();
         do {
             findDeclaredMethods(classType, methods);
-
             classType = classType.getSuperclass();
         } while (classType != null && classType != Object.class);
 
