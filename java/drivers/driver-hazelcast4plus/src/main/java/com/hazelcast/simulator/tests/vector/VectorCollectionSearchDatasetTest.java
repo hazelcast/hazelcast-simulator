@@ -77,7 +77,7 @@ public class VectorCollectionSearchDatasetTest extends VectorCollectionDatasetTe
     @Prepare(global = true)
     public void prepare() {
         int testDataSetSize = reader.getSize();
-        var size = targetCollectionSize > 0 ? targetCollectionSize : testDataSetSize;
+        var size = getRequestedSize();
         collectionInflated = size > testDataSetSize;
 
         if (collection.size() == size) {

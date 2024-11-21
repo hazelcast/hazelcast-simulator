@@ -30,6 +30,8 @@ public class VectorCollectionDatasetTestBase extends HazelcastTest {
     // allows inflating the collection to arbitrary size by repeatedly adding the entries.
     // if smaller than size of the dataset, loads only a subset of it
     public int targetCollectionSize = -1;
+    // fraction of the target collection size to be used in given test
+    public double targetCollectionSizeFraction = 1.0;
 
     // if vectors should be normalized before use
     public boolean normalize = false;
@@ -54,6 +56,11 @@ public class VectorCollectionDatasetTestBase extends HazelcastTest {
     protected TestDataset testDataset;
     protected VectorCollection<Integer, Integer> collection;
     //endregion
+
+    protected int getRequestedSize() {
+        var size = targetCollectionSize > 0 ? targetCollectionSize : reader.getSize();
+        return (int) (size * targetCollectionSizeFraction);
+    }
 
     @Setup
     public void setup() {

@@ -17,7 +17,7 @@ public class VectorCollectionPutDatasetTest extends VectorCollectionDatasetTestB
     @TimeStep(prob = 0)
     public void put() {
         int testDataSetSize = reader.getSize();
-        var size = targetCollectionSize > 0 ? targetCollectionSize : testDataSetSize;
+        var size = getRequestedSize();
 
         var index = counter.getAndIncrement();
         if (index >= size) {
@@ -33,7 +33,7 @@ public class VectorCollectionPutDatasetTest extends VectorCollectionDatasetTestB
     @TimeStep(prob = 0)
     public void putAll() {
         int testDataSetSize = reader.getSize();
-        var size = targetCollectionSize > 0 ? targetCollectionSize : testDataSetSize;
+        var size = getRequestedSize();
 
         var iteration = counter.getAndAdd(putBatchSize);
         if (iteration >= size) {
@@ -43,7 +43,7 @@ public class VectorCollectionPutDatasetTest extends VectorCollectionDatasetTestB
         Map<Integer, VectorDocument<Integer>> buffer = new HashMap<>();
         for (int i = 0; i < putBatchSize; i++) {
             var key = iteration + i;
-            if (key >= reader.size) {
+            if (key >= testDataSetSize) {
                 break;
             }
             var vector = reader.getTrainVector(key % testDataSetSize);
@@ -51,6 +51,23 @@ public class VectorCollectionPutDatasetTest extends VectorCollectionDatasetTestB
         }
 
         collection.putAllAsync(buffer)
+                .toCompletableFuture()
+                .join();
+    }
+
+    /**
+     * Deletes entries 0..requested size
+     */
+    @TimeStep(prob = 0)
+    public void delete() {
+        var size = getRequestedSize();
+
+        var index = counter.getAndIncrement();
+        if (index >= size) {
+            testContext.stop();
+            return;
+        }
+        collection.deleteAsync(index)
                 .toCompletableFuture()
                 .join();
     }
