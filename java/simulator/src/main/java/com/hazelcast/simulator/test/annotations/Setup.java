@@ -22,7 +22,7 @@ import java.lang.annotation.Target;
 
 /**
  * Multiple {@link Setup} methods are allowed. The {@link Setup} methods on a
- * subclass are executed before the {@link Setup} methods on a super class,
+ * subclass are executed after the {@link Setup} methods on a super class,
  * however there is no ordering within the same class. This is the same semantics
  * as provided by junit.
  * <p/>
