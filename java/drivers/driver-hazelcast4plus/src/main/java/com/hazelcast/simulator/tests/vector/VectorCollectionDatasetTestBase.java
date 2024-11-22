@@ -4,6 +4,7 @@ import com.hazelcast.config.vector.Metric;
 import com.hazelcast.config.vector.VectorCollectionConfig;
 import com.hazelcast.config.vector.VectorIndexConfig;
 import com.hazelcast.core.Pipelining;
+import com.hazelcast.function.ThrowingRunnable;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -41,6 +42,7 @@ public class VectorCollectionDatasetTestBase extends HazelcastTest {
     public String collectionName;
     // by default do not use backups to get faster upload
     public int backupCount = 0;
+    public int asyncBackupCount = 0;
     //endregion
 
     //region graph parameters
@@ -85,6 +87,7 @@ public class VectorCollectionDatasetTestBase extends HazelcastTest {
                 targetInstance,
                 new VectorCollectionConfig(collectionName)
                         .setBackupCount(backupCount)
+                        .setAsyncBackupCount(asyncBackupCount)
                         .addVectorIndexConfig(
                                 new VectorIndexConfig()
                                         .setMetric(Metric.valueOf(metric))
@@ -121,7 +124,7 @@ public class VectorCollectionDatasetTestBase extends HazelcastTest {
         }
     }
 
-    protected static long withTimer(Runnable runnable) {
+    protected static long withTimer(ThrowingRunnable runnable) {
         var start = System.currentTimeMillis();
         runnable.run();
         return System.currentTimeMillis() - start;

@@ -1,11 +1,13 @@
 package com.hazelcast.simulator.tests.vector;
 
 import com.hazelcast.simulator.test.annotations.TimeStep;
+import com.hazelcast.simulator.utils.HazelcastUtils;
 import com.hazelcast.vector.VectorDocument;
 import com.hazelcast.vector.VectorValues;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class VectorCollectionPutDatasetTest extends VectorCollectionDatasetTestBase {
@@ -73,10 +75,23 @@ public class VectorCollectionPutDatasetTest extends VectorCollectionDatasetTestB
     }
 
     @TimeStep(prob = 0)
-    public void optimize() {
-        // note: this may fail with > 1 client
+    public void optimize() throws ExecutionException, InterruptedException {
+        var start = System.currentTimeMillis();
+
+        // TODO: this may fail with > 1 client
         var cleanupTimer = withTimer(() -> collection.optimizeAsync().toCompletableFuture().join());
-        logger.info("Cleanup time: {} ms", cleanupTimer);
+
+        if (backupCount + asyncBackupCount > 0) {
+            // optimize backups are async - wait for them also to get true time
+            HazelcastUtils.waitForClusterSafeState(targetInstance);
+            var cleanupTotalTimer = System.currentTimeMillis() - start;
+            logger.info("Cleanup primary time: {} ms", cleanupTimer);
+            logger.info("Cleanup wait for backups time: {} ms", cleanupTotalTimer -cleanupTimer);
+            logger.info("Cleanup total time: {} ms", cleanupTotalTimer);
+        } else {
+            logger.info("Cleanup time: {} ms", cleanupTimer);
+        }
         testContext.stop();
     }
+
 }
