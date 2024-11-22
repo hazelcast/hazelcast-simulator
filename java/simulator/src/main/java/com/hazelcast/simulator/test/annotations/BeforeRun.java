@@ -31,7 +31,7 @@ import java.lang.annotation.Target;
  * {@link com.hazelcast.simulator.test.BaseThreadState}.
  * <p/>
  * Multiple {@link BeforeRun} methods are allowed. The {@link BeforeRun} methods
- * on a subclass are executed before the {@link AfterRun} methods on a super class,
+ * on a subclass are executed after the {@link BeforeRun} methods on a super class,
  * however there is no ordering within the same class. This is the same semantics
  * as provided by junit.
  *

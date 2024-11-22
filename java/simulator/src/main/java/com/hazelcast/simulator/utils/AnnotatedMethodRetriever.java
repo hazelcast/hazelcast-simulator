@@ -18,6 +18,7 @@ package com.hazelcast.simulator.utils;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
@@ -34,6 +35,7 @@ public class AnnotatedMethodRetriever {
     private boolean mustBeNotStatic;
     private boolean mustBoNoArg;
     private AnnotationFilter filter;
+    private boolean subclassFirst;
 
     public AnnotatedMethodRetriever(Class clazz, Class<? extends Annotation> annotationClazz) {
         this.clazz = checkNotNull(clazz, "clazz can't be null");
@@ -65,6 +67,11 @@ public class AnnotatedMethodRetriever {
         return this;
     }
 
+    public AnnotatedMethodRetriever withSubclassFirst() {
+        this.subclassFirst = true;
+        return this;
+    }
+
     public Method find() {
         List<Method> methods = findAll();
         switch (methods.size()) {
@@ -87,6 +94,12 @@ public class AnnotatedMethodRetriever {
             verifyArgs(method);
             method.setAccessible(true);
         }
+        if (!subclassFirst) {
+            // findAllDeclaredMethods returns subclass methods first.
+            // Reverse them but the side effect is reversing order of method in a class.
+            Collections.reverse(methods);
+        }
+
         return methods;
     }
 
@@ -119,12 +132,8 @@ public class AnnotatedMethodRetriever {
         List<Method> methods = new ArrayList<>();
         do {
             findDeclaredMethods(classType, methods);
-            if (!methods.isEmpty()) {
-                break;
-            }
-
             classType = classType.getSuperclass();
-        } while (classType != null);
+        } while (classType != null && classType != Object.class);
 
         return methods;
     }

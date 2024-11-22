@@ -296,7 +296,7 @@ public class TestContainer {
                 runner = new TimeStepRunner(this);
             }
 
-            if (runAnnotations.size() == 0) {
+            if (runAnnotations.isEmpty()) {
                 throw new IllegalTestException(
                         "Test is missing a run strategy, it must contain one of the following annotations: "
                                 + asList(Run.class.getName(), TimeStep.class.getName()));
@@ -314,11 +314,12 @@ public class TestContainer {
         }
     }
 
-    private void registerTask(Class<? extends Annotation> annotationClass, AnnotationFilter filter, TestPhase testPhase) {
+    private void registerTask(Class<? extends Annotation> annotationClass, AnnotationFilter<?> filter, TestPhase testPhase) {
         List<Method> methods = new AnnotatedMethodRetriever(testClass, annotationClass)
                 .withoutArgs()
                 .withPublicNonStaticModifier()
                 .withFilter(filter)
+                .withSubclassFirst()
                 .findAll();
 
         taskPerPhaseMap.put(testPhase, toCallable(methods));

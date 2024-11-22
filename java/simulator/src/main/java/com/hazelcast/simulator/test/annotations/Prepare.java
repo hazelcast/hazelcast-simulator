@@ -24,7 +24,7 @@ import java.lang.annotation.Target;
  * In the Prepare expensive things like filling a Map can be done.
  * <p/>
  * Multiple {@link Prepare} methods are allowed. The {@link Prepare} methods
- * on a subclass are executed before the {@link Prepare} methods on a super class,
+ * on a subclass are executed after the {@link Prepare} methods on a super class,
  * however there is no ordering within the same class. This is the same semantics
  * as provided by junit. However local {@link Prepare} always happens before
  * global {@link Prepare}.
