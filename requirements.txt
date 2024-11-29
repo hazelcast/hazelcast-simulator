@@ -36,7 +36,7 @@ tenacity==8.2.3
 typed-ast==1.5.5
 typing_extensions==4.7.1
 tzdata==2023.4
-urllib3==1.26.18
+urllib3==1.26.19
 zipp==3.16.2
 zope.event==5.0
 zope.interface==6.0
