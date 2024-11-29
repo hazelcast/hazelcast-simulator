@@ -12,7 +12,7 @@ def _configure_hazelcast_xml(nodes, args: DriverConfigureArgs, is_lite_member: b
         if not os.path.exists(src_file):
             raise Exception(f"Could not find hazelcast.xml with path [{src_file}]")
     else:
-        src_file = find_driver_config_file(_get_driver(args), "hazelcast.xml")
+        src_file = find_driver_config_file(args.driver, "hazelcast.xml")
 
     config = read_file(src_file)
 
@@ -49,7 +49,7 @@ def _configure_client_hazelcast_xml(nodes, args: DriverConfigureArgs):
         if not os.path.exists(src_file):
             raise Exception(f"Could not find client-hazelcast.xml with path [{src_file}]")
     else:
-        src_file = find_driver_config_file(_get_driver(args), "client-hazelcast.xml")
+        src_file = find_driver_config_file(args.driver, "client-hazelcast.xml")
 
     config = read_file(src_file)
 
@@ -63,13 +63,13 @@ def _configure_client_hazelcast_xml(nodes, args: DriverConfigureArgs):
 
 
 def _configure_log4j_xml(args: DriverConfigureArgs):
-    driver = _get_driver(args)
+    driver = args.driver
     log4j_xml = read_file(find_driver_config_file(driver, "log4j.xml"))
     args.coordinator_params['file:log4j.xml'] = log4j_xml
 
 
 def _configure_worker_sh(args: DriverConfigureArgs):
-    driver = _get_driver(args)
+    driver = args.driver
 
     worker_sh_path = args.test.get('worker_sh')
     if worker_sh_path is None:
@@ -78,14 +78,6 @@ def _configure_worker_sh(args: DriverConfigureArgs):
         worker_sh = read_file(worker_sh_path)
 
     args.coordinator_params['file:worker.sh'] = worker_sh
-
-
-def _get_driver(args: DriverConfigureArgs):
-    driver = args.test.get('driver')
-    if driver is None:
-        raise Exception(f"Could not find 'driver' in test {args.test['name']}")
-    return driver
-
 
 def exec(args: DriverConfigureArgs):
     info("Configure")

@@ -22,9 +22,8 @@ def analyze_dstat(run_dir, attributes):
         agent_id = csv_filename[:csv_filename.index("_")]
         csv_path = f"{run_dir}/{csv_filename}"
         info(f"\tLoading {csv_path}")
-        df = pd.read_csv(csv_path, skiprows=5)
-
-        multiple_by(df, 1000, 'used', 'free', 'buf', 'cach')
+        df = pd.read_csv(csv_path, skiprows=6)
+        multiple_by(df, 1000, 'used', 'free', 'buff', 'cach')
 
         df['time'] = pd.to_datetime(df['epoch'], unit='s')
         df.set_index('time', inplace=True)
