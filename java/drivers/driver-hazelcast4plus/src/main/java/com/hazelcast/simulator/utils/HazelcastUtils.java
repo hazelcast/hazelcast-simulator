@@ -71,7 +71,7 @@ public final class HazelcastUtils {
      * Currently, the method supports the following configuration:
      * </p>
      * <ul>
-     *   <li><b>CP Member Priority:</b> If the "cp_priority" property is provided,
+     *   <li><b>CP Member Priority:</b> If the "cp_priorities" property is provided,
      *   the method will set the CP member priority for the agent based on the agent's private IP address.</li>
      * </ul>
      *
@@ -81,7 +81,7 @@ public final class HazelcastUtils {
      *
      */
     public static void handlePerAgentConfig(Map<String, String> properties, Config config) {
-        String cpPriorities = properties.get("cp_priority");
+        String cpPriorities = properties.get("cp_priorities");
         if (cpPriorities == null) {
             return;
         }

@@ -165,6 +165,11 @@ class PerfTest:
         for key, value in test.items():
             if not key == 'test':
                 coordinator_params[key] = value
+        # Add member user to worker parameters
+        hosts = load_hosts(inventory_path=inventory_path, host_pattern="all:!mc:!load_balancers")
+        if hosts:
+            user = ssh_user(hosts[0])
+            coordinator_params['members_user'] = user
 
         driver = test.get('driver')
         node_driver = None
