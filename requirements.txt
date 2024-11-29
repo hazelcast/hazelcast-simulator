@@ -19,7 +19,7 @@ more-itertools==8.14.0
 numpy==1.24.4
 packaging==23.1
 pandas==2.0.3
-Pillow==10.0.0
+Pillow==10.3.0
 plotly==5.18.0
 pycparser==2.21
 pyparsing==3.0.9
