@@ -22,6 +22,5 @@
 
     <modules>
         <module>driver-hazelcast4plus</module>
-        <module>driver-standaloneclient4plus</module>
     </modules>
 </project>
