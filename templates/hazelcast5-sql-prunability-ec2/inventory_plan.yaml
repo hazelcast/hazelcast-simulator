@@ -4,6 +4,7 @@ terraform_plan: aws
 basename: <id>-<rnd:5>
 # Enter something here that identifies you.
 owner: <id>
+placement_group_name: None
 region: eu-central-1
 availability_zone: eu-central-1a
 #Engineering account VPC

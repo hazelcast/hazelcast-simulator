@@ -12,7 +12,7 @@ vpc_id: vpc-094e507d79a701227
 #Engineering account igw
 internet_gateway_id: igw-03696757cca398137
 #Change the '20' to a different octet to prevent running into conflicts.
-cidr_block: 10.0.20.0/24
+cidr_block: 10.0.50.0/24
 #Change team information
 team: Cloud
 type: Benchmarking
