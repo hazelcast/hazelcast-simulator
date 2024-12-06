@@ -10,6 +10,9 @@ vpc_id: vpc-<your-vpc-id-here>
 internet_gateway_id: igw-<your-igw-id-here>
 # Change to a different cidr_block as-needed.
 cidr_block: 10.0.5.0/24
+#Change team information
+team: Cloud
+type: Benchmarking
 
 keypair:
     public_key: key.pub

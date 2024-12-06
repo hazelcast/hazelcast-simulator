@@ -48,6 +48,8 @@ resource "aws_subnet" "subnet" {
     map_public_ip_on_launch = true
     tags = {
         Name = "Simulator Public Subnet ${local.settings.basename}"
+        team  = local.settings.team
+        type  = local.settings.type
     }
 }
 
@@ -60,6 +62,8 @@ resource "aws_route_table" "route_table" {
 
     tags = {
         Name = "Simulator Public Subnet Route Table ${local.settings.basename}"
+        team  = local.settings.team
+        type  = local.settings.type
     }
 }
 
@@ -86,6 +90,8 @@ resource "aws_security_group" "node-sg" {
     tags = {
         Name = "Simulator Node Security Group ${local.settings.basename}",
         Owner = local.settings.owner
+        team  = local.settings.team
+        type  = local.settings.type
     }
 
     ingress {
@@ -153,6 +159,8 @@ resource "aws_instance" "nodes" {
         Owner = local.settings.owner
         "passthrough:ansible_ssh_private_key_file" = local.settings.keypair.private_key
         "passthrough:ansible_user" = local.settings.nodes.user
+        team  = local.settings.team
+        type  = local.settings.type
     }
 
     # mount instance store to be used by Tiered Storage
@@ -182,6 +190,8 @@ resource "aws_security_group" "loadgenerator-sg" {
     tags = {
         Name = "Simulator Load Balancer Security Group ${local.settings.basename}",
         Owner = local.settings.owner
+        team  = local.settings.team
+        type  = local.settings.type
     }
 
     ingress {
@@ -248,6 +258,8 @@ resource "aws_instance" "loadgenerators" {
         Owner = local.settings.owner
         "passthrough:ansible_ssh_private_key_file" = local.settings.keypair.private_key
         "passthrough:ansible_user" = local.settings.loadgenerators.user
+        team  = local.settings.team
+        type  = local.settings.type
     }
 }
 
@@ -314,6 +326,8 @@ resource "aws_instance" "mc" {
         Owner = local.settings.owner
         "passthrough:ansible_ssh_private_key_file" = local.settings.keypair.private_key
         "passthrough:ansible_user" = local.settings.mc.user
+        team  = local.settings.team
+        type  = local.settings.type
     }
 
     connection {
