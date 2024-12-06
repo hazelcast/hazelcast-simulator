@@ -182,7 +182,7 @@ aws_session_token=AQoEXAMPLEH4aoAH0gNCAPyJxz4BlCFFxWNE1OPTgk5TthT+FvwqnKwRcOIfrR
 
 Or alternatively you can use `aws sso login` and autorize your terminal via SSO.
 
-To apply the configuration on an existing environment, execute the following command from within the benchmark.
+To apply the configuration on an existing environment, execute the following command from within the benchmark
 directory:
 
    ```shell
