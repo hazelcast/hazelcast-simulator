@@ -104,22 +104,22 @@ Also contains pointers where to go next.
 3. Create a virtual environment, activate it and install dependencies
 
     ```shell
-   python3.8 -m venv venv && source ./venv/bin/activate
-   ```
+    $ cd hazelcast-simulator
+    $ # python 3.11 is the version that is currently supported
+    $ python3.11 -m venv venv 
+    $ # activate the virtual environment appropriate to your shell, e.g. in bash:
+    $ source ./venv/bin/activate
+    $ pip install -r requirements.txt
+    ```
 
- ```shell
-   pip install -U -r requirements.txt
-   ```
-
-   `signal-processing-algorithms` is only needed when you are going to do performance regression testing. The library is
-   used for change point detection:
+`signal-processing-algorithms` is only needed when you are going to do performance regression testing. The library is
+used for change point detection:
 
 
 4. Build Simulator:
 
-   ```
-   cd hazelcast-simulator
-   ./build
+   ```bash
+   $ ./build
    ```
    This will automatically build the Java code, download the artifacts and prepare the simulator for usage.
 
