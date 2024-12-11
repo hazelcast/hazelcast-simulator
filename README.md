@@ -1867,6 +1867,27 @@ Here is an example of usage in the `tests.yaml` file:
 Consult [Configuring Leadership Priority](https://docs.hazelcast.com/hazelcast/5.5/cp-subsystem/configuration#configuring-leadership-priority
 ) for more information about the CP subsystem priority.
 
+
+## Persistence
+For Hot Restart persistence and CP Subsystem persistence, selecting on device storage for your machine will provide better performance.
+NAS solutions like AWS EBS can significantly degrade system performance due to their higher latency.
+
+Select instances with local storage, preferably NVMe SSDs, to ensure low-latency access and optimal performance.
+
+Formatting and mounting the storage device can be time-consuming. The simulator automates this process and also handles the clearing of persisted data.
+To enable automatic formatting and mounting, set the mount_volume and mount_path parameters in your tests.yaml file:
+
+```yaml
+    mount_volume: /dev/nvme1n1
+    mount_path: /dir/to/persistence
+```
+Parameters:
+
+`mount_volume:` Specifies the device to mount (e.g., /dev/nvme1n1).
+
+`mount_path:` Defines the directory where the device will be mounted (e.g., /dir/to/persistence).
+
+
 # Get Help
 
 You can use the following channels for getting help with Hazelcast:
