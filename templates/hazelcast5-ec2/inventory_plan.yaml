@@ -18,10 +18,6 @@ keypair:
 nodes:
     count: 1
     instance_type: c5.9xlarge
-    # default AWS AMI
-    # ami: ami-05cafdf7c9f772ad2
-    # user: ec2-user
-    # ubuntu
     ami: ami-04e601abe3e1a910f
     user: ubuntu
     tenancy: null
@@ -29,10 +25,6 @@ nodes:
 loadgenerators:
     count: 1
     instance_type: c5.9xlarge
-    # default AWS AMI
-    # ami: ami-05cafdf7c9f772ad2
-    # user: ec2-user
-    # ubuntu
     ami: ami-04e601abe3e1a910f
     user: ubuntu
     tenancy: null
@@ -40,10 +32,6 @@ loadgenerators:
 mc:
     instance_type: c5.4xlarge
     count: 0
-    # default AWS AMI
-    # ami: ami-05cafdf7c9f772ad2
-    # user: ec2-user
-    # ubuntu
     ami: ami-04e601abe3e1a910f
     user: ubuntu
     tenancy: null
