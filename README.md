@@ -1865,8 +1865,8 @@ Consult [Configuring Leadership Priority](https://docs.hazelcast.com/hazelcast/5
 
 
 ## Persistence
-For Hot Restart persistence and CP Subsystem persistence, it's necessary to use on-device storage. NAS solutions like AWS EBS 
-can significantly degrade system performance due to their higher latency.
+For Hot Restart persistence and CP Subsystem persistence, selecting on device storage for your machine will provide better performance.
+NAS solutions like AWS EBS can significantly degrade system performance due to their higher latency.
 
 Select instances with local storage, preferably NVMe SSDs, to ensure low-latency access and optimal performance.
 
