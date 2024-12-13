@@ -33,41 +33,10 @@ import java.util.function.Function;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
-public class VectorCollectionSearchDatasetTest extends HazelcastTest {
-
-    public String name;
-
-    public String datasetUrl;
-    public String testDatasetUrl;
-
-    public String workingDirectory;
-
-    // common parameters
-
-    public int numberOfSearchIterations = Integer.MAX_VALUE;
-
-    // allows inflating the collection to arbitrary size by repeatedly adding the entries.
-    // if smaller than size of the dataset, loads only a subset of it
-    public int targetCollectionSize = -1;
-
-    // graph parameters
-    public String metric;
-
-    public int maxDegree;
-
-    public int efConstruction;
-
-    public boolean useDeduplication = true;
-
-    public boolean normalize = false;
-
-    // collection parameters
-    public String collectionName;
-
-    // by default do not use backups to get faster upload
-    public int backupCount = 0;
+public class VectorCollectionSearchDatasetTest extends VectorCollectionDatasetTestBase {
 
     // search parameters
+    public int numberOfSearchIterations = Integer.MAX_VALUE;
 
     public int limit;
     public boolean includeVectors = true;
@@ -77,61 +46,21 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
 
     // inner test parameters
 
-    private static final int PUT_BATCH_SIZE = 2_000;
-
-    private static final int MAX_PUT_ALL_IN_FLIGHT = 24;
-
-    private VectorCollection<Integer, Integer> collection;
-
-    private DatasetReader reader;
-
-    private TestDataset testDataset;
-
     private final Queue<TestSearchResult> searchResults = new ConcurrentLinkedQueue<>();
 
     private final ScoreMetrics scoreMetrics = new ScoreMetrics();
 
-    private long indexBuildTime = 0;
     private SearchOptions options;
 
-    private final AtomicInteger counter = new AtomicInteger(0);
+    private long indexBuildTime = 0;
     // for inflated collection precision calculation are wrong due to duplicated vectors
     private boolean collectionInflated;
 
+    private final AtomicInteger counter = new AtomicInteger(0);
 
     @Setup
-    public void setup() {
-        if (collectionName == null) {
-            collectionName = name;
-        }
+    public void setupSearch() {
         scoreMetrics.setName(name);
-        reader = DatasetReader.create(datasetUrl, workingDirectory, normalize);
-
-        int dimension = reader.getDimension();
-        assert dimension == reader.getTestDatasetDimension() : "dataset dimension does not correspond to query vector dimension";
-        if (testDatasetUrl != null) {
-            var testReader = DatasetReader.create(testDatasetUrl, workingDirectory, normalize, true);
-            testDataset = testReader.getTestDataset();
-        } else {
-            testDataset = reader.getTestDataset();
-        }
-
-        logger.info("Vector collection name: {}", collectionName);
-        logger.info("Use normalize: {}", normalize);
-        collection = VectorCollection.getCollection(
-                targetInstance,
-                new VectorCollectionConfig(collectionName)
-                        .setBackupCount(backupCount)
-                        .addVectorIndexConfig(
-                                new VectorIndexConfig()
-                                        .setMetric(Metric.valueOf(metric))
-                                        .setDimension(dimension)
-                                        .setMaxDegree(maxDegree)
-                                        .setEfConstruction(efConstruction)
-                                        .setUseDeduplication(useDeduplication)
-                        )
-        );
-
         SearchOptionsBuilder optionsBuilder = SearchOptions.builder()
                 .setIncludeValue(includeValue)
                 .setIncludeVectors(includeVectors)
@@ -148,7 +77,7 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
     @Prepare(global = true)
     public void prepare() {
         int testDataSetSize = reader.getSize();
-        var size = targetCollectionSize > 0 ? targetCollectionSize : testDataSetSize;
+        var size = getRequestedSize();
         collectionInflated = size > testDataSetSize;
 
         if (collection.size() == size) {
@@ -248,8 +177,6 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
         logger.info("The percentage of results with precision lower than 99%: {}", scoreMetrics.getPercentLowerThen(99));
         logger.info("Total results: {}", scoreMetrics.getTotalCount());
 
-        // test dataset will no longer be needed
-        testDataset = null;
         searchResults.clear();
     }
 
@@ -298,34 +225,4 @@ public class VectorCollectionSearchDatasetTest extends HazelcastTest {
         }
     }
 
-    void addToPipelineWithLogging(Pipelining<Void> pipelining, CompletionStage<Void> asyncInvocation) {
-        var now = System.currentTimeMillis();
-        try {
-            pipelining.add(asyncInvocation);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-        var msBlocked = System.currentTimeMillis() - now;
-        // log if we were blocked for more than 30 sec
-        if (msBlocked > 30_000) {
-            logger.info(
-                    "Thread was blocked for {} sec due to reaching max pipeline depth",
-                    MILLISECONDS.toSeconds(msBlocked)
-            );
-        }
-    }
-
-    private long withTimer(Runnable runnable) {
-        var start = System.currentTimeMillis();
-        runnable.run();
-        return System.currentTimeMillis() - start;
-    }
-
-    private float getFirstCoordinate(VectorValues vectorValues) {
-        var v = (VectorValues.SingleVectorValues) vectorValues;
-        if (v == null || v.vector().length == 0) {
-            return 0;
-        }
-        return v.vector()[0];
-    }
 }

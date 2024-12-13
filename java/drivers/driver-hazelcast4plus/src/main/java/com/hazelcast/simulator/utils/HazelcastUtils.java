@@ -18,11 +18,13 @@ package com.hazelcast.simulator.utils;
 import com.hazelcast.cluster.Member;
 import com.hazelcast.config.Config;
 import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.core.HazelcastInstanceAware;
 import com.hazelcast.shaded.org.json.JSONArray;
 import com.hazelcast.shaded.org.json.JSONObject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.Serializable;
 import java.net.InetSocketAddress;
 import java.util.Iterator;
 import java.util.Map;
@@ -119,6 +121,27 @@ public final class HazelcastUtils {
             } catch (Exception e) {
                 return null;
             }
+        }
+    }
+
+    public static void waitForClusterSafeState(HazelcastInstance targetInstance) throws InterruptedException, ExecutionException {
+        targetInstance.getExecutorService("safe-check").submit(new WaitForClusterSafe()).get();
+    }
+
+    private static class WaitForClusterSafe implements Callable<Boolean>, HazelcastInstanceAware, Serializable {
+        private HazelcastInstance node;
+
+        @Override
+        public Boolean call() throws Exception {
+            while (!node.getPartitionService().isClusterSafe()) {
+                Thread.sleep(1);
+            }
+            return true;
+        }
+
+        @Override
+        public void setHazelcastInstance(HazelcastInstance node) {
+            this.node = node;
         }
     }
 }
