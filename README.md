@@ -104,22 +104,22 @@ Also contains pointers where to go next.
 3. Create a virtual environment, activate it and install dependencies
 
     ```shell
-   python3.8 -m venv venv && source ./venv/bin/activate
-   ```
+    $ cd hazelcast-simulator
+    $ # python 3.11 is the version that is currently supported
+    $ python3.11 -m venv venv 
+    $ # activate the virtual environment appropriate to your shell, e.g. in bash:
+    $ source ./venv/bin/activate
+    $ pip install -r requirements.txt
+    ```
 
- ```shell
-   pip install -U -r requirements.txt
-   ```
-
-   `signal-processing-algorithms` is only needed when you are going to do performance regression testing. The library is
-   used for change point detection:
+`signal-processing-algorithms` is only needed when you are going to do performance regression testing. The library is
+used for change point detection:
 
 
 4. Build Simulator:
 
-   ```
-   cd hazelcast-simulator
-   ./build
+   ```bash
+   $ ./build
    ```
    This will automatically build the Java code, download the artifacts and prepare the simulator for usage.
 
@@ -1866,6 +1866,27 @@ Here is an example of usage in the `tests.yaml` file:
 
 Consult [Configuring Leadership Priority](https://docs.hazelcast.com/hazelcast/5.5/cp-subsystem/configuration#configuring-leadership-priority
 ) for more information about the CP subsystem priority.
+
+
+## Persistence
+For Hot Restart persistence and CP Subsystem persistence, selecting on device storage for your machine will provide better performance.
+NAS solutions like AWS EBS can significantly degrade system performance due to their higher latency.
+
+Select instances with local storage, preferably NVMe SSDs, to ensure low-latency access and optimal performance.
+
+Formatting and mounting the storage device can be time-consuming. The simulator automates this process and also handles the clearing of persisted data.
+To enable automatic formatting and mounting, set the mount_volume and mount_path parameters in your tests.yaml file:
+
+```yaml
+    mount_volume: /dev/nvme1n1
+    mount_path: /dir/to/persistence
+```
+Parameters:
+
+`mount_volume:` Specifies the device to mount (e.g., /dev/nvme1n1).
+
+`mount_path:` Defines the directory where the device will be mounted (e.g., /dir/to/persistence).
+
 
 # Get Help
 
