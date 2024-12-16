@@ -161,7 +161,7 @@ Simulator makes use of Terraform for provisioning. After you have created a benc
 `perftest create` command, you want to edit the `inventory_plan.yaml`. This is where you can configure the
 type of instances, the number etc. The specified `cidr_block` will need to be updated to prevent conflicts.
 
-To provision the environment, you will first need to configure your AWS credentials:
+To provision the environment, you will first need to configure your AWS credentials and update team tag on inventory_plan according to the values on following [repository](https://github.com/hazelcast/aws-hazelcast-inc-iac/blob/main/README.md#aws-tagging-guidelines):
 
 In your `~/.aws/credentials` file you need something like this:
 
