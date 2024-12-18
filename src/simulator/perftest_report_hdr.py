@@ -199,7 +199,7 @@ def report_hdr(config: ReportConfig, df):
 def __make_report_csv(config: ReportConfig):
     for run_label, run_dir in config.runs.items():
         hdr_dir = f"{config.report_dir}/hdr/{run_label}"
-        for file_name in os.listdir(hdr_dir):
+        for file_name in sorted(os.listdir(hdr_dir)):
             if not file_name.endswith(".hgrm"):
                 continue
 
