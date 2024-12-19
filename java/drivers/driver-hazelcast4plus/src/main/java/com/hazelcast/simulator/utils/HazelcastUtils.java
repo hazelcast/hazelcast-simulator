@@ -19,8 +19,10 @@ import com.hazelcast.cluster.Member;
 import com.hazelcast.config.Config;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.HazelcastInstanceAware;
+import com.hazelcast.instance.impl.HazelcastInstanceImpl;
 import com.hazelcast.shaded.org.json.JSONArray;
 import com.hazelcast.shaded.org.json.JSONObject;
+import com.hazelcast.spi.impl.operationparker.impl.OperationParkerImpl;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -128,12 +130,37 @@ public final class HazelcastUtils {
         targetInstance.getExecutorService("safe-check").submit(new WaitForClusterSafe()).get();
     }
 
+    public static void waitForNoParkedOperations(HazelcastInstance targetInstance) throws InterruptedException, ExecutionException {
+        var futures = targetInstance.getExecutorService("safe-check").submitToAllMembers(new WaitForNoParkedOperations());
+        for (var future : futures.values()) {
+            future.get();
+        }
+    }
+
     private static class WaitForClusterSafe implements Callable<Boolean>, HazelcastInstanceAware, Serializable {
         private HazelcastInstance node;
 
         @Override
         public Boolean call() throws Exception {
             while (!node.getPartitionService().isClusterSafe()) {
+                Thread.sleep(1);
+            }
+            return true;
+        }
+
+        @Override
+        public void setHazelcastInstance(HazelcastInstance node) {
+            this.node = node;
+        }
+    }
+
+    private static class WaitForNoParkedOperations implements Callable<Boolean>, HazelcastInstanceAware, Serializable {
+        private HazelcastInstance node;
+
+        @Override
+        public Boolean call() throws Exception {
+            OperationParkerImpl parker = (OperationParkerImpl) ((HazelcastInstanceImpl) node).node.getNodeEngine().getOperationParker();
+            while (parker.getTotalValidWaitingOperationCount() > 0) {
                 Thread.sleep(1);
             }
             return true;
