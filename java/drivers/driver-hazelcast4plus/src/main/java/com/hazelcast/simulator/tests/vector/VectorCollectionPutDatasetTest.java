@@ -78,15 +78,16 @@ public class VectorCollectionPutDatasetTest extends VectorCollectionDatasetTestB
     public void optimize() throws ExecutionException, InterruptedException {
         var start = System.currentTimeMillis();
 
-        // TODO: this may fail with > 1 client
+        // TODO: this will cause redundant invocations with >1 client
         var cleanupTimer = withTimer(() -> collection.optimizeAsync().toCompletableFuture().join());
 
         if (backupCount + asyncBackupCount > 0) {
-            // optimize backups are async - wait for them also to get true time
+            // optimize backups are async and blocking (can be parked) - wait for them also to get true time
             HazelcastUtils.waitForClusterSafeState(targetInstance);
+            HazelcastUtils.waitForNoParkedOperations(targetInstance);
             var cleanupTotalTimer = System.currentTimeMillis() - start;
             logger.info("Cleanup primary time: {} ms", cleanupTimer);
-            logger.info("Cleanup wait for backups time: {} ms", cleanupTotalTimer -cleanupTimer);
+            logger.info("Cleanup wait for backups time: {} ms", cleanupTotalTimer - cleanupTimer);
             logger.info("Cleanup total time: {} ms", cleanupTotalTimer);
         } else {
             logger.info("Cleanup time: {} ms", cleanupTimer);
