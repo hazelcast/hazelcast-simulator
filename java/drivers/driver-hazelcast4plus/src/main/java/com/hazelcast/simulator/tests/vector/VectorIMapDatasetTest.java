@@ -140,8 +140,8 @@ public class VectorIMapDatasetTest extends VectorCollectionDatasetTestBase {
             predicate = null;
         }
 
-        // TODO: handle cases with fetching vectors and values (projection?)
-        var result = collection.keySet(com.hazelcast.vector.VectorPredicates.<Integer, VectorDocument<Integer>>nearestNeighbours(limit)
+        // TODO: handle cases with fetching keys, vectors and values (projection?)
+        var result = collection.entrySet(com.hazelcast.vector.VectorPredicates.<Integer, VectorDocument<Integer>>nearestNeighbours(limit)
                 .to(vector)
                 .withEmbedding("vectors")
                 .withMetric(Metric.valueOf(metric))
@@ -153,7 +153,7 @@ public class VectorIMapDatasetTest extends VectorCollectionDatasetTestBase {
         if (result.size() != limit) {
             throw new AssertionError("Expected " + limit + " vectors but got " + result.size());
         }
-        if (numberOfMatchingEntries >= 0 && result.stream().anyMatch(i -> i < startId || i > endId)) {
+        if (numberOfMatchingEntries >= 0 && result.stream().mapToInt(Map.Entry::getKey).anyMatch(i -> i < startId || i > endId)) {
             throw new AssertionError("Expected keys between " + startId + " and " + endId + " but got " + result);
         }
     }
