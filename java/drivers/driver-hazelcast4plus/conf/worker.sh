@@ -26,29 +26,37 @@ log() {
 MOUNTED=false
 DIR_CREATED=false
 
-# Cleanup function to revert partial changes if persistent volume setup fails
+# Cleanup function. We only unmount if the script fails (non-zero exit code).
 cleanup() {
     local exit_code=$?
-    if [[ $MOUNTED == true ]]; then
-        log "INFO" "Attempting to unmount '$mount_path'..."
-        sudo umount "$mount_path" && log "INFO" "Successfully unmounted '$mount_path'." || log "WARNING" "Failed to unmount '$mount_path'. Please unmount manually."
-    fi
-
-    if [[ $DIR_CREATED == true ]]; then
-        log "INFO" "Attempting to remove mount directory '$mount_path'..."
-        sudo rmdir "$mount_path" && log "INFO" "Successfully removed directory '$mount_path'." || log "WARNING" "Failed to remove directory '$mount_path'. It may not be empty or you may not have permissions."
-    fi
-
     if [[ $exit_code -ne 0 ]]; then
+        # On error, attempt to undo the mount if it happened
+        if [[ $MOUNTED == true ]]; then
+            log "INFO" "Attempting to unmount '$mount_path' due to error..."
+            if sudo umount "$mount_path"; then
+                log "INFO" "Successfully unmounted '$mount_path'."
+            else
+                log "WARNING" "Failed to unmount '$mount_path'. Please unmount manually if needed."
+            fi
+        fi
+        # If you *also* want to remove the directory on error, uncomment:
+        # if [[ $DIR_CREATED == true ]]; then
+        #     log "INFO" "Attempting to remove mount directory '$mount_path'..."
+        #     if sudo rmdir "$mount_path"; then
+        #         log "INFO" "Successfully removed directory '$mount_path'."
+        #     else
+        #         log "WARNING" "Failed to remove directory '$mount_path'."
+        #     fi
+        # fi
+
         log "ERROR" "Script exited with code $exit_code. Cleanup performed."
     fi
 
     exit $exit_code
 }
 
-trap cleanup EXIT
-trap cleanup ERR
-trap cleanup INT
+# We trap only ERR/INT so that a normal successful EXIT does not unmount
+trap cleanup ERR INT
 
 # Read the parameters file and add it to the environment
 while IFS='=' read -r key value; do
@@ -56,7 +64,6 @@ while IFS='=' read -r key value; do
 done < "parameters"
 
 # Determine if persistence is enabled based on mount_volume and mount_path
-# If ony one is set, this is a misconfiguration and we exit to warn the user.
 PERSISTENCE_ENABLED=false
 if [[ -n "${mount_volume:-}" && -n "${mount_path:-}" ]]; then
     PERSISTENCE_ENABLED=true
@@ -69,7 +76,7 @@ validate_mount_params() {
     if [[ $PERSISTENCE_ENABLED == true ]]; then
         # Validate that mount_volume is a valid device path under /dev/
         if [[ ! "$mount_volume" =~ ^/dev/[a-zA-Z0-9]+$ ]]; then
-            log "ERROR" "mount_volume '$mount_volume' is not a valid device path. It should start with '/dev/' followed by the device name."
+            log "ERROR" "mount_volume '$mount_volume' is not a valid device path. It should start with '/dev/'."
             exit 1
         fi
 
@@ -95,7 +102,7 @@ validate_mount_params() {
 
         # Check for invalid characters in mount_path
         if [[ "$mount_path" =~ [^a-zA-Z0-9/_\-] ]]; then
-            log "ERROR" "mount_path '$mount_path' contains invalid characters. Allowed characters are letters, numbers, '/', '_', and '-'."
+            log "ERROR" "mount_path '$mount_path' contains invalid characters. Allowed: letters, numbers, '/', '_', '-'."
             exit 1
         fi
 
@@ -119,24 +126,24 @@ validate_mount_path_safety() {
 mount_persistence_volume() {
     # Check if blkid command exists
     if ! command -v blkid &> /dev/null; then
-        log "ERROR" "blkid not found."
+        log "ERROR" "blkid not found. Cannot check filesystem type."
         exit 1
     fi
 
     log "INFO" "Setting up '$mount_path' for persistence volume..."
 
-    # Unmount volume if mounted elsewhere
+    # If the device is mounted at some other path, unmount it there first
     if findmnt -S "$mount_volume" | grep -qv "$mount_path"; then
-        log "INFO" "Unmounting '$mount_volume' from previous mount point..."
+        log "INFO" "Unmounting '$mount_volume' from a previous mount point..."
         sudo umount "$mount_volume" || { log "ERROR" "Failed to unmount '$mount_volume'"; exit 1; }
     fi
 
-    # Check if the filesystem is XFS, if not, format it
+    # Format as XFS only if not already XFS
     if ! blkid "$mount_volume" | grep -q 'TYPE="xfs"'; then
-        log "INFO" "Creating XFS filesystem on '$mount_volume'..."
+        log "INFO" "No XFS filesystem found on '$mount_volume'. Formatting now..."
         sudo mkfs.xfs -f "$mount_volume" || { log "ERROR" "Failed to format '$mount_volume'"; exit 1; }
     else
-        log "INFO" "'$mount_volume' already has an XFS filesystem."
+        log "INFO" "'$mount_volume' already has an XFS filesystem. Skipping mkfs."
     fi
 
     # Create mount directory if it doesn't exist
@@ -167,10 +174,10 @@ handle_persistence_volume() {
     validate_mount_params
     if [[ $PERSISTENCE_ENABLED == true ]]; then
         validate_mount_path_safety "$mount_path"
-        # Check if mount_path is already a mount point
+
+        # Only mount/format if not already mounted
         if mountpoint -q "$mount_path"; then
-            log "INFO" "Clearing contents of '$mount_path' directory..."
-            sudo rm -rf "${mount_path:?}/"* || { log "WARNING" "Failed to clear contents of '$mount_path'."; }
+            log "INFO" "Already mounted at '$mount_path'. Skipping re-mount and wipe to preserve data."
         else
             mount_persistence_volume
         fi
