@@ -12,6 +12,7 @@ import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.vector.VectorDocument;
 import com.hazelcast.vector.VectorValues;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -25,6 +26,7 @@ public class VectorIMapDatasetTest extends VectorCollectionDatasetTestBase {
     // IMap parameters
     public String inMemoryFormat;
     public String indexField;
+    public boolean useCompactSerialization;
 
     // search parameters
     public int numberOfSearchIterations = Integer.MAX_VALUE;
@@ -68,9 +70,16 @@ public class VectorIMapDatasetTest extends VectorCollectionDatasetTestBase {
             return;
         }
         var vector = reader.getTrainVector(index % testDataSetSize);
-        collection.putAsync(index, VectorDocument.of(index % testDataSetSize, VectorValues.of(vector)))
+        collection.putAsync(index, createVectorDocument(index, testDataSetSize, vector))
                 .toCompletableFuture()
                 .join();
+    }
+
+    @NotNull
+    private VectorDocument<Integer> createVectorDocument(int index, int testDataSetSize, float[] vector) {
+        return useCompactSerialization
+                ? CompactIntegerVectorDocument.of(index % testDataSetSize, VectorValues.of(vector))
+                : VectorDocument.of(index % testDataSetSize, VectorValues.of(vector));
     }
 
     @TimeStep(prob = 0)
