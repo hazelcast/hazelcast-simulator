@@ -1,19 +1,14 @@
 package com.hazelcast.simulator.tests.vector;
 
 import com.hazelcast.config.vector.Metric;
-import com.hazelcast.config.vector.VectorCollectionConfig;
-import com.hazelcast.config.vector.VectorIndexConfig;
 import com.hazelcast.core.Pipelining;
-import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
-import com.hazelcast.simulator.tests.vector.model.TestDataset;
 import com.hazelcast.vector.SearchOptions;
 import com.hazelcast.vector.SearchOptionsBuilder;
 import com.hazelcast.vector.SearchResults;
-import com.hazelcast.vector.VectorCollection;
 import com.hazelcast.vector.VectorDocument;
 import com.hazelcast.vector.VectorValues;
 import com.hazelcast.vector.impl.Hints;
@@ -26,7 +21,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
@@ -147,9 +141,17 @@ public class VectorCollectionSearchDatasetTest extends VectorCollectionDatasetTe
         }
         var vector = testDataset.getSearchVector(iteration % testDataset.size());
 
+        SearchOptions effectiveOptions;
+        if (hasFilter()) {
+            var filter = createFilter();
+            effectiveOptions = options.toBuilder().predicate(filter.predicate()).build();
+        } else {
+            effectiveOptions = options;
+        }
+
         var result = collection.searchAsync(
                 VectorValues.of(vector),
-                options
+                effectiveOptions
         ).toCompletableFuture().join();
         if (iteration < testDataset.size()) {
             searchResults.add(new TestSearchResult(iteration, vector, result));

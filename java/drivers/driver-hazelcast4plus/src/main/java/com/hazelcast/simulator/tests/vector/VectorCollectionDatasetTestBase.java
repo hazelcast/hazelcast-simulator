@@ -5,14 +5,18 @@ import com.hazelcast.config.vector.VectorCollectionConfig;
 import com.hazelcast.config.vector.VectorIndexConfig;
 import com.hazelcast.core.Pipelining;
 import com.hazelcast.function.ThrowingRunnable;
+import com.hazelcast.query.Predicate;
+import com.hazelcast.query.Predicates;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.tests.vector.model.TestDataset;
 import com.hazelcast.vector.VectorCollection;
+import com.hazelcast.vector.VectorDocument;
 import com.hazelcast.vector.VectorValues;
 
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ThreadLocalRandom;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
@@ -22,6 +26,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 public class VectorCollectionDatasetTestBase extends HazelcastTest {
     protected static final int PUT_BATCH_SIZE = 2_000;
     protected static final int MAX_PUT_ALL_IN_FLIGHT = 24;
+    private static final Filter NO_FILTER = new Filter(null, 0, 0);
 
     //region dataset parameters
     public String datasetUrl;
@@ -52,6 +57,12 @@ public class VectorCollectionDatasetTestBase extends HazelcastTest {
     public boolean useDeduplication = VectorIndexConfig.DEFAULT_USE_DEDUPLICATION;
     //endregion
 
+    //region search parameters
+    public String indexField;
+    // negative value means filtering disabled. Allows to pass 1.0 to test overhead of predicate application
+    public double matchingEntriesFraction = -1;
+    protected int numberOfMatchingEntries = -1;
+    //endregion
 
     //region internal state
     protected DatasetReader reader;
@@ -97,6 +108,12 @@ public class VectorCollectionDatasetTestBase extends HazelcastTest {
                                         .setUseDeduplication(useDeduplication)
                         )
         );
+
+        if (matchingEntriesFraction >= 0) {
+            numberOfMatchingEntries = (int) (getRequestedSize() * matchingEntriesFraction);
+            logger.info("Will use predicate with {} matching entries.", numberOfMatchingEntries);
+        }
+
     }
 
     @Teardown
@@ -121,6 +138,28 @@ public class VectorCollectionDatasetTestBase extends HazelcastTest {
                     MILLISECONDS.toSeconds(msBlocked)
             );
         }
+    }
+
+    protected Filter createFilter() {
+        Predicate<Integer, VectorDocument<Integer>> predicate;
+        if (hasFilter()) {
+            int maxStartId = getRequestedSize() - numberOfMatchingEntries;
+            int startId = maxStartId > 0 ? ThreadLocalRandom.current().nextInt(maxStartId) : maxStartId;
+            int endId = startId + numberOfMatchingEntries - 1;
+            // between is inclusive
+            // use indexed field if available, otherwise filter on value
+            predicate = Predicates.between(indexField != null ? indexField : "this.value", startId, endId);
+            return new Filter(predicate, startId, endId);
+        } else {
+            return NO_FILTER;
+        }
+    }
+
+    protected boolean hasFilter() {
+        return numberOfMatchingEntries >= 0;
+    }
+
+    protected record Filter(Predicate<Integer, VectorDocument<Integer>> predicate, int startId, int endId) {
     }
 
     protected static long withTimer(ThrowingRunnable runnable) {

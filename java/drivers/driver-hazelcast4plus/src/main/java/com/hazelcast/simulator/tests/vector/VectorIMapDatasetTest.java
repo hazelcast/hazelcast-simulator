@@ -7,8 +7,6 @@ import com.hazelcast.config.IndexType;
 import com.hazelcast.config.MapConfig;
 import com.hazelcast.config.vector.Metric;
 import com.hazelcast.map.IMap;
-import com.hazelcast.query.Predicate;
-import com.hazelcast.query.Predicates;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.vector.VectorDocument;
@@ -17,7 +15,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class VectorIMapDatasetTest extends VectorCollectionDatasetTestBase {
@@ -26,16 +23,12 @@ public class VectorIMapDatasetTest extends VectorCollectionDatasetTestBase {
 
     // IMap parameters
     public String inMemoryFormat;
-    public String indexField;
     public boolean useCompactSerialization;
     public String cacheDeserializedValues = CacheDeserializedValues.INDEX_ONLY.name();
 
     // search parameters
     public int numberOfSearchIterations = Integer.MAX_VALUE;
     public int limit;
-    // negative value means filtering disabled. Allows to pass 1.0 to test overhead of predicate application
-    public double matchingEntriesFraction = -1;
-    private int numberOfMatchingEntries = -1;
 
     private final AtomicInteger counter = new AtomicInteger(0);
 
@@ -55,11 +48,6 @@ public class VectorIMapDatasetTest extends VectorCollectionDatasetTestBase {
         targetInstance.getConfig().addMapConfig(mapConfig);
 
         collection = targetInstance.getMap(collectionName);
-
-        if (matchingEntriesFraction >= 0) {
-            numberOfMatchingEntries = (int) (getRequestedSize() * matchingEntriesFraction);
-            logger.info("Will use predicate with {} matching entries.", numberOfMatchingEntries);
-        }
     }
 
     @TimeStep(prob = 0)
@@ -136,28 +124,14 @@ public class VectorIMapDatasetTest extends VectorCollectionDatasetTestBase {
         }
         var vector = testDataset.getSearchVector(iteration % testDataset.size());
 
-        Predicate<Integer, VectorDocument<Integer>> predicate;
-        int startId;
-        int endId;
-        if (numberOfMatchingEntries >= 0) {
-            int maxStartId = getRequestedSize() - numberOfMatchingEntries;
-            startId = maxStartId > 0 ? ThreadLocalRandom.current().nextInt(maxStartId) : maxStartId;
-            endId = startId + numberOfMatchingEntries - 1;
-            // between is inclusive
-            // use indexed field if available, otherwise filter on value
-            predicate = Predicates.between(indexField != null ? indexField : "this.value", startId, endId);
-        } else {
-            startId = 0;
-            endId = 0;
-            predicate = null;
-        }
+        var filter = createFilter();
 
         // TODO: handle cases with fetching keys, vectors and values (projection?)
         var result = collection.entrySet(com.hazelcast.vector.VectorPredicates.<Integer, VectorDocument<Integer>>nearestNeighbours(limit)
                 .to(vector)
                 .withEmbedding("vectors")
                 .withMetric(Metric.valueOf(metric))
-                .matching(predicate)
+                .matching(filter.predicate())
                 .build());
 //        var result = collection.keySet(Predicates.pagingPredicate(predicate, limit));
 
@@ -165,8 +139,8 @@ public class VectorIMapDatasetTest extends VectorCollectionDatasetTestBase {
         if (result.size() != limit) {
             throw new AssertionError("Expected " + limit + " vectors but got " + result.size());
         }
-        if (numberOfMatchingEntries >= 0 && result.stream().mapToInt(Map.Entry::getKey).anyMatch(i -> i < startId || i > endId)) {
-            throw new AssertionError("Expected keys between " + startId + " and " + endId + " but got " + result);
+        if (numberOfMatchingEntries >= 0 && result.stream().mapToInt(Map.Entry::getKey).anyMatch(i -> i < filter.startId() || i > filter.endId())) {
+            throw new AssertionError("Expected keys between " + filter.startId() + " and " + filter.endId() + " but got " + result);
         }
     }
 
