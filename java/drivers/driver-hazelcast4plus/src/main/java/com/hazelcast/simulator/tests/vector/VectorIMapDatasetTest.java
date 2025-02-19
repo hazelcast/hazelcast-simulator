@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.tests.vector;
 
+import com.hazelcast.config.CacheDeserializedValues;
 import com.hazelcast.config.InMemoryFormat;
 import com.hazelcast.config.IndexConfig;
 import com.hazelcast.config.IndexType;
@@ -27,6 +28,7 @@ public class VectorIMapDatasetTest extends VectorCollectionDatasetTestBase {
     public String inMemoryFormat;
     public String indexField;
     public boolean useCompactSerialization;
+    public String cacheDeserializedValues = CacheDeserializedValues.INDEX_ONLY.name();
 
     // search parameters
     public int numberOfSearchIterations = Integer.MAX_VALUE;
@@ -44,7 +46,8 @@ public class VectorIMapDatasetTest extends VectorCollectionDatasetTestBase {
         var mapConfig = new MapConfig(collectionName)
                 .setInMemoryFormat(inMemoryFormat != null ? InMemoryFormat.valueOf(inMemoryFormat) : MapConfig.DEFAULT_IN_MEMORY_FORMAT)
                 .setBackupCount(backupCount)
-                .setAsyncBackupCount(asyncBackupCount);
+                .setAsyncBackupCount(asyncBackupCount)
+                .setCacheDeserializedValues(CacheDeserializedValues.parseString(cacheDeserializedValues));
         if (indexField != null) {
             mapConfig.addIndexConfig(new IndexConfig(IndexType.SORTED, indexField).setName("metadata-index"));
         }
