@@ -2,10 +2,12 @@ package com.hazelcast.simulator.tests.vector;
 
 import com.hazelcast.config.vector.Metric;
 import com.hazelcast.core.Pipelining;
+import com.hazelcast.query.Predicate;
 import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
+import com.hazelcast.simulator.tests.vector.model.TestDataset;
 import com.hazelcast.vector.SearchOptions;
 import com.hazelcast.vector.SearchOptionsBuilder;
 import com.hazelcast.vector.SearchResults;
@@ -76,6 +78,8 @@ public class VectorCollectionSearchDatasetTest extends VectorCollectionDatasetTe
 
         if (collection.size() == size) {
             logger.info("Collection seems to be already filled - reusing existing data.");
+            // reader will no longer be needed
+            reader = null;
             return;
         }
 
@@ -154,18 +158,35 @@ public class VectorCollectionSearchDatasetTest extends VectorCollectionDatasetTe
                 effectiveOptions
         ).toCompletableFuture().join();
         if (iteration < testDataset.size()) {
-            searchResults.add(new TestSearchResult(iteration, vector, result));
+            searchResults.add(new TestSearchResult(iteration, vector, effectiveOptions.getPredicate(), result));
         }
     }
 
     @Teardown(global = true)
     public void afterRun() {
-        searchResults.forEach(testSearchResult -> {
+        var evaluationTimeMs = withTimer(() -> searchResults.forEach(testSearchResult -> {
             int index = testSearchResult.index();
             List<Integer> ids = new ArrayList<>();
             VectorUtils.forEach(testSearchResult.results, r -> ids.add((Integer) r.getKey()));
-            scoreMetrics.set((int) (testDataset.getPrecision(ids, index, limit) * 100));
-        });
+
+            if (testSearchResult.predicate == null) {
+                // use ground truth from the dataset
+                scoreMetrics.set((int) (testDataset.getPrecision(ids, index, limit) * 100));
+            } else {
+                // evaluate ground truth on the collection
+                List<Integer> gtIds = new ArrayList<>();
+                var gtOpts = SearchOptions.builder()
+                        .limit(limit)
+                        // get 100% accurate results
+                        .hint(Hints.PARTITION_LIMIT, limit)
+                        .hint(Hints.USE_FULL_SCAN, true)
+                        .predicate(testSearchResult.predicate).build();
+                var gtResults = collection.searchAsync(VectorValues.of(testSearchResult.searchVector), gtOpts).toCompletableFuture().join();
+                VectorUtils.forEach(gtResults, r -> gtIds.add((Integer) r.getKey()));
+
+                scoreMetrics.set((int) (TestDataset.getPrecision(ids, limit, gtIds.stream().mapToInt(i -> i).toArray()) * 100));
+            }
+        }));
 
         writeAllSearchResultsToFile("precision_" + name + ".out");
         appendStatisticsToFile();
@@ -178,11 +199,14 @@ public class VectorCollectionSearchDatasetTest extends VectorCollectionDatasetTe
         logger.info("The percentage of results with precision lower than 98%: {}", scoreMetrics.getPercentLowerThen(98));
         logger.info("The percentage of results with precision lower than 99%: {}", scoreMetrics.getPercentLowerThen(99));
         logger.info("Total results: {}", scoreMetrics.getTotalCount());
+        logger.info("Evaluation took: {} ms", evaluationTimeMs);
 
         searchResults.clear();
     }
 
-    public record TestSearchResult(int index, float[] searchVector, SearchResults<?, ?> results) {
+    public record TestSearchResult(int index, float[] searchVector,
+                                   Predicate<?, ?> predicate,
+                                   SearchResults<?, ?> results) {
     }
 
     private void writeAllSearchResultsToFile(String fileName) {

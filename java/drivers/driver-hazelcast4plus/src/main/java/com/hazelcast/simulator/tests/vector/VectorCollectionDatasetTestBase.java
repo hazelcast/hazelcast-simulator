@@ -110,6 +110,9 @@ public class VectorCollectionDatasetTestBase extends HazelcastTest {
         );
 
         if (matchingEntriesFraction >= 0) {
+            if (matchingEntriesFraction > 1) {
+                throw new IllegalArgumentException("matchingEntriesFraction should be at most 1");
+            }
             numberOfMatchingEntries = (int) (getRequestedSize() * matchingEntriesFraction);
             logger.info("Will use predicate with {} matching entries.", numberOfMatchingEntries);
         }
