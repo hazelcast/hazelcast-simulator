@@ -223,7 +223,8 @@ public class VectorIMapDatasetTest extends VectorCollectionDatasetTestBase {
     @Teardown(global = true)
     public void afterRun() throws FileNotFoundException {
         if (countHistogram.getTotalCount() > 0) {
-            try (var ps = new PrintStream("count_" + name + ".hdr")) {
+            // not use .hdr extension because simulator uses them in report generation
+            try (var ps = new PrintStream("count_" + name + ".out")) {
                 countHistogram.outputPercentileDistribution(ps, 1.0);
             }
         }
