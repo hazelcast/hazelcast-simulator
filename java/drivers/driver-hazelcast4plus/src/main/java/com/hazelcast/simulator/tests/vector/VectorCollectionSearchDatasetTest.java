@@ -33,6 +33,8 @@ public class VectorCollectionSearchDatasetTest extends VectorCollectionDatasetTe
 
     // search parameters
     public int numberOfSearchIterations = Integer.MAX_VALUE;
+    // number of results that are recoded for precision evaluation
+    public int recordedResultCount = Integer.MAX_VALUE;
 
     public int limit;
     public boolean includeVectors = true;
@@ -161,7 +163,7 @@ public class VectorCollectionSearchDatasetTest extends VectorCollectionDatasetTe
                 VectorValues.of(vector),
                 effectiveOptions
         ).toCompletableFuture().join();
-        if (iteration < testDataset.size()) {
+        if (iteration < Math.min(recordedResultCount, testDataset.size())) {
             searchResults.add(new TestSearchResult(iteration, vector, effectiveOptions.getPredicate(), result));
         }
     }
@@ -177,6 +179,9 @@ public class VectorCollectionSearchDatasetTest extends VectorCollectionDatasetTe
                 // use ground truth from the dataset
                 scoreMetrics.set((int) (testDataset.getPrecision(ids, index, limit) * 100));
             } else {
+                if (index == 0) {
+                    logger.info("Computing ground truth for {} results", searchResults.size());
+                }
                 // evaluate ground truth on the collection
                 List<Integer> gtIds = new ArrayList<>();
                 var gtOpts = SearchOptions.builder()
