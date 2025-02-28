@@ -26,7 +26,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 public class VectorCollectionDatasetTestBase extends HazelcastTest {
     protected static final int PUT_BATCH_SIZE = 2_000;
     protected static final int MAX_PUT_ALL_IN_FLIGHT = 24;
-    private static final Filter NO_FILTER = new Filter(null, 0, 0);
+    protected static final Filter NO_FILTER = new Filter(null, 0, 0);
 
     //region dataset parameters
     public String datasetUrl;
@@ -67,12 +67,20 @@ public class VectorCollectionDatasetTestBase extends HazelcastTest {
     //region internal state
     protected DatasetReader reader;
     protected TestDataset testDataset;
-    protected VectorCollection<Integer, Integer> collection;
+    protected VectorCollection<Integer, Object> collection;
     //endregion
 
     protected int getRequestedSize() {
         var size = targetCollectionSize > 0 ? targetCollectionSize : reader.getSize();
         return (int) (size * targetCollectionSizeFraction);
+    }
+
+    /**
+     * Check if the collection has default size. Only with default size
+     * precision computation using provided ground truth makes sense.
+     */
+    protected boolean isDefaultSize() {
+        return targetCollectionSize == reader.getSize();
     }
 
     @Setup
@@ -116,7 +124,6 @@ public class VectorCollectionDatasetTestBase extends HazelcastTest {
             numberOfMatchingEntries = (int) (getRequestedSize() * matchingEntriesFraction);
             logger.info("Will use predicate with {} matching entries.", numberOfMatchingEntries);
         }
-
     }
 
     @Teardown
@@ -145,7 +152,7 @@ public class VectorCollectionDatasetTestBase extends HazelcastTest {
 
     protected Filter createFilter() {
         Predicate<Integer, VectorDocument<Integer>> predicate;
-        if (hasFilter()) {
+        if (hasRandomFilter()) {
             int maxStartId = getRequestedSize() - numberOfMatchingEntries;
             int startId = maxStartId > 0 ? ThreadLocalRandom.current().nextInt(maxStartId) : maxStartId;
             int endId = startId + numberOfMatchingEntries - 1;
@@ -158,11 +165,19 @@ public class VectorCollectionDatasetTestBase extends HazelcastTest {
         }
     }
 
-    protected boolean hasFilter() {
+    /**
+     * @return if the test should use randomly generated range filter with specified selectivity
+     */
+    protected boolean hasRandomFilter() {
         return numberOfMatchingEntries >= 0;
     }
 
-    protected record Filter(Predicate<Integer, VectorDocument<Integer>> predicate, int startId, int endId) {
+    protected Object getValue(int index) {
+        var payload = reader.getPayload(index);
+        return payload != null ? payload : index;
+    }
+
+    protected record Filter(Predicate predicate, int startId, int endId) {
     }
 
     protected static long withTimer(ThrowingRunnable runnable) {

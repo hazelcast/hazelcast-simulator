@@ -85,13 +85,13 @@ public class VectorCollectionSearchDatasetTest extends VectorCollectionDatasetTe
 
         var indexBuildTimeStart = System.currentTimeMillis();
 
-        Map<Integer, VectorDocument<Integer>> buffer = new HashMap<>();
+        Map<Integer, VectorDocument<Object>> buffer = new HashMap<>();
         Pipelining<Void> pipelining = new Pipelining<>(MAX_PUT_ALL_IN_FLIGHT);
         logger.info("Start loading data...");
 
         int index = 0;
         while (index < size) {
-            buffer.put(index, VectorDocument.of(index % testDataSetSize, VectorValues.of(reader.getTrainVector(index % testDataSetSize))));
+            buffer.put(index, VectorDocument.of(getValue(index % testDataSetSize), VectorValues.of(reader.getTrainVector(index % testDataSetSize))));
             index++;
             if (buffer.size() % PUT_BATCH_SIZE == 0) {
                 addToPipelineWithLogging(pipelining, collection.putAllAsync(buffer));
@@ -146,11 +146,15 @@ public class VectorCollectionSearchDatasetTest extends VectorCollectionDatasetTe
         var vector = testDataset.getSearchVector(iteration % testDataset.size());
 
         SearchOptions effectiveOptions;
-        if (hasFilter()) {
+        if (hasRandomFilter()) {
             var filter = createFilter();
             effectiveOptions = options.toBuilder().predicate(filter.predicate()).build();
         } else {
-            effectiveOptions = options;
+            var testDatasetFilter = testDataset.getSearchConditions(iteration % testDataset.size());
+
+            effectiveOptions = testDatasetFilter != null
+                    ? options.toBuilder().predicate(testDatasetFilter).build()
+                    : options;
         }
 
         var result = collection.searchAsync(
@@ -169,7 +173,7 @@ public class VectorCollectionSearchDatasetTest extends VectorCollectionDatasetTe
             List<Integer> ids = new ArrayList<>();
             VectorUtils.forEach(testSearchResult.results, r -> ids.add((Integer) r.getKey()));
 
-            if (testSearchResult.predicate == null) {
+            if (!hasRandomFilter() || testSearchResult.predicate == null) {
                 // use ground truth from the dataset
                 scoreMetrics.set((int) (testDataset.getPrecision(ids, index, limit) * 100));
             } else {

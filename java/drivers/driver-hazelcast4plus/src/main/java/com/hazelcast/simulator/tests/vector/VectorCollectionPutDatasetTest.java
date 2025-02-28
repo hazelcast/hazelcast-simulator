@@ -43,7 +43,7 @@ public class VectorCollectionPutDatasetTest extends VectorCollectionDatasetTestB
             testContext.stop();
             return;
         }
-        Map<Integer, VectorDocument<Integer>> buffer = new HashMap<>();
+        Map<Integer, VectorDocument<Object>> buffer = new HashMap<>();
         for (int i = 0; i < putBatchSize; i++) {
             var key = iteration + i;
             if (key >= testDataSetSize) {

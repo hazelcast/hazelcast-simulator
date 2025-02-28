@@ -22,6 +22,8 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.nio.file.Path;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class DatasetReader {
 
@@ -32,6 +34,8 @@ public abstract class DatasetReader {
     protected final File downloadedFile;
 
     protected float[][] trainDataset;
+
+    protected Object[] payloads;
 
     protected TestDataset testDataset;
 
@@ -87,6 +91,10 @@ public abstract class DatasetReader {
         return trainDataset[index];
     }
 
+    public Object getPayload(int index) {
+        return payloads != null ? payloads[index] : null;
+    }
+
     public TestDataset getTestDataset() {
         return testDataset;
     }
@@ -138,7 +146,7 @@ public abstract class DatasetReader {
             var ext = FilenameUtils.getExtension(datasetUrl.getFile());
             return switch (ext) {
                 case "hdf5" -> new HDF5DatasetReader(url, directory, normalizeVector, testOnly);
-                case "tgz" -> new NpyArchiveDatasetReader(url, directory, normalizeVector, testOnly);
+                case "tgz", "gz" -> new NpyArchiveDatasetReader(url, directory, normalizeVector, testOnly);
                 default -> throw new UnsupportedOperationException("File " + ext + " is not supported");
             };
         } catch (MalformedURLException e) {
