@@ -262,7 +262,7 @@ class InventoryInstallCli:
 
         log_header("Generating and installing TLS keystore and truststores")
         info(f"hosts={hosts}")
-        cmd = f"ansible-playbook --limit {hosts} --inventory inventory.yaml {simulator_home}/playbooks/install_tls_keystores.yaml -e rsa_key_size='{rsa_key_size}'"
+        cmd = f"ansible-playbook --inventory inventory.yaml {simulator_home}/playbooks/install_tls_keystores.yaml -e rsa_key_size='{rsa_key_size}'"
         self._run_installation(cmd)
 
     def _run_installation(self, cmd):
