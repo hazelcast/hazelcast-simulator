@@ -350,9 +350,3 @@ resource "aws_instance" "mc" {
 output "mc" {
     value = [aws_instance.mc.*]
 }
-
-
-
-
-
-

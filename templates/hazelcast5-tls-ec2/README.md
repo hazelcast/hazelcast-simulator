@@ -21,7 +21,6 @@ If you want to get the best performance for your environment
 inventory tune
 ```
 
-
 Modify the tests by editing the `tests.yaml` file.
 
 To run the tests
