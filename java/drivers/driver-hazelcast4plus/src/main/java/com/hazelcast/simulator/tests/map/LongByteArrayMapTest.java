@@ -55,12 +55,13 @@ public class LongByteArrayMapTest extends HazelcastTest {
     private List<IMap<Long, byte[]>> maps = new ArrayList<>();
     private byte[][] values;
     private final Executor callerRuns = Runnable::run;
-    Random random = new Random();
+    private final Random random = new Random();
 
     @Setup
     public void setUp() {
         for (int i = 0; i < mapCount; i++) {
-            maps.add(targetInstance.getMap(name + "_" + i));
+            String mapName = (mapCount == 1) ? name : name + "_" + i;
+            maps.add(targetInstance.getMap(mapName));
         }
         values = generateByteArrays(valueCount, minValueLength, maxValueLength);
     }
