@@ -22,6 +22,8 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.nio.file.Path;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class DatasetReader {
 
@@ -128,8 +130,12 @@ public abstract class DatasetReader {
             }
         }
 
+    private record DatasetKey(String url, boolean normalize) {}
+    private final static Map<DatasetKey, DatasetReader> DATASET_CACHE = new ConcurrentHashMap<>();
+
     public static DatasetReader create(String url, String directory, boolean normalizeVector) {
-        return create(url, directory, normalizeVector, false);
+        return DATASET_CACHE.computeIfAbsent(new DatasetKey(url, normalizeVector),
+                __ -> create(url, directory, normalizeVector, false));
     }
 
     public static DatasetReader create(String url, String directory, boolean normalizeVector, boolean testOnly) {
