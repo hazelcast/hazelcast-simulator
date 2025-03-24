@@ -1,8 +1,12 @@
-
 locals {
     settings = yamldecode(file("../inventory_plan.yaml"))
     private_key = file("../${local.settings.keypair.private_key}")
     public_key = file("../${local.settings.keypair.public_key}")
+    common_resource_tags = merge({
+        team  = local.settings.team
+        type  = local.settings.type
+        Owner = local.settings.owner
+    }, try(local.settings.extraTags, {}))
 }
 
 provider "aws" {
@@ -46,11 +50,9 @@ resource "aws_subnet" "subnet" {
     cidr_block              = local.settings.cidr_block
     availability_zone       = local.settings.availability_zone
     map_public_ip_on_launch = true
-    tags = {
+    tags = merge({
         Name = "Simulator Public Subnet ${local.settings.basename}"
-        team  = local.settings.team
-        type  = local.settings.type
-    }
+    }, local.common_resource_tags)
 }
 
 resource "aws_route_table" "route_table" {
@@ -60,11 +62,9 @@ resource "aws_route_table" "route_table" {
         gateway_id = local.settings.internet_gateway_id
     }
 
-    tags = {
+    tags = merge({
         Name = "Simulator Public Subnet Route Table ${local.settings.basename}"
-        team  = local.settings.team
-        type  = local.settings.type
-    }
+    }, local.common_resource_tags)
 }
 
 resource "aws_route_table_association" "route_table_association" {
@@ -86,14 +86,11 @@ resource "aws_security_group" "node-sg" {
     name        = "simulator-security-group-node-${local.settings.basename}"
     description = "Security group for the node"
     vpc_id      = local.settings.vpc_id
-    
-    tags = {
+
+    tags = merge({
         Name = "Simulator Node Security Group ${local.settings.basename}",
-        Owner = local.settings.owner
-        team  = local.settings.team
-        type  = local.settings.type
-    }
-    
+    }, local.common_resource_tags)
+
     ingress {
         description = "SSH"
         from_port   = 22
@@ -109,7 +106,7 @@ resource "aws_security_group" "node-sg" {
         protocol    = "tcp"
         cidr_blocks = ["0.0.0.0/0"]
     }
-  
+
     ingress {
         description = "Simulator"
         from_port   = 9000
@@ -144,15 +141,12 @@ resource "aws_instance" "nodes" {
     vpc_security_group_ids  = [ aws_security_group.node-sg.id ]
     subnet_id               = aws_subnet.subnet.id
     tenancy                 = local.settings.nodes.tenancy
-    
-    tags = {
+
+    tags = merge({
         Name  = "Simulator Node ${local.settings.basename}"
-        Owner = local.settings.owner
         "passthrough:ansible_ssh_private_key_file" = local.settings.keypair.private_key
         "passthrough:ansible_user" = local.settings.nodes.user
-        team  = local.settings.team
-        type  = local.settings.type
-    }
+    }, local.common_resource_tags)
 }
 
 output "nodes" {
@@ -165,14 +159,11 @@ resource "aws_security_group" "loadgenerator-sg" {
     name        = "simulator-security-group-loadgenerator-${local.settings.basename}"
     description = "Security group for the loadgenerator"
     vpc_id      = local.settings.vpc_id
-    
-    tags = {
+
+    tags = merge({
         Name = "Simulator Load Balancer Security Group ${local.settings.basename}",
-        Owner = local.settings.owner
-        team  = local.settings.team
-        type  = local.settings.type
-    }
-    
+    }, local.common_resource_tags)
+
     ingress {
         description = "SSH"
         from_port   = 22
@@ -215,15 +206,12 @@ resource "aws_instance" "loadgenerators" {
     placement_group         = aws_placement_group.cluster_placement_group.name
     vpc_security_group_ids  = [ aws_security_group.loadgenerator-sg.id ]
     tenancy                 = local.settings.loadgenerators.tenancy
-    tags = {
+    tags = merge({
         Name  = "Simulator Load Generator ${local.settings.basename}"
-        Owner = local.settings.owner
         "passthrough:ansible_ssh_private_key_file" = local.settings.keypair.private_key
         "passthrough:ansible_user" = local.settings.loadgenerators.user
-        team  = local.settings.team
-        type  = local.settings.type
-    }
-} 
+    }, local.common_resource_tags)
+}
 
 output "loadgenerators" {
     value = [aws_instance.loadgenerators.*]
@@ -284,14 +272,11 @@ resource "aws_instance" "mc" {
     availability_zone       = local.settings.availability_zone
     vpc_security_group_ids  = [ aws_security_group.mc-sg.id ]
 
-    tags = {
+    tags = merge({
         Name  = "Simulator MC ${local.settings.basename}"
-        Owner = local.settings.owner
         "passthrough:ansible_ssh_private_key_file" = local.settings.keypair.private_key
         "passthrough:ansible_user" = local.settings.mc.user
-        team  = local.settings.team
-        type  = local.settings.type
-    }
+    }, local.common_resource_tags)
 
     connection {
         type        = "ssh"
