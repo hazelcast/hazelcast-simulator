@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hazelcast-client
+        xsi:schemaLocation="http://www.hazelcast.com/schema/client-config
+            http://www.hazelcast.com/schema/config/hazelcast-client-config-5.0.xsd"
+        xmlns="http://www.hazelcast.com/schema/client-config"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+    <cluster-name>workers</cluster-name>
+
+    <network>
+        <cluster-members>
+            <!--MEMBERS-->
+        </cluster-members>
+
+        <!--        <ssl enabled="true">-->
+        <!--            <properties>-->
+        <!--                <property name="protocol">TLSv1.2</property>-->
+        <!--                <property name="trustStore">/tmp/truststore.jks</property>-->
+        <!--                <property name="trustStorePassword">changeit</property>-->
+        <!--            </properties>-->
+        <!--        </ssl>-->
+
+        <ssl enabled="true">
+            <factory-class-name>com.hazelcast.nio.ssl.OpenSSLEngineFactory</factory-class-name>
+            <properties>
+                <property name="protocol">TLSv1.2</property>
+                <property name="trustCertCollectionFile">/tmp/cert.pem</property>
+            </properties>
+        </ssl>
+    </network>
+
+    <properties>
+        <property name="hazelcast.logging.type">log4j2</property>
+    </properties>
+
+</hazelcast-client>

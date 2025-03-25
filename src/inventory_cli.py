@@ -136,6 +136,7 @@ class InventoryInstallCli:
             perf            Installs Linux Perf
             async_profiler  Installs Async Profiler
             iperf3          Installs iperf3 Profiler
+            tls_keystores   Installs TLS keystore and truststores for secure connections
         '''
 
         parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -248,6 +249,24 @@ class InventoryInstallCli:
         if exitcode != 0:
             exit_with_error(f'Failed to install iperf3, exitcode={exitcode} command=[{cmd}])')
         log_header("Installing iperf3: Done")
+
+    def tls_keystores(self, argv):
+        parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+                                         description='Install TLS keystore and truststore')
+        parser.add_argument("--rsa-key-size", help="The key size to use when generating the key pair", default = "2048")
+        args = parser.parse_args(argv)
+        rsa_key_size = args.rsa_key_size
+
+        log_header("Generating and installing TLS keystore and truststores")
+        cmd = f"ansible-playbook --inventory inventory.yaml {simulator_home}/playbooks/install_tls_keystores.yaml -e rsa_key_size='{rsa_key_size}'"
+        self._run_installation(cmd)
+
+    def _run_installation(self, cmd):
+        info(cmd)
+        exitcode = shell(cmd)
+        if exitcode != 0:
+            exit_with_error(f'Installation failed, exitcode={exitcode} command=[{cmd}])')
+        log_header("Installation complete")
 
 class InventoryImportCli:
 
