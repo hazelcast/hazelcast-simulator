@@ -37,6 +37,8 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateByteArrays;
 
@@ -52,8 +54,8 @@ public class LongByteArrayMapTest extends HazelcastTest {
     public int getAllSize = 5;
     public int mapCount = 1;
 
-    private List<IMap<Long, byte[]>> maps = new ArrayList<>();
     private byte[][] values;
+    private final List<IMap<Long, byte[]>> maps = new ArrayList<>();
     private final Executor callerRuns = Runnable::run;
     private final Random random = new Random();
 
@@ -68,14 +70,25 @@ public class LongByteArrayMapTest extends HazelcastTest {
 
     @Prepare(global = true)
     public void prepare() {
+        int threadCount = Math.min(maps.size(), Runtime.getRuntime().availableProcessors());
+        ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
+
         for (IMap<Long, byte[]> map : maps) {
-            Streamer<Long, byte[]> streamer = StreamerFactory.getInstance(map);
-            for (long key = 0; key < keyDomain; key++) {
-                byte[] value = values[random.nextInt(valueCount)];
-                streamer.pushEntry(key, value);
-            }
-            streamer.await();
+            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+                Streamer<Long, byte[]> streamer = StreamerFactory.getInstance(map);
+                Random threadLocalRandom = new Random();
+                for (long key = 0; key < keyDomain; key++) {
+                    byte[] value = values[threadLocalRandom.nextInt(valueCount)];
+                    streamer.pushEntry(key, value);
+                }
+                streamer.await();
+            }, executor);
+            futures.add(future);
         }
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+
+        executor.shutdown();
     }
 
     private IMap<Long, byte[]> getRandomMap() {
