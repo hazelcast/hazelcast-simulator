@@ -253,15 +253,11 @@ class InventoryInstallCli:
     def tls_keystores(self, argv):
         parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter,
                                          description='Install TLS keystore and truststore')
-        parser.add_argument("--hosts", help="The target hosts.", default="all:!mc:!load_balancers")
         parser.add_argument("--rsa-key-size", help="The key size to use when generating the key pair", default = "2048")
         args = parser.parse_args(argv)
-
-        hosts = args.hosts
         rsa_key_size = args.rsa_key_size
 
         log_header("Generating and installing TLS keystore and truststores")
-        info(f"hosts={hosts}")
         cmd = f"ansible-playbook --inventory inventory.yaml {simulator_home}/playbooks/install_tls_keystores.yaml -e rsa_key_size='{rsa_key_size}'"
         self._run_installation(cmd)
 
