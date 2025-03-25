@@ -1,7 +1,6 @@
 
 locals {
     settings = yamldecode(file("../inventory_plan.yaml"))
-    private_key = file("../${local.settings.keypair.private_key}")
     public_key = file("../${local.settings.keypair.public_key}")
 }
 
@@ -9,32 +8,6 @@ provider "aws" {
     profile = "default"
     region = local.settings.region
 }
-
-resource "aws_default_vpc" "vpc" {
-  tags = {
-    Name = "Default VPC"
-  }
-}
-
-#resource "aws_vpc" "prod-vpc" {
-#    cidr_block = "10.0.0.0/16"
-#    enable_dns_support = "true" #gives you an internal domain name
-#    enable_dns_hostnames = "true" #gives you an internal host name
-#    enable_classiclink = "false"
-#    instance_tenancy = "default"
-#    
-#    tags = {
-#        Name = "prod-vpc"
-#    }
-#}
-
-#resource "aws_internet_gateway" "my_vpc_igw" {
-#  vpc_id = local.settings.vpc_id
-#
-#  tags = {
-#    Name = "My VPC - Internet Gateway"
-#  }
-#}
 
 resource "aws_key_pair" "keypair" {
     key_name   = "simulator-keypair-${local.settings.basename}"

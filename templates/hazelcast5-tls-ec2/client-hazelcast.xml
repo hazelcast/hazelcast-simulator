@@ -12,21 +12,21 @@
             <!--MEMBERS-->
         </cluster-members>
 
-        <ssl enabled="true">
-            <properties>
-                <property name="protocol">TLSv1.2</property>
-                <property name="trustStore">/tmp/truststore.jks</property>
-                <property name="trustStorePassword">changeit</property>
-            </properties>
-        </ssl>
-
         <!--        <ssl enabled="true">-->
-        <!--            <factory-class-name>com.hazelcast.nio.ssl.OpenSSLEngineFactory</factory-class-name>-->
         <!--            <properties>-->
         <!--                <property name="protocol">TLSv1.2</property>-->
-        <!--                <property name="trustCertCollectionFile">/tmp/cert.pem</property>-->
+        <!--                <property name="trustStore">/tmp/truststore.jks</property>-->
+        <!--                <property name="trustStorePassword">changeit</property>-->
         <!--            </properties>-->
         <!--        </ssl>-->
+
+        <ssl enabled="true">
+            <factory-class-name>com.hazelcast.nio.ssl.OpenSSLEngineFactory</factory-class-name>
+            <properties>
+                <property name="protocol">TLSv1.2</property>
+                <property name="trustCertCollectionFile">/tmp/cert.pem</property>
+            </properties>
+        </ssl>
     </network>
 
     <properties>
