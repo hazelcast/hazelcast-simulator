@@ -1,0 +1,42 @@
+provisioner: terraform
+terraform_plan: aws
+# Used for naming resources; give it some unique name specific to a set of benchmarks
+basename: <id>-<rnd:5>
+# Enter something here that identifies you.
+owner: <id>
+region: us-east-1
+availability_zone: us-east-1b
+#Engineering account VPC
+vpc_id: vpc-02e85223e6d75fedd
+#Engineering account igw
+internet_gateway_id: igw-04124f82713efd431
+#Change the '20' to a different octet to prevent running into conflicts.
+cidr_block: 10.0.20.0/24
+#Change team information
+team: Core
+type: Benchmarking
+
+keypair:
+    public_key: key.pub
+    private_key: key
+
+nodes:
+    count: 1
+    instance_type: c5.9xlarge
+    ami: ami-0f9de6e2d2f067fca
+    user: ubuntu
+    tenancy: null
+    
+loadgenerators:
+    count: 1
+    instance_type: c5.9xlarge
+    ami: ami-0f9de6e2d2f067fca
+    user: ubuntu
+    tenancy: null
+
+mc:
+    instance_type: c5.4xlarge
+    count: 0
+    ami: ami-0f9de6e2d2f067fca
+    user: ubuntu
+    tenancy: null
