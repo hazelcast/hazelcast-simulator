@@ -51,29 +51,48 @@ def __merge_worker_hdr(run_dir):
 def __process_hdr(config: ReportConfig, run_dir, run_label):
     log_sub_section("Processing hdr files: Start")
     start_sec = time.time()
+    hdr_batch_process_details = os.path.join(run_dir, "hdr_batch_process_details")
+    processed_hdr_files = []
 
-    for outer_file_name in os.listdir(run_dir):
-        if outer_file_name.endswith(".hdr"):
-            __process_hdr_file(config, run_label, None, f"{run_dir}/{outer_file_name}")
-            continue
-
-        worker_dir = f"{run_dir}/{outer_file_name}"
-        worker_id = extract_worker_id(worker_dir)
-
-        if not worker_id:
-            continue
-
-        for inner_file_name in os.listdir(worker_dir):
-            if not inner_file_name.endswith(".hdr"):
+    with open(hdr_batch_process_details, 'w') as batch_process_output:
+        for outer_file_name in os.listdir(run_dir):
+            if outer_file_name.endswith(".hdr"):
+                processed_hdr_files.append(__process_hdr_file(
+                    config, run_label, None, f"{run_dir}/{outer_file_name}", batch_process_output))
                 continue
-            hdr_file = f"{worker_dir}/{inner_file_name}"
-            __process_hdr_file(config, run_label, worker_id, hdr_file)
+
+            worker_dir = f"{run_dir}/{outer_file_name}"
+            worker_id = extract_worker_id(worker_dir)
+
+            if not worker_id:
+                continue
+
+            for inner_file_name in os.listdir(worker_dir):
+                if not inner_file_name.endswith(".hdr"):
+                    continue
+                hdr_file = f"{worker_dir}/{inner_file_name}"
+                processed_hdr_files.append(__process_hdr_file(
+                    config, run_label, worker_id, hdr_file, batch_process_output))
+    
+    hdr_processing_cmd = f"""java -cp "{simulator_home}/lib/*" \
+                    com.hazelcast.simulator.utils.BatchedHistogramLogProcessor {hdr_batch_process_details}"""
+    status = shell(hdr_processing_cmd)
+    if status != 0:
+        raise Exception(
+            f"hdr processing failed with status {status}, cmd executed: \"{hdr_processing_cmd}\"")
+
+    for hdr_output_dir, hdr_file_name_no_ext in processed_hdr_files:
+        os.remove(f"{hdr_output_dir}/{hdr_file_name_no_ext}")
+        os.remove(f"{hdr_output_dir}/{hdr_file_name_no_ext}-csv.hgrm")
+        os.rename(f"{hdr_output_dir}/{hdr_file_name_no_ext}-csv",
+                  f"{hdr_output_dir}/{hdr_file_name_no_ext}.latency-history.csv")
+    os.remove(hdr_batch_process_details)
 
     duration_sec = time.time() - start_sec
     log_sub_section(f"Processing hdr files: Done {duration_sec:.2f} seconds)")
 
 
-def __process_hdr_file(config: ReportConfig, run_label, worker_id, hdr_file):
+def __process_hdr_file(config: ReportConfig, run_label, worker_id, hdr_file, batch_process_output):
     info(f"\t processing hdr file {hdr_file}")
 
     hdr_file_name_no_ext = Path(hdr_file).stem
@@ -95,24 +114,10 @@ def __process_hdr_file(config: ReportConfig, run_label, worker_id, hdr_file):
         duration = period.end_time - period.start_time
         end = duration - config.cooldown_seconds
         start_end += f" -end {end} "
-
-    shell(f"""java -cp "{simulator_home}/lib/*" \
-                    com.hazelcast.simulator.utils.SimulatorHistogramLogProcessor {start_end} \
-                    -i {hdr_file} \
-                    -o {target_dir}/{hdr_file_name_no_ext} \
-                    -outputValueUnitRatio 1000""")
-    os.rename(f"{target_dir}/{hdr_file_name_no_ext}.hgrm",
-              f"{target_dir}/{hdr_file_name_no_ext}.hgrm.bak")
-    shell(f"""java -cp "{simulator_home}/lib/*" \
-                    com.hazelcast.simulator.utils.SimulatorHistogramLogProcessor {start_end} \
-                    -csv \
-                    -i {hdr_file} \
-                    -o {target_dir}/{hdr_file_name_no_ext} \
-                    -outputValueUnitRatio 1000""")
-    os.rename(f"{target_dir}/{hdr_file_name_no_ext}.hgrm.bak",
-              f"{target_dir}/{hdr_file_name_no_ext}.hgrm")
-    os.rename(f"{target_dir}/{hdr_file_name_no_ext}",
-              f"{target_dir}/{hdr_file_name_no_ext}.latency-history.csv")
+    
+    batch_process_output.write(f"{start_end} -i {hdr_file} -o {target_dir}/{hdr_file_name_no_ext} -outputValueUnitRatio 1000\n")
+    batch_process_output.write(f"{start_end} -csv -i {hdr_file} -o {target_dir}/{hdr_file_name_no_ext}-csv -outputValueUnitRatio 1000\n")
+    return target_dir, hdr_file_name_no_ext
 
 
 def analyze_latency_history(report_dir, run_dir, attributes):
