@@ -27,7 +27,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
  *
  * @author Gil Tene
  */
-public class HistogramLogProcessor extends Thread {
+public class HistogramLogProcessor implements Runnable {
 
     public static final String versionString = "Histogram Log Processor version ---SIMULATOR--";
 
@@ -375,7 +375,6 @@ public class HistogramLogProcessor extends Thread {
      * @throws FileNotFoundException if specified input file is not found
      */
     public HistogramLogProcessor(final String[] args) throws FileNotFoundException {
-        this.setName("HistogramLogProcessor");
         config = new HistogramLogProcessorConfiguration(args);
         if (config.inputFileName != null) {
             logReader = new HistogramLogReader(config.inputFileName);
@@ -390,10 +389,8 @@ public class HistogramLogProcessor extends Thread {
      * @param args command line arguments
      */
     public static void main(final String[] args) {
-        final HistogramLogProcessor processor;
         try {
-            processor = new HistogramLogProcessor(args);
-            processor.start();
+           new HistogramLogProcessor(args).run();
         } catch (FileNotFoundException ex) {
             System.err.println("failed to open input file.");
         }

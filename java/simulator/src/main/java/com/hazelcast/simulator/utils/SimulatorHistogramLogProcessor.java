@@ -27,6 +27,7 @@ public class SimulatorHistogramLogProcessor extends HistogramLogProcessor {
         super(args);
     }
 
+    @Override
     protected Object[] buildRegularHistogramStatistics(Histogram intervalHistogram, Histogram accumulatedHistogram) {
         double intervalThroughput = ((double) (intervalHistogram.getTotalCount())
                 / (intervalHistogram.getEndTimeStamp() - intervalHistogram.getStartTimeStamp()));
@@ -71,6 +72,7 @@ public class SimulatorHistogramLogProcessor extends HistogramLogProcessor {
         };
     }
 
+    @Override
     protected Object[] buildDoubleHistogramStatistics(DoubleHistogram intervalHistogram, DoubleHistogram accumulatedHistogram) {
         double intervalThroughput = ((double) (intervalHistogram.getTotalCount())
                 / (intervalHistogram.getEndTimeStamp() - intervalHistogram.getStartTimeStamp()));
@@ -115,6 +117,7 @@ public class SimulatorHistogramLogProcessor extends HistogramLogProcessor {
         };
     }
 
+    @Override
     protected String buildLegend(boolean cvs) {
         if (cvs) {
             return "\"Timestamp\","
@@ -156,6 +159,7 @@ public class SimulatorHistogramLogProcessor extends HistogramLogProcessor {
         }
     }
 
+    @Override
     protected String buildLogFormat(boolean cvs) {
         if (cvs) {
             return "%.3f," //timestamp
@@ -229,10 +233,8 @@ public class SimulatorHistogramLogProcessor extends HistogramLogProcessor {
     }
 
     public static void main(final String[] args) {
-        final SimulatorHistogramLogProcessor processor;
         try {
-            processor = new SimulatorHistogramLogProcessor(args);
-            processor.start();
+            new SimulatorHistogramLogProcessor(args).run();
         } catch (FileNotFoundException ex) {
             System.err.println("failed to open input file.");
         }
