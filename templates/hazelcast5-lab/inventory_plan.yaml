@@ -1,0 +1,17 @@
+provisioner: lab
+# Restrict to some subset of the 10 machines if desired, 1 indexed to 
+# match the ip addresses
+#machines: [3, 4, 10]
+
+# Either 10 or 40 supported
+bandwidthGbps: 10
+
+nodes:
+    count: 1
+    user: <ssh_username>
+loadgenerators:
+    count: 1
+    user: <ssh_username>
+mc:
+    count: 0
+    user: <ssh_username>
