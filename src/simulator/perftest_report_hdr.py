@@ -52,12 +52,12 @@ def __process_hdr(config: ReportConfig, run_dir, run_label):
     log_sub_section("Processing hdr files: Start")
     start_sec = time.time()
     hdr_batch_process_details = os.path.join(run_dir, "hdr_batch_process_details")
-    processed_hdr_files = []
+    prepared_hdr_files = []
 
     with open(hdr_batch_process_details, 'w') as batch_process_output:
         for outer_file_name in os.listdir(run_dir):
             if outer_file_name.endswith(".hdr"):
-                processed_hdr_files.append(__process_hdr_file(
+                prepared_hdr_files.append(__prepare_hdr_file(
                     config, run_label, None, f"{run_dir}/{outer_file_name}", batch_process_output))
                 continue
 
@@ -71,9 +71,10 @@ def __process_hdr(config: ReportConfig, run_dir, run_label):
                 if not inner_file_name.endswith(".hdr"):
                     continue
                 hdr_file = f"{worker_dir}/{inner_file_name}"
-                processed_hdr_files.append(__process_hdr_file(
+                prepared_hdr_files.append(__prepare_hdr_file(
                     config, run_label, worker_id, hdr_file, batch_process_output))
     
+    info(f"Processing {len(prepared_hdr_files)} hdr files")
     hdr_processing_cmd = f"""java -cp "{simulator_home}/lib/*" \
                     com.hazelcast.simulator.utils.BatchedHistogramLogProcessor {hdr_batch_process_details}"""
     status = shell(hdr_processing_cmd)
@@ -81,7 +82,7 @@ def __process_hdr(config: ReportConfig, run_dir, run_label):
         raise Exception(
             f"hdr processing failed with status {status}, cmd executed: \"{hdr_processing_cmd}\"")
 
-    for hdr_output_dir, hdr_file_name_no_ext in processed_hdr_files:
+    for hdr_output_dir, hdr_file_name_no_ext in prepared_hdr_files:
         os.remove(f"{hdr_output_dir}/{hdr_file_name_no_ext}")
         os.remove(f"{hdr_output_dir}/{hdr_file_name_no_ext}-csv.hgrm")
         os.rename(f"{hdr_output_dir}/{hdr_file_name_no_ext}-csv",
@@ -92,8 +93,8 @@ def __process_hdr(config: ReportConfig, run_dir, run_label):
     log_sub_section(f"Processing hdr files: Done {duration_sec:.2f} seconds)")
 
 
-def __process_hdr_file(config: ReportConfig, run_label, worker_id, hdr_file, batch_process_output):
-    info(f"\t processing hdr file {hdr_file}")
+def __prepare_hdr_file(config: ReportConfig, run_label, worker_id, hdr_file, batch_process_output):
+    info(f"\t Preparing hdr file {hdr_file} for processing")
 
     hdr_file_name_no_ext = Path(hdr_file).stem
 
