@@ -133,6 +133,14 @@ resource "aws_security_group" "node-sg" {
         cidr_blocks = ["0.0.0.0/0"]
     }
 
+    ingress {
+        description = "ICMP"
+        from_port   = -1
+        to_port     = -1
+        protocol    = "icmp"
+        cidr_blocks = [local.settings.cidr_block]
+    }
+
     egress {
         from_port   = 0
         to_port     = 0
@@ -227,6 +235,14 @@ resource "aws_security_group" "loadgenerator-sg" {
         cidr_blocks = ["0.0.0.0/0"]
     }
 
+    ingress {
+        description = "ICMP"
+        from_port   = -1
+        to_port     = -1
+        protocol    = "icmp"
+        cidr_blocks = [local.settings.cidr_block]
+    }
+
     egress {
         from_port   = 0
         to_port     = 0
@@ -290,6 +306,14 @@ resource "aws_security_group" "mc-sg" {
         to_port     = 8443
         protocol    = "tcp"
         cidr_blocks = ["0.0.0.0/0"]
+    }
+
+    ingress {
+        description = "ICMP"
+        from_port   = -1
+        to_port     = -1
+        protocol    = "icmp"
+        cidr_blocks = [local.settings.cidr_block]
     }
 
     egress {
