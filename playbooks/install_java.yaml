@@ -6,7 +6,6 @@
     tar_gz_filename: "{{ jdk_url | basename }}"
 
   tasks:
-
   - name: Downloads the tar.gz
     get_url:
       url: "{{ jdk_url }}"
@@ -39,3 +38,24 @@
       regexp: '^export JAVA_HOME'
       line: "export JAVA_HOME=~{{ console_user | default(ansible_user) }}/{{ archive_contents.files[0].split('/')[0] }}"
       insertbefore: BOF
+
+  - name: Add Ping Failure Detector support
+    when: ansible_system == "Linux"
+    block:
+      - name: Set raw socket capability on java binary
+        become: yes
+        command:
+          cmd: "setcap cap_net_raw=+ep /home/{{ console_user | default(ansible_user) }}/{{ archive_contents.files[0].split('/')[0] }}/bin/java"
+
+      - name: Trust jdk libs
+        become: yes
+        copy:
+          dest: /etc/ld.so.conf.d/java.conf
+          content: |
+            /home/{{ console_user | default(ansible_user) }}/{{ archive_contents.files[0].split('/')[0] }}/lib
+            /home/{{ console_user | default(ansible_user) }}/{{ archive_contents.files[0].split('/')[0] }}/jre/lib/amd64/jli
+
+      - name: Reload trusted libs
+        become: yes
+        command:
+          cmd: ldconfig
