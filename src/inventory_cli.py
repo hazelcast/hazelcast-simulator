@@ -5,6 +5,7 @@ import argparse
 from os import path
 
 from simulator.inventory_terraform import terraform_import, terraform_destroy, terraform_apply
+from simulator.inventory_lab import lab_apply, lab_destroy
 from simulator.util import load_yaml_file, exit_with_error, simulator_home, shell, now_seconds
 from simulator.log import info, log_header
 from simulator.ssh import new_key
@@ -310,14 +311,17 @@ class InventoryApplyCli:
         start = now_seconds()
         if not path.exists("key.pub"):
             new_key()
-
-        if provisioner == "static":
-            info(f"Ignoring create on static environment")
-            return
-        elif provisioner == "terraform":
-            terraform_apply(inventory_plan, force)
-        else:
-            exit_with_error(f"Unrecognized provisioner [{provisioner}]")
+        
+        match provisioner:
+            case "static":
+                info(f"Ignoring create on static environment")
+                return
+            case "terraform":
+                terraform_apply(inventory_plan, force)
+            case "lab":
+                lab_apply(inventory_plan)
+            case _:
+                exit_with_error(f"Unrecognized provisioner [{provisioner}]")
 
         log_header("Inventory apply: Done")
         duration = now_seconds() - start
@@ -341,13 +345,16 @@ class InventoryDestroyCli:
         provisioner = inventory_plan['provisioner']
         start = now_seconds()
 
-        if provisioner == "static":
-            info(f"Ignoring destroy on static environment")
-            return
-        elif provisioner == "terraform":
-            terraform_destroy(inventory_plan, force=True)
-        else:
-            exit_with_error(f"Unrecognized provisioner [{provisioner}]")
+        match provisioner:
+            case "static":
+                info(f"Ignoring destroy on static environment")
+                return
+            case "terraform":
+                terraform_destroy(inventory_plan, force=True)
+            case "lab":
+                lab_destroy()
+            case _:
+                exit_with_error(f"Unrecognized provisioner [{provisioner}]")
 
         log_header("Inventory destroy: Done")
         duration = now_seconds() - start
