@@ -41,7 +41,7 @@ import com.hazelcast.sql.SqlService;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class AggregationBenchmark extends HazelcastTest {
+public class AggregationTest extends HazelcastTest {
 
     // properties
     // the number of map entries
