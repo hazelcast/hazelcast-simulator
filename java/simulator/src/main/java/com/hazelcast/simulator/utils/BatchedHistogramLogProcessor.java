@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.utils;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -8,6 +9,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 import static java.util.concurrent.CompletableFuture.runAsync;
@@ -27,8 +29,20 @@ public class BatchedHistogramLogProcessor {
         ExecutorService executor = Executors.newFixedThreadPool(threadCount);
         try {
             List<CompletableFuture<Void>> tasks = new ArrayList<>();
+            Semaphore gate = new Semaphore(1000);
             for (var processorInvocation : processorInvocations) {
-                tasks.add(runAsync(new SimulatorHistogramLogProcessor(processorInvocation), executor));
+                tasks.add(runAsync(() -> {
+                    gate.acquireUninterruptibly();
+                    try {
+                        new SimulatorHistogramLogProcessor(processorInvocation).run();
+                    }
+                    catch (FileNotFoundException e) {
+                        throw new RuntimeException(e);
+                    }
+                    finally {
+                        gate.release();
+                    }
+                }, executor));
             }
             CompletableFuture.allOf(tasks.toArray(new CompletableFuture[0])).join();
         } finally {

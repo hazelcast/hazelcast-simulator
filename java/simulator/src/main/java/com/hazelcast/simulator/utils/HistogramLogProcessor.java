@@ -147,7 +147,7 @@ public class HistogramLogProcessor implements Runnable {
             histogram = logReader.nextIntervalHistogram(config.rangeStartTimeSec, config.rangeEndTimeSec);
         } catch (RuntimeException ex) {
             System.err.println("Log file parsing error at line number " + lineNumber +
-                    ": line appears to be malformed.");
+                    ": line appears to be malformed. " + "Log file: " + config.inputFileName);
             if (config.verbose) {
                 throw ex;
             } else {
