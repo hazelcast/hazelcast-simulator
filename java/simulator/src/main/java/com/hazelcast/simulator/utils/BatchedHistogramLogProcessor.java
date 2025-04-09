@@ -35,11 +35,9 @@ public class BatchedHistogramLogProcessor {
                     gate.acquireUninterruptibly();
                     try {
                         new SimulatorHistogramLogProcessor(processorInvocation).run();
-                    }
-                    catch (FileNotFoundException e) {
+                    } catch (FileNotFoundException e) {
                         throw new RuntimeException(e);
-                    }
-                    finally {
+                    } finally {
                         gate.release();
                     }
                 }, executor));
