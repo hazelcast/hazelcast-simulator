@@ -21,10 +21,47 @@ import static java.time.ZoneOffset.UTC;
 import static java.util.Comparator.comparingLong;
 import static java.util.stream.Collectors.groupingBy;
 
-public class OperationsFileAggregator {
+public class OperationsFileAggregator
+        implements Runnable {
 
-    private static final DateTimeFormatter TIMESTAMP_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy hh:mm:ss");
+    private static final DateTimeFormatter TIMESTAMP_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
     private static final Logger LOGGER = LogManager.getLogger(OperationsFileAggregator.class);
+    private static final CSVFormat CSV_FORMAT = CSVFormat.DEFAULT.builder().setHeader("epoch", "timestamp", "operations",
+            "operations-delta", "operations/second").setSkipHeaderRecord(true).get();
+
+    private final Path runDir;
+
+    public OperationsFileAggregator(Path runDir) {
+        this.runDir = runDir;
+        if (!Files.isDirectory(runDir)) {
+            throw new IllegalArgumentException(runDir + " is not a valid directory!");
+        }
+    }
+
+    @Override
+    public void run() {
+        Map<String, List<Path>> operationsByTest;
+        try {
+            operationsByTest = groupOperationsByTest(runDir);
+        } catch (IOException e) {
+            throw new RuntimeException("Unable to locate operations files from runDir=" + runDir, e);
+        }
+
+        for (var entry : operationsByTest.entrySet()) {
+            String testId = entry.getKey();
+            List<Path> workerOperations = entry.getValue();
+            LOGGER.info("Combining {} files for testId \"{}\"", workerOperations.size(), testId);
+            OperationsOverTime combined = workerOperations.stream().parallel().map(OperationsFileAggregator::parse)
+                                                          .reduce(OperationsFileAggregator::combine).orElseThrow();
+            var outputDest = runDir.resolve("operations" + testId + ".csv");
+            LOGGER.info("Writing combined operations for testId \"{}\" to {}", testId, outputDest);
+            try {
+                writeOutput(outputDest, combined);
+            } catch (IOException e) {
+                throw new RuntimeException("Error writing combined operations to " + outputDest, e);
+            }
+        }
+    }
 
     record OperationState(long epoch, long operations, long operationsDelta, double operationsRate) {
         public OperationState(CSVRecord record) {
@@ -33,19 +70,15 @@ public class OperationsFileAggregator {
         }
 
         public OperationState add(OperationState other) {
-            return new OperationState(
-                    epoch,
-                    operations + other.operations,
-                    operationsDelta + other.operationsDelta,
-                    operationsRate + other.operationsRate
-            );
+            return new OperationState(epoch, operations + other.operations, operationsDelta + other.operationsDelta,
+                    operationsRate + other.operationsRate);
         }
     }
 
     record OperationsOverTime(List<OperationState> states) {
     }
 
-    static Map<String, List<Path>> separateOperationsByTest(Path runDir)
+    static Map<String, List<Path>> groupOperationsByTest(Path runDir)
             throws IOException {
         try (var fileTree = Files.walk(runDir, 2)) {
             return fileTree.filter(Files::isRegularFile).filter(p -> p.getParent() != null)
@@ -56,9 +89,9 @@ public class OperationsFileAggregator {
     }
 
     static OperationsOverTime parse(Path operations) {
-        var format = CSVFormat.DEFAULT.builder().setHeader().setSkipHeaderRecord(true).get();
+        //var format = CSVFormat.DEFAULT.builder().setHeader().setSkipHeaderRecord(true).get();
         Map<Long, OperationState> states = new HashMap<>();
-        try (var parser = format.parse(Files.newBufferedReader(operations))) {
+        try (var parser = CSV_FORMAT.parse(Files.newBufferedReader(operations))) {
             parser.stream().map(OperationState::new).forEach(state -> states.put(state.epoch, state));
         } catch (IOException e) {
             throw new RuntimeException("Unable to parse " + operations.toAbsolutePath(), e);
@@ -77,16 +110,14 @@ public class OperationsFileAggregator {
 
     static void writeOutput(Path dest, OperationsOverTime operations)
             throws IOException {
-        var format = CSVFormat.DEFAULT.builder().setHeader("epoch", "timestamp", "operations", "operations-delta", "operations/second").get();
+        var format = CSVFormat.DEFAULT.builder()
+                                      .setHeader("epoch", "timestamp", "operations", "operations-delta", "operations/second")
+                                      .get();
         try (var printer = format.print(dest, StandardCharsets.UTF_8)) {
             for (var state : operations.states) {
-                printer.printRecord(
-                        state.epoch,
-                        Instant.ofEpochSecond(state.epoch).atZone(UTC).format(TIMESTAMP_FORMATTER),
-                        state.operations,
-                        state.operationsDelta,
-                        new BigDecimal(state.operationsRate).setScale(4, HALF_UP).stripTrailingZeros().toPlainString()
-                );
+                printer.printRecord(state.epoch, Instant.ofEpochSecond(state.epoch).atZone(UTC).format(TIMESTAMP_FORMATTER),
+                        state.operations, state.operationsDelta,
+                        new BigDecimal(state.operationsRate).setScale(4, HALF_UP).stripTrailingZeros().toPlainString());
             }
         }
     }
@@ -96,20 +127,6 @@ public class OperationsFileAggregator {
         if (args.length != 1) {
             throw new IllegalArgumentException("Expects exactly one path argument pointing to the run directory");
         }
-        Path runDir = Path.of(args[0]);
-        if (!Files.isDirectory(runDir)) {
-            throw new IllegalArgumentException(runDir + " is not a valid directory!");
-        }
-        Map<String, List<Path>> operationsByTest = separateOperationsByTest(runDir);
-        for (var entry : operationsByTest.entrySet()) {
-            String testId = entry.getKey();
-            List<Path> workerOperations = entry.getValue();
-            LOGGER.info("Combining {} files for testId \"{}\"", workerOperations.size(), testId);
-            OperationsOverTime combined = workerOperations.stream().parallel().map(OperationsFileAggregator::parse)
-                                                          .reduce(OperationsFileAggregator::combine).orElseThrow();
-            var outputDest = runDir.resolve("operations" + testId + ".csv");
-            LOGGER.info("Writing combined operations for testId \"{}\" to {}", testId, outputDest);
-            writeOutput(outputDest, combined);
-        }
+        new OperationsFileAggregator(Path.of(args[0])).run();
     }
 }
