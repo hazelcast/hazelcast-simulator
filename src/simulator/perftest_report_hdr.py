@@ -24,6 +24,7 @@ def prepare_hdr(config: ReportConfig):
 
 
 def __merge_worker_hdr(run_dir):
+    info("Starting worker hdr file merge")
     dic = {}
     for worker_dir_name in os.listdir(run_dir):
         worker_dir = f"{run_dir}/{worker_dir_name}"
@@ -46,6 +47,7 @@ def __merge_worker_hdr(run_dir):
         shell(f"""java -cp "{simulator_home}/lib/*" \
                          com.hazelcast.simulator.utils.HistogramLogMerger \
                          {run_dir}/{file_name} {" ".join(hdr_files)} 2>/dev/null""")
+    info("Completed worker hdr file merge")
 
 
 def __process_hdr(config: ReportConfig, run_dir, run_label):
