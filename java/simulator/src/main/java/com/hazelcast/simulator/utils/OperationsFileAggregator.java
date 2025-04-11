@@ -26,8 +26,12 @@ public class OperationsFileAggregator
 
     private static final DateTimeFormatter TIMESTAMP_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
     private static final Logger LOGGER = LogManager.getLogger(OperationsFileAggregator.class);
-    private static final CSVFormat CSV_FORMAT = CSVFormat.DEFAULT.builder().setHeader("epoch", "timestamp", "operations",
-            "operations-delta", "operations/second").setSkipHeaderRecord(true).get();
+    private static final int RATE_PRECISION = 4;
+    private static final int WALK_DEPTH = 2;
+    private static final CSVFormat.Builder CSV_COMMON_FORMAT = CSVFormat.DEFAULT.builder()
+                                                                                .setHeader("epoch", "timestamp", "operations",
+                                                                                        "operations-delta", "operations/second")
+                                                                                .setRecordSeparator('\n');
 
     private final Path runDir;
 
@@ -80,7 +84,7 @@ public class OperationsFileAggregator
 
     static Map<String, List<Path>> groupOperationsByTest(Path runDir)
             throws IOException {
-        try (var fileTree = Files.walk(runDir, 2)) {
+        try (var fileTree = Files.walk(runDir, WALK_DEPTH)) {
             return fileTree.filter(Files::isRegularFile).filter(p -> p.getParent() != null)
                            .filter(p -> p.getParent().getFileName().toString().matches("^A\\d+_W\\d+-.*-javaclient$"))
                            .filter(p -> p.getFileName().toString().matches("^operations.*\\.csv$"))
@@ -89,9 +93,8 @@ public class OperationsFileAggregator
     }
 
     static OperationsOverTime parse(Path operations) {
-        //var format = CSVFormat.DEFAULT.builder().setHeader().setSkipHeaderRecord(true).get();
         Map<Long, OperationState> states = new HashMap<>();
-        try (var parser = CSV_FORMAT.parse(Files.newBufferedReader(operations))) {
+        try (var parser = CSV_COMMON_FORMAT.setSkipHeaderRecord(true).get().parse(Files.newBufferedReader(operations))) {
             parser.stream().map(OperationState::new).forEach(state -> states.put(state.epoch, state));
         } catch (IOException e) {
             throw new RuntimeException("Unable to parse " + operations.toAbsolutePath(), e);
@@ -110,14 +113,12 @@ public class OperationsFileAggregator
 
     static void writeOutput(Path dest, OperationsOverTime operations)
             throws IOException {
-        var format = CSVFormat.DEFAULT.builder()
-                                      .setHeader("epoch", "timestamp", "operations", "operations-delta", "operations/second")
-                                      .get();
-        try (var printer = format.print(dest, StandardCharsets.UTF_8)) {
+        try (var printer = CSV_COMMON_FORMAT.setSkipHeaderRecord(false).get().print(dest, StandardCharsets.UTF_8)) {
             for (var state : operations.states) {
                 printer.printRecord(state.epoch, Instant.ofEpochSecond(state.epoch).atZone(UTC).format(TIMESTAMP_FORMATTER),
                         state.operations, state.operationsDelta,
-                        new BigDecimal(state.operationsRate).setScale(4, HALF_UP).stripTrailingZeros().toPlainString());
+                        new BigDecimal(state.operationsRate).setScale(RATE_PRECISION, HALF_UP).stripTrailingZeros()
+                                                            .toPlainString());
             }
         }
     }

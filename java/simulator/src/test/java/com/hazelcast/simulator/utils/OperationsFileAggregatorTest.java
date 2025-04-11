@@ -7,7 +7,9 @@ import com.hazelcast.simulator.utils.OperationsFileAggregator.OperationsOverTime
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -15,8 +17,44 @@ import java.util.stream.Stream;
 import static com.hazelcast.simulator.utils.OperationsFileAggregator.groupOperationsByTest;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.notNullValue;
 
 public class OperationsFileAggregatorTest {
+
+    @Test
+    public void testCompleteRun()
+            throws IOException {
+        var fs = Jimfs.newFileSystem(Configuration.unix());
+        var resourceLoader = OperationsFileAggregator.class.getClassLoader();
+        var inputStructure = Map.of("run/A2_W1-10.212.1.102-javaclient/operations.csv",
+                "OperationsFileAggregator/operations1.csv", "run/A2_W2-10.212.1.102-javaclient/operations.csv",
+                "OperationsFileAggregator/operations2.csv", "run/A3_W1-10.212.1.103-javaclient/operations.csv",
+                "OperationsFileAggregator/operations3.csv", "run/A3_W2-10.212.1.103-javaclient/operations.csv",
+                "OperationsFileAggregator/operations4.csv", "run/A4_W1-10.212.1.104-javaclient/operations.csv",
+                "OperationsFileAggregator/operations5.csv");
+
+        for (var entry : inputStructure.entrySet()) {
+            Path dataDest = fs.getPath(entry.getKey());
+            Files.createDirectories(dataDest.getParent());
+            String data;
+            try (var reader = resourceLoader.getResourceAsStream(entry.getValue())) {
+                assertThat(reader, notNullValue());
+                data = new String(reader.readAllBytes(), StandardCharsets.UTF_8);
+            }
+            Files.writeString(dataDest, data);
+        }
+
+        new OperationsFileAggregator(fs.getPath("run")).run();
+        var outputDest = fs.getPath("run/operations.csv");
+        assertThat(Files.exists(outputDest), equalTo(true));
+
+        String expectedOutput;
+        try (var reader = resourceLoader.getResourceAsStream("OperationsFileAggregator/operationsCombined.csv")) {
+            assertThat(reader, notNullValue());
+            expectedOutput = new String(reader.readAllBytes(), StandardCharsets.UTF_8);
+        }
+        assertThat(Files.readString(outputDest), equalTo(expectedOutput));
+    }
 
     @Test
     public void testOperationsParse()
@@ -81,11 +119,8 @@ public class OperationsFileAggregatorTest {
                 List.of(new OperationState(1744210069, 1000, 1000, 999.23635),
                         new OperationState(1744210070, 1900, 900, 899.72534))));
 
-        var expected = List.of(
-                "epoch,timestamp,operations,operations-delta,operations/second",
-                "1744210069,09/04/2025 14:47:49,1000,1000,999.2364",
-                "1744210070,09/04/2025 14:47:50,1900,900,899.7253"
-        );
+        var expected = List.of("epoch,timestamp,operations,operations-delta,operations/second",
+                "1744210069,09/04/2025 14:47:49,1000,1000,999.2364", "1744210070,09/04/2025 14:47:50,1900,900,899.7253");
 
         assertThat(Files.readAllLines(outputDest), equalTo(expected));
     }
