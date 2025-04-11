@@ -4,7 +4,6 @@
 import argparse
 import csv
 import glob
-import os.path
 import shutil
 
 from simulator.perftest_report_dstat import report_dstat, analyze_dstat
@@ -29,11 +28,10 @@ def prepare(config: ReportConfig):
 
 
 def analyze(config: ReportConfig):
-    result = None
-
+    all_runs_data = []
     for run_label, run_dir in config.runs.items():
-        tmp_df = analyze_run(config, run_dir, run_label)
-        if tmp_df is None:
+        run_data = analyze_run(config, run_dir, run_label)
+        if run_data is None:
             continue
 
         if not config.preserve_time:
@@ -44,11 +42,12 @@ def analyze(config: ReportConfig):
             end_time_sec = round(period.end_time)
             if config.cooldown_seconds is not None:
                 end_time_sec = end_time_sec - config.cooldown_seconds
-            tmp_df = df_trim_time(tmp_df, start_time_sec, end_time_sec)
-            tmp_df = df_shift_time(tmp_df, -start_time_sec)
-        result = merge_dataframes(result, tmp_df)
+            run_data = df_trim_time(run_data, start_time_sec, end_time_sec)
+            run_data = df_shift_time(run_data, -start_time_sec)
+        
+        all_runs_data.append(run_data)
 
-    return result
+    return concat_dataframe_columns(all_runs_data)
 
 
 def analyze_run(config: ReportConfig, run_dir, run_label):
@@ -59,16 +58,11 @@ def analyze_run(config: ReportConfig, run_dir, run_label):
 
     attributes = {"run_label": run_label}
 
-    result = None
-
-    df_operations = analyze_operations(run_dir, attributes)
-    result = merge_dataframes(result, df_operations)
-
-    df_latency_history = analyze_latency_history(config.report_dir, run_dir, attributes)
-    result = merge_dataframes(result, df_latency_history)
-
-    df_dstat = analyze_dstat(run_dir, attributes)
-    result = merge_dataframes(result, df_dstat)
+    result = concat_dataframe_columns([
+        analyze_operations(run_dir, attributes),
+        analyze_latency_history(config.report_dir, attributes),
+        analyze_dstat(run_dir, attributes)
+    ])
 
     info(f"Analyzing run_path:{run_dir}: Done")
     return result
@@ -79,7 +73,7 @@ def report(config: ReportConfig, df: pd.DataFrame):
         return
 
     path_csv = f"{config.report_dir}/data.csv"
-    info(f"path csv: {path_csv}")
+    info(f"Writing combined run data to: {path_csv}")
     df.to_csv(path_csv)
 
     # for column_name in df.columns:

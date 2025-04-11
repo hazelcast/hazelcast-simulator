@@ -7,15 +7,12 @@ from matplotlib.dates import DateFormatter
 
 from simulator.perftest_report_common import *
 import matplotlib.pyplot as plt
-import plotly.express as px
-import plotly.offline as pyo
-import plotly.tools as tls
 
 def analyze_dstat(run_dir, attributes):
     log_section("Loading dstat data: Start")
     start_sec = time.time()
 
-    result = None
+    all_dstat_data = []
     for csv_filename in os.listdir(run_dir):
         if not csv_filename.endswith("_dstat.csv"):
             continue
@@ -40,8 +37,9 @@ def analyze_dstat(run_dir, attributes):
             column_desc = ColumnDesc("dstat", column_name, new_attributes)
             df.rename(columns={column_name: column_desc.to_string()}, inplace=True)
 
-        result = merge_dataframes(result, df)
+        all_dstat_data.append(df)
 
+    result = concat_dataframe_columns(all_dstat_data)
     duration_sec = time.time() - start_sec
     log_section(f"Loading dstat data: Done (duration {duration_sec:.2f} seconds)")
     return result

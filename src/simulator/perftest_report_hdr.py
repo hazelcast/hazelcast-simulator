@@ -5,9 +5,6 @@ import time
 from pathlib import Path
 
 from matplotlib.dates import DateFormatter
-import plotly.express as px
-import plotly.offline as pyo
-import plotly.tools as tls
 from matplotlib.ticker import FuncFormatter
 from pandas.errors import EmptyDataError
 
@@ -121,7 +118,7 @@ def __prepare_hdr_file(config: ReportConfig, run_label, worker_id, hdr_file, bat
     return target_dir, hdr_file_name_no_ext
 
 
-def analyze_latency_history(report_dir, run_dir, attributes):
+def analyze_latency_history(report_dir, attributes):
     log_section("Loading latency history data: Start")
     run_label = attributes["run_label"]
 
@@ -134,12 +131,11 @@ def analyze_latency_history(report_dir, run_dir, attributes):
         warn(f"Skipping hdr latency analysis, dir [{dir}] does not exist.")
         return None
 
-    result = None
+    all_latency_histories = []
     for outer_file_name in os.listdir(dir):
         outer_path = f"{dir}/{outer_file_name}"
         if outer_file_name.endswith(".latency-history.csv"):
-            csv_df = __load_latency_history_csv(outer_path, attributes, None)
-            result = merge_dataframes(result, csv_df)
+            all_latency_histories.append(__load_latency_history_csv(outer_path, attributes, None))
         elif os.path.isdir(outer_path):
             worker_id = outer_file_name
             # iterate over the files in the worker directory
@@ -147,10 +143,10 @@ def analyze_latency_history(report_dir, run_dir, attributes):
                 if not inner_file_name.endswith(".latency-history.csv"):
                     continue
 
-                csv_df = __load_latency_history_csv(
-                    f"{outer_path}/{inner_file_name}", attributes, worker_id)
-                result = merge_dataframes(result, csv_df)
+                all_latency_histories.append(__load_latency_history_csv(
+                    f"{outer_path}/{inner_file_name}", attributes, worker_id))
 
+    result = concat_dataframe_columns(all_latency_histories)
     duration_sec = time.time() - start_sec
     log_section(f"Loading latency history data: Done (duration {duration_sec:.2f} seconds)")
     return result
