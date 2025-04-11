@@ -83,16 +83,11 @@ class ColumnDesc:
         return ColumnDesc(group, metric, attributes)
 
 
-def merge_dataframes(*dfs):
-    result = None
-    for df in dfs:
-        if df is None:
-            continue
-        elif result is None:
-            result = df
-        else:
-            result = pd.concat([result, df], axis=1, join="outer")
-    return result
+def concat_dataframe_columns(dataframes):
+    if len(dataframes) == 0:
+        return None
+    else:
+        return pd.concat(dataframes, axis=1, join='outer')
 
 
 # Shifts the vales in the time index to the beginning (epoch). This is needed

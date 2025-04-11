@@ -27,9 +27,7 @@ def analyze_operations(run_dir, attributes):
     df_list += __load_aggregated_operations_csv(run_dir, attributes)
     df_list += __load_worker_operations_csv(run_dir, attributes)
 
-    result = None
-    for df in df_list:
-        result = merge_dataframes(result, df)
+    result = concat_dataframe_columns(df_list)
 
     duration_sec = time.time() - start_sec
     log_section(f"Loading operations data: Done (duration {duration_sec:.2f} seconds)")
