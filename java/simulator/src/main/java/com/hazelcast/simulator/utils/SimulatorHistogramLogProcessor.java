@@ -19,12 +19,12 @@ import org.HdrHistogram.DoubleHistogram;
 import org.HdrHistogram.Histogram;
 
 import java.io.Closeable;
-import java.io.IOException;
+import java.io.FileNotFoundException;
 
 @SuppressWarnings({"checkstyle:methodlength", "checkstyle:magicnumber"})
 public class SimulatorHistogramLogProcessor extends HistogramLogProcessor implements Closeable {
 
-    public SimulatorHistogramLogProcessor(String[] args) throws IOException {
+    public SimulatorHistogramLogProcessor(String[] args) throws FileNotFoundException {
         super(args);
     }
 
@@ -234,14 +234,14 @@ public class SimulatorHistogramLogProcessor extends HistogramLogProcessor implem
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
         logReader.close();
     }
 
     public static void main(final String[] args) {
         try (SimulatorHistogramLogProcessor processor = new SimulatorHistogramLogProcessor(args)) {
             processor.run();
-        } catch (IOException ex) {
+        } catch (FileNotFoundException ex) {
             System.err.println("Failed to open input file: " + ex.getMessage());
         }
     }

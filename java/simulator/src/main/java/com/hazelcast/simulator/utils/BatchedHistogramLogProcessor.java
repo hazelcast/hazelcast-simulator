@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.utils;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -31,7 +32,7 @@ public class BatchedHistogramLogProcessor {
                 tasks.add(runAsync(() -> {
                     try (SimulatorHistogramLogProcessor processor = new SimulatorHistogramLogProcessor(processorInvocation)) {
                         processor.run();
-                    } catch (IOException e) {
+                    } catch (FileNotFoundException e) {
                         throw new RuntimeException(e);
                     }
                 }, executor));
