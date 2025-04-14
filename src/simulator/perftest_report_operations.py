@@ -148,17 +148,16 @@ def __load_aggregated_operations_csv(run_dir, attributes):
 
 
 def __create_aggregated_operations_csv(run_dir):
-    info("\tMerging operations dataframes")
+    info("\tMerging worker operations")
     start_time = time.time()
     cmd = f"""java -cp "{simulator_home}/lib/*" \
                                com.hazelcast.simulator.utils.OperationsFileAggregator {run_dir}"""
     status = shell(cmd)
     if status != 0:
-        raise Exception(f"hdr processing failed with status {status}, cmd executed: \"{cmd}\"")
-    info("Completed merging operations dataframes")
+        raise Exception(f"Merge failed with status {status}, cmd executed: \"{cmd}\"")
     end_time = time.time()
     duration_seconds = end_time - start_time
-    info(f"\tFinished merging dataframes in {duration_seconds} seconds.")
+    info(f"\tFinished merging worker operations in {duration_seconds:.1f} seconds.")
 
 
 def report_operations(config: ReportConfig, df: pd.DataFrame):
