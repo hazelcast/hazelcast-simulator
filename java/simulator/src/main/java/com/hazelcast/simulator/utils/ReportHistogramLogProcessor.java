@@ -13,12 +13,15 @@ import java.util.concurrent.TimeUnit;
 
 import static java.util.concurrent.CompletableFuture.runAsync;
 
-public class BatchedHistogramLogProcessor {
+public class ReportHistogramLogProcessor {
     /**
      * Utility to process multiple {@link SimulatorHistogramLogProcessor} invocations
      * in parallel. A single path is expected as an arg which points to file where each
      * line is interpreted as an invocation of {@link SimulatorHistogramLogProcessor}
      * detailing the args to pass for that invocation.
+     *
+     * The latency history output will always be in csv format, the overall distribution
+     * format can be controlled with the -csv flag.
      */
     public static void main(String[] args)
             throws IOException, InterruptedException {
@@ -30,7 +33,7 @@ public class BatchedHistogramLogProcessor {
             List<CompletableFuture<Void>> tasks = new ArrayList<>();
             for (var processorInvocation : processorInvocations) {
                 tasks.add(runAsync(() -> {
-                    try (SimulatorHistogramLogProcessor processor = new SimulatorHistogramLogProcessor(processorInvocation)) {
+                    try (var processor = new SimulatorHistogramLogProcessor(processorInvocation, true)) {
                         processor.run();
                     } catch (FileNotFoundException e) {
                         throw new RuntimeException(e);
