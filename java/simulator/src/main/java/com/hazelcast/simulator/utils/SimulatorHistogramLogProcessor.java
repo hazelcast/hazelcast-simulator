@@ -18,12 +18,13 @@ package com.hazelcast.simulator.utils;
 import org.HdrHistogram.DoubleHistogram;
 import org.HdrHistogram.Histogram;
 
-import java.io.FileNotFoundException;
+import java.io.Closeable;
+import java.io.IOException;
 
 @SuppressWarnings({"checkstyle:methodlength", "checkstyle:magicnumber"})
-public class SimulatorHistogramLogProcessor extends HistogramLogProcessor {
+public class SimulatorHistogramLogProcessor extends HistogramLogProcessor implements Closeable {
 
-    public SimulatorHistogramLogProcessor(String[] args) throws FileNotFoundException {
+    public SimulatorHistogramLogProcessor(String[] args) throws IOException {
         super(args);
     }
 
@@ -232,11 +233,16 @@ public class SimulatorHistogramLogProcessor extends HistogramLogProcessor {
         }
     }
 
+    @Override
+    public void close() throws IOException {
+        logReader.close();
+    }
+
     public static void main(final String[] args) {
-        try {
-            new SimulatorHistogramLogProcessor(args).run();
-        } catch (FileNotFoundException ex) {
-            System.err.println("failed to open input file.");
+        try (SimulatorHistogramLogProcessor processor = new SimulatorHistogramLogProcessor(args)) {
+            processor.run();
+        } catch (IOException ex) {
+            System.err.println("Failed to open input file: " + ex.getMessage());
         }
     }
 }

@@ -30,9 +30,9 @@ public class BatchedHistogramLogProcessor {
             List<CompletableFuture<Void>> tasks = new ArrayList<>();
             for (var processorInvocation : processorInvocations) {
                 tasks.add(runAsync(() -> {
-                    try {
-                        new SimulatorHistogramLogProcessor(processorInvocation).run();
-                    } catch (FileNotFoundException e) {
+                    try (SimulatorHistogramLogProcessor processor = new SimulatorHistogramLogProcessor(processorInvocation)) {
+                        processor.run();
+                    } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
                 }, executor));
