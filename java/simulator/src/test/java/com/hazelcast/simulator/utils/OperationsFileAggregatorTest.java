@@ -12,6 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import static com.hazelcast.simulator.utils.OperationsFileAggregator.groupOperationsByTest;
@@ -87,8 +88,8 @@ public class OperationsFileAggregatorTest {
             Files.createFile(p);
         }
 
-        var expected = Map.of("", List.of(paths.get(1), paths.get(2), paths.get(5)), "123", List.of(paths.get(3)), "xyz",
-                List.of(paths.get(4)));
+        var expected = Map.of("", Set.of(paths.get(1), paths.get(2), paths.get(5)), "123", Set.of(paths.get(3)), "xyz",
+                Set.of(paths.get(4)));
 
         assertThat(groupOperationsByTest(root.resolve("run")), equalTo(expected));
     }

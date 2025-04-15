@@ -15,11 +15,13 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static java.math.RoundingMode.HALF_UP;
 import static java.time.ZoneOffset.UTC;
 import static java.util.Comparator.comparingLong;
 import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.toSet;
 
 public class OperationsFileAggregator
         implements Runnable {
@@ -44,7 +46,7 @@ public class OperationsFileAggregator
 
     @Override
     public void run() {
-        Map<String, List<Path>> operationsByTest;
+        Map<String, Set<Path>> operationsByTest;
         try {
             operationsByTest = groupOperationsByTest(runDir);
         } catch (IOException e) {
@@ -53,7 +55,7 @@ public class OperationsFileAggregator
 
         for (var entry : operationsByTest.entrySet()) {
             String testId = entry.getKey();
-            List<Path> workerOperations = entry.getValue();
+            List<Path> workerOperations = entry.getValue().stream().toList();
             LOGGER.info("Combining {} files for testId \"{}\"", workerOperations.size(), testId);
             OperationsOverTime combined = workerOperations.stream().parallel().map(OperationsFileAggregator::parse)
                                                           .reduce(OperationsFileAggregator::combine).orElseThrow();
@@ -82,13 +84,13 @@ public class OperationsFileAggregator
     record OperationsOverTime(List<OperationState> states) {
     }
 
-    static Map<String, List<Path>> groupOperationsByTest(Path runDir)
+    static Map<String, Set<Path>> groupOperationsByTest(Path runDir)
             throws IOException {
         try (var fileTree = Files.walk(runDir, WALK_DEPTH)) {
             return fileTree.filter(Files::isRegularFile).filter(p -> p.getParent() != null)
                            .filter(p -> p.getParent().getFileName().toString().matches("^A\\d+_W\\d+-.*-javaclient$"))
-                           .filter(p -> p.getFileName().toString().matches("^operations.*\\.csv$"))
-                           .collect(groupingBy(p -> p.getFileName().toString().replace("operations", "").replace(".csv", "")));
+                           .filter(p -> p.getFileName().toString().matches("^operations.*\\.csv$")).collect(
+                            groupingBy(p -> p.getFileName().toString().replace("operations", "").replace(".csv", ""), toSet()));
         }
     }
 
