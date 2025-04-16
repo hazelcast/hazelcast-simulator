@@ -73,16 +73,14 @@ def __process_hdr(config: ReportConfig, run_dir, run_label):
     
     info(f"Processing {len(prepared_hdr_files)} hdr files")
     hdr_processing_cmd = f"""java -cp "{simulator_home}/lib/*" \
-                    com.hazelcast.simulator.utils.BatchedHistogramLogProcessor {hdr_batch_process_details}"""
+                    com.hazelcast.simulator.utils.ReportHistogramLogProcessor {hdr_batch_process_details}"""
     status = shell(hdr_processing_cmd)
     if status != 0:
         raise Exception(
             f"hdr processing failed with status {status}, cmd executed: \"{hdr_processing_cmd}\"")
 
     for hdr_output_dir, hdr_file_name_no_ext in prepared_hdr_files:
-        os.remove(f"{hdr_output_dir}/{hdr_file_name_no_ext}")
-        os.remove(f"{hdr_output_dir}/{hdr_file_name_no_ext}-csv.hgrm")
-        os.rename(f"{hdr_output_dir}/{hdr_file_name_no_ext}-csv",
+        os.rename(f"{hdr_output_dir}/{hdr_file_name_no_ext}",
                   f"{hdr_output_dir}/{hdr_file_name_no_ext}.latency-history.csv")
     os.remove(hdr_batch_process_details)
 
@@ -114,7 +112,6 @@ def __prepare_hdr_file(config: ReportConfig, run_label, worker_id, hdr_file, bat
         start_end += f" -end {end} "
     
     batch_process_output.write(f"{start_end} -i {hdr_file} -o {target_dir}/{hdr_file_name_no_ext} -outputValueUnitRatio 1000\n")
-    batch_process_output.write(f"{start_end} -csv -i {hdr_file} -o {target_dir}/{hdr_file_name_no_ext}-csv -outputValueUnitRatio 1000\n")
     return target_dir, hdr_file_name_no_ext
 
 

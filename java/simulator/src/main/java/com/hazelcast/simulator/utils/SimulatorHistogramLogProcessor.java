@@ -24,8 +24,11 @@ import java.io.FileNotFoundException;
 @SuppressWarnings({"checkstyle:methodlength", "checkstyle:magicnumber"})
 public class SimulatorHistogramLogProcessor extends HistogramLogProcessor implements Closeable {
 
-    public SimulatorHistogramLogProcessor(String[] args) throws FileNotFoundException {
+    private final boolean areLatenciesFormattedAsCsv;
+
+    public SimulatorHistogramLogProcessor(String[] args, boolean forceLatencyFormatAsCsv) throws FileNotFoundException {
         super(args);
+        this.areLatenciesFormattedAsCsv = config.logFormatCsv || forceLatencyFormatAsCsv;
     }
 
     @Override
@@ -120,7 +123,7 @@ public class SimulatorHistogramLogProcessor extends HistogramLogProcessor implem
 
     @Override
     protected String buildLegend(boolean cvs) {
-        if (cvs) {
+        if (cvs || areLatenciesFormattedAsCsv) {
             return "\"Timestamp\","
                     + "\"StartTime\","
                     + "\"Int_Count\","
@@ -162,7 +165,7 @@ public class SimulatorHistogramLogProcessor extends HistogramLogProcessor implem
 
     @Override
     protected String buildLogFormat(boolean cvs) {
-        if (cvs) {
+        if (cvs || areLatenciesFormattedAsCsv) {
             return "%.3f," //timestamp
                     + "%.3f," //timestamp
                     + "%d," //int count
@@ -213,7 +216,7 @@ public class SimulatorHistogramLogProcessor extends HistogramLogProcessor implem
                     + "%7.3f " //int mean
                     + "%7.3f " //int std deviation
                     + "%7.3f " //int throughput
-                    + "( "
+                    + ") "
                     + "T:%d " //total count
                     + "( "
                     + "%7.3f " //total 25%
@@ -239,7 +242,7 @@ public class SimulatorHistogramLogProcessor extends HistogramLogProcessor implem
     }
 
     public static void main(final String[] args) {
-        try (SimulatorHistogramLogProcessor processor = new SimulatorHistogramLogProcessor(args)) {
+        try (SimulatorHistogramLogProcessor processor = new SimulatorHistogramLogProcessor(args, false)) {
             processor.run();
         } catch (FileNotFoundException ex) {
             System.err.println("Failed to open input file: " + ex.getMessage());
