@@ -7,6 +7,7 @@ import time
 from matplotlib.dates import DateFormatter
 
 from simulator.perftest_report_common import *
+from simulator.util import shell, simulator_home
 import matplotlib.pyplot as plt
 import plotly.express as px
 import plotly.offline as pyo
@@ -147,65 +148,16 @@ def __load_aggregated_operations_csv(run_dir, attributes):
 
 
 def __create_aggregated_operations_csv(run_dir):
-    df_list_map = {}
-
-    # load all the operation dataframes for every worker/test
-    for outer_file_name in os.listdir(run_dir):
-        outer_dir = f"{run_dir}/{outer_file_name}"
-        worker_id = extract_worker_id(outer_dir)
-        if not worker_id:
-            continue
-
-        for inner_file_name in os.listdir(outer_dir):
-            if not inner_file_name.startswith("operations") or not inner_file_name.endswith(".csv"):
-                continue
-            test_id = inner_file_name.replace("operations", "").replace(".csv", "")
-            df_list = df_list_map.get(test_id)
-            if df_list is None:
-                df_list = []
-                df_list_map[test_id] = df_list
-            csv_path = f"{outer_dir}/{inner_file_name}"
-            info(f"\tLoading {csv_path}")
-            df = pd.read_csv(csv_path)
-            if len(df.index) == 0:
-                continue
-            df['epoch'] = df['epoch'].round(0).astype(int)
-            df.set_index('epoch', inplace=True)
-            # get rid of duplicates
-            df = df.loc[~df.index.duplicated(keep='last')]
-            df_list.append(df)
-
+    info("\tMerging worker operations")
     start_time = time.time()
-    # merge the frames into the
-    info(f"\tMerging dataframes (can take some time)")
-    for test_id, df_list in df_list_map.items():
-        aggr_df = df_list[0]
-
-        for df_index in range(1, len(df_list)):
-            df = df_list[df_index]
-            for row_ind, row in df.iterrows():
-                try:
-                    aggr_row = aggr_df.loc[row_ind]
-                    # it is a row with a time that already exist. So a new row is
-                    # created whereby every value from the 2 rows are added into
-                    # a new row and that is written back to the aggr_df
-                    new_aggr_row = []
-                    for value_ind in range(len(row)):
-                        value = row.values[value_ind]
-                        aggr_value = aggr_row.values[value_ind]
-                        new_aggr_value = value + aggr_value
-                        new_aggr_row.append(new_aggr_value)
-
-                    aggr_df.loc[row_ind] = new_aggr_row
-                except KeyError:
-                    # it is a row with a time that doesn't exist in the aggregate
-                    # so the whole row can be added.
-                    aggr_df.loc[row_ind] = row
-
-        aggr_df.to_csv(f"{run_dir}/operations{test_id}.csv")
+    cmd = f"""java -cp "{simulator_home}/lib/*" \
+                               com.hazelcast.simulator.utils.OperationsFileAggregator {run_dir}"""
+    status = shell(cmd)
+    if status != 0:
+        raise Exception(f"Merge failed with status {status}, cmd executed: \"{cmd}\"")
     end_time = time.time()
     duration_seconds = end_time - start_time
-    info(f"\tFinished merging dataframes in {duration_seconds} seconds.")
+    info(f"\tFinished merging worker operations in {duration_seconds:.1f} seconds.")
 
 
 def report_operations(config: ReportConfig, df: pd.DataFrame):
