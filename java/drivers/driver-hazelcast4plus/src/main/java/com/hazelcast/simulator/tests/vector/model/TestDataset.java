@@ -1,5 +1,7 @@
 package com.hazelcast.simulator.tests.vector.model;
 
+import com.hazelcast.query.Predicate;
+
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -9,18 +11,33 @@ public class TestDataset {
 
     private final float[][] searchVectors;
 
+    private final Predicate[] searchConditions;
+
     private final int[][] closestIds;
 
     private final float[][] closestScores;
 
-    public TestDataset(float[][] searchVector, int[][] closestIds, float[][] closestScores) {
+    public TestDataset(float[][] searchVector, Predicate[] searchConditions, int[][] closestIds, float[][] closestScores) {
         this.searchVectors = searchVector;
+        this.searchConditions = searchConditions;
         this.closestIds = closestIds;
         this.closestScores = closestScores;
     }
 
+    public TestDataset(float[][] searchVectors, int[][] ids, float[][] scores) {
+        this(searchVectors, null, ids, scores);
+    }
+
     public float[] getSearchVector(int index) {
         return searchVectors[index];
+    }
+
+    public int getLimit(int index) {
+        return closestIds[index].length;
+    }
+
+    public Predicate<?, ?> getSearchConditions(int index) {
+        return searchConditions != null ? searchConditions[index] : null;
     }
 
     public int getDimension() {
@@ -35,8 +52,13 @@ public class TestDataset {
     }
 
     public float getPrecision(List<Integer> actualVectorsIds, int index, int top) {
+        int[] closestIds = this.closestIds[index];
+        return getPrecision(actualVectorsIds, top, closestIds);
+    }
+
+    public static float getPrecision(List<Integer> actualVectorsIds, int top, int[] closestIds) {
         var actualSet = new HashSet<>(actualVectorsIds);
-        var expectedSet = Arrays.stream(Arrays.copyOfRange(closestIds[index], 0, top)).boxed().collect(Collectors.toSet());
+        var expectedSet = Arrays.stream(Arrays.copyOfRange(closestIds, 0, top)).boxed().collect(Collectors.toSet());
         actualSet.retainAll(expectedSet);
         return ((float) actualSet.size()) / top;
     }
