@@ -41,9 +41,9 @@ def __merge_worker_hdr(run_dir):
 
 
     for file_name, hdr_files in dic.items():
-        # write the list of files into a file named inputFilesListingFile.txt
-        file_name = file_name + "._merge_worker_hdr_input_files_list"
-        hdr_list_file = os.path.join(run_dir, file_name)
+        # write the list of files into a file and let Java processor read from it
+        hdr_list_file_name = file_name + "._merge_worker_hdr_input_files_list"
+        hdr_list_file = os.path.join(run_dir, hdr_list_file_name)
         print(f"Writing file list for {file_name} into file {hdr_list_file}")
         with open(hdr_list_file, 'w') as listing_file:
             for hdr_file_path in hdr_files:
