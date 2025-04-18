@@ -53,7 +53,7 @@ public final class HistogramLogMerger {
 
         File inputFilesListFile = new File(args[1]);
         if (!inputFilesListFile.exists()) {
-            throw new IllegalArgumentException("inputFilesListingFile File [" + inputFilesListFile + "] doesn't exist");
+            throw new IllegalArgumentException("inputFilesListingFile [" + inputFilesListFile + "] doesn't exist");
         }
 
         System.out.println("[HistogramLogMerger] Reading input files list from " + inputFilesListFile);
