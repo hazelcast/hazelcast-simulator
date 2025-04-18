@@ -24,9 +24,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map.Entry;
 
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
@@ -61,14 +60,14 @@ public final class HistogramLogMerger {
         System.out.println("[HistogramLogMerger] Using input files list from " + inputFilesListFile);
 
         List<String> inputFiles = Files.readAllLines(inputFilesListFile.toPath());
-        HashMap<String, HistogramLogReader> readers = new HashMap<>(inputFiles.size() - 1);
+        ArrayList<HistogramLogReader> readers = new ArrayList<>(inputFiles.size());
         inputFiles.forEach(p -> {
             File file = new File(p);
             if (!file.exists()) {
                 throw new IllegalArgumentException("File [" + file + "] doesn't exist");
             }
             try {
-                readers.put(p, new HistogramLogReader(p));
+                readers.add(new HistogramLogReader(p));
             } catch (FileNotFoundException e) {
                 throw new RuntimeException(e);
             }
@@ -81,11 +80,11 @@ public final class HistogramLogMerger {
         writer.outputLogFormatVersion();
         writer.outputLegend();
 
+        int numberOfMergedHistograms = 0;
         for (; ; ) {
             Histogram merged = null;
-            for (Entry<String, HistogramLogReader> readerEntry : readers.entrySet()) {
-                System.out.println("Reading histogram from " + readerEntry.getKey());
-                Histogram histogram = (Histogram) readerEntry.getValue().nextIntervalHistogram();
+            for (HistogramLogReader reader : readers) {
+                Histogram histogram = (Histogram) reader.nextIntervalHistogram();
                 if (histogram == null) {
                     continue;
                 }
@@ -97,6 +96,9 @@ public final class HistogramLogMerger {
                             histogram.getNumberOfSignificantValueDigits());
                 }
                 merged.add(histogram);
+                if (++numberOfMergedHistograms % 100 == 0) {
+                    System.out.println("[HistogramLogMerger] Merged " + numberOfMergedHistograms + " histograms");
+                }
             }
 
             if (merged == null) {
