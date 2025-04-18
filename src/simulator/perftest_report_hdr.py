@@ -39,10 +39,21 @@ def __merge_worker_hdr(run_dir):
                 dic[file_name] = files
             files.append(hdr_file)
 
+
     for file_name, hdr_files in dic.items():
-        shell(f"""java -cp "{simulator_home}/lib/*" \
+        # write the list of files into a file named inputFilesListingFile.txt
+        file_name = file_name + "._merge_worker_hdr_input_files_list"
+        hdr_list_file = os.path.join(run_dir, file_name)
+        print(f"Writing file list for {file_name} into file {hdr_list_file}")
+        with open(hdr_list_file, 'w') as listing_file:
+            listing_file.writelines(hdr_files)
+
+        command = f"""java -cp "{simulator_home}/lib/*" \
                          com.hazelcast.simulator.utils.HistogramLogMerger \
-                         {run_dir}/{file_name} {" ".join(hdr_files)} 2>/dev/null""")
+                         {run_dir}/{file_name} {hdr_list_file} 2>/dev/null"""
+
+        print(f"Executing process for {command}")
+        shell(command)
 
 
 def __process_hdr(config: ReportConfig, run_dir, run_label):

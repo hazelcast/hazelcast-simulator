@@ -22,6 +22,9 @@ import org.HdrHistogram.HistogramLogWriter;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
 
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
@@ -44,16 +47,28 @@ public final class HistogramLogMerger {
         deleteQuiet(outputFile);
         ensureExistingFile(outputFile);
 
-        HistogramLogReader[] readers = new HistogramLogReader[args.length - 1];
-        for (int k = 1; k < args.length; k++) {
-            File file = new File(args[k]);
+        if (args.length < 2) {
+            throw new IllegalArgumentException("Usage: HistogramLogMerger <outputFile> <inputFilesListingFile>");
+        }
+
+        File inputFilesListFile = new File(args[1]);
+        if (!inputFilesListFile.exists()) {
+            throw new IllegalArgumentException("inputFilesListingFile File [" + inputFilesListFile + "] doesn't exist");
+        }
+
+        System.out.println("[HistogramLogMerger] Reading input files list from " + inputFilesListFile);
+
+        List<String> inputFiles = Files.readAllLines(inputFilesListFile.toPath());
+        HistogramLogReader[] readers = new HistogramLogReader[inputFiles.size() - 1];
+        inputFiles.stream().forEach(p -> {
+            File file = new File(p);
             if (!file.exists()) {
                 throw new IllegalArgumentException("File [" + file + "] doesn't exist");
             }
-        }
+        });
 
-        for (int k = 1; k < args.length; k++) {
-            String inputFile = args[k];
+        for (int k = 1; k < inputFiles.size(); k++) {
+            String inputFile = inputFiles.get(k);
             readers[k - 1] = new HistogramLogReader(inputFile);
         }
 
