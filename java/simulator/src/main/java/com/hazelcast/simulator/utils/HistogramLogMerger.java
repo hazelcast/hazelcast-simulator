@@ -24,6 +24,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,6 +41,8 @@ import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
  * to have the same length; as soon as a HDR is finished, it is ignored and this continues till all HDR files are fully processed.
  */
 public final class HistogramLogMerger {
+
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private HistogramLogMerger() {
     }
@@ -57,7 +61,7 @@ public final class HistogramLogMerger {
             throw new IllegalArgumentException("hdr_files_list_file [" + inputFilesListFile + "] doesn't exist");
         }
 
-        System.out.println("[HistogramLogMerger] Using input files list from " + inputFilesListFile);
+        log("Using input files list from " + inputFilesListFile);
 
         List<String> inputFiles = Files.readAllLines(inputFilesListFile.toPath());
         ArrayList<HistogramLogReader> readers = new ArrayList<>(inputFiles.size());
@@ -75,7 +79,7 @@ public final class HistogramLogMerger {
 
         HistogramLogWriter writer = new HistogramLogWriter(outputFile);
         String comment = "[Latency histograms for " + getBaseName(outputFile) + ']';
-        System.out.println(comment);
+        log(comment);
         writer.outputComment(comment);
         writer.outputLogFormatVersion();
         writer.outputLegend();
@@ -103,9 +107,13 @@ public final class HistogramLogMerger {
             }
 
             writer.outputIntervalHistogram(merged);
-            System.out.println("[HistogramLogMerger] Added merged histogram " + ++numberOfMergedHistograms + " to " + outputFile);
-
+            log("Added merged histogram " + ++numberOfMergedHistograms + " to " + outputFile);
         }
+    }
+
+    private static void log(String log) {
+        String currentTime = LocalDateTime.now().format(formatter);
+        System.out.println("[" + currentTime + "] [HistogramLogMerger] " + log);
     }
 
     private static String getBaseName(File file) {
