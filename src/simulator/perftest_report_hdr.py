@@ -46,7 +46,8 @@ def __merge_worker_hdr(run_dir):
         hdr_list_file = os.path.join(run_dir, file_name)
         print(f"Writing file list for {file_name} into file {hdr_list_file}")
         with open(hdr_list_file, 'w') as listing_file:
-            listing_file.writelines(hdr_files)
+            for hdr_file_path in hdr_files:
+                listing_file.write(hdr_file_path + '\n')
 
         command = f"""java -cp "{simulator_home}/lib/*" \
                          com.hazelcast.simulator.utils.HistogramLogMerger \
