@@ -96,9 +96,6 @@ public final class HistogramLogMerger {
                             histogram.getNumberOfSignificantValueDigits());
                 }
                 merged.add(histogram);
-                if (++numberOfMergedHistograms % 100 == 0) {
-                    System.out.println("[HistogramLogMerger] Merged " + numberOfMergedHistograms + " histograms");
-                }
             }
 
             if (merged == null) {
@@ -106,6 +103,10 @@ public final class HistogramLogMerger {
             }
 
             writer.outputIntervalHistogram(merged);
+            if (++numberOfMergedHistograms % 1000 == 0) {
+                System.out.println("[HistogramLogMerger] Added merged histogram " + numberOfMergedHistograms + " to " + outputFile);
+            }
+
         }
     }
 
