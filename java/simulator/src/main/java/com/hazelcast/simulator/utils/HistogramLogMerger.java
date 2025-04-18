@@ -103,9 +103,7 @@ public final class HistogramLogMerger {
             }
 
             writer.outputIntervalHistogram(merged);
-            if (++numberOfMergedHistograms % 1000 == 0) {
-                System.out.println("[HistogramLogMerger] Added merged histogram " + numberOfMergedHistograms + " to " + outputFile);
-            }
+            System.out.println("[HistogramLogMerger] Added merged histogram " + ++numberOfMergedHistograms + " to " + outputFile);
 
         }
     }
