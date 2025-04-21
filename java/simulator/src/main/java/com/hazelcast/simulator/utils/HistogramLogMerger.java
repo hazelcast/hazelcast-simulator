@@ -57,7 +57,7 @@ public final class HistogramLogMerger {
             throw new IllegalArgumentException("hdr_files_list_file [" + inputFilesListFile + "] doesn't exist");
         }
 
-        System.out.println("[HistogramLogMerger] Using input files list from " + inputFilesListFile);
+        log("Using input files list from " + inputFilesListFile);
 
         List<String> inputFiles = Files.readAllLines(inputFilesListFile.toPath());
         ArrayList<HistogramLogReader> readers = new ArrayList<>(inputFiles.size());
@@ -75,7 +75,7 @@ public final class HistogramLogMerger {
 
         HistogramLogWriter writer = new HistogramLogWriter(outputFile);
         String comment = "[Latency histograms for " + getBaseName(outputFile) + ']';
-        System.out.println(comment);
+        log(comment);
         writer.outputComment(comment);
         writer.outputLogFormatVersion();
         writer.outputLegend();
@@ -103,9 +103,12 @@ public final class HistogramLogMerger {
             }
 
             writer.outputIntervalHistogram(merged);
-            System.out.println("[HistogramLogMerger] Added merged histogram " + ++numberOfMergedHistograms + " to " + outputFile);
-
+            log("Added merged histogram " + ++numberOfMergedHistograms + " to " + outputFile);
         }
+    }
+
+    private static void log(String log) {
+        System.out.println("[HistogramLogMerger] " + log);
     }
 
     private static String getBaseName(File file) {
