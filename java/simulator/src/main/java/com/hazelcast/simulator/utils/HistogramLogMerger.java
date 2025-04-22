@@ -21,7 +21,11 @@ import org.HdrHistogram.HistogramLogReader;
 import org.HdrHistogram.HistogramLogWriter;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
@@ -44,24 +48,39 @@ public final class HistogramLogMerger {
         deleteQuiet(outputFile);
         ensureExistingFile(outputFile);
 
-        HistogramLogReader[] readers = new HistogramLogReader[args.length - 1];
-        for (int k = 1; k < args.length; k++) {
-            File file = new File(args[k]);
+        if (args.length < 2) {
+            throw new IllegalArgumentException("Usage: HistogramLogMerger <outputFile> <hdr_files_list_file>");
+        }
+
+        File inputFilesListFile = new File(args[1]);
+        if (!inputFilesListFile.exists()) {
+            throw new IllegalArgumentException("hdr_files_list_file [" + inputFilesListFile + "] doesn't exist");
+        }
+
+        log("Using input files list from " + inputFilesListFile);
+
+        List<String> inputFiles = Files.readAllLines(inputFilesListFile.toPath());
+        ArrayList<HistogramLogReader> readers = new ArrayList<>(inputFiles.size());
+        inputFiles.forEach(p -> {
+            File file = new File(p);
             if (!file.exists()) {
                 throw new IllegalArgumentException("File [" + file + "] doesn't exist");
             }
-        }
-
-        for (int k = 1; k < args.length; k++) {
-            String inputFile = args[k];
-            readers[k - 1] = new HistogramLogReader(inputFile);
-        }
+            try {
+                readers.add(new HistogramLogReader(p));
+            } catch (FileNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+        });
 
         HistogramLogWriter writer = new HistogramLogWriter(outputFile);
-        writer.outputComment("[Latency histograms for " + getBaseName(outputFile) + ']');
+        String comment = "[Latency histograms for " + getBaseName(outputFile) + ']';
+        log(comment);
+        writer.outputComment(comment);
         writer.outputLogFormatVersion();
         writer.outputLegend();
 
+        int numberOfMergedHistograms = 0;
         for (; ; ) {
             Histogram merged = null;
             for (HistogramLogReader reader : readers) {
@@ -84,7 +103,12 @@ public final class HistogramLogMerger {
             }
 
             writer.outputIntervalHistogram(merged);
+            log("Added merged histogram " + ++numberOfMergedHistograms + " to " + outputFile);
         }
+    }
+
+    private static void log(String log) {
+        System.out.println("[HistogramLogMerger] " + log);
     }
 
     private static String getBaseName(File file) {
