@@ -15,23 +15,17 @@
  */
 package com.hazelcast.simulator.drivers;
 
-import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.coordinator.registry.AgentData;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.Closeable;
-import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
-import static com.hazelcast.simulator.utils.FileUtils.getConfigurationFile;
-import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static java.lang.String.format;
 
 public abstract class Driver<V> implements Closeable {
@@ -41,36 +35,23 @@ public abstract class Driver<V> implements Closeable {
     protected Map<String, String> properties = new HashMap<>();
     private final Map<String, String> configCache = new HashMap<>();
 
-    public static Driver loadDriver(String driver) {
-        LOGGER.info(format("Loading driver [%s]", driver));
-
-        if ("hazelcast-enterprise4".equals(driver)
-                || "hazelcast4".equals(driver)
-                || "hazelcast-enterprise5".equals(driver)
-                || "hazelcast5".equals(driver)) {
-            // The 'P' is intentionally uppercase to match the driver name
-            return loadInstance("hazelcast4Plus");
-        } else if ("hazelcast-enterprise3".equals(driver)) {
-            return loadInstance("hazelcast3");
-        } else {
-            return loadInstance(driver);
-        }
+    public static Driver loadDriver(String driverClass) {
+        LOGGER.info("Loading driver [{}]", driverClass);
+        return loadInstance(driverClass);
     }
 
-    private static Driver loadInstance(String driver) {
-        String driverName = "com.hazelcast.simulator." + driver.toLowerCase() + "."
-                + driver.substring(0, 1).toUpperCase() + driver.substring(1) + "Driver";
+    private static Driver loadInstance(String driverClassName) {
         Class driverClass;
         try {
-            driverClass = Driver.class.getClassLoader().loadClass(driverName);
+            driverClass = Driver.class.getClassLoader().loadClass(driverClassName);
         } catch (ClassNotFoundException e) {
-            throw new CommandLineExitException(format("Could not locate driver class [%s]", driverName));
+            throw new CommandLineExitException(format("Could not locate driver class [%s]", driverClassName));
         }
 
         try {
             return (Driver) driverClass.newInstance();
         } catch (Exception e) {
-            throw new CommandLineExitException(format("Failed to create an instance of driver [%s]", driverName), e);
+            throw new CommandLineExitException(format("Failed to create an instance of driver [%s]", driverClassName), e);
         }
     }
 

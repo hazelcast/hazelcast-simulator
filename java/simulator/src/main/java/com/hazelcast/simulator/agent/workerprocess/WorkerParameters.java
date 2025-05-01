@@ -52,6 +52,31 @@ public class WorkerParameters {
         }
     }
 
+    public String findDriverClass() {
+        String driverClassOverride = findDriverClassOverride();
+        String driver = findDriver();
+        return driverClassOverride != null ? driverClassOverride : switch (driver) {
+            case "hazelcast-enterprise3" -> "com.hazelcast.simulator.hazelcast3.Hazelcast3Driver";
+            case "hazelcast-enterprise4", "hazelcast4", "hazelcast-enterprise5", "hazelcast5" ->
+                    "com.hazelcast.simulator.hazelcast4plus.Hazelcast4PlusDriver";
+            default -> throw new IllegalStateException(
+                    "No default \"driver_class\" found for \"" + driver + "\" please specify it explicitly");
+        };
+    }
+
+    private String findDriverClassOverride() {
+        String driverClassOverride = map.get("driver_class");
+        if (driverClassOverride != null) {
+            return driverClassOverride;
+        }
+
+        if (getWorkerType().equals("member")) {
+            return map.get("node_driver_class");
+        } else {
+            return map.get("loadgenerator_driver_class");
+        }
+    }
+
     public Map<String, String> asMap() {
         return map;
     }
