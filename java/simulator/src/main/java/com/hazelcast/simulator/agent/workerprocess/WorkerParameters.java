@@ -58,7 +58,7 @@ public class WorkerParameters {
         return driverClassOverride != null ? driverClassOverride : switch (driver) {
             case "hazelcast-enterprise3" -> "com.hazelcast.simulator.hazelcast3.Hazelcast3Driver";
             case "hazelcast-enterprise4", "hazelcast4", "hazelcast-enterprise5", "hazelcast5" ->
-                    "com.hazelcast.simulator.hazelcast4plus.Hazelcast4PlusDriver";
+                    "com.hazelcast.simulator.hazelcast4plus.Hazelcast4PlusMultiDriver";
             default -> throw new IllegalStateException(
                     "No default \"driver_class\" found for \"" + driver + "\" please specify it explicitly");
         };
