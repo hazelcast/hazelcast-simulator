@@ -30,6 +30,7 @@ import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -64,22 +65,27 @@ public class LongByteArrayMapTest extends HazelcastTest {
     public int fixedKeyProbability = 0;
 
     private byte[][] values;
-    private final List<IMap<Long, byte[]>> maps = new ArrayList<>();
+    private final List<List<IMap<Long, byte[]>>> maps = new ArrayList<>();
     private final Executor callerRuns = Runnable::run;
     private final Random random = new Random();
 
     @Setup
     public void setUp() {
-        for (int i = 0; i < mapCount; i++) {
-            String mapName = (mapCount == 1) ? name : name + "_" + i;
-            maps.add(targetInstance.getMap(mapName));
+        for (var instance : getTargetInstances()) {
+            List<IMap<Long, byte[]>> mapsForInstance = new ArrayList<>();
+            maps.add(mapsForInstance);
+            for (int i = 0; i < mapCount; i++) {
+                String mapName = (mapCount == 1) ? name : name + "_" + i;
+                mapsForInstance.add(instance.getMap(mapName));
+            }
         }
         values = generateByteArrays(valueCount, minValueLength, maxValueLength);
     }
 
     @Prepare(global = true)
     public void prepare() {
-        for (IMap<Long, byte[]> map : maps) {
+        // We only need to use one instance to prepare the maps
+        for (IMap<Long, byte[]> map : maps.get(0)) {
             Streamer<Long, byte[]> streamer = StreamerFactory.getInstance(map);
             for (long key = 0; key < keyDomain; key++) {
                 byte[] value = values[random.nextInt(valueCount)];
@@ -90,7 +96,7 @@ public class LongByteArrayMapTest extends HazelcastTest {
     }
 
     private IMap<Long, byte[]> getRandomMap() {
-        return maps.get(random.nextInt(mapCount));
+        return maps.get(random.nextInt(maps.size())).get(random.nextInt(mapCount));
     }
 
     @TimeStep(prob = -1)
@@ -173,8 +179,6 @@ public class LongByteArrayMapTest extends HazelcastTest {
 
     @Teardown
     public void tearDown() {
-        for (IMap<Long, byte[]> map : maps) {
-            map.destroy();
-        }
+        maps.stream().flatMap(Collection::stream).forEach(IMap::destroy);
     }
 }

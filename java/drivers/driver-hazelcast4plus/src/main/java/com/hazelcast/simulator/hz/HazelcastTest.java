@@ -25,6 +25,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * An Abstract Hazelcast Test that provides basic behavior so it doesn't need to be repeated for every test.
@@ -52,8 +53,11 @@ public abstract class HazelcastTest {
     @InjectDriver
     private HazelcastInstances targetInstances;
 
-    protected final List<HazelcastInstance> getAllInstances() {
-        return targetInstances == null ? null : targetInstances.values();
+    protected final List<HazelcastInstance> getTargetInstances() {
+        if (targetInstances == null) {
+            throw new IllegalStateException("Cannot access injected field until it has been initialised");
+        }
+        return targetInstances.values();
     }
 
     public IAtomicLong getAtomicLong(String name) {
