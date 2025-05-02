@@ -149,13 +149,13 @@ public class LongByteArrayMapTest extends HazelcastTest {
     }
 
     public class ThreadState extends BaseThreadState {
-        public static final int HUNDRED = 100;
+        public static final int HIGHEST_PROBABILITY = 100;
         private Pipelining<byte[]> pipeline;
         private int i;
 
         private long randomKey() {
             if (fixedKeyDomain > 0 && fixedKeyDomain < keyDomain && fixedKeyProbability > 0 &&
-                    randomInt(HUNDRED) < fixedKeyProbability) {
+                    randomInt(HIGHEST_PROBABILITY) < fixedKeyProbability) {
                 return randomLong(fixedKeyDomain);
             }
             return randomLong(keyDomain);
