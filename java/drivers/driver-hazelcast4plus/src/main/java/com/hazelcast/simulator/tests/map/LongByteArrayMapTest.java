@@ -52,16 +52,15 @@ public class LongByteArrayMapTest extends HazelcastTest {
     public int getAllSize = 5;
     public int mapCount = 1;
     /**
-     * The percentage of total keys to be used as fixed key domain. If set to 0, all
-     * keys are random. you need to also set the fixedKeysProbability to a value
-     * greater than 0 to make the fixed key domain to be used.
+     * The fixed keys to be used in the test. If set to 0, all
+     * keys are random. It should be less than the {@code keyDomain}.
      */
-    public int fixedKeysPercentage = 0;
+    public int fixedKeyDomain = 0;
     /**
-     * The probability of using a fixed key from the fixed key domain. This is only
-     * used if fixedKeysPercentage is set to a value greater than 0.
+     * The probability of using a fixed key from the {@code fixedKeyDomain}.
+     * It is used if {@code fixedKeyPercentage} is set to a value greater than 0.
      */
-    public int fixedKeysProbability = 0;
+    public int fixedKeyProbability = 0;
 
     private byte[][] values;
     private final List<IMap<Long, byte[]>> maps = new ArrayList<>();
@@ -150,19 +149,14 @@ public class LongByteArrayMapTest extends HazelcastTest {
     }
 
     public class ThreadState extends BaseThreadState {
+        public static final int HUNDRED = 100;
         private Pipelining<byte[]> pipeline;
         private int i;
-        private int fixedKeysDomain;
-
-        public ThreadState() {
-            if (fixedKeysPercentage > 0) {
-                fixedKeysDomain = keyDomain * (fixedKeysPercentage / 100);
-            }
-        }
 
         private long randomKey() {
-            if (fixedKeysDomain > 0 && randomInt(100) < fixedKeysProbability) {
-                return randomLong(fixedKeysDomain);
+            if (fixedKeyDomain > 0 && fixedKeyDomain < keyDomain && fixedKeyProbability > 0 &&
+                    randomInt(HUNDRED) < fixedKeyProbability) {
+                return randomLong(fixedKeyDomain);
             }
             return randomLong(keyDomain);
         }
