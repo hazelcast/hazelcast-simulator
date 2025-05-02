@@ -51,6 +51,16 @@ public class LongByteArrayMapTest extends HazelcastTest {
     public int pipelineIterations = 100;
     public int getAllSize = 5;
     public int mapCount = 1;
+    /**
+     * The fixed keys to be used in the test. If set to 0, all
+     * keys are random. It should be less than the {@code keyDomain}.
+     */
+    public int fixedKeyDomain = 0;
+    /**
+     * The probability of using a fixed key from the {@code fixedKeyDomain}.
+     * It is used if {@code fixedKeyPercentage} is set to a value greater than 0.
+     */
+    public int fixedKeyProbability = 0;
 
     private byte[][] values;
     private final List<IMap<Long, byte[]>> maps = new ArrayList<>();
@@ -139,10 +149,15 @@ public class LongByteArrayMapTest extends HazelcastTest {
     }
 
     public class ThreadState extends BaseThreadState {
+        public static final int HIGHEST_PROBABILITY = 100;
         private Pipelining<byte[]> pipeline;
         private int i;
 
         private long randomKey() {
+            if (fixedKeyDomain > 0 && fixedKeyDomain < keyDomain && fixedKeyProbability > 0 &&
+                    randomInt(HIGHEST_PROBABILITY) < fixedKeyProbability) {
+                return randomLong(fixedKeyDomain);
+            }
             return randomLong(keyDomain);
         }
 
