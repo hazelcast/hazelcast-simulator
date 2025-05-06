@@ -29,13 +29,14 @@ import org.apache.logging.log4j.Logger;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-
+import java.util.Map;
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 import static com.hazelcast.simulator.utils.ReflectionUtils.getFieldValue;
 import static com.hazelcast.simulator.utils.VersionUtils.isMinVersion;
 import static java.lang.String.format;
+import static java.util.Comparator.comparingInt;
 import static org.junit.Assert.fail;
 
 public final class HazelcastTestUtils {
@@ -115,5 +116,23 @@ public final class HazelcastTestUtils {
         if (!isMinVersion(minVersion, actualVersion)) {
             fail(format(message, minVersion));
         }
+    }
+
+    /**
+     * Assign an object to an index in a fair way so that the difference between min/max indexes assigned to any key is 1
+     *
+     * @param indexUpperBound The upper bound (exclusive) of the contiguous index range [0, indexUpperBound)
+     * @param key The object to assign to an index
+     * @param keysToIndexes The current mapping of keys to indexes
+     * @return The index assigned
+     * @param <K> The key type
+     */
+    public static <K> int assignKeyToIndex(int indexUpperBound, K key, Map<K, Integer> keysToIndexes) {
+        if (keysToIndexes.containsKey(key)) return keysToIndexes.get(key);
+        var indexChosenCounts = new int[indexUpperBound];
+        keysToIndexes.values().forEach(i -> indexChosenCounts[i]++);
+        int clientIndex = java.util.stream.IntStream.range(0, indexUpperBound).boxed().min(comparingInt(i -> indexChosenCounts[i])).orElse(0);
+        keysToIndexes.put(key, clientIndex);
+        return clientIndex;
     }
 }
