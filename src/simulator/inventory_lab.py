@@ -30,7 +30,6 @@ def lab_apply(inventory_plan):
     with open(__INVENTORY_FILE, 'w') as f:
         f.write(yaml.dump(output))
 
-
 def __configure_group_inventory(group_plan, lab_addresses, bandwidth):
     output = {}
     group_size = group_plan["count"]
