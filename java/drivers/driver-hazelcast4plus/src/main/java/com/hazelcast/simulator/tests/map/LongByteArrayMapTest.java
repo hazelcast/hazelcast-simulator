@@ -53,7 +53,8 @@ public class LongByteArrayMapTest extends HazelcastTest {
     public int mapCount = 1;
     /**
      * The fixed keys to be used in the test. If set to 0, all
-     * keys are random. It should be less than the {@code keyDomain}.
+     * keys are random. Currently the only {@code get} operation uses it.
+     * It should be less than the {@code keyDomain}.
      */
     public int fixedKeyDomain = 0;
     /**
@@ -94,7 +95,7 @@ public class LongByteArrayMapTest extends HazelcastTest {
 
     @TimeStep(prob = -1)
     public byte[] get(ThreadState state) {
-        return getRandomMap().get(state.randomKey());
+        return getRandomMap().get(state.fixedKeyOrRandom());
     }
 
     @TimeStep(prob = -1)
@@ -153,11 +154,15 @@ public class LongByteArrayMapTest extends HazelcastTest {
         private Pipelining<byte[]> pipeline;
         private int i;
 
-        private long randomKey() {
+        private long fixedKeyOrRandom() {
             if (fixedKeyDomain > 0 && fixedKeyDomain < keyDomain && fixedKeyProbability > 0 &&
                     randomInt(HIGHEST_PROBABILITY) < fixedKeyProbability) {
                 return randomLong(fixedKeyDomain);
             }
+            return randomKey();
+        }
+
+        private long randomKey() {
             return randomLong(keyDomain);
         }
 
