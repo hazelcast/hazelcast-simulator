@@ -60,7 +60,8 @@ public class WorkerParameters {
             case "hazelcast-enterprise4", "hazelcast4", "hazelcast-enterprise5", "hazelcast5" ->
                     "com.hazelcast.simulator.hazelcast4plus.Hazelcast4PlusMultiDriver";
             default -> throw new IllegalStateException(
-                    "No default \"driver_class\" found for \"" + driver + "\" please specify it explicitly");
+                    "No default driver class found for driver \"" + driver + "\". Specify it explicitly using the "
+                            + "parameter \"driver_class\" alongside the \"driver\" parameter in tests.yaml");
         };
     }
 
