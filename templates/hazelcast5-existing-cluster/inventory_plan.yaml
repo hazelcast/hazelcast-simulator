@@ -3,11 +3,11 @@ provisioner: existing-cluster
 cluster_name: <cluster_name>
 
 nodes:
-    private_ip: <private_ip>
+  - private_ip: <private_ip>
     public_ip: <public_ip>
     user: <ssh_username>
 
 loadgenerators:
-    private_ip: <private_ip>
+  - private_ip: <private_ip>
     public_ip: <public_ip>
     user: <ssh_username>
