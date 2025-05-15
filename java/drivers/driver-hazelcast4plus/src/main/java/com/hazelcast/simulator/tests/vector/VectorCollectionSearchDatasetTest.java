@@ -1,10 +1,8 @@
 package com.hazelcast.simulator.tests.vector;
 
 import com.hazelcast.config.vector.Metric;
-import com.hazelcast.config.vector.VectorCollectionConfig;
-import com.hazelcast.config.vector.VectorIndexConfig;
 import com.hazelcast.core.Pipelining;
-import com.hazelcast.simulator.hz.HazelcastTest;
+import com.hazelcast.query.Predicate;
 import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -13,7 +11,6 @@ import com.hazelcast.simulator.tests.vector.model.TestDataset;
 import com.hazelcast.vector.SearchOptions;
 import com.hazelcast.vector.SearchOptionsBuilder;
 import com.hazelcast.vector.SearchResults;
-import com.hazelcast.vector.VectorCollection;
 import com.hazelcast.vector.VectorDocument;
 import com.hazelcast.vector.VectorValues;
 import com.hazelcast.vector.impl.Hints;
@@ -26,7 +23,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
@@ -37,6 +33,8 @@ public class VectorCollectionSearchDatasetTest extends VectorCollectionDatasetTe
 
     // search parameters
     public int numberOfSearchIterations = Integer.MAX_VALUE;
+    // number of results that are recoded for precision evaluation
+    public int recordedResultCount = Integer.MAX_VALUE;
 
     public int limit;
     public boolean includeVectors = true;
@@ -82,18 +80,20 @@ public class VectorCollectionSearchDatasetTest extends VectorCollectionDatasetTe
 
         if (collection.size() == size) {
             logger.info("Collection seems to be already filled - reusing existing data.");
+            // reader will no longer be needed
+            reader = null;
             return;
         }
 
         var indexBuildTimeStart = System.currentTimeMillis();
 
-        Map<Integer, VectorDocument<Integer>> buffer = new HashMap<>();
+        Map<Integer, VectorDocument<Object>> buffer = new HashMap<>();
         Pipelining<Void> pipelining = new Pipelining<>(MAX_PUT_ALL_IN_FLIGHT);
         logger.info("Start loading data...");
 
         int index = 0;
         while (index < size) {
-            buffer.put(index, VectorDocument.of(index % testDataSetSize, VectorValues.of(reader.getTrainVector(index % testDataSetSize))));
+            buffer.put(index, VectorDocument.of(getValue(index % testDataSetSize), VectorValues.of(reader.getTrainVector(index % testDataSetSize))));
             index++;
             if (buffer.size() % PUT_BATCH_SIZE == 0) {
                 addToPipelineWithLogging(pipelining, collection.putAllAsync(buffer));
@@ -147,23 +147,55 @@ public class VectorCollectionSearchDatasetTest extends VectorCollectionDatasetTe
         }
         var vector = testDataset.getSearchVector(iteration % testDataset.size());
 
+        SearchOptions effectiveOptions;
+        if (hasRandomFilter()) {
+            var filter = createFilter();
+            effectiveOptions = options.toBuilder().predicate(filter.predicate()).build();
+        } else {
+            var testDatasetFilter = testDataset.getSearchConditions(iteration % testDataset.size());
+
+            effectiveOptions = testDatasetFilter != null
+                    ? options.toBuilder().predicate(testDatasetFilter).build()
+                    : options;
+        }
+
         var result = collection.searchAsync(
                 VectorValues.of(vector),
-                options
+                effectiveOptions
         ).toCompletableFuture().join();
-        if (iteration < testDataset.size()) {
-            searchResults.add(new TestSearchResult(iteration, vector, result));
+        if (iteration < Math.min(recordedResultCount, testDataset.size())) {
+            searchResults.add(new TestSearchResult(iteration, vector, effectiveOptions.getPredicate(), result));
         }
     }
 
     @Teardown(global = true)
     public void afterRun() {
-        searchResults.forEach(testSearchResult -> {
+        var evaluationTimeMs = withTimer(() -> searchResults.forEach(testSearchResult -> {
             int index = testSearchResult.index();
             List<Integer> ids = new ArrayList<>();
             VectorUtils.forEach(testSearchResult.results, r -> ids.add((Integer) r.getKey()));
-            scoreMetrics.set((int) (testDataset.getPrecision(ids, index, limit) * 100));
-        });
+
+            if (!hasRandomFilter() || testSearchResult.predicate == null) {
+                // use ground truth from the dataset
+                scoreMetrics.set((int) (testDataset.getPrecision(ids, index, limit) * 100));
+            } else {
+                if (index == 0) {
+                    logger.info("Computing ground truth for {} results", searchResults.size());
+                }
+                // evaluate ground truth on the collection
+                List<Integer> gtIds = new ArrayList<>();
+                var gtOpts = SearchOptions.builder()
+                        .limit(limit)
+                        // get 100% accurate results
+                        .hint(Hints.PARTITION_LIMIT, limit)
+                        .hint(Hints.USE_FULL_SCAN, true)
+                        .predicate(testSearchResult.predicate).build();
+                var gtResults = collection.searchAsync(VectorValues.of(testSearchResult.searchVector), gtOpts).toCompletableFuture().join();
+                VectorUtils.forEach(gtResults, r -> gtIds.add((Integer) r.getKey()));
+
+                scoreMetrics.set((int) (TestDataset.getPrecision(ids, limit, gtIds.stream().mapToInt(i -> i).toArray()) * 100));
+            }
+        }));
 
         writeAllSearchResultsToFile("precision_" + name + ".out");
         appendStatisticsToFile();
@@ -176,11 +208,14 @@ public class VectorCollectionSearchDatasetTest extends VectorCollectionDatasetTe
         logger.info("The percentage of results with precision lower than 98%: {}", scoreMetrics.getPercentLowerThen(98));
         logger.info("The percentage of results with precision lower than 99%: {}", scoreMetrics.getPercentLowerThen(99));
         logger.info("Total results: {}", scoreMetrics.getTotalCount());
+        logger.info("Evaluation took: {} ms", evaluationTimeMs);
 
         searchResults.clear();
     }
 
-    public record TestSearchResult(int index, float[] searchVector, SearchResults<?, ?> results) {
+    public record TestSearchResult(int index, float[] searchVector,
+                                   Predicate<?, ?> predicate,
+                                   SearchResults<?, ?> results) {
     }
 
     private void writeAllSearchResultsToFile(String fileName) {

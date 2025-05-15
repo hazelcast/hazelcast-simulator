@@ -12,6 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class VectorCollectionPutDatasetTest extends VectorCollectionDatasetTestBase {
 
+    public boolean stopAfterOptimize = true;
     public int putBatchSize = 2_000;
 
     private final AtomicInteger counter = new AtomicInteger(0);
@@ -42,7 +43,7 @@ public class VectorCollectionPutDatasetTest extends VectorCollectionDatasetTestB
             testContext.stop();
             return;
         }
-        Map<Integer, VectorDocument<Integer>> buffer = new HashMap<>();
+        Map<Integer, VectorDocument<Object>> buffer = new HashMap<>();
         for (int i = 0; i < putBatchSize; i++) {
             var key = iteration + i;
             if (key >= testDataSetSize) {
@@ -92,7 +93,10 @@ public class VectorCollectionPutDatasetTest extends VectorCollectionDatasetTestB
         } else {
             logger.info("Cleanup time: {} ms", cleanupTimer);
         }
-        testContext.stop();
+
+        if (stopAfterOptimize) {
+            testContext.stop();
+        }
     }
 
 }
