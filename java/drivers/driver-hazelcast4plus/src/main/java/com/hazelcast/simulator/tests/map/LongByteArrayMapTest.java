@@ -16,6 +16,7 @@
 
 package com.hazelcast.simulator.tests.map;
 
+import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.Pipelining;
 import com.hazelcast.map.IMap;
 import com.hazelcast.simulator.hz.HazelcastTest;
@@ -79,7 +80,7 @@ public class LongByteArrayMapTest extends HazelcastTest {
 
     @Setup
     public void setUp() {
-        for (var instance : getTargetInstances()) {
+        for (HazelcastInstance instance : getTargetInstances()) {
             List<IMap<Long, byte[]>> mapsForInstance = new ArrayList<>();
             maps.add(mapsForInstance);
             for (int i = 0; i < mapCount; i++) {

@@ -40,7 +40,7 @@ public class Hazelcast4PlusMultiDriver
     public void close()
             throws IOException {
         IOException err = null;
-        for (var delegate : delegates) {
+        for (Hazelcast4PlusDriver delegate : delegates) {
             try {
                 delegate.close();
             } catch (IOException e) {
