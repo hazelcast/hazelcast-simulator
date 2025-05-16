@@ -4,7 +4,12 @@ import glob
 import re
 
 __INVENTORY_FILE = "inventory.yaml"
-__AGENT_START_PATH = os.path.join("..", "bin", "hidden", "agent_start")
+# Get absolute path of current script's directory
+__SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Build path to agent_start relative to this script
+__AGENT_START_PATH = os.path.join(__SCRIPT_DIR, "..", "..", "bin", "hidden", "agent_start")
+__AGENT_START_PATH = os.path.abspath(__AGENT_START_PATH)  # Clean up the path
 
 
 def existing_cluster_destroy():
@@ -47,20 +52,25 @@ def __write_yaml(path, data):
     with open(path, 'w') as f:
         yaml.dump(data, f, default_flow_style=False)
 
-def __substitute_cluster_name(cluster_name, search_dir="."):
+def __substitute_cluster_name(cluster_name):
     placeholder_start = "<cluster-name>"
     placeholder_end = "</cluster-name>"
-    for filepath in glob.glob(os.path.join(search_dir, "**"), recursive=True):
-        if not os.path.isfile(filepath) or filepath.endswith(".yaml"):
-            continue
-        with open(filepath, "r") as file:
-            content = file.read()
-        if placeholder_start in content:
-            new_content = content.replace(
-                f"{placeholder_start}{cluster_name}{placeholder_end}", cluster_name
-            )
-            with open(filepath, "w") as file:
-                file.write(new_content)
+    file_name = "client-hazelcast.xml"
+
+    if not os.path.isfile(file_name):
+        raise FileNotFoundError(f"{file_name} not found in current directory: {os.getcwd()}")
+
+    with open(file_name, "r") as file:
+        content = file.read()
+
+    if placeholder_start in content:
+        new_content = content.replace(
+            f"{placeholder_start}default-cluster{placeholder_end}",
+            f"{placeholder_start}{cluster_name}{placeholder_end}"
+        )
+        with open(file_name, "w") as file:
+            file.write(new_content)
+
 
 def __replace_java_kill_block(file_path):
     with open(file_path, 'r') as file:
