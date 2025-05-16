@@ -18,6 +18,7 @@ package com.hazelcast.simulator.worker.testcontainer;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.probes.LatencyProbe;
 import com.hazelcast.simulator.probes.impl.HdrLatencyProbe;
+import com.hazelcast.simulator.drivers.Convertible;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.InjectTestContext;
 import com.hazelcast.simulator.test.annotations.InjectDriver;
@@ -211,10 +212,16 @@ public class PropertyBinding {
             if (driverInstance == null) {
                 throw new IllegalTestException("No driver found");
             }
-
-            Class driverType = driverInstance.getClass();
+            Object valueToSet = driverInstance;
+            if (valueToSet instanceof Convertible c) {
+                Object converted = c.convertTo(fieldType);
+                if (converted != null) {
+                    valueToSet = converted;
+                }
+            }
+            Class<?> driverType = valueToSet.getClass();
             assertFieldType(driverType, fieldType, InjectDriver.class);
-            setFieldValue(object, field, driverInstance);
+            setFieldValue(object, field, valueToSet);
         }
     }
 

@@ -76,6 +76,10 @@ Please refer to the [Quickstart](#quickstart) to start your Simulator journey.
     * [Logging](#logging)
     * [Running multiple tests in parallel](#running-multiple-tests-in-parallel)
     * [Various forms of testing](#various-forms-of-testing)
+    * [Network constraints](#network-constraints)
+    * [CP subsystem leader priority](#cp-subsystem-leader-priority)
+    * [Persistence](#persistence)
+    * [Running multiple clients per loadgenerator](#running-multiple-clients-per-loadgenerator-worker)
 - [Get Help](#get-help)
 
 # Quickstart
@@ -418,9 +422,9 @@ should be conducted in.
 | Property                               | Example value    | Description                                                                                                                                 |
 |----------------------------------------|------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
 | `name`                                 | `read_only`      | The name of the test suite (overriden by test-specific values)                                                                              |
-| `repititions`                          | `1`              | The number of times this test suite should run (1 or more)                                                                                  |
+| `repetitions`                          | `1`              | The number of times this test suite should run (1 or more)                                                                                  |
 | `duration`                             | `300s`           | The amount of time this test suite should run for (45m, 1h, 2d, etc.)                                                                       |
-| `clients`                              | `1`              | The number of Hazelcast Clients to use in this test suite (hosted on `loadgenerator_hosts`                                                  |
+| `clients`                              | `1`              | The number of loadgenerator workers to use in this test suite (hosted on `loadgenerator_hosts`                                              |
 | `members`                              | `1`              | The number of Hazelcast Members to use in this test suite (hosted on `node_hosts`)                                                          |
 | `loadgenerator_hosts`                  | `loadgenerators` | Defines the host for Clients, based on either `loadgenerators` or `nodes`, allowing both separate and mixed client/member setups            |
 | `node_hosts`                           | `nodes`          | Defines the host for Members - this should generally always be `nodes`, and only `loadgenerator_hosts` should be changed for mixed testing. |
@@ -435,6 +439,7 @@ should be conducted in.
 | `license_key`                          | `your_ee_key`    | The Hazelcast Enterprise Edition license to use in your test, if using `hazelcast-enterprise5` drivers                                      |
 | `parallel`                             | `True`           | Defines whether tests should be run in parallel when multiple tests are defined within 1 suite (default false)                              |
 | `cp_priorities` | <pre>- address: internalIp<br> &nbsp;priority: 1</pre> | Defines the leadership priority of the CP Subsystem members in the cluster. Use the internal IP address of the agent(s) you wish to configure. |
+| `clients_per_loadgenerator`            | `1`              | The number of Hazelcast client instances per loadgenerator worker (default 1)                                                               |
 
 ### Specify test class(es) and number of threads per worker
 
@@ -1887,6 +1892,58 @@ Parameters:
 
 `mount_path:` Defines the directory where the device will be mounted (e.g., /dir/to/persistence).
 
+## Running multiple clients per loadgenerator worker
+By default, each simulator worker uses a single Hazelcast instance. For workers using the Hazelcast Java client the number of 
+clients is configurable and can be increased. This can be useful when benchmarking how a Hazelcast cluster behaves with a high 
+number of client connections as having a single client per worker process is expensive with thousands of clients. To configure this
+value you can set the `clients_per_loadgenerator` value in the `tests.yaml` file. For example the following snippet will configure
+600 loadgenerator processes each with 10 Hazelcast client instances
+
+```yaml
+- name: many_clients_test
+  duration: 5m
+  repetitions: 1
+  node_count: 10
+  loadgenerator_count: 600
+  clients_per_loadgenerator: 10
+  driver: hazelcast-enterprise5
+  # ...
+```
+
+How the clients are used is **test specific** and most current test implementations simply ignore all but one of the clients. One
+test which works with multiple clients is `LongByteArrayMapTest` which evenly assigns simulator threads to clients in a many to 1 
+fashion. For example the following config will assign each simulator test thread a single client.
+
+```yaml
+    - class: com.hazelcast.simulator.tests.map.LongByteArrayMapTest
+      name: map
+      threadCount: 10
+      getProb: 0.9
+      putProb: 0.1
+```
+
+With `threadCount: 20` each client would have 2 threads assigned to it. If `threadCount < clients_per_loadgenerator` then the 
+extra clients will simply be ignored.
+
+### Using the clients in a test
+
+When implementing your own test it is recommended to extend `HazelcastTest`, this provides a method available to subclasses:
+
+```java
+protected final List<HazelcastInstance> getTargetInstances() {
+    // ...
+}
+```
+
+which allows access to the client instances. If you don't want to subclass this class then you can use the `@InjectDriver` 
+annotation on your own class with the `HazelcastInstances` type, like:
+
+```java
+class MySimulatorTest {
+    @InjectDriver
+    HazelcastInstances instances;
+}
+```
 
 # Get Help
 
