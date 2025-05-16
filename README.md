@@ -79,7 +79,7 @@ Please refer to the [Quickstart](#quickstart) to start your Simulator journey.
     * [Network constraints](#network-constraints)
     * [CP subsystem leader priority](#cp-subsystem-leader-priority)
     * [Persistence](#persistence)
-    * [Client count scaling](#client-count-scaling)
+    * [Running multiple clients per loadgenerator](#running-multiple-clients-per-loadgenerator-worker)
 - [Get Help](#get-help)
 
 # Quickstart
@@ -1892,7 +1892,7 @@ Parameters:
 
 `mount_path:` Defines the directory where the device will be mounted (e.g., /dir/to/persistence).
 
-## Client count scaling
+## Running multiple clients per loadgenerator worker
 By default, each simulator worker uses a single Hazelcast instance. For workers using the Hazelcast Java client the number of 
 clients is configurable and can be increased. This can be useful when benchmarking how a Hazelcast cluster behaves with a high 
 number of client connections as having a single client per worker process is expensive with thousands of clients. To configure this
@@ -1924,6 +1924,26 @@ fashion. For example the following config will assign each simulator test thread
 
 With `threadCount: 20` each client would have 2 threads assigned to it. If `threadCount < clients_per_loadgenerator` then the 
 extra clients will simply be ignored.
+
+### Using the clients in a test
+
+When implementing your own test it is recommended to extend `HazelcastTest`, this provides a method available to subclasses:
+
+```java
+protected final List<HazelcastInstance> getTargetInstances() {
+    // ...
+}
+```
+
+which allows access to the client instances. If you don't want to subclass this class then you can use the `@InjectDriver` 
+annotation on your own class with the `HazelcastInstances` type, like:
+
+```java
+class MySimulatorTest {
+    @InjectDriver
+    HazelcastInstances instances;
+}
+```
 
 # Get Help
 
