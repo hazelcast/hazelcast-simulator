@@ -6,6 +6,7 @@ from os import path
 
 from simulator.inventory_terraform import terraform_import, terraform_destroy, terraform_apply
 from simulator.inventory_lab import lab_apply, lab_destroy
+from simulator.inventory_existing_cluster import existing_cluster_apply, existing_cluster_destroy
 from simulator.util import load_yaml_file, exit_with_error, simulator_home, shell, now_seconds
 from simulator.log import info, log_header
 from simulator.ssh import new_key
@@ -320,6 +321,8 @@ class InventoryApplyCli:
                 terraform_apply(inventory_plan, force)
             case "lab":
                 lab_apply(inventory_plan)
+            case "existing-cluster":
+                existing_cluster_apply(inventory_plan)    
             case _:
                 exit_with_error(f"Unrecognized provisioner [{provisioner}]")
 
@@ -353,6 +356,8 @@ class InventoryDestroyCli:
                 terraform_destroy(inventory_plan, force=True)
             case "lab":
                 lab_destroy()
+            case "existing-cluster":
+                existing_cluster_destroy()                
             case _:
                 exit_with_error(f"Unrecognized provisioner [{provisioner}]")
 
