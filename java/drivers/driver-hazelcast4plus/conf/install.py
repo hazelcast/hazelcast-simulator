@@ -71,7 +71,7 @@ def _get_remote_repo(is_enterprise:bool, version:str):
         if version.endswith("-SNAPSHOT"):
             # maven ignores settings.xml authentication unless forced with fully qualified remoteRepositories construct
             # https://maven.apache.org/plugins/maven-dependency-plugin/get-mojo.html
-            return "snapshot-internal::::https://repository.hazelcast.com/snapshot-internal"
+            return "snapshot::::https://repository.hazelcast.com/snapshot/"
         else:
             return "https://repository.hazelcast.com/release"
 

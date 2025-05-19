@@ -27,28 +27,6 @@
                 <enabled>true</enabled>
             </snapshots>
         </repository>
-        <repository>
-            <id>snapshot-internal</id>
-            <name>Hazelcast Internal Snapshots</name>
-            <url>https://repository.hazelcast.com/snapshot-internal/</url>
-            <releases>
-                <enabled>false</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-          </repository>
-          <repository>
-            <id>release-internal</id>
-            <name>Hazelcast Internal</name>
-            <url>https://repository.hazelcast.com/release</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-          </repository>
     </repositories>
 
     <properties>
