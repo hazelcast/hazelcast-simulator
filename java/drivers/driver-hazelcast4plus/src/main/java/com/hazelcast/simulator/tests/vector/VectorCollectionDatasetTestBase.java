@@ -97,7 +97,6 @@ public class VectorCollectionDatasetTestBase extends HazelcastTest {
                                         .setUseDeduplication(useDeduplication)
                         )
         );
-
     }
 
     @Teardown
