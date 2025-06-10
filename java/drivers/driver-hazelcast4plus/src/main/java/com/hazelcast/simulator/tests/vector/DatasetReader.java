@@ -35,6 +35,8 @@ public abstract class DatasetReader {
 
     protected float[][] trainDataset;
 
+    protected Object[] payloads;
+
     protected TestDataset testDataset;
 
     protected int dimension;
@@ -87,6 +89,10 @@ public abstract class DatasetReader {
 
     public float[] getTrainVector(int index) {
         return trainDataset[index];
+    }
+
+    public Object getPayload(int index) {
+        return payloads != null ? payloads[index] : null;
     }
 
     public TestDataset getTestDataset() {
@@ -144,7 +150,7 @@ public abstract class DatasetReader {
             var ext = FilenameUtils.getExtension(datasetUrl.getFile());
             return switch (ext) {
                 case "hdf5" -> new HDF5DatasetReader(url, directory, normalizeVector, testOnly);
-                case "tgz" -> new NpyArchiveDatasetReader(url, directory, normalizeVector, testOnly);
+                case "tgz", "gz" -> new NpyArchiveDatasetReader(url, directory, normalizeVector, testOnly);
                 default -> throw new UnsupportedOperationException("File " + ext + " is not supported");
             };
         } catch (MalformedURLException e) {
