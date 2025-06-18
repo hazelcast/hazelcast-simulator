@@ -4,13 +4,13 @@
 import time
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 from matplotlib.dates import DateFormatter
 from matplotlib.ticker import FuncFormatter
 from pandas.errors import EmptyDataError
 
 from simulator.log import warn
 from simulator.perftest_report_common import *
-import matplotlib.pyplot as plt
 from simulator.util import shell, simulator_home, read_file, write_file
 
 
@@ -97,7 +97,7 @@ def __process_hdr(config: ReportConfig, run_dir, run_label):
     os.remove(hdr_batch_process_details)
 
     duration_sec = time.time() - start_sec
-    log_sub_section(f"Processing hdr files: Done {duration_sec:.2f} seconds)")
+    log_sub_section(f"Processing hdr files: Done {duration_sec:.2f} seconds")
 
 
 def __prepare_hdr_file(config: ReportConfig, run_label, worker_id, hdr_file, batch_process_output):
