@@ -19,7 +19,7 @@ public class PoorSqlTest extends HazelcastTest {
     public String mapName = "poorsqlmap";
     public int maxLeId = 1_500;
     public int size = 0;
-    public boolean useLargeJson = false;
+    public int jsonSize = 0;
 
     public static int PIPLINE_SIZE = 200;
 
@@ -45,7 +45,7 @@ public class PoorSqlTest extends HazelcastTest {
     @TimeStep
     public void putAsync(ThreadState state) throws InterruptedException, ExecutionException {
 
-        var bulk = 1_000;
+        var bulk = 500;
         var map = getMap();
         if (size > 0 && map.size() > size) {
             testContext.stop();
@@ -55,17 +55,12 @@ public class PoorSqlTest extends HazelcastTest {
             var leId = generateLeId();
             state.run(
                     map.putAsync(generateId(),
-                            useLargeJson ?
-                                    buildJsonLarge(
-                                            leId,
-                                            "fmId" + leId,
-                                            "FND001"
-                                    ) :
-                                    buildJson(
-                                            leId,
-                                            "fmId" + leId,
-                                            "FND001"
-                                    )
+                            buildJson(
+                                    leId,
+                                    "fmId" + leId,
+                                    "FND001",
+                                    jsonSize
+                            )
                     )
             );
         }
@@ -93,7 +88,7 @@ public class PoorSqlTest extends HazelcastTest {
         }
     }
 
-    public static HazelcastJsonValue buildJson(String leId, String fmId, String fundCode) {
+    public static HazelcastJsonValue buildJsonSmall(String leId, String fmId, String fundCode) {
         String timestamp = Instant.now().toString();
         var json = """
                 {
@@ -113,7 +108,7 @@ public class PoorSqlTest extends HazelcastTest {
         return new HazelcastJsonValue(json);
     }
 
-    public static HazelcastJsonValue buildJsonLarge(String leId, String fmId, String fundCode) {
+    public static HazelcastJsonValue buildJsonReal(String leId, String fmId, String fundCode) {
         String timestamp = Instant.now().toString();
 
         var json = """
@@ -144,6 +139,10 @@ public class PoorSqlTest extends HazelcastTest {
                         "extraField7": "extraValue7",
                         "extraField8": "extraValue8",
                         "extraField9": "extraValue9",
+                        "extraField10": "extraValue9",
+                        "extraField11": "extraValue9",
+                        "extraField12": "extraValue9",
+                        "extraField13": "extraValue9",
                         "permissions": {
                           "view": true,
                           "edit": false,
@@ -219,5 +218,28 @@ public class PoorSqlTest extends HazelcastTest {
         );
 
         return new HazelcastJsonValue(json);
+    }
+
+    public static HazelcastJsonValue buildJson(String leId, String fmId, String fundCode, int extraFieldCount) {
+        StringBuilder jsonBuilder = new StringBuilder();
+
+        jsonBuilder.append("{\n");
+        jsonBuilder.append("  \"data\": {\n");
+        jsonBuilder.append("    \"fmProfile\": {\n");
+        jsonBuilder.append("      \"fmAccount\": {\n");
+        jsonBuilder.append("        \"leId\": \"").append(leId).append("\",\n");
+        jsonBuilder.append("        \"fmId\": \"").append(fmId).append("\",\n");
+        jsonBuilder.append("        \"fundCode\": \"").append(fundCode).append("\"\n");
+        jsonBuilder.append("      }\n");
+        jsonBuilder.append("    }\n");
+        jsonBuilder.append("  }");
+
+        for (int i = 1; i <= extraFieldCount; i++) {
+            jsonBuilder.append(",\n  \"extraField").append(i).append("\": \"value").append(i).append("\"");
+        }
+        jsonBuilder.append(",\n  \"leIdLast").append("\": \"").append(leId).append("\"");
+        jsonBuilder.append("\n}");
+
+        return new HazelcastJsonValue(jsonBuilder.toString());
     }
 }
