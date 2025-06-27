@@ -13,7 +13,8 @@
     </parent>
 
     <properties>
-        <hazelcast.version>6.0.0-SNAPSHOT</hazelcast.version>
+        <hazelcast.version>5.5.0</hazelcast.version>
+        <hazelcast-enterprise.version>5.5.6</hazelcast-enterprise.version>
         <main.basedir>${project.parent.basedir}</main.basedir>
         <netty.version>4.1.119.Final</netty.version>
         <netty-tcnative.version>2.0.70.Final</netty-tcnative.version>
@@ -74,7 +75,7 @@
         <dependency>
             <groupId>com.hazelcast</groupId>
             <artifactId>hazelcast-enterprise</artifactId>
-            <version>${hazelcast.version}</version>
+            <version>${hazelcast-enterprise.version}</version>
         </dependency>
 
         <dependency>

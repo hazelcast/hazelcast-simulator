@@ -66,7 +66,7 @@ public class VectorCollectionSearchDatasetTest extends VectorCollectionDatasetTe
                 .setIncludeVectors(includeVectors)
                 .limit(limit);
         if (efSearch != null) {
-            optionsBuilder.hint(Hints.EF_SEARCH, efSearch);
+            //optionsBuilder.hint(Hints.EF_SEARCH, efSearch);
         }
         if (singleStage) {
             optionsBuilder.hint(Hints.FORCE_SINGLE_STAGE_SEARCH, true);

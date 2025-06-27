@@ -47,9 +47,9 @@ public class VectorCollectionDatasetTestBase extends HazelcastTest {
 
     //region graph parameters
     public String metric;
-    public int maxDegree = VectorIndexConfig.DEFAULT_MAX_DEGREE;
-    public int efConstruction = VectorIndexConfig.DEFAULT_EF_CONSTRUCTION;
-    public boolean useDeduplication = VectorIndexConfig.DEFAULT_USE_DEDUPLICATION;
+    public int maxDegree = 32;
+    public int efConstruction = 100;
+    public boolean useDeduplication = true;
     //endregion
 
 
@@ -86,16 +86,16 @@ public class VectorCollectionDatasetTestBase extends HazelcastTest {
         collection = VectorCollection.getCollection(
                 targetInstance,
                 new VectorCollectionConfig(collectionName)
-                        .setBackupCount(backupCount)
-                        .setAsyncBackupCount(asyncBackupCount)
-                        .addVectorIndexConfig(
-                                new VectorIndexConfig()
-                                        .setMetric(Metric.valueOf(metric))
-                                        .setDimension(dimension)
-                                        .setMaxDegree(maxDegree)
-                                        .setEfConstruction(efConstruction)
-                                        .setUseDeduplication(useDeduplication)
-                        )
+                        //.setBackupCount(backupCount)
+//                        .setAsyncBackupCount(asyncBackupCount)
+//                        .addVectorIndexConfig(
+//                                new VectorIndexConfig()
+//                                        .setMetric(Metric.valueOf(metric))
+//                                        .setDimension(dimension)
+//                                        .setMaxDegree(maxDegree)
+//                                        .setEfConstruction(efConstruction)
+//                                        .setUseDeduplication(useDeduplication)
+//                        )
         );
 
     }
