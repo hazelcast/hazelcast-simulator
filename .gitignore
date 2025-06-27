@@ -17,3 +17,6 @@ src/__pycache__/
 m2/
 .vscode
 myproject
+.venv/
+helloworld/
+intesa-test/
