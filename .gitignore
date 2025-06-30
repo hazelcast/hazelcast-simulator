@@ -20,3 +20,4 @@ myproject
 .venv/
 build-docker.sh
 /simulator-projects/
+simulator-projects
