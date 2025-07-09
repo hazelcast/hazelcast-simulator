@@ -17,12 +17,15 @@ package com.hazelcast.simulator.hz;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.cp.IAtomicLong;
+import com.hazelcast.simulator.hazelcast4plus.HazelcastInstances;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.InjectTestContext;
 import com.hazelcast.simulator.test.annotations.InjectDriver;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.List;
+import java.util.Objects;
 
 /**
  * An Abstract Hazelcast Test that provides basic behavior so it doesn't need to be repeated for every test.
@@ -46,6 +49,16 @@ public abstract class HazelcastTest {
 
     @InjectDriver
     protected HazelcastInstance targetInstance;
+
+    @InjectDriver
+    private HazelcastInstances targetInstances;
+
+    protected final List<HazelcastInstance> getTargetInstances() {
+        if (targetInstances == null) {
+            throw new IllegalStateException("Cannot access injected field until it has been initialised");
+        }
+        return targetInstances.values();
+    }
 
     public IAtomicLong getAtomicLong(String name) {
         return targetInstance.getDistributedObject("hz:impl:atomicLongService", name);
