@@ -4,7 +4,6 @@ import glob
 import re
 
 __INVENTORY_FILE = "inventory.yaml"
-__DEFAULT_NODE_USER = "root"
 
 def existing_cluster_destroy():
     """
@@ -41,7 +40,6 @@ def __generate_inventory_for_existing_cluster(plan):
     The result is written to inventory.yaml.
     """
     def format_hosts(entries):
-        # For loadgenerators: list of dicts
         if entries and isinstance(entries[0], dict):
             return {
                 entry["public_ip"]: {
@@ -98,7 +96,6 @@ def __insert_cluster_members(nodes):
     with open(file_name, "r") as file:
         lines = file.readlines()
 
-    # Find the indentation of the placeholder
     indent = ""
     for line in lines:
         if placeholder in line:
@@ -116,7 +113,6 @@ def __insert_cluster_members(nodes):
             port = "5701"
         addresses.append(f'{indent}<address>{ip}:{port}</address>\n')
 
-    # Build new content, replacing the placeholder line with the addresses
     new_lines = []
     for line in lines:
         if placeholder in line:
