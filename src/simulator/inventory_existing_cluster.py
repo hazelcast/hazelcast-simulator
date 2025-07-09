@@ -4,22 +4,25 @@ import glob
 import re
 
 __INVENTORY_FILE = "inventory.yaml"
-# Get absolute path of current script's directory
-__SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-
-# Build path to agent_start relative to this script
-__AGENT_START_PATH = os.path.join(__SCRIPT_DIR, "..", "..", "bin", "hidden", "agent_start")
-__AGENT_START_PATH = os.path.abspath(__AGENT_START_PATH)  # Clean up the path
-
+__DEFAULT_NODE_USER = "root"
 
 def existing_cluster_destroy():
+    """
+    Removes the generated inventory.yaml file if it exists.
+    Used to clean up the environment configuration for an existing cluster.
+    """
     try:
         os.remove(__INVENTORY_FILE)
     except OSError:
         pass
 
 def existing_cluster_apply(inventory_plan):
-
+    """
+    Applies the given inventory plan for an existing cluster:
+    - Generates inventory.yaml (only from loadgenerators section)
+    - Substitutes the cluster name in client-hazelcast.xml
+    - Inserts cluster member addresses into client-hazelcast.xml from the nodes list
+    """
     cluster_name = inventory_plan.get("cluster_name", "default-cluster")
 
     # Generate inventory.yaml
@@ -29,23 +32,30 @@ def existing_cluster_apply(inventory_plan):
     # Replace placeholders in files
     __substitute_cluster_name(cluster_name)
 
-    # Replace java kill block in script
-    __replace_java_kill_block(__AGENT_START_PATH)
+    # Insert cluster members into client-hazelcast.xml
+    __insert_cluster_members(inventory_plan.get("nodes", []))
 
 def __generate_inventory_for_existing_cluster(plan):
+    """
+    Generates the inventory dictionary for loadgenerators only (no nodes section).
+    The result is written to inventory.yaml.
+    """
     def format_hosts(entries):
-        return {
-            entry["public_ip"]: {
-                "ansible_ssh_private_key_file": "key",
-                "ansible_user": entry["user"],
-                "private_ip": entry["private_ip"]
+        # For loadgenerators: list of dicts
+        if entries and isinstance(entries[0], dict):
+            return {
+                entry["public_ip"]: {
+                    "ansible_ssh_private_key_file": "key",
+                    "ansible_user": entry["user"],
+                    "private_ip": entry["private_ip"]
+                }
+                for entry in entries
             }
-            for entry in entries
-        }
+        else:
+            return {}
 
     return {
-        "loadgenerators": {"hosts": format_hosts(plan.get("loadgenerators", []))},
-        "nodes": {"hosts": format_hosts(plan.get("nodes", []))}
+        "loadgenerators": {"hosts": format_hosts(plan.get("loadgenerators", []))}
     }
 
 def __write_yaml(path, data):
@@ -53,6 +63,10 @@ def __write_yaml(path, data):
         yaml.dump(data, f, default_flow_style=False)
 
 def __substitute_cluster_name(cluster_name):
+    """
+    Replaces the <cluster-name>default-cluster</cluster-name> placeholder in client-hazelcast.xml
+    with the actual cluster name from the inventory plan.
+    """
     placeholder_start = "<cluster-name>"
     placeholder_end = "</cluster-name>"
     file_name = "client-hazelcast.xml"
@@ -71,23 +85,44 @@ def __substitute_cluster_name(cluster_name):
         with open(file_name, "w") as file:
             file.write(new_content)
 
+def __insert_cluster_members(nodes):
+    """
+    Inserts <address> entries for each node into client-hazelcast.xml at the <!--MEMBERS--> placeholder.
+    Supports both 'ip' and 'ip:port' formats. Defaults to port 5701 if not specified.
+    """
+    file_name = "client-hazelcast.xml"
+    placeholder = "<!--MEMBERS-->"
+    if not os.path.isfile(file_name):
+        raise FileNotFoundError(f"{file_name} not found in current directory: {os.getcwd()}")
 
-def __replace_java_kill_block(file_path):
-    with open(file_path, 'r') as file:
+    with open(file_name, "r") as file:
         lines = file.readlines()
 
-    inside_block = False
+    # Find the indentation of the placeholder
+    indent = ""
+    for line in lines:
+        if placeholder in line:
+            indent = line[:line.index(placeholder)]
+            break
+
+    addresses = []
+    for node in nodes:
+        if ":" in node:
+            ip, port = node.split(":", 1)
+            ip = ip.strip()
+            port = port.strip()
+        else:
+            ip = node.strip()
+            port = "5701"
+        addresses.append(f'{indent}<address>{ip}:{port}</address>\n')
+
+    # Build new content, replacing the placeholder line with the addresses
     new_lines = []
     for line in lines:
-        if re.match(r'\s*if\s+hash\s+killall', line):
-            inside_block = True
-            new_lines.append("pkill -9 -f 'java.*hazelcast-simulator.*' || true\n")
-            continue
-        if inside_block and re.match(r'\s*fi\s*', line):
-            inside_block = False
-            continue
-        if not inside_block:
+        if placeholder in line:
+            new_lines.extend(addresses)
+        else:
             new_lines.append(line)
 
-    with open(file_path, 'w') as file:
+    with open(file_name, "w") as file:
         file.writelines(new_lines)

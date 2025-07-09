@@ -2,6 +2,8 @@
 
 This template is designed to run Hazelcast Simulator on an existing cluster. It allows you to define node and load generator IPs and user credentials, and run performance tests without provisioning new infrastructure.
 
+**Note:** Only key-based SSH login is supported for connecting to existing hosts. Password authentication is not supported.
+
 ## 🔐 SSH Access Requirement
 
 Ensure that your SSH public key (`key.pub`) is added to the `~/.ssh/authorized_keys` file on **all nodes and load generators**. This is required for passwordless SSH access.
