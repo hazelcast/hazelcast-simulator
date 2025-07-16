@@ -2,17 +2,16 @@
 
 This template is designed to run Hazelcast Simulator on an existing cluster. It allows you to define node and load generator IPs and user credentials, and run performance tests without provisioning new infrastructure.
 
-**Note:** Only key-based SSH login is supported for connecting to existing hosts. Password authentication is not supported.
-
 ## 🔐 SSH Access Requirement
 
-Ensure that your SSH public key (`key.pub`) is added to the `~/.ssh/authorized_keys` file on **all nodes and load generators**. This is required for passwordless SSH access.
+Ensure that your SSH public key (`key.pub`) is added to the `~/.ssh/authorized_keys` file on **load generators**. This is required for passwordless SSH access.
 
 ## Modify the Environment
 
 Edit the `inventory_plan.yaml` file to specify your cluster setup:
 - `cluster_name`
-- IP addresses and SSH users for `nodes` and `loadgenerators`
+- IP addresses and SSH users for `loadgenerators`
+- IP addresses for `nodes`
 
 ## Apply the Inventory
 
@@ -62,27 +61,15 @@ inventory destroy
 ```yaml
 provisioner: existing-cluster
 
-cluster_name: test-cluster
-
-nodes:
-  - private_ip: 10.0.0.10
-    public_ip: 10.0.0.10
-    user: root
-
-  - private_ip: 10.0.0.11
-    public_ip: 10.0.0.11
-    user: root
-
-  - private_ip: 10.0.0.12
-    public_ip: 10.0.0.12
-    user: root
+cluster_name: dev
 
 loadgenerators:
-  - private_ip: 10.0.0.21
-    public_ip: 10.0.0.21
+  - private_ip: 172.31.6.117
+    public_ip: 34.243.39.233
     user: root
 
-  - private_ip: 10.0.0.22
-    public_ip: 10.0.0.22
-    user: root
+nodes:
+  -  172.31.4.151
+  -  172.31.5.104
+  -  172.31.3.126
 ```
