@@ -1,6 +1,6 @@
 # Hazelcast Simulator – Existing Cluster Template
 
-This template is designed to run Hazelcast Simulator on an existing cluster. It allows you to define node and load generator IPs and user credentials, and run performance tests without provisioning new infrastructure.
+This template is designed to run Hazelcast Simulator on an existing cluster. It allows you to run performance tests without provisioning new infrastructure.
 
 ## 🔐 SSH Access Requirement
 
@@ -8,24 +8,12 @@ Ensure that your SSH public key (`key.pub`) is added to the `~/.ssh/authorized_k
 
 ## Modify the Environment
 
-Edit the `inventory_plan.yaml` file to specify your cluster setup:
-- `cluster_name`
+Edit the `inventory.yaml` file to specify your loadgenerator setup:
 - IP addresses and SSH users for `loadgenerators`
-- IP addresses for `nodes`
 
-## Apply the Inventory
-
-To generate the environment configuration:
-```bash
-inventory apply
-```
-
-## View the Environment
-To review the generated inventory and verify the available instances:
-
-```bash
-cat inventory.yaml
-```
+Edit the `client-hazelcast.xml` file to specify your hazelcast cluster:
+- Add hazelcast member addresses under the cluster-members section
+- Edit cluster name to your hazelcast cluster name
 
 ## Install Dependencies
 Install Java and the Hazelcast Simulator on the configured instances:
@@ -50,26 +38,41 @@ To run the performance tests:
 perftest run
 ```
 
-## To clean up the inventory:
-
-```bash
-inventory destroy
-```
-
 ## Example inventory_plan.yaml
 
 ```yaml
-provisioner: existing-cluster
-
-cluster_name: dev
-
 loadgenerators:
-  - private_ip: 172.31.6.117
-    public_ip: 34.243.39.233
-    user: root
+  hosts:
+    34.243.39.233:
+      ansible_ssh_private_key_file: key
+      ansible_user: root
+      private_ip: 172.31.6.117
+```
 
-nodes:
-  -  172.31.4.151
-  -  172.31.5.104
-  -  172.31.3.126
+## Example client-hazelcast.xml
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<hazelcast-client
+        xsi:schemaLocation="http://www.hazelcast.com/schema/client-config
+            http://www.hazelcast.com/schema/config/hazelcast-client-config-5.0.xsd"
+        xmlns="http://www.hazelcast.com/schema/client-config"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+    <cluster-name>dev</cluster-name>
+
+    <network>
+        <cluster-members>
+            <address>172.31.4.151:5701</address>
+            <address>172.31.5.104:5701</address>
+            <address>172.31.3.126:5701</address>
+        </cluster-members>
+    </network>
+
+    <properties>
+        <property name="hazelcast.logging.type">log4j2</property>
+    </properties>
+
+</hazelcast-client>
+
 ```

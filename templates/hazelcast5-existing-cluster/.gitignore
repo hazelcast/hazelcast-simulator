@@ -11,4 +11,3 @@ venv/
 /.idea/
 /runs/
 /logs/
-inventory.yaml
