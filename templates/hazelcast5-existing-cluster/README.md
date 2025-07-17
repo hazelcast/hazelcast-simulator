@@ -11,9 +11,9 @@ Ensure that your SSH public key (`key.pub`) is added to the `~/.ssh/authorized_k
 Edit the `inventory.yaml` file to specify your loadgenerator setup:
 - IP addresses and SSH users for `loadgenerators`
 
-Edit the `client-hazelcast.xml` file to specify your hazelcast cluster:
-- Add hazelcast member addresses under the cluster-members section
-- Edit cluster name to your hazelcast cluster name
+Edit the `client-hazelcast.xml` file to to point to your Hazelcast cluster::
+- Under the <cluster-members> section, list the IP addresses and ports of your Hazelcast member nodes.
+- Update the <cluster-name> element to match the name of your Hazelcast cluster
 
 ## Install Dependencies
 Install Java and the Hazelcast Simulator on the configured instances:
