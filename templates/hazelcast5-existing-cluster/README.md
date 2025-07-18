@@ -38,7 +38,7 @@ To run the performance tests:
 perftest run
 ```
 
-## Example inventory_plan.yaml
+## Example inventory.yaml
 
 ```yaml
 loadgenerators:

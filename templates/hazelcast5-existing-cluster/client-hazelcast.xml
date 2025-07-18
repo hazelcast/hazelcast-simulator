@@ -5,11 +5,13 @@
         xmlns="http://www.hazelcast.com/schema/client-config"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
-    <cluster-name>default-cluster</cluster-name>
+    <cluster-name>cluster-name</cluster-name>
 
     <network>
         <cluster-members>
-            <!--MEMBERS-->
+            <address>member1_ip:port</address>
+            <address>member2_ip:port</address>
+            <address>member3_ip:port</address>
         </cluster-members>
     </network>
 
