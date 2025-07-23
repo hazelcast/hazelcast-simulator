@@ -1,0 +1,6 @@
+loadgenerators:
+  hosts:
+    <public_ip>:
+      ansible_ssh_private_key_file: key
+      ansible_user: <ssh_username>
+      private_ip: <private_ip>
