@@ -56,7 +56,7 @@ while IFS='=' read -r key value; do
 done < "parameters"
 
 # Determine if persistence is enabled based on mount_volume and mount_path
-# If ony one is set, this is a misconfiguration and we exit to warn the user.
+# If only one is set, this is a misconfiguration and we exit to warn the user.
 PERSISTENCE_ENABLED=false
 if [[ -n "${mount_volume:-}" && -n "${mount_path:-}" ]]; then
     PERSISTENCE_ENABLED=true

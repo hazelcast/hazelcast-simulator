@@ -24,62 +24,73 @@ Hazelcast Simulator is available as a downloadable package on the
 Hazelcast <a href="https://hazelcast.com/open-source-projects/downloads/" target="_blank">website</a>.
 Please refer to the [Quickstart](#quickstart) to start your Simulator journey.
 
+- [Hazelcast Simulator](#hazelcast-simulator)
 - [Quickstart](#quickstart)
-    * [Install](#install)
-    * [Creating a benchmark](#creating-a-benchmark)
-    * [Provisioning the environment](#provisioning-the-environment)
-    * [SSH to nodes](#ssh-to-nodes)
-    * [Running a test.](#running-a-test)
-    * [What's next](#whats-next)
+  - [Install](#install)
+  - [Creating a benchmark](#creating-a-benchmark)
+  - [Provisioning the environment](#provisioning-the-environment)
+  - [SSH to nodes](#ssh-to-nodes)
+  - [Running a test.](#running-a-test)
+  - [What's next](#whats-next)
 - [Key Concepts and Terminology](#key-concepts-and-terminology)
 - [Define test scenario](#define-test-scenario)
-    * [TestSuite configuration](#testsuite-configuration)
-        + [Specify the test environment and non-class-specific parameters](#specify-the-test-environment-and-non-class-specific-parameters)
-        + [Specify test class(es) and number of threads per worker](#specify-test-classes-and-number-of-threads-per-worker)
-        + [Setting up operations frequency](#setting-up-operations-frequency)
-        + [Configuring parameters](#configuring-parameters)
-        + [Latency Testing](#latency-testing)
-    * [Controlling the Cluster Layout](#controlling-the-cluster-layout)
-        + [Set number of members and clients](#set-number-of-members-and-clients)
-        + [Control distribution of workers over machines](#control-distribution-of-workers-over-machines)
-            - [Default distribution algorithm](#default-distribution-algorithm)
-            - [Reserving machines for members only](#reserving-machines-for-members-only)
-                * [Order of the IP addresses](#order-of-the-ip-addresses)
-        + [Running tests against an already running cluster](#running-tests-against-an-already-running-cluster)
-        + [Running tests against a cluster in Hazelcast Cloud](#running-tests-against-a-cluster-in-hazelcast-cloud)
-    * [Controlling the Hazelcast Configuration](#controlling-the-hazelcast-configuration)
-        + [IP addresses and other configuration auto-filling](#ip-addresses-and-other-configuration-auto-filling)
+  - [TestSuite configuration](#testsuite-configuration)
+    - [Specify the test environment and non-class-specific parameters](#specify-the-test-environment-and-non-class-specific-parameters)
+    - [Specify test class(es) and number of threads per worker](#specify-test-classes-and-number-of-threads-per-worker)
+    - [Setting up operations frequency](#setting-up-operations-frequency)
+    - [Configuring parameters](#configuring-parameters)
+    - [Latency Testing](#latency-testing)
+  - [Controlling the Cluster Layout](#controlling-the-cluster-layout)
+    - [Set number of members and clients](#set-number-of-members-and-clients)
+    - [Control distribution of workers over machines](#control-distribution-of-workers-over-machines)
+      - [Default distribution algorithm](#default-distribution-algorithm)
+      - [Reserving machines for members only](#reserving-machines-for-members-only)
+        - [Order of the IP addresses](#order-of-the-ip-addresses)
+    - [Running tests against an already running cluster](#running-tests-against-an-already-running-cluster)
+    - [Running tests against a cluster in Hazelcast Cloud](#running-tests-against-a-cluster-in-hazelcast-cloud)
+  - [Controlling the Hazelcast Configuration](#controlling-the-hazelcast-configuration)
+    - [IP addresses and other configuration auto-filling](#ip-addresses-and-other-configuration-auto-filling)
 - [Run the test](#run-the-test)
-    * [Configure test duration](#configure-test-duration)
-    * [Specify TestSuite file to be used](#specify-testsuite-file-to-be-used)
-    * [Installing Simulator on remote machines](#installing-simulator-on-remote-machines)
+  - [Configure test duration](#configure-test-duration)
+  - [Specify TestSuite file to be used](#specify-testsuite-file-to-be-used)
+  - [Installing Simulator on remote machines](#installing-simulator-on-remote-machines)
 - [Report generation](#report-generation)
-    * [Basics](#basics)
-    * [Generate comparison reports](#generate-comparison-reports)
-    * [Extensive reports](#extensive-reports)
-    * [Warmup and cooldown](#warmup-and-cooldown)
+  - [Basics](#basics)
+  - [Generate comparison reports](#generate-comparison-reports)
+  - [Extensive reports](#extensive-reports)
+  - [Warmup and cooldown](#warmup-and-cooldown)
 - [Simulator Properties reference](#simulator-properties-reference)
 - [Advanced topics](#advanced-topics)
-    * [Writing a Simulator test](#writing-a-simulator-test)
-        + [Adding properties](#adding-properties)
-        + [ThreadState](#threadstate)
-        + [AfterRun and BeforeRun](#afterrun-and-beforerun)
-        + [Verification](#verification)
-        + [TearDown](#teardown)
-        + [Complete Lifecycle of Calls on the Test](#complete-lifecycle-of-calls-on-the-test)
-        + [Stopping a Test](#stopping-a-test)
-        + [Code Generation](#code-generation)
-    * [Profiling your Simulator Test](#profiling-your-simulator-test)
-    * [GC analysis](#gc-analysis)
-    * [Reducing Fluctuations](#reducing-fluctuations)
-    * [Enabling Diagnostics](#enabling-diagnostics)
-    * [Logging](#logging)
-    * [Running multiple tests in parallel](#running-multiple-tests-in-parallel)
-    * [Various forms of testing](#various-forms-of-testing)
-    * [Network constraints](#network-constraints)
-    * [CP subsystem leader priority](#cp-subsystem-leader-priority)
-    * [Persistence](#persistence)
-    * [Running multiple clients per loadgenerator](#running-multiple-clients-per-loadgenerator-worker)
+  - [Writing a Simulator test](#writing-a-simulator-test)
+    - [Adding properties](#adding-properties)
+    - [ThreadState](#threadstate)
+    - [AfterRun and BeforeRun](#afterrun-and-beforerun)
+    - [Verification](#verification)
+    - [TearDown](#teardown)
+    - [Complete Lifecycle of Calls on the Test](#complete-lifecycle-of-calls-on-the-test)
+    - [Stopping a Test](#stopping-a-test)
+    - [Code Generation](#code-generation)
+  - [Profiling your Simulator Test](#profiling-your-simulator-test)
+  - [GC analysis](#gc-analysis)
+  - [Reducing Fluctuations](#reducing-fluctuations)
+  - [Enabling Diagnostics](#enabling-diagnostics)
+  - [Logging](#logging)
+  - [Running multiple tests in parallel](#running-multiple-tests-in-parallel)
+  - [Controlling the load generation](#controlling-the-load-generation)
+  - [Various forms of testing](#various-forms-of-testing)
+    - [Throughput testing](#throughput-testing)
+    - [Latency testing](#latency-testing-1)
+    - [Stress testing](#stress-testing)
+    - [Soak testing](#soak-testing)
+    - [Volume testing](#volume-testing)
+    - [Scalability testing](#scalability-testing)
+  - [Network constraints](#network-constraints)
+    - [Injecting latencies](#injecting-latencies)
+    - [Removing Latencies](#removing-latencies)
+  - [CP subsystem leader priority](#cp-subsystem-leader-priority)
+  - [Persistence](#persistence)
+  - [Running multiple clients per loadgenerator worker](#running-multiple-clients-per-loadgenerator-worker)
+    - [Using the clients in a test](#using-the-clients-in-a-test)
 - [Get Help](#get-help)
 
 # Quickstart
@@ -421,7 +432,7 @@ should be conducted in.
 
 | Property                               | Example value    | Description                                                                                                                                 |
 |----------------------------------------|------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
-| `name`                                 | `read_only`      | The name of the test suite (overriden by test-specific values)                                                                              |
+| `name`                                 | `read_only`      | The name of the test suite (overridden by test-specific values)                                                                              |
 | `repetitions`                          | `1`              | The number of times this test suite should run (1 or more)                                                                                  |
 | `duration`                             | `300s`           | The amount of time this test suite should run for (45m, 1h, 2d, etc.)                                                                       |
 | `clients`                              | `1`              | The number of loadgenerator workers to use in this test suite (hosted on `loadgenerator_hosts`                                              |
@@ -528,7 +539,7 @@ and preload 1 million entries with a value size of exactly 10 KB, we would edit 
 ```yaml
   test:
     - class: com.hazelcast.simulator.tests.map.IntByteMapTest
-      # probabilites and thread count settings
+      # probabilities and thread count settings
       minSize: 10_000
       maxSize: 10_000
       keyCount: 1_000_000
@@ -1044,7 +1055,7 @@ The `config` object can be configured as shown below:
 ```yaml
   test:
     - class: example.SomeTest
-      config.nestedConfig.valu: 1000
+      config.nestedConfig.value: 1000
 ```
 
 If a property is not used in a test, the test fails during its startup. The reason is that if you would make a typing
@@ -1703,7 +1714,7 @@ When testing the throughput, results are constrained by factors including CPU, m
 Therefore, it's crucial to know these constraints and analyse the test results in their context.
 
 Cloud providers specify the availability of CPU and memory for different instance types,
-howeveer  they are much less verbose on network-related limits.
+however  they are much less verbose on network-related limits.
 
 There are two main limitations in play related to network resources: bandwidth (bits/s) and packet count (packets/s).
 Hazelcast-simulator contains a tool that allows measuring the limits of bandwidth and packet count, based on `iperf3`.

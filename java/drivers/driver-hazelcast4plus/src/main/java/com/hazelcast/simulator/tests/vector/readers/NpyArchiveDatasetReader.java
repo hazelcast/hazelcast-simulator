@@ -20,7 +20,7 @@ import java.util.List;
 public class NpyArchiveDatasetReader extends DatasetReader {
 
     private Path trainDatasetFilename;
-    private Path testDatesetFilename;
+    private Path testDatasetFilename;
 
     public NpyArchiveDatasetReader(String url, String directory, boolean normalizeVector, boolean testOnly) {
         super(url, directory, normalizeVector, testOnly);
@@ -29,7 +29,7 @@ public class NpyArchiveDatasetReader extends DatasetReader {
     @Override
     protected void preprocessDatasetFile() {
         this.trainDatasetFilename = Path.of(workingDirectory.toString(), "vectors.npy");
-        this.testDatesetFilename = Path.of(workingDirectory.toString(), "tests.jsonl");
+        this.testDatasetFilename = Path.of(workingDirectory.toString(), "tests.jsonl");
 
         if (!trainDatasetFilename.toFile().exists()) {
             unpack();
@@ -66,7 +66,7 @@ public class NpyArchiveDatasetReader extends DatasetReader {
     protected void parseTestDataset() {
         try {
             var parser = new JsonParser();
-            List<String> queryList = FileUtils.readLines(testDatesetFilename.toFile(), Charset.defaultCharset());
+            List<String> queryList = FileUtils.readLines(testDatasetFilename.toFile(), Charset.defaultCharset());
             int size = queryList.size();
             var searchVectors = new float[size][dimension];
             var searchClosestIds = new int[size][];

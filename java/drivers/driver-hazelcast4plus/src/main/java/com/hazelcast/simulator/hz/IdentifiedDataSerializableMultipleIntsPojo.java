@@ -61,7 +61,7 @@ public class IdentifiedDataSerializableMultipleIntsPojo implements IdentifiedDat
 
     @Override
     public int getClassId() {
-        return IdentifiedDataSerializableFactory.SAMPLE_MUTLIPLE_INTS_TYPE;
+        return IdentifiedDataSerializableFactory.SAMPLE_MULTIPLE_INTS_TYPE;
     }
 
     @Override

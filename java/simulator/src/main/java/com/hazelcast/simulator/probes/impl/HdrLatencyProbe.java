@@ -76,7 +76,7 @@ public class HdrLatencyProbe implements LatencyProbe {
 
             // Negative values should normally not happen.
             // But it could happen when the clock jump or when there is an
-            // overflow. So lets convert it to a postive value and record it.
+            // overflow. So lets convert it to a positive value and record it.
             if (latencyNanos == Long.MIN_VALUE) {
                 latencyNanos = HIGHEST_TRACKABLE_VALUE_NANOS;
             } else {

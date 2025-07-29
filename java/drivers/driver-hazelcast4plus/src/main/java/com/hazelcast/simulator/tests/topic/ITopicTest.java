@@ -48,7 +48,7 @@ public class ITopicTest extends HazelcastTest {
     public int listenersPerTopic = 1;
     public int maxProcessingDelayNanos = 0;
     public int maxPublicationDelayNanos = 1000;
-    // the maximum period the verification process is going to wait till the correct number of messags
+    // the maximum period the verification process is going to wait till the correct number of messages
     // have been received. A negative value indicates that no verification should be done.
     public int maxVerificationTimeSeconds = 60;
 
