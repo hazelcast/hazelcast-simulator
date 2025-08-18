@@ -4,8 +4,8 @@ Hazelcast Simulator is a production simulator used to test Hazelcast and Hazelca
 environments.
 It also allows you to create your own tests and perform them on your Hazelcast clusters and applications that are
 deployed to
-cloud computing environments. In your tests, you can provide any property that can be specified on these environments (
-Amazon EC2 or your own environment): properties such as hardware specifications, operating system, Java version, etc.
+cloud computing environments. In your tests, you can provide any property that can be specified on these environments
+(Amazon EC2 or your own environment): properties such as hardware specifications, operating system, Java version, etc.
 
 Hazelcast Simulator allows you to add potential production problems, such as real-life failures, network problems,
 overloaded CPU,
@@ -163,9 +163,9 @@ In the future more templates will be added.
 
 Simulator makes use of Terraform for provisioning. After you have created a benchmark using the
 `perftest create` command, you want to edit the `inventory_plan.yaml`. This is where you can configure the
-type of instances, the number etc. The specified `cidr_block` will need to be updated to prevent conflicts.
+type of instances, the number etc., The specified `cidr_block` will need to be updated to prevent conflicts.
 
-To provision the environment, you will first need to configure your AWS credentials and update team tag on inventory_plan according to the values on following [repository](https://github.com/hazelcast/aws-hazelcast-inc-iac/blob/main/README.md#aws-tagging-guidelines):
+To provision the environment, you will first need to configure your AWS credentials and update the team tag on inventory_plan according to the values on the following [repository](https://github.com/hazelcast/aws-hazelcast-inc-iac/blob/main/README.md#aws-tagging-guidelines):
 
 In your `~/.aws/credentials` file you need something like this:
 
@@ -184,7 +184,7 @@ aws_secret_access_key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
 aws_session_token=AQoEXAMPLEH4aoAH0gNCAPyJxz4BlCFFxWNE1OPTgk5TthT+FvwqnKwRcOIfrRh3c/LTo6UDdyJwOOvEVPvLXCrrrUtdnniCEXAMPLE/IvU1dYUg2RVAJBanLiHb4IgRmpRV3zrkuWJOgQs8IZZaIv2BXIa2R4OlgkBN9bkUDNCJiBeb/AXlzBBko7b15fjrBs2+cTQtpZ3CYWFXG8C5zqx37wnOE49mRl/+OtkIKGO7fAE
 ```
 
-Or alternatively you can use `aws sso login` and autorize your terminal via SSO.
+Or alternatively you can use `aws sso login` and authorize your terminal via SSO.
 
 To apply the configuration on an existing environment, execute the following command from within the benchmark
 directory:
@@ -300,12 +300,12 @@ You can use the following channels for getting help from Hazelcast:
 
 # Key Concepts and Terminology
 
-The following are the key concepts mentioned with Hazelcast Simulator.
+The following are the key concepts mentioned with Hazelcast Simulator:
 
 - **Test** - A test class for the functionality you want to test, e.g. a Hazelcast map. This test class looks similar to
   a JUnit
-  test, but it uses custom annotations to define methods for different test phases (
-  e.g. `@Setup`, `@Warmup`, `@Run`, `@Verify`).
+  test, but it uses custom annotations to define methods for different test phases
+- (e.g. `@Setup`, `@Warmup`, `@Run`, `@Verify`).
 
 - **TestSuite** - A yaml file that contains the name of the `Test` classes and the properties you want to set on
   those `Test`
@@ -357,9 +357,8 @@ The following are the key concepts mentioned with Hazelcast Simulator.
 - **Failure** - An indication that something has gone wrong. Failures are picked up by the `Agent` and sent back to
   the `Coordinator`.
 
-- **simulator.properties** - The configuration file you use to adapt the Hazelcast Simulator to your business needs (
-  e.g. cloud
-  provider, SSH username, Hazelcast version, Java profiler settings, etc.).
+- **simulator.properties** - The configuration file you use to adapt the Hazelcast Simulator to your business needs
+    - e.g. cloud provider, SSH username, Hazelcast version, Java profiler settings, etc.
 
 # Define test scenario
 
@@ -452,7 +451,7 @@ properties shown in the above example are built-in "magic" properties of Simulat
 | `name`        | `MyByteTest`                                       | Defines a unique name for this Test. This property is only required when running multiple tests on the same test class, without it only 1 test will run per class type (as the class name is used as the name if not defined here). The tests are ordered alphabetically by name. |
 | `threadCount` | `40`                                               | Defines how many threads are running the Test methods in parallel. In other words, defines the number of worker threads for Simulator Tests which use the `@RunWithWorker` annotation.                                                                                            |
 
-> :books: For details about available values for `class`, refer to the provided classes in the [drivers](drivers)
+> :books: For details about available values for `class`, refer to the provided classes in the [drivers](java/drivers)
 > directory or the [Writing a Simulator test](#writing-a-simulator-test) section.
 
 ### Setting up operations frequency
@@ -587,7 +586,7 @@ member and
 client Workers and also their distribution on the available remote machines.
 
 > All configuration about the cluster layout is managed through the `inventory_plan.yaml` file which handles the actual
-> provisisiong, as well as the `tests.yaml` file which handles the allocation of workers between hosts.
+> provisioning, as well as the `tests.yaml` file which handles the allocation of workers between hosts.
 
 ### Set number of members and clients
 
@@ -629,7 +628,7 @@ nodes:
 
 The Workers will be distributed among the available remote machines with a round robin selection. First the members are
 distributed in the round robin
-fassion (going through the IP addresses from the top to the bottom). Once there are no more members to be distributed,
+fashion (going through the IP addresses from the top to the bottom). Once there are no more members to be distributed,
 Simulator
 continues (= **not** starting from the first IP address but continuing with the next one) with distribution of the
 clients. By default, the machines will
@@ -722,8 +721,8 @@ in `client-hazelcast.xml`.
 
 ## Controlling the Hazelcast Configuration
 
-You can specify Hazelcast configuration by placing a `hazelcast.xml` (member configuration) or `client-hazelcast.xml` (
-client configuration) in your working directory
+You can specify Hazelcast configuration by placing a `hazelcast.xml` (member configuration) or `client-hazelcast.xml`
+(client configuration) in your working directory
 (the one from which you're executing the `perftest` command). Simulator will handle the upload of them and makes sure
 that the
 workers are started with them transparently.
@@ -767,8 +766,8 @@ example when editing this section is actually desired.
 
 # Run the test
 
-The actual Simulator Test run is done with the `perftest run` command. The created `tests.yaml` script (
-via `perftest create` in [Quickstart](#quickstart))
+The actual Simulator Test run is done with the `perftest run` command. The created `tests.yaml` script
+(via `perftest create` in [Quickstart](#quickstart))
 is a good start to customize your test setup.
 
 ## Configure test duration
@@ -806,9 +805,9 @@ This is very convenient when you want to test multiple test scenarios on the sam
 ## Installing Simulator on remote machines
 
 Simulator needs to be installed on the remote machines before you run the tests.
-If you already have your cloud instances provisioned (
-see [Controlling provisioned machines](#controlling-provisioned-machines)) or run a `static` setup (
-see [Using static setup](#using-static-setup)), you can just install Hazelcast Simulator with the following command.
+If you already have your cloud instances provisioned
+(see [Controlling provisioned machines](#controlling-provisioned-machines)) or run a `static` setup
+(see [Using static setup](#using-static-setup)), you can just install Hazelcast Simulator with the following command.
 
 ```
 inventory install simulator
@@ -921,7 +920,7 @@ always loaded from the `${SIMULATOR_HOME}/conf/simulator.properties` file. Your 
 defaults.
 
 For the full reference of available settings and their descriptions, please refer
-to [default simulator.properties](master/conf/simulator.properties).
+to [default simulator.properties](conf/simulator.properties).
 
 # Advanced topics
 
@@ -1152,8 +1151,8 @@ public class MyTest extends AbstractTest {
 }
 ```
 
-The reason for having a single test instance shared between all threads, instead of having a test instance per thread (
-and
+The reason for having a single test instance shared between all threads, instead of having a test instance per thread
+(and
 dropping the need for the `ThreadState`) is that it will be a lot more cache friendly. It is not the test instance which
 needs to be put into the cache, but everything referred from the test instance.
 
@@ -1491,7 +1490,7 @@ You can configure frequency based logging as shown below:
       logFrequency: 10000
 ```
 
-In this example, every 10000 iteration, a log entry is made per timestep thread.
+In this example, every 10000 iterations, a log entry is made per timestep thread.
 
 You can configure time rate based logging as shown below:
 
@@ -1703,7 +1702,7 @@ When testing the throughput, results are constrained by factors including CPU, m
 Therefore, it's crucial to know these constraints and analyse the test results in their context.
 
 Cloud providers specify the availability of CPU and memory for different instance types,
-howeveer  they are much less verbose on network-related limits.
+however they are much less verbose on network-related limits.
 
 There are two main limitations in play related to network resources: bandwidth (bits/s) and packet count (packets/s).
 Hazelcast-simulator contains a tool that allows measuring the limits of bandwidth and packet count, based on `iperf3`.
