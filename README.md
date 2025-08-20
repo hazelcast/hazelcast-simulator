@@ -421,7 +421,7 @@ should be conducted in.
 
 | Property                               | Example value    | Description                                                                                                                                 |
 |----------------------------------------|------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
-| `name`                                 | `read_only`      | The name of the test suite (overriden by test-specific values)                                                                              |
+| `name`                                 | `read_only`      | The name of the test suite (overridden by test-specific values)                                                                              |
 | `repetitions`                          | `1`              | The number of times this test suite should run (1 or more)                                                                                  |
 | `duration`                             | `300s`           | The amount of time this test suite should run for (45m, 1h, 2d, etc.)                                                                       |
 | `clients`                              | `1`              | The number of loadgenerator workers to use in this test suite (hosted on `loadgenerator_hosts`                                              |
@@ -528,7 +528,7 @@ and preload 1 million entries with a value size of exactly 10 KB, we would edit 
 ```yaml
   test:
     - class: com.hazelcast.simulator.tests.map.IntByteMapTest
-      # probabilites and thread count settings
+      # probabilities and thread count settings
       minSize: 10_000
       maxSize: 10_000
       keyCount: 1_000_000
@@ -1044,7 +1044,7 @@ The `config` object can be configured as shown below:
 ```yaml
   test:
     - class: example.SomeTest
-      config.nestedConfig.valu: 1000
+      config.nestedConfig.value: 1000
 ```
 
 If a property is not used in a test, the test fails during its startup. The reason is that if you would make a typing
@@ -1703,7 +1703,7 @@ When testing the throughput, results are constrained by factors including CPU, m
 Therefore, it's crucial to know these constraints and analyse the test results in their context.
 
 Cloud providers specify the availability of CPU and memory for different instance types,
-howeveer  they are much less verbose on network-related limits.
+however  they are much less verbose on network-related limits.
 
 There are two main limitations in play related to network resources: bandwidth (bits/s) and packet count (packets/s).
 Hazelcast-simulator contains a tool that allows measuring the limits of bandwidth and packet count, based on `iperf3`.

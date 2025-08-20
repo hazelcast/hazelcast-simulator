@@ -24,7 +24,7 @@ public class IdentifiedDataSerializableFactory implements DataSerializableFactor
 
     public static final int SAMPLE_STRING_TYPE = 1;
     public static final int SAMPLE_LONG_TYPE = 2;
-    public static final int SAMPLE_MUTLIPLE_INTS_TYPE = 3;
+    public static final int SAMPLE_MULTIPLE_INTS_TYPE = 3;
 
     @Override
     public IdentifiedDataSerializable create(int typeId) {
@@ -33,7 +33,7 @@ public class IdentifiedDataSerializableFactory implements DataSerializableFactor
                 return new IdentifiedDataSerializablePojo();
             case SAMPLE_LONG_TYPE:
                 return new IdentifiedDataWithLongSerializablePojo();
-            case SAMPLE_MUTLIPLE_INTS_TYPE:
+            case SAMPLE_MULTIPLE_INTS_TYPE:
                 return new IdentifiedDataSerializableMultipleIntsPojo();
             default:
                 return null;

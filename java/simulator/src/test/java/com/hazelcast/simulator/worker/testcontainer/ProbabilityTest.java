@@ -33,7 +33,7 @@ public class ProbabilityTest {
     }
 
     @Test
-    public void test_methodProbabilitiesToMethodRatios_highPricision() {
+    public void test_methodProbabilitiesToMethodRatios_highPrecision() {
         int[] ratios;
 
         ratios = methodProbabilitiesToMethodRatios(0.1, 0.9);
@@ -68,7 +68,7 @@ public class ProbabilityTest {
     }
 
     @Test
-    public void test_methodProbabilitiesToMethodRatios_simplication() {
+    public void test_methodProbabilitiesToMethodRatios_simplification() {
         int[] ratios;
 
         ratios = methodProbabilitiesToMethodRatios(0.10, 0.90);

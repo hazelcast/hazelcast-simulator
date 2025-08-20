@@ -41,7 +41,7 @@ public class PropertyBindingTest {
     }
 
     @Test
-    public void loadAsDouble_existing_wihUnderscores() {
+    public void loadAsDouble_existing_withUnderscores() {
         TestCase testCase = new TestCase("foo")
                 .setProperty("doubleValue", "5_0d");
         PropertyBinding binding = new PropertyBinding(testCase);

@@ -74,7 +74,7 @@ public class ConnectionFactory {
     private String toUrl(String brokerURL) {
         // here we configure the 'failover'
         // http://activemq.apache.org/failover-transport-reference.html
-        // In this case we'll allow for 30 attempts with a maximum of 1 second between the attemps.
+        // In this case we'll allow for 30 attempts with a maximum of 1 second between the attempts.
         // so if we can't send in 30 seconds; give up.
         return "failover:(" + brokerURL + ")?initialReconnectDelay=100"
                 + "&maxReconnectAttempts=" + maxReconnectAttempts

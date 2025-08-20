@@ -51,8 +51,8 @@ class ReportConfig:
 
 
 class ColumnDesc:
-    seperator = "::"
-    kv_seperator = "=="
+    separator = "::"
+    kv_separator = "=="
 
     def __init__(self, group, metric, attributes=None):
         if attributes is None:
@@ -62,22 +62,22 @@ class ColumnDesc:
         self.attributes = attributes
 
     def to_string(self):
-        result = f"{self.group}{ColumnDesc.seperator}{self.metric_id}"
+        result = f"{self.group}{ColumnDesc.separator}{self.metric_id}"
 
         if self.attributes is not None:
             for key, value in self.attributes.items():
                 if not value is None:
-                    result = result + f"{ColumnDesc.seperator}{key}{ColumnDesc.kv_seperator}{value}"
+                    result = result + f"{ColumnDesc.separator}{key}{ColumnDesc.kv_separator}{value}"
         return result
 
     @staticmethod
     def from_string(column_name):
-        args = column_name.split(ColumnDesc.seperator)
+        args = column_name.split(ColumnDesc.separator)
         group = args[0]
         metric = args[1]
         attributes = {}
         for k in range(2, len(args)):
-            pair = args[k].split(ColumnDesc.kv_seperator)
+            pair = args[k].split(ColumnDesc.kv_separator)
             attributes[pair[0]] = pair[1]
 
         return ColumnDesc(group, metric, attributes)

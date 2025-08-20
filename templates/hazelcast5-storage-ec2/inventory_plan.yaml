@@ -25,10 +25,10 @@ nodes:
     count: 1
     instance_type: i3en.2xlarge
     # default AWS AMI
-    # ami: ami-05cafdf7c9f772ad2
+    # ami: ami-0083ee179c14acc6a
     # user: ec2-user
     # ubuntu
-    ami: ami-04e601abe3e1a910f
+    ami: ami-0083ee179c14acc6a
     user: ubuntu
     placement_group: None
     tenancy: null
@@ -37,10 +37,10 @@ loadgenerators:
     count: 2
     instance_type: c5.4xlarge
     # default AWS AMI
-    # ami: ami-05cafdf7c9f772ad2
+    # ami: ami-0083ee179c14acc6a
     # user: ec2-user
     # ubuntu
-    ami: ami-04e601abe3e1a910f
+    ami: ami-0083ee179c14acc6a
     user: ubuntu
     placement_group: None
     tenancy: null
@@ -49,10 +49,10 @@ mc:
     instance_type: c5.4xlarge
     count: 0
     # default AWS AMI
-    # ami: ami-05cafdf7c9f772ad2
+    # ami: ami-0083ee179c14acc6a
     # user: ec2-user
     # ubuntu
-    ami: ami-04e601abe3e1a910f
+    ami: ami-0083ee179c14acc6a
     user: ubuntu
     placement_group: None
     tenancy: null

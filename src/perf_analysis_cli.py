@@ -246,7 +246,7 @@ class PerfRegressionAnalysisCli:
                             help="The number of permutations for the change point detection", type=int, default=100)
         parser.add_argument("--pvalue", nargs=1,
                             help="The pvalue for the change point detection", type=float, default=0.05)
-        parser.add_argument("--n_std_treshhold", nargs=1,
+        parser.add_argument("--n_std_threshold", nargs=1,
                             help="The number of standard deviations away from the mean to be considered an anomaly",
                             type=float, default=4)
         parser.add_argument("-o", "--output", help="The directory to write the output", nargs=1,
@@ -273,7 +273,7 @@ class PerfRegressionAnalysisCli:
             exit_with_error("pvalue can't be larger than 1")
         self.anomalies_per_metric = {}
         self.changepoints_per_metric = {}
-        self.n_std_treshhold = args.n_std_treshhold
+        self.n_std_threshold = args.n_std_threshold
 
         self.trim()
         self.changepoint_detection()
@@ -340,7 +340,7 @@ class PerfRegressionAnalysisCli:
     def anomaly_detection(self):
         info("Anomaly detection")
         for metric, ts in self.ts_per_metric.items():
-            aps = anomaly_detection(ts, min_history_length=10, max_n=self.n_std_treshhold)
+            aps = anomaly_detection(ts, min_history_length=10, max_n=self.n_std_threshold)
             self.anomalies_per_metric[metric] = aps
 
     def changepoint_detection(self):
