@@ -18,6 +18,7 @@ package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.Pipelining;
+import com.hazelcast.map.EntryProcessor;
 import com.hazelcast.map.IMap;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.probes.LatencyProbe;
@@ -40,12 +41,10 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
-import java.util.stream.IntStream;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.assignKeyToIndex;
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateByteArrays;
 import static java.lang.Thread.currentThread;
-import static java.util.Comparator.comparingInt;
 
 public class LongByteArrayMapTest extends HazelcastTest {
 
@@ -124,7 +123,7 @@ public class LongByteArrayMapTest extends HazelcastTest {
         return getRandomMap().get(state.fixedKeyOrRandom());
     }
 
-    @TimeStep(prob = -1)
+    @TimeStep(prob = 0)
     public Map<Long, byte[]> getAll(ThreadState state) {
         Set<Long> keys = new HashSet<>();
         for (int k = 0; k < getAllSize; k++) {
@@ -143,6 +142,17 @@ public class LongByteArrayMapTest extends HazelcastTest {
         return getRandomMap().put(state.randomKey(), state.randomValue());
     }
 
+    /**
+     * Ensures that the key does not exist before adding it again.
+     */
+    @TimeStep(prob = 0)
+    public void deleteAndPut(ThreadState state) {
+        var map = getRandomMap();
+        long key = state.randomKey();
+        map.delete(key);
+        map.put(key, state.randomValue());
+    }
+
     @TimeStep(prob = 0.0)
     public CompletableFuture putAsync(ThreadState state) {
         return getRandomMap().putAsync(state.randomKey(), state.randomValue()).toCompletableFuture();
@@ -156,6 +166,21 @@ public class LongByteArrayMapTest extends HazelcastTest {
     @TimeStep(prob = 0)
     public CompletableFuture setAsync(ThreadState state) {
         return getRandomMap().setAsync(state.randomKey(), state.randomValue()).toCompletableFuture();
+    }
+
+    /**
+     * Logs size of the map during test. Useful as sanity check when IMap can change size, eg. with TTL or eviction.
+     */
+    @TimeStep(prob = 0)
+    public void sizeLog() {
+        IMap<Long, byte[]> map = getRandomMap();
+        logger.info("current size of {}: {}", map.getName(), map.size());
+    }
+
+    @TimeStep(prob = 0)
+    public void updateAllUsingEntryProcessor() {
+        IMap<Long, byte[]> map = getRandomMap();
+        map.executeOnEntries(new UpdateEntryProcessor((byte) 1));
     }
 
     @TimeStep(prob = 0)
@@ -194,6 +219,23 @@ public class LongByteArrayMapTest extends HazelcastTest {
 
         private byte[] randomValue() {
             return values[randomInt(values.length)];
+        }
+    }
+
+    private static final class UpdateEntryProcessor implements EntryProcessor<Long, byte[], Object> {
+
+        private final byte increment;
+
+        private UpdateEntryProcessor(byte increment) {
+            this.increment = increment;
+        }
+
+        @Override
+        public Object process(Map.Entry<Long, byte[]> entry) {
+            byte[] value = entry.getValue();
+            value[0] += increment;
+            entry.setValue(value);
+            return null;
         }
     }
 
