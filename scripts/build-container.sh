@@ -37,7 +37,7 @@ fi
 
 # Check if pre-built artifacts exist
 if [[ ! -d "lib" ]] || [[ ! -d "drivers" ]]; then
-    yellow "Warning: Pre-built artifacts (lib/ or drivers/) not found"
+    yellow "Pre-built artifacts (lib/ or drivers/) not found"
     yellow "Building Java components first..."
     
     # Try to build Java components
