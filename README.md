@@ -152,83 +152,6 @@ used for change point detection:
    PATH=<path-to-simulator>/bin/:$PATH
    ```
 
-## Docker Usage Examples
-Here's a complete workflow using the Docker image to run performance tests on AWS:
-### 1. Create a New Benchmark Project
-```bash
-# Create project with Hazelcast 5 template for EC2
-docker run --rm -it -v "$(pwd):/workspace" hazelcast/simulator:latest perftest create --template hazelcast5-ec2 test
-```
-
-### 2. Apply Infrastructure 
-```bash
-# Provision AWS infrastructure (requires AWS credentials)
-docker run --rm -it \
-  -v "$(pwd)/test:/workspace" \
-  -v ~/.aws:/root/.aws:ro \
-  hazelcast/simulator:latest inventory apply
-```
-
-### 3. Install Java on Remote Machines
-```bash
-# Install Java on provisioned instances
-docker run --rm -it \
-  -v "$(pwd)/test:/workspace" \
-  hazelcast/simulator:latest inventory install java
-```
-
-### 4. Install Simulator on Remote Machines
-```bash
-# Install Simulator on remote instances
-docker run --rm -it \
-  -v "$(pwd)/test:/workspace" \
-  -v ~/.aws:/root/.aws:ro \
-  hazelcast/simulator:latest inventory install simulator
-```
-
-### 5. Run Performance Tests
-```bash
-# Execute the performance tests
-docker run --rm -it \
-  -v "$(pwd)/test:/workspace" \
-  hazelcast/simulator:latest perftest run
-```
-
-### 6. Clean Up Infrastructure
-```bash
-# Destroy AWS infrastructure when done
-docker run --rm -it \
-  -v "$(pwd)/test:/workspace" \
-  -v ~/.aws:/root/.aws:ro \
-  hazelcast/simulator:latest inventory destroy
-```
-
-### Docker Volume Mounts Explained
-
-- `-v "$(pwd)/test:/workspace"` - Mounts your test directory as the working directory inside the container
-- `-v ~/.aws:/root/.aws:ro` - Mounts your AWS credentials (read-only) for authentication
-
-### Available Docker Tags
-
-- `hazelcast/simulator:latest` - Latest stable release
-- `hazelcast/simulator:v1.0.0` - Specific version tags
-
-### Interactive Docker Usage
-
-For interactive development and debugging:
-
-```bash
-# Start an interactive shell
-docker run --rm -it \
-  -v "$(pwd):/workspace" \
-  -v ~/.aws:/root/.aws:ro \
-  hazelcast/simulator:latest
-
-# Inside the container, you can run any simulator commands
-perftest --help
-inventory --help
-```
-
 ## Creating a benchmark
 
 The first step is to create a benchmark, which can be done using the `perftest` tool.
@@ -327,6 +250,83 @@ To destroy the environment, call the following:
    ```shell
    inventory destroy
    ```
+   
+## Docker Usage Examples
+Here's a complete workflow using the Docker image to run performance tests on AWS:
+### 1. Create a New Benchmark Project
+```bash
+# Create project with Hazelcast 5 template for EC2
+docker run --rm -it -v "$(pwd):/workspace" hazelcast/simulator:latest perftest create --template hazelcast5-ec2 test
+```
+
+### 2. Apply Infrastructure 
+```bash
+# Provision AWS infrastructure (requires AWS credentials)
+docker run --rm -it \
+  -v "$(pwd)/test:/workspace" \
+  -v ~/.aws:/root/.aws:ro \
+  hazelcast/simulator:latest inventory apply
+```
+
+### 3. Install Java on Remote Machines
+```bash
+# Install Java on provisioned instances
+docker run --rm -it \
+  -v "$(pwd)/test:/workspace" \
+  hazelcast/simulator:latest inventory install java
+```
+
+### 4. Install Simulator on Remote Machines
+```bash
+# Install Simulator on remote instances
+docker run --rm -it \
+  -v "$(pwd)/test:/workspace" \
+  -v ~/.aws:/root/.aws:ro \
+  hazelcast/simulator:latest inventory install simulator
+```
+
+### 5. Run Performance Tests
+```bash
+# Execute the performance tests
+docker run --rm -it \
+  -v "$(pwd)/test:/workspace" \
+  hazelcast/simulator:latest perftest run
+```
+
+### 6. Clean Up Infrastructure
+```bash
+# Destroy AWS infrastructure when done
+docker run --rm -it \
+  -v "$(pwd)/test:/workspace" \
+  -v ~/.aws:/root/.aws:ro \
+  hazelcast/simulator:latest inventory destroy
+```
+
+### Docker Volume Mounts Explained
+
+- `-v "$(pwd)/test:/workspace"` - Mounts your test directory as the working directory inside the container
+- `-v ~/.aws:/root/.aws:ro` - Mounts your AWS credentials (read-only) for authentication
+
+### Available Docker Tags
+
+- `hazelcast/simulator:latest` - Latest stable release
+- `hazelcast/simulator:v1.0.0` - Specific version tags
+
+### Interactive Docker Usage
+
+For interactive development and debugging:
+
+```bash
+# Start an interactive shell
+docker run --rm -it \
+  -v "$(pwd):/workspace" \
+  -v ~/.aws:/root/.aws:ro \
+  hazelcast/simulator:latest
+
+# Inside the container, you can run any simulator commands
+perftest --help
+inventory --help
+```
 
 ## SSH to nodes
 
