@@ -45,10 +45,23 @@ jobs:
             type=semver,pattern={{version}}
             type=raw,value=latest,enable={{is_default_branch}}
 
-      - name: Build Java artifacts (required for Docker build)
+      - name: Setup Java
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
         env:
           HZ_SNAPSHOT_INTERNAL_USERNAME: ${{ secrets.HZ_SNAPSHOT_INTERNAL_USERNAME }}
           HZ_SNAPSHOT_INTERNAL_PASSWORD: ${{ secrets.HZ_SNAPSHOT_INTERNAL_PASSWORD }}
+
+        with:
+          java-version: '17'
+          distribution: 'adopt'
+          architecture: 'x64'
+          cache: 'maven'
+          server-id: snapshot-internal
+          server-username: HZ_SNAPSHOT_INTERNAL_USERNAME
+          server-password: HZ_SNAPSHOT_INTERNAL_PASSWORD
+
+
+      - name: Build Java artifacts (required for Docker build)
         run: |
           echo "Building Java components..."
           ./build
