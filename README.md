@@ -89,7 +89,7 @@ Also contains pointers where to go next.
 
 ## Install
 
-### Option 1: Using Docker (Recommended)
+### Option 1: Using Docker
 
 The easiest way to use Hazelcast Simulator is through our Docker image:
 
