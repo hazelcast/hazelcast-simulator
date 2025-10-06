@@ -310,7 +310,7 @@ docker run --rm -it \
 ### Available Docker Tags
 
 - `hazelcast/simulator:latest` - Latest stable release
-- `hazelcast/simulator:v1.0.0` - Specific version tags
+- See [Docker Hub](https://hub.docker.com/r/hazelcast/simulator/tags) for all available version tags
 
 ### Interactive Docker Usage
 
