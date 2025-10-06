@@ -51,8 +51,7 @@ jobs:
 
         with:
           java-version: '17'
-          distribution: 'adopt'
-          architecture: 'x64'
+          distribution: 'termurin'
           cache: 'maven'
           server-id: snapshot-internal
           server-username: HZ_SNAPSHOT_INTERNAL_USERNAME
@@ -92,7 +91,7 @@ jobs:
           
           # Test basic commands are available
           echo "Testing Java installation..."
-          docker exec $CONTAINER_ID java -version
+          docker exec "${CONTAINER_ID}" java -version
           
           echo "Testing Maven installation..."
           docker exec $CONTAINER_ID mvn --version
