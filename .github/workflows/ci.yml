@@ -2,10 +2,10 @@ name: CI - Build, Test, and Push Docker Image
 
 on:
   push:
-    branches: [ master ]
-    tags: [ 'v*' ]
+    branches: master
+    tags: 'v*'
   pull_request:
-    branches: [ master ]
+    branches: master
 
 env:
   REGISTRY: docker.io
