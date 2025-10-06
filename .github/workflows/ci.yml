@@ -81,8 +81,9 @@ jobs:
           tags: ${{ env.TEST_IMAGE_TAG }}
           build-args: |
             PYTHON_VERSION=${{ env.PYTHON_VERSION }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          # Only cache for main branch builds to avoid PR cache overhead and branch isolation issues
+          cache-from: ${{ github.ref == 'refs/heads/master' && 'type=gha' || '' }}
+          cache-to: ${{ github.ref == 'refs/heads/master' && 'type=gha,mode=max' || '' }}
 
       - name: Run container smoke tests
         run: |
@@ -164,8 +165,9 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             PYTHON_VERSION=${{ env.PYTHON_VERSION }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          # Only cache for main branch builds to avoid PR cache overhead and branch isolation issues
+          cache-from: ${{ github.ref == 'refs/heads/master' && 'type=gha' || '' }}
+          cache-to: ${{ github.ref == 'refs/heads/master' && 'type=gha,mode=max' || '' }}
 
       - name: Generate build summary
         if: always()
