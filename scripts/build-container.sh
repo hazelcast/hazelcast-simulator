@@ -44,10 +44,9 @@ if [[ ! -d "lib" ]] || [[ ! -d "drivers" ]]; then
         chmod +x ./build
         echo "$(yellow 'Running local build script...')"
         if ! ./build; then
-            red "Error: Local build failed. Please build the Java components manually or provide Maven credentials."
+            red "Error: Local build failed. Please build the Java components manually."
             red "You can try:"
             red "  1. Run './build' with proper Maven credentials"
-            red "  2. Set HZ_SNAPSHOT_INTERNAL_USERNAME and HZ_SNAPSHOT_INTERNAL_PASSWORD environment variables"
             exit 1
         fi
     else
