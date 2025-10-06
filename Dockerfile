@@ -1,13 +1,16 @@
 FROM ubuntu:24.04
 
+# Declare build arguments
+ARG PYTHON_VERSION=3.11
+
 # Install runtime dependencies with retry mechanism
 RUN apt-get update && apt-get install -y software-properties-common \
     && add-apt-repository ppa:deadsnakes/ppa \
     && apt-get update && apt-get install -y \
         openjdk-17-jdk-headless \
         maven \
-        python3.11 \
-        python3.11-distutils \
+        python${PYTHON_VERSION} \
+        python${PYTHON_VERSION}-distutils \
         python3-pip \
         openssh-client \
         rsync \
@@ -31,11 +34,11 @@ RUN curl -fsSL https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/sh
     apt-get update && apt-get install -y terraform && rm -rf /var/lib/apt/lists/*
 
 # Install AWS CLI
-RUN python3.11 -m pip install --no-cache-dir awscli
+RUN python${PYTHON_VERSION} -m pip install --no-cache-dir awscli
 
 # Install Python dependencies
 COPY requirements.txt /tmp/requirements.txt
-RUN python3.11 -m pip install --no-cache-dir --break-system-packages --ignore-installed -r /tmp/requirements.txt && \
+RUN python${PYTHON_VERSION} -m pip install --no-cache-dir --break-system-packages --ignore-installed -r /tmp/requirements.txt && \
     rm /tmp/requirements.txt
 
 # Create simulator directory structure
@@ -65,26 +68,26 @@ RUN echo '#!/bin/bash' > /opt/simulator/bin/perftest && \
     echo 'export SIMULATOR_HOME=/opt/simulator' >> /opt/simulator/bin/perftest && \
     echo 'export PYTHONPATH=/opt/simulator/src' >> /opt/simulator/bin/perftest && \
     echo 'export PATH="/opt/simulator/bin:$PATH"' >> /opt/simulator/bin/perftest && \
-    echo 'exec python3.11 /opt/simulator/src/perftest_cli.py "$@"' >> /opt/simulator/bin/perftest
+    echo "exec python${PYTHON_VERSION} /opt/simulator/src/perftest_cli.py \"\$@\"" >> /opt/simulator/bin/perftest
 
 # Create inventory wrapper
 RUN echo '#!/bin/bash' > /opt/simulator/bin/inventory && \
     echo 'cd /workspace' >> /opt/simulator/bin/inventory && \
     echo 'export SIMULATOR_HOME=/opt/simulator' >> /opt/simulator/bin/inventory && \
     echo 'export PYTHONPATH=/opt/simulator/src' >> /opt/simulator/bin/inventory && \
-    echo 'exec python3.11 /opt/simulator/src/inventory_cli.py "$@"' >> /opt/simulator/bin/inventory
+    echo "exec python${PYTHON_VERSION} /opt/simulator/src/inventory_cli.py \"\$@\"" >> /opt/simulator/bin/inventory
 
 RUN echo '#!/bin/bash' > /opt/simulator/bin/iperf3test && \
     echo 'cd /workspace' >> /opt/simulator/bin/iperf3test && \
     echo 'export SIMULATOR_HOME=/opt/simulator' >> /opt/simulator/bin/iperf3test && \
     echo 'export PYTHONPATH=/opt/simulator/src' >> /opt/simulator/bin/iperf3test && \
-    echo 'exec python3.11 /opt/simulator/src/iperf3test_cli.py "$@"' >> /opt/simulator/bin/iperf3test
+    echo "exec python${PYTHON_VERSION} /opt/simulator/src/iperf3test_cli.py \"\$@\"" >> /opt/simulator/bin/iperf3test
 
 RUN echo '#!/bin/bash' > /opt/simulator/bin/perfregtest && \
     echo 'cd /workspace' >> /opt/simulator/bin/perfregtest && \
     echo 'export SIMULATOR_HOME=/opt/simulator' >> /opt/simulator/bin/perfregtest && \
     echo 'export PYTHONPATH=/opt/simulator/src' >> /opt/simulator/bin/perfregtest && \
-    echo 'exec python3.11 /opt/simulator/src/perfregtest_cli.py "$@"' >> /opt/simulator/bin/perfregtest
+    echo "exec python${PYTHON_VERSION} /opt/simulator/src/perfregtest_cli.py \"\$@\"" >> /opt/simulator/bin/perfregtest
 
 # Make wrapper scripts executable and create system-wide symlinks
 RUN chmod +x /opt/simulator/bin/perftest /opt/simulator/bin/inventory /opt/simulator/bin/iperf3test /opt/simulator/bin/perfregtest && \

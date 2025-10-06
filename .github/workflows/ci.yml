@@ -9,6 +9,10 @@ on:
 
 env:
   IMAGE_NAME: hazelcast/simulator
+  PYTHON_VERSION: "3.11"
+  TEST_IMAGE_TAG: test-image:latest
+  DOCKER_PLATFORMS: linux/amd64,linux/arm64
+  TEST_PLATFORM: linux/amd64
 
 jobs:
   docker-ci:
@@ -25,7 +29,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3.11.1
         with:
-          platforms: linux/amd64,linux/arm64
+          platforms: ${{ env.DOCKER_PLATFORMS }}
 
       - name: Log in to Docker Hub
         if: github.event_name != 'pull_request'
@@ -60,21 +64,23 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5.6.0
         with:
-          python-version: '3.11'
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Build Java artifacts (required for Docker build)
         run: |
           echo "Building Java components..."
           ./build
-        timeout-minutes: 15
+        timeout-minutes: 15  # Prevents infinite hangs on Maven dependency resolution failures
 
       - name: Build Docker image for testing
         uses: docker/build-push-action@v5.4.0
         with:
           context: .
-          platforms: linux/amd64
+          platforms: ${{ env.TEST_PLATFORM }}
           load: true
-          tags: test-image:latest
+          tags: ${{ env.TEST_IMAGE_TAG }}
+          build-args: |
+            PYTHON_VERSION=${{ env.PYTHON_VERSION }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -84,7 +90,7 @@ jobs:
           
           # Test container startup and basic functionality
           echo "Testing container startup..."
-          CONTAINER_ID=$(docker run -d test-image:latest sleep 30)
+          CONTAINER_ID=$(docker run --rm -d ${{ env.TEST_IMAGE_TAG }} sleep 30)
           
           # Wait for container to be ready
           sleep 5
@@ -94,40 +100,39 @@ jobs:
           docker exec "${CONTAINER_ID}" java -version
           
           echo "Testing Maven installation..."
-          docker exec $CONTAINER_ID mvn --version
+          docker exec "${CONTAINER_ID}" mvn --version
           
           echo "Testing Python installation..."
-          docker exec $CONTAINER_ID python3.11 --version
+          docker exec "${CONTAINER_ID}" python${{ env.PYTHON_VERSION }} --version
           
           echo "Testing Terraform installation..."
-          docker exec $CONTAINER_ID terraform version
+          docker exec "${CONTAINER_ID}" terraform version
           
           echo "Testing AWS CLI installation..."
-          docker exec $CONTAINER_ID aws --version
+          docker exec "${CONTAINER_ID}" aws --version
           
           echo "Testing simulator commands availability..."
-          docker exec $CONTAINER_ID which perftest
-          docker exec $CONTAINER_ID which inventory
+          docker exec "${CONTAINER_ID}" which perftest
+          docker exec "${CONTAINER_ID}" which inventory
           
           echo "Testing simulator welcome message..."
-          docker exec $CONTAINER_ID /opt/simulator/bin/simulator-welcome
+          docker exec "${CONTAINER_ID}" /opt/simulator/bin/simulator-welcome
           
           echo "Testing perftest help command..."
-          docker exec $CONTAINER_ID perftest --help || true
+          docker exec "${CONTAINER_ID}" perftest --help || true
           
           echo "Testing inventory help command..."
-          docker exec $CONTAINER_ID inventory --help || true
+          docker exec "${CONTAINER_ID}" inventory --help || true
           
-          # Clean up
-          docker stop $CONTAINER_ID
-          docker rm $CONTAINER_ID
+          # Stop container 
+          docker stop "${CONTAINER_ID}"
           
           echo "Smoke tests completed successfully!"
 
       - name: Run security scan with Trivy
         uses: aquasecurity/trivy-action@0.33.1
         with:
-          image-ref: test-image:latest
+          image-ref: ${{ env.TEST_IMAGE_TAG }}
           format: 'sarif'
           output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH'
@@ -143,7 +148,7 @@ jobs:
       - name: Run Trivy vulnerability scanner (table output)
         uses: aquasecurity/trivy-action@0.33.1
         with:
-          image-ref: test-image:latest
+          image-ref: ${{ env.TEST_IMAGE_TAG }}
           format: 'table'
           severity: 'CRITICAL,HIGH,MEDIUM'
           exit-code: '0'  # Don't fail on vulnerabilities for now
@@ -153,10 +158,12 @@ jobs:
         uses: docker/build-push-action@v5.4.0
         with:
           context: .
-          platforms: linux/amd64,linux/arm64
+          platforms: ${{ env.DOCKER_PLATFORMS }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            PYTHON_VERSION=${{ env.PYTHON_VERSION }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -168,7 +175,7 @@ jobs:
           echo "### Image Details" >> $GITHUB_STEP_SUMMARY
           echo "- **Repository**: ${{ env.IMAGE_NAME }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Tags**: ${{ steps.meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Platforms**: linux/amd64, linux/arm64" >> $GITHUB_STEP_SUMMARY
+          echo "- **Platforms**: ${{ env.DOCKER_PLATFORMS }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Test Results" >> $GITHUB_STEP_SUMMARY
           echo "- **Java Build**: Completed" >> $GITHUB_STEP_SUMMARY

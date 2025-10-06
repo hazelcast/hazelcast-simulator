@@ -12,8 +12,9 @@ yellow() { echo -e "\033[33m$1\033[0m"; }
 blue() { echo -e "\033[34m$1\033[0m"; }
 
 # Configuration
-IMAGE_NAME="hazelcast/simulator"
+IMAGE_NAME="${IMAGE_NAME:-hazelcast/simulator}"
 IMAGE_TAG="${1:-latest}"
+PYTHON_VERSION="${PYTHON_VERSION:-3.11}"
 DOCKERFILE="./Dockerfile"
 BUILD_CONTEXT="."
 
@@ -66,6 +67,7 @@ echo "$(blue 'Starting Docker build...')"
 
 # Build with BuildKit for better performance
 DOCKER_BUILDKIT=1 docker build \
+    --build-arg PYTHON_VERSION="$PYTHON_VERSION" \
     -t "$IMAGE_NAME:$IMAGE_TAG" \
     -f "$DOCKERFILE" \
     .
