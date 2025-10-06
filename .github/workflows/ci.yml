@@ -93,8 +93,9 @@ jobs:
           echo "Testing container startup..."
           CONTAINER_ID=$(docker run --rm -d ${{ env.TEST_IMAGE_TAG }} sleep 30)
           
-          # Wait for container to be ready
-          sleep 5
+          # Wait for container to be healthy using HEALTHCHECK
+          echo "Waiting for container to be healthy..."
+          timeout 60 bash -c 'until [ "$(docker inspect "${CONTAINER_ID}" --format="{{.State.Health.Status}}")" = "healthy" ]; do sleep 2; done'
           
           # Test basic commands are available
           echo "Testing Java installation..."

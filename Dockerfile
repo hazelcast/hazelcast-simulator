@@ -147,6 +147,13 @@ RUN echo "Verifying copied artifacts..." && \
     ls -la /opt/simulator/user-lib/ && \
     echo "Pre-built artifact verification completed."
 
+# Add health check to verify container readiness
+HEALTHCHECK --interval=10s --timeout=5s --start-period=30s --retries=3 \
+  CMD java -version >/dev/null 2>&1 && \
+      python${PYTHON_VERSION} --version >/dev/null 2>&1 && \
+      which perftest >/dev/null 2>&1 && \
+      which inventory >/dev/null 2>&1 || exit 1
+
 # Set default command to show welcome and start interactive shell
 CMD ["bash", "-c", "/opt/simulator/bin/simulator-welcome && exec bash"]
 
