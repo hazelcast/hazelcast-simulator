@@ -93,14 +93,18 @@ Also contains pointers where to go next.
 
 The easiest way to use Hazelcast Simulator is through our Docker image:
 
+#### Pull the latest image
 ```bash
-# Pull the latest image
 docker pull hazelcast/simulator:latest
+```
 
-# Create a project directory
+#### Create a project directory
+```bash
 mkdir my-simulator-project && cd my-simulator-project
+```
 
-# Create your first benchmark
+#### Create your first benchmark
+```bash
 docker run --rm -it -v "$(pwd):/workspace" hazelcast/simulator:latest perftest create --template hazelcast5-ec2 test
 ```
 
@@ -250,7 +254,7 @@ To destroy the environment, call the following:
    ```shell
    inventory destroy
    ```
-   
+
 ## Docker Usage Examples
 Here's a complete workflow using the Docker image to run performance tests on AWS:
 ### 1. Create a New Benchmark Project
