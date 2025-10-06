@@ -160,5 +160,5 @@ CMD ["bash", "-c", "/opt/simulator/bin/simulator-welcome && exec bash"]
 # Add metadata labels
 LABEL maintainer="Hazelcast, Inc."
 LABEL description="Hazelcast Simulator"
-LABEL version="v0.0.1"
+LABEL version="v2.0.0"
 LABEL repository="https://github.com/hazelcast/hazelcast-simulator"
