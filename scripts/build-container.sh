@@ -87,6 +87,6 @@ if [[ $? -eq 0 ]]; then
     echo "  docker run --rm $IMAGE_NAME:$IMAGE_TAG perftest --help"
     echo "  docker run --rm $IMAGE_NAME:$IMAGE_TAG inventory --help"
 else
-    red "❌ Container build failed!"
+    red "Container build failed!"
     exit 1
 fi
