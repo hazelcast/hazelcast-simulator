@@ -73,7 +73,7 @@ DOCKER_BUILDKIT=1 docker build \
 
 if [[ $? -eq 0 ]]; then
     echo
-    green "✅ Container build completed successfully!"
+    green "Container build completed successfully!"
     echo
     echo "$(blue 'Image details:')"
     docker images "$IMAGE_NAME:$IMAGE_TAG"
