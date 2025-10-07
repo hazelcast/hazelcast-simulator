@@ -2,6 +2,7 @@
 
 # Hazelcast Simulator Container Build Script
 # This script builds the Hazelcast Simulator container using pre-built artifacts
+# For local development and testing purposes only
 
 set -e
 

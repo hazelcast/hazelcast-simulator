@@ -7,7 +7,7 @@ ARG PYTHON_VERSION=3.11
 RUN apt-get update && apt-get install -y software-properties-common \
     && add-apt-repository ppa:deadsnakes/ppa \
     && apt-get update && apt-get install -y \
-        openjdk-17-jdk-headless \
+        wget \
         maven \
         python${PYTHON_VERSION} \
         python${PYTHON_VERSION}-distutils \
@@ -27,6 +27,20 @@ RUN apt-get update && apt-get install -y software-properties-common \
         iputils-ping \
         ca-certificates \
     && rm -rf /var/lib/apt/lists/*
+
+# Install Eclipse Temurin JDK 17
+RUN wget -qO - https://packages.adoptium.net/artifactory/api/gpg/key/public | gpg --dearmor -o /usr/share/keyrings/adoptium-archive-keyring.gpg && \
+    echo "deb [signed-by=/usr/share/keyrings/adoptium-archive-keyring.gpg] https://packages.adoptium.net/artifactory/deb $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/adoptium.list && \
+    apt-get update && apt-get install -y temurin-17-jdk && rm -rf /var/lib/apt/lists/*
+
+# Set Temurin JDK 17 as the default Java version and configure JAVA_HOME
+RUN JAVA_HOME_PATH=$(find /usr/lib/jvm -name "temurin-17*" -type d | head -1) && \
+    update-alternatives --install /usr/bin/java java $JAVA_HOME_PATH/bin/java 1700 && \
+    update-alternatives --install /usr/bin/javac javac $JAVA_HOME_PATH/bin/javac 1700 && \
+    update-alternatives --set java $JAVA_HOME_PATH/bin/java && \
+    update-alternatives --set javac $JAVA_HOME_PATH/bin/javac && \
+    echo "export JAVA_HOME=$JAVA_HOME_PATH" >> /etc/environment && \
+    echo "export JAVA_HOME=$JAVA_HOME_PATH" >> /etc/bash.bashrc
 
 # Install Terraform
 RUN curl -fsSL https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg && \
