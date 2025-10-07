@@ -20,7 +20,7 @@ jobs:
     services:
       # Local Docker registry for testing multi-platform images
       registry:
-        image: registry:2
+        image: registry:3
         ports:
           - 5000:5000
         options: >-
@@ -101,7 +101,7 @@ jobs:
           
           # Test container startup and basic functionality
           echo "Testing container startup..."
-          CONTAINER_ID=$(docker run --rm -d ${{ env.LOCAL_REGISTRY_IMAGE }} sleep 30)
+          CONTAINER_ID=$(docker run --rm -d ${LOCAL_REGISTRY_IMAGE} sleep 30)
           
           # Wait for container to be healthy using HEALTHCHECK
           echo "Waiting for container to be healthy..."
@@ -140,14 +140,6 @@ jobs:
           docker stop "${CONTAINER_ID}"
           
           echo "Smoke tests completed successfully!"
-
-      - name: Install Skopeo
-        if: github.event_name != 'pull_request'
-        run: |
-          echo "Installing Skopeo for reliable registry-to-registry image copying..."
-          sudo apt-get update -qq
-          sudo apt-get install -y skopeo
-          skopeo --version
 
       - name: Copy tested image to Docker Hub with Skopeo
         id: image-publish
@@ -200,15 +192,9 @@ jobs:
           
           # Determine overall workflow status
           OVERALL_STATUS="Success"
-          if [ "${{ steps.java-build.outcome }}" = "failure" ] || \
-             [ "${{ steps.multiplatform-build.outcome }}" = "failure" ] || \
-             [ "${{ steps.smoke-tests.outcome }}" = "failure" ] || \
-             [ "${{ steps.image-publish.outcome }}" = "failure" ]; then
+          if [ "${{ failure() }}" = "true" ]; then
             OVERALL_STATUS="Failed"
-          elif [ "${{ steps.java-build.outcome }}" = "cancelled" ] || \
-               [ "${{ steps.multiplatform-build.outcome }}" = "cancelled" ] || \
-               [ "${{ steps.smoke-tests.outcome }}" = "cancelled" ] || \
-               [ "${{ steps.image-publish.outcome }}" = "cancelled" ]; then
+          elif [ "${{ cancelled() }}" = "true" ]; then
             OVERALL_STATUS="Cancelled"
           fi
           
