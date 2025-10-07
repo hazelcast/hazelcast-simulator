@@ -257,15 +257,16 @@ To destroy the environment, call the following:
 
 ## Docker Usage Examples
 Here's a complete workflow using the Docker image to run performance tests on AWS:
+
 ### 1. Create a New Benchmark Project
+#### Create project with Hazelcast 5 template for EC2
 ```bash
-# Create project with Hazelcast 5 template for EC2
 docker run --rm -it -v "$(pwd):/workspace" hazelcast/simulator:latest perftest create --template hazelcast5-ec2 test
 ```
 
 ### 2. Apply Infrastructure 
+#### Provision AWS infrastructure (requires AWS credentials)
 ```bash
-# Provision AWS infrastructure (requires AWS credentials)
 docker run --rm -it \
   -v "$(pwd)/test:/workspace" \
   -v ~/.aws:/root/.aws:ro \
@@ -274,7 +275,6 @@ docker run --rm -it \
 
 ### 3. Install Java on Remote Machines
 ```bash
-# Install Java on provisioned instances
 docker run --rm -it \
   -v "$(pwd)/test:/workspace" \
   hazelcast/simulator:latest inventory install java
@@ -282,7 +282,52 @@ docker run --rm -it \
 
 ### 4. Install Simulator on Remote Machines
 ```bash
-# Install Simulator on remote instances
+docker run --rm -it \
+  -v "$(pwd)/test:/workspace" \
+  -v ~/.aws:/root/.aws:ro \
+  hazelcast/simulator:latest inventory install simulator
+```
+
+### 5. Run Performance Tests
+```bash
+docker run --rm -it \
+  -v "$(pwd)/test:/workspace" \
+  hazelcast/simulator:latest perftest run
+```
+
+### 6. Clean Up Infrastructure
+```bash
+docker run --rm -it \
+  -v "$(pwd)/test:/workspace" \
+  -v ~/.aws:/root/.aws:ro \
+  hazelcast/simulator:latest inventory destroy
+```
+
+Here's a complete workflow using the Docker image to run performance tests on existing/running Hazelcast Cluster:
+
+### 1. Create a New Benchmark Project
+#### Create project with Hazelcast 5 existing cluster template
+```bash
+docker run --rm -it -v "$(pwd):/workspace" hazelcast/simulator:latest perftest create --template hazelcast5-existing-cluster test
+```
+
+### 2. Modify the Environment 
+Edit the `inventory.yaml` file to specify your loadgenerator setup:
+- IP addresses and SSH users for `loadgenerators`
+
+Edit the `client-hazelcast.xml` file to to point to your Hazelcast cluster::
+- Under the <cluster-members> section, list the IP addresses and ports of your Hazelcast member nodes.
+- Update the <cluster-name> element to match the name of your Hazelcast cluster
+
+### 3. Install Java on Load Generator Machines
+```bash
+docker run --rm -it \
+  -v "$(pwd)/test:/workspace" \
+  hazelcast/simulator:latest inventory install java
+```
+
+### 4. Install Simulator on Load Generator Machines
+```bash
 docker run --rm -it \
   -v "$(pwd)/test:/workspace" \
   -v ~/.aws:/root/.aws:ro \
