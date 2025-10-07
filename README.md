@@ -336,19 +336,9 @@ docker run --rm -it \
 
 ### 5. Run Performance Tests
 ```bash
-# Execute the performance tests
 docker run --rm -it \
   -v "$(pwd)/test:/workspace" \
   hazelcast/simulator:latest perftest run
-```
-
-### 6. Clean Up Infrastructure
-```bash
-# Destroy AWS infrastructure when done
-docker run --rm -it \
-  -v "$(pwd)/test:/workspace" \
-  -v ~/.aws:/root/.aws:ro \
-  hazelcast/simulator:latest inventory destroy
 ```
 
 ### Docker Volume Mounts Explained
