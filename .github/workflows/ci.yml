@@ -232,4 +232,3 @@ jobs:
             echo "Images were not published due to publication step failure." >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
           fi
-          
