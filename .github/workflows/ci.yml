@@ -145,36 +145,19 @@ jobs:
         id: image-publish
         if: github.event_name != 'pull_request'
         run: |
-          echo "Copying tested multi-platform image from local registry to Docker Hub using Skopeo..."
+          echo "Syncing multi-platform image to Docker Hub using Skopeo sync..."
           
-          # Verify source manifest list exists
-          echo "Verifying source manifest in local registry..."
-          skopeo inspect --raw docker://${{ env.LOCAL_REGISTRY_IMAGE }} | jq -r '.mediaType'
-                    
-          # Copy image for each tag using Skopeo
-          echo "${{ steps.meta.outputs.tags }}" | while IFS= read -r tag; do
-            if [ -n "$tag" ]; then
-              echo "Processing tag: $tag"
-              
-              # Copy the entire manifest list (all platforms) to Docker Hub
-              # Skopeo preserves the manifest list structure and handles multi-platform images correctly
-              echo "Copying multi-platform image to: $tag"
-              skopeo copy \
-                --all \
-                --retry-times 3 \
-                --src-tls-verify=false \
-                docker://${{ env.LOCAL_REGISTRY_IMAGE }} \
-                docker://"$tag"
-              
-              # Verify the copied image manifest
-              echo "Verifying copied manifest for: $tag"
-              skopeo inspect --raw docker://"$tag" | jq -r '.mediaType'
-                            
-              echo "Successfully copied multi-platform image to: $tag"
-            fi
-          done
+          # Sync all tags at once using skopeo sync
+          skopeo sync \
+            --src docker \
+            --dest docker \
+            --all \
+            --src-tls-verify=false \
+            --retry-times 3 \
+            ${{ env.LOCAL_REGISTRY_IMAGE }} \
+            ${{ env.IMAGE_NAME }}
           
-          echo "All images successfully copied to Docker Hub with Skopeo!"
+          echo "Successfully synced all images to Docker Hub!"
           
       - name: Generate build summary
         if: always()
