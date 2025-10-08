@@ -6,6 +6,13 @@ on:
     tags: 'v*'
   pull_request:
     branches: master
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        description: 'Enable tmate debugging session'
+        required: false
+        default: false
+        type: boolean
 
 env:
   IMAGE_NAME: ${{ vars.IMAGE_NAME }} # hazelcast/simulator
@@ -29,6 +36,12 @@ jobs:
           --health-timeout 5s
           --health-retries 5
     steps:
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+        with:
+          detached: true
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
