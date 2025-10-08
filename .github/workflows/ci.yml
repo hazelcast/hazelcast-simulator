@@ -12,6 +12,9 @@ env:
   PYTHON_VERSION: "3.11"
   DOCKER_PLATFORMS: linux/amd64,linux/arm64
   LOCAL_REGISTRY_IMAGE: localhost:5000/hazelcast/simulator:test
+  HZ_SNAPSHOT_INTERNAL_USERNAME: ${{ secrets.HZ_SNAPSHOT_INTERNAL_USERNAME }}
+  HZ_SNAPSHOT_INTERNAL_PASSWORD: ${{ secrets.HZ_SNAPSHOT_INTERNAL_PASSWORD }}
+
 
 jobs:
   docker-ci:
@@ -58,9 +61,6 @@ jobs:
 
       - name: Setup Java
         uses: actions/setup-java@v4
-        env:
-          HZ_SNAPSHOT_INTERNAL_USERNAME: ${{ secrets.HZ_SNAPSHOT_INTERNAL_USERNAME }}
-          HZ_SNAPSHOT_INTERNAL_PASSWORD: ${{ secrets.HZ_SNAPSHOT_INTERNAL_PASSWORD }}
         with:
           java-version: '17'
           distribution: 'temurin'
