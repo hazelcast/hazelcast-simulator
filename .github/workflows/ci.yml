@@ -8,7 +8,7 @@ on:
     branches: master
 
 env:
-  IMAGE_NAME: ${{ vars.IMAGE_NAME }}
+  IMAGE_NAME: ${{ vars.IMAGE_NAME }}  # hazelcast/simulator
   PYTHON_VERSION: "3.11"
   DOCKER_PLATFORMS: linux/amd64,linux/arm64
   LOCAL_REGISTRY_IMAGE: localhost:5000/${{ vars.IMAGE_NAME }}:test
@@ -59,7 +59,7 @@ jobs:
 
       - name: Setup Java
         uses: actions/setup-java@v4
-        env: 
+        env:
           HZ_SNAPSHOT_INTERNAL_USERNAME: ${{ secrets.HZ_SNAPSHOT_INTERNAL_USERNAME }}
           HZ_SNAPSHOT_INTERNAL_PASSWORD: ${{ secrets.HZ_SNAPSHOT_INTERNAL_PASSWORD }}
 
