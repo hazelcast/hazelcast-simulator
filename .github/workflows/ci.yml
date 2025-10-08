@@ -63,7 +63,7 @@ jobs:
           HZ_SNAPSHOT_INTERNAL_PASSWORD: ${{ secrets.HZ_SNAPSHOT_INTERNAL_PASSWORD }}
         with:
           java-version: '17'
-          distribution: 'termurin'
+          distribution: 'temurin'
           cache: 'maven'
           server-id: snapshot-internal
           server-username: HZ_SNAPSHOT_INTERNAL_USERNAME
