@@ -59,6 +59,10 @@ jobs:
 
       - name: Setup Java
         uses: actions/setup-java@v4
+        env: 
+          HZ_SNAPSHOT_INTERNAL_USERNAME: ${{ secrets.HZ_SNAPSHOT_INTERNAL_USERNAME }}
+          HZ_SNAPSHOT_INTERNAL_PASSWORD: ${{ secrets.HZ_SNAPSHOT_INTERNAL_PASSWORD }}
+
         with:
           java-version: '17'
           distribution: 'temurin'
@@ -74,9 +78,6 @@ jobs:
 
       - name: Build Java artifacts (required for Docker build)
         id: java-build
-        env: 
-          HZ_SNAPSHOT_INTERNAL_USERNAME: ${{ secrets.HZ_SNAPSHOT_INTERNAL_USERNAME }}
-          HZ_SNAPSHOT_INTERNAL_PASSWORD: ${{ secrets.HZ_SNAPSHOT_INTERNAL_PASSWORD }}
         run: |
           echo "Building Java components..."
           ./build
