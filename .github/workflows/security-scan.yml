@@ -12,7 +12,7 @@ on:
         default: 'latest'
 
 env:
-  IMAGE_NAME: ${{ vars.IMAGE_NAME }} # hazelcast/simulator
+  IMAGE_NAME: hazelcast/simulator
 
 jobs:
   security-scan:
