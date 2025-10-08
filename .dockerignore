@@ -1,0 +1,39 @@
+# Build outputs and caches
+**/target/
+**/.mvn/
+**/*.log
+**/.pytest_cache/
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+
+# Development files
+**/.idea/
+**/.vscode/
+**/.DS_Store
+**/.git/
+**/.gitignore
+**/venv/
+**/node_modules/
+
+# Test and documentation
+**/test-*/
+**/docs/
+**/examples/
+**/*.md
+!requirements.txt
+
+# Runtime files
+**/logs/
+**/runs/
+**/aws/terraform.tfstate*
+**/key*
+**/inventory.yaml
+!**/inventory_plan.yaml
+
+# Temporary files
+**/tmp/
+**/.temp/
+**/*.tmp
+**/*.swp
+**/*.bak

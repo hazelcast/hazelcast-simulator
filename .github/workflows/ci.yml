@@ -1,0 +1,234 @@
+name: CI - Build, Test, and Push Docker Image
+
+on:
+  push:
+    branches: master
+    tags: 'v*'
+  pull_request:
+    branches: master
+
+env:
+  IMAGE_NAME: ${{ vars.IMAGE_NAME }} # hazelcast/simulator
+  PYTHON_VERSION: "3.11"
+  DOCKER_PLATFORMS: linux/amd64,linux/arm64
+  LOCAL_REGISTRY_IMAGE: localhost:5000/${{ vars.IMAGE_NAME }}:test
+
+jobs:
+  docker-ci:
+    name: Docker Build, Test, and Push
+    runs-on: ubuntu-latest
+    services:
+      # Local Docker registry for testing multi-platform images
+      registry:
+        image: registry:3
+        ports:
+          - 5000:5000
+        options: >-
+          --health-cmd "wget --no-verbose --tries=1 --spider http://localhost:5000/ || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          platforms: ${{ env.DOCKER_PLATFORMS }}
+          # Configure Buildx to use the local registry for multi-platform builds
+          driver-opts: |
+            network=host
+
+      - name: Log in to Docker Hub
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_NAME }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        env:
+          HZ_SNAPSHOT_INTERNAL_USERNAME: ${{ secrets.HZ_SNAPSHOT_INTERNAL_USERNAME }}
+          HZ_SNAPSHOT_INTERNAL_PASSWORD: ${{ secrets.HZ_SNAPSHOT_INTERNAL_PASSWORD }}
+        with:
+          java-version: '17'
+          distribution: 'termurin'
+          cache: 'maven'
+          server-id: snapshot-internal
+          server-username: HZ_SNAPSHOT_INTERNAL_USERNAME
+          server-password: HZ_SNAPSHOT_INTERNAL_PASSWORD
+          
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Build Java artifacts (required for Docker build)
+        id: java-build
+        run: |
+          echo "Building Java components..."
+          ./build
+        timeout-minutes: 15  # Prevents infinite hangs on Maven dependency resolution failures
+
+      - name: Build and push multi-platform image to local registry
+        id: multiplatform-build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: ${{ env.DOCKER_PLATFORMS }}
+          push: true
+          tags: ${{ env.LOCAL_REGISTRY_IMAGE }}
+          build-args: |
+            PYTHON_VERSION=${{ env.PYTHON_VERSION }}
+          # Only cache for main branch builds to avoid PR cache overhead and branch isolation issues
+          cache-from: ${{ github.ref == 'refs/heads/master' && 'type=gha' || '' }}
+          cache-to: ${{ github.ref == 'refs/heads/master' && 'type=gha,mode=max' || '' }}
+      - name: Run container smoke tests
+        id: smoke-tests
+        run: |
+          echo "Running container smoke tests on multi-platform image..."
+          
+          # Test container startup and basic functionality
+          echo "Testing container startup..."
+          CONTAINER_ID=$(docker run --rm -d ${LOCAL_REGISTRY_IMAGE} sleep 30)
+          
+          # Wait for container to be healthy using HEALTHCHECK
+          echo "Waiting for container to be healthy..."
+          timeout 60 bash -c 'until [ "$(docker inspect "${CONTAINER_ID}" --format="{{.State.Health.Status}}")" = "healthy" ]; do sleep 2; done'
+          
+          # Test basic commands are available
+          echo "Testing Java installation..."
+          docker exec "${CONTAINER_ID}" java -version
+          
+          echo "Testing Maven installation..."
+          docker exec "${CONTAINER_ID}" mvn --version
+          
+          echo "Testing Python installation..."
+          docker exec "${CONTAINER_ID}" python${{ env.PYTHON_VERSION }} --version
+          
+          echo "Testing Terraform installation..."
+          docker exec "${CONTAINER_ID}" terraform version
+          
+          echo "Testing AWS CLI installation..."
+          docker exec "${CONTAINER_ID}" aws --version
+          
+          echo "Testing simulator commands availability..."
+          docker exec "${CONTAINER_ID}" which perftest
+          docker exec "${CONTAINER_ID}" which inventory
+          
+          echo "Testing simulator welcome message..."
+          docker exec "${CONTAINER_ID}" /opt/simulator/bin/simulator-welcome
+          
+          echo "Testing perftest help command..."
+          docker exec "${CONTAINER_ID}" perftest --help || true
+          
+          echo "Testing inventory help command..."
+          docker exec "${CONTAINER_ID}" inventory --help || true
+          
+          # Stop container 
+          docker stop "${CONTAINER_ID}"
+          
+          echo "Smoke tests completed successfully!"
+
+      - name: Copy tested image to Docker Hub with Skopeo
+        id: image-publish
+        if: github.event_name != 'pull_request'
+        run: |
+          echo "Syncing multi-platform image to Docker Hub using Skopeo sync..."
+          
+          # Sync all tags at once using skopeo sync
+          skopeo sync \
+            --src docker \
+            --dest docker \
+            --all \
+            --src-tls-verify=false \
+            --retry-times 3 \
+            ${{ env.LOCAL_REGISTRY_IMAGE }} \
+            ${{ env.IMAGE_NAME }}
+          
+          echo "Successfully synced all images to Docker Hub!"
+          
+      - name: Generate build summary
+        if: always()
+        run: |
+          # Function to determine status display
+          get_status() {
+            case "$1" in
+              "success") echo "Success" ;;
+              "failure") echo "Failed" ;;
+              "cancelled") echo "Cancelled" ;;
+              "skipped") echo "Skipped" ;;
+              *) echo "Unknown" ;;
+            esac
+          }
+          
+          # Determine overall workflow status
+          OVERALL_STATUS="Success"
+          if [ "${{ failure() }}" = "true" ]; then
+            OVERALL_STATUS="Failed"
+          elif [ "${{ cancelled() }}" = "true" ]; then
+            OVERALL_STATUS="Cancelled"
+          fi
+          
+          echo "## Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Overall Status**: $OVERALL_STATUS" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Image Details" >> $GITHUB_STEP_SUMMARY
+          echo "- **Repository**: ${{ env.IMAGE_NAME }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Tags**: ${{ steps.meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Platforms**: ${{ env.DOCKER_PLATFORMS }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Step Results" >> $GITHUB_STEP_SUMMARY
+          echo "- **Java Build**: $(get_status '${{ steps.java-build.outcome }}')" >> $GITHUB_STEP_SUMMARY
+          echo "- **Multi-Platform Build**: $(get_status '${{ steps.multiplatform-build.outcome }}')" >> $GITHUB_STEP_SUMMARY
+          echo "- **Container Smoke Tests**: $(get_status '${{ steps.smoke-tests.outcome }}')" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ github.event_name }}" != "pull_request" ]; then
+            echo "- **Image Publication**: $(get_status '${{ steps.image-publish.outcome }}')" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- **Image Publication**: Skipped (PR build)" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Show failure details if any step failed
+          if [ "$OVERALL_STATUS" = "Failed" ]; then
+            echo "### Failure Details" >> $GITHUB_STEP_SUMMARY
+            if [ "${{ steps.java-build.outcome }}" = "failure" ]; then
+              echo "- Java Build failed - check build logs for compilation or dependency issues" >> $GITHUB_STEP_SUMMARY
+            fi
+            if [ "${{ steps.multiplatform-build.outcome }}" = "failure" ]; then
+              echo "- Multi-Platform Build failed - check Dockerfile and build context" >> $GITHUB_STEP_SUMMARY
+            fi
+            if [ "${{ steps.smoke-tests.outcome }}" = "failure" ]; then
+              echo "- Container Smoke Tests failed - check container functionality and dependencies" >> $GITHUB_STEP_SUMMARY
+            fi
+            if [ "${{ steps.image-publish.outcome }}" = "failure" ]; then
+              echo "- Image Publication failed - check registry credentials and connectivity" >> $GITHUB_STEP_SUMMARY
+            fi
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Show published images section only if publication succeeded
+          if [ "${{ github.event_name }}" != "pull_request" ] && [ "${{ steps.image-publish.outcome }}" = "success" ]; then
+            echo "### Published Images" >> $GITHUB_STEP_SUMMARY
+            echo "The following images have been published:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "${{ steps.meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ github.event_name }}" != "pull_request" ] && [ "${{ steps.image-publish.outcome }}" != "success" ]; then
+            echo "### Image Publication" >> $GITHUB_STEP_SUMMARY
+            echo "Images were not published due to publication step failure." >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi

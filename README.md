@@ -89,6 +89,27 @@ Also contains pointers where to go next.
 
 ## Install
 
+### Option 1: Using Docker
+
+The easiest way to use Hazelcast Simulator is through our Docker image:
+
+#### Pull the latest image
+```bash
+docker pull hazelcast/simulator:latest
+```
+
+#### Create a project directory
+```bash
+mkdir my-simulator-project && cd my-simulator-project
+```
+
+#### Create your first benchmark
+```bash
+docker run --rm -it -v "$(pwd):/workspace" hazelcast/simulator:latest perftest create --template hazelcast5-ec2 test
+```
+
+### Option 2: Local Installation
+
 1. Checkout the Simulator git repository:
 
     ```shell
@@ -233,6 +254,118 @@ To destroy the environment, call the following:
    ```shell
    inventory destroy
    ```
+
+## Docker Usage Examples
+Here's a complete workflow using the Docker image to run performance tests on AWS:
+
+### 1. Create a New Benchmark Project
+#### Create project with Hazelcast 5 template for EC2
+```bash
+docker run --rm -it -v "$(pwd):/workspace" hazelcast/simulator:latest perftest create --template hazelcast5-ec2 test
+```
+
+### 2. Apply Infrastructure 
+#### Provision AWS infrastructure (requires AWS credentials)
+```bash
+docker run --rm -it \
+  -v "$(pwd)/test:/workspace" \
+  -v ~/.aws:/root/.aws:ro \
+  hazelcast/simulator:latest inventory apply
+```
+
+### 3. Install Java on Remote Machines
+```bash
+docker run --rm -it \
+  -v "$(pwd)/test:/workspace" \
+  hazelcast/simulator:latest inventory install java
+```
+
+### 4. Install Simulator on Remote Machines
+```bash
+docker run --rm -it \
+  -v "$(pwd)/test:/workspace" \
+  -v ~/.aws:/root/.aws:ro \
+  hazelcast/simulator:latest inventory install simulator
+```
+
+### 5. Run Performance Tests
+```bash
+docker run --rm -it \
+  -v "$(pwd)/test:/workspace" \
+  hazelcast/simulator:latest perftest run
+```
+
+### 6. Clean Up Infrastructure
+```bash
+docker run --rm -it \
+  -v "$(pwd)/test:/workspace" \
+  -v ~/.aws:/root/.aws:ro \
+  hazelcast/simulator:latest inventory destroy
+```
+
+Here's a complete workflow using the Docker image to run performance tests on existing/running Hazelcast Cluster:
+
+### 1. Create a New Benchmark Project
+#### Create project with Hazelcast 5 existing cluster template
+```bash
+docker run --rm -it -v "$(pwd):/workspace" hazelcast/simulator:latest perftest create --template hazelcast5-existing-cluster test
+```
+
+### 2. Modify the Environment 
+Edit the `inventory.yaml` file to specify your loadgenerator setup:
+- IP addresses and SSH users for `loadgenerators`
+
+Edit the `client-hazelcast.xml` file to to point to your Hazelcast cluster::
+- Under the <cluster-members> section, list the IP addresses and ports of your Hazelcast member nodes.
+- Update the <cluster-name> element to match the name of your Hazelcast cluster
+
+### 3. Install Java on Load Generator Machines
+```bash
+docker run --rm -it \
+  -v "$(pwd)/test:/workspace" \
+  hazelcast/simulator:latest inventory install java
+```
+
+### 4. Install Simulator on Load Generator Machines
+```bash
+docker run --rm -it \
+  -v "$(pwd)/test:/workspace" \
+  -v ~/.aws:/root/.aws:ro \
+  hazelcast/simulator:latest inventory install simulator
+```
+
+### 5. Run Performance Tests
+```bash
+docker run --rm -it \
+  -v "$(pwd)/test:/workspace" \
+  hazelcast/simulator:latest perftest run
+```
+
+### Docker Volume Mounts Explained
+
+- `-v "$(pwd)/test:/workspace"` - Mounts your test directory as the working directory inside the container
+- `-v ~/.aws:/root/.aws:ro` - Mounts your AWS credentials (read-only) for authentication
+
+### Available Docker Tags
+
+- `hazelcast/simulator:latest` - Latest stable release
+- See [Docker Hub](https://hub.docker.com/r/hazelcast/simulator/tags) for all available version tags
+
+### Interactive Docker Usage
+
+For interactive development and debugging:
+
+```bash
+# Start an interactive shell
+docker run --rm -it \
+  -v "$(pwd):/workspace" \
+  -v ~/.aws:/root/.aws:ro \
+  hazelcast/simulator:latest
+
+# Inside the container, you can run any simulator commands
+perftest --help
+inventory --help
+```
 
 ## SSH to nodes
 
