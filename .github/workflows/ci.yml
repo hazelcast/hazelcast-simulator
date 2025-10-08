@@ -63,7 +63,7 @@ jobs:
           HZ_SNAPSHOT_INTERNAL_PASSWORD: ${{ secrets.HZ_SNAPSHOT_INTERNAL_PASSWORD }}
         with:
           java-version: '17'
-          distribution: 'termurin'
+          distribution: 'temurin'
           cache: 'maven'
           server-id: snapshot-internal
           server-username: HZ_SNAPSHOT_INTERNAL_USERNAME
@@ -175,9 +175,9 @@ jobs:
           
           # Determine overall workflow status
           OVERALL_STATUS="Success"
-          if [ "${{ failure() }}" = "true" ]; then
+          if [ "${{ job.status }}" = "failure" ]; then
             OVERALL_STATUS="Failed"
-          elif [ "${{ cancelled() }}" = "true" ]; then
+          elif [ "${{ job.status }}" = "cancelled" ]; then
             OVERALL_STATUS="Cancelled"
           fi
           
