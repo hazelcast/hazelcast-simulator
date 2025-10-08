@@ -8,12 +8,10 @@ on:
     branches: master
 
 env:
-  IMAGE_NAME: hazelcast/simulator
+  IMAGE_NAME: ${{ vars.IMAGE_NAME }}
   PYTHON_VERSION: "3.11"
   DOCKER_PLATFORMS: linux/amd64,linux/arm64
-  LOCAL_REGISTRY_IMAGE: localhost:5000/hazelcast/simulator:test
-  HZ_SNAPSHOT_INTERNAL_USERNAME: ${{ secrets.HZ_SNAPSHOT_INTERNAL_USERNAME }}
-  HZ_SNAPSHOT_INTERNAL_PASSWORD: ${{ secrets.HZ_SNAPSHOT_INTERNAL_PASSWORD }}
+  LOCAL_REGISTRY_IMAGE: localhost:5000/${{ vars.IMAGE_NAME }}:test
 
 
 jobs:
@@ -76,6 +74,9 @@ jobs:
 
       - name: Build Java artifacts (required for Docker build)
         id: java-build
+        env: 
+          HZ_SNAPSHOT_INTERNAL_USERNAME: ${{ secrets.HZ_SNAPSHOT_INTERNAL_USERNAME }}
+          HZ_SNAPSHOT_INTERNAL_PASSWORD: ${{ secrets.HZ_SNAPSHOT_INTERNAL_PASSWORD }}
         run: |
           echo "Building Java components..."
           ./build
