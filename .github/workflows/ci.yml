@@ -112,11 +112,11 @@ jobs:
           
           # Test container startup and basic functionality
           echo "Testing container startup..."
-          CONTAINER_ID=$(docker run --rm -d ${LOCAL_REGISTRY_IMAGE} sleep 30)
+          CONTAINER_ID=$(docker run --rm -d ${LOCAL_REGISTRY_IMAGE} sleep 300)
           
           # Wait for container to be healthy using HEALTHCHECK
           echo "Waiting for container to be healthy..."
-          timeout 60 bash -c 'until [ "$(docker inspect "${CONTAINER_ID}" --format="{{.State.Health.Status}}")" = "healthy" ]; do sleep 2; done'
+          timeout 60 bash -c "until [ \"\$(docker inspect ${CONTAINER_ID} --format='{{.State.Health.Status}}')\" = \"healthy\" ]; do sleep 2; done"
           
           # Test basic commands are available
           echo "Testing Java installation..."
@@ -126,7 +126,7 @@ jobs:
           docker exec "${CONTAINER_ID}" mvn --version
           
           echo "Testing Python installation..."
-          docker exec "${CONTAINER_ID}" python${{ env.PYTHON_VERSION }} --version
+          docker exec "${CONTAINER_ID}" python3 --version
           
           echo "Testing Terraform installation..."
           docker exec "${CONTAINER_ID}" terraform version

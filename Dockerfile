@@ -164,7 +164,7 @@ RUN echo "Verifying copied artifacts..." && \
 # Add health check to verify container readiness
 HEALTHCHECK --interval=10s --timeout=5s --start-period=30s --retries=3 \
   CMD java -version >/dev/null 2>&1 && \
-      python${PYTHON_VERSION} --version >/dev/null 2>&1 && \
+      python3 --version >/dev/null 2>&1 && \
       which perftest >/dev/null 2>&1 && \
       which inventory >/dev/null 2>&1 || exit 1
 
