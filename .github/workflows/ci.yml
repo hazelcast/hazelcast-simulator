@@ -156,19 +156,22 @@ jobs:
         id: image-publish
         if: github.event_name != 'pull_request'
         run: |
-          echo "Syncing multi-platform image to Docker Hub using Skopeo sync..."
-          
-          # Sync all tags at once using skopeo sync
-          skopeo sync \
-            --src docker \
-            --dest docker \
-            --all \
-            --src-tls-verify=false \
-            --retry-times 3 \
-            ${{ env.LOCAL_REGISTRY_IMAGE }} \
-            ${{ env.IMAGE_NAME }}
-          
-          echo "Successfully synced all images to Docker Hub!"
+          echo "Copying multi-platform image to Docker Hub using Skopeo..."
+
+          # Copy the tested image from local registry to each tag
+          TAGS="${{ steps.meta.outputs.tags }}"
+
+          for TAG in $TAGS; do
+            echo "Copying to $TAG..."
+            skopeo copy \
+              --all \
+              --src-tls-verify=false \
+              --retry-times 3 \
+              docker://${{ env.LOCAL_REGISTRY_IMAGE }} \
+              docker://$TAG
+          done
+
+          echo "Successfully copied images to Docker Hub with tags: $TAGS"
           
       - name: Generate build summary
         if: always()
