@@ -30,6 +30,7 @@ Please refer to the [Quickstart](#quickstart) to start your Simulator journey.
     * [Provisioning the environment](#provisioning-the-environment)
     * [SSH to nodes](#ssh-to-nodes)
     * [Running a test.](#running-a-test)
+    * [Docker Usage Examples](#docker-usage-examples)
     * [What's next](#whats-next)
 - [Key Concepts and Terminology](#key-concepts-and-terminology)
 - [Define test scenario](#define-test-scenario)
@@ -98,15 +99,21 @@ The easiest way to use Hazelcast Simulator is through our Docker image:
 docker pull hazelcast/simulator:latest
 ```
 
-#### Create a project directory
+#### For interactive development and debugging:
 ```bash
-mkdir my-simulator-project && cd my-simulator-project
+# Start an interactive shell
+docker run --rm -it -v "$(pwd):/workspace" -v ~/.aws:/root/.aws:ro hazelcast/simulator:latest bash
 ```
 
-#### Create your first benchmark
-```bash
-docker run --rm -it -v "$(pwd):/workspace" hazelcast/simulator:latest perftest create --template hazelcast5-ec2 test
-```
+#### Docker Volume Mounts Explained
+
+- `-v "$(pwd)/test:/workspace"` - Mounts your test directory as the working directory inside the container
+- `-v ~/.aws:/root/.aws:ro` - Mounts your AWS credentials (read-only) for authentication
+
+#### Available Docker Tags
+
+- `hazelcast/simulator:latest` - Latest stable release
+- See [Docker Hub](https://hub.docker.com/r/hazelcast/simulator/tags) for all available version tags
 
 ### Option 2: Local Installation
 
@@ -160,6 +167,22 @@ used for change point detection:
 
 The first step is to create a benchmark, which can be done using the `perftest` tool.
 
+### Using Docker
+
+Create a benchmark using a Docker command with a specific template:
+
+```bash
+docker run --rm -it -v "$(pwd):/workspace" hazelcast/simulator:latest perftest create --template hazelcast5-ec2 test
+```
+
+To see available templates:
+
+```bash
+docker run --rm -it -v "$(pwd):/workspace" hazelcast/simulator:latest perftest create --list
+```
+
+### Using Local Installation
+
    ```shell
    perftest create myproject
    ```
@@ -169,7 +192,7 @@ This will create a fully configured benchmark that will run in EC2.
 There are various benchmark templates. These can be accessed using:
 
    ```shell
-   perftest create --list 
+   perftest create --list
    ```
 
 And a benchmark using a specific benchmark can be created using:
@@ -255,7 +278,50 @@ To destroy the environment, call the following:
    inventory destroy
    ```
 
+## SSH to nodes
+
+To SSH into your remote nodes, the following command can be used from the test directory:
+
+```
+ssh -i key <username>@<ip>
+```
+
+## Running a test.
+
+In the generated benchmark directory, a `tests.yaml` file is created and it will contain something like this:
+
+```yaml
+     - name: write_only
+       duration: 300s
+       repetitions: 1
+       clients: 1
+       members: 1
+       driver: hazelcast5
+       version: maven=5.0
+       client_args: -Xms3g -Xmx3g
+       member_args: -Xms3g -Xmx3g
+       loadgenerator_hosts: loadgenerators
+       node_hosts: nodes
+       verify_enabled: False
+       performance_monitor_interval_seconds: 1
+       warmup_seconds: 0
+       cooldown_seconds: 0
+       test:
+         class: com.hazelcast.simulator.tests.map.IntByteMapTest
+         threadCount: 40
+         getProb: 0
+         putProb: 1
+         keyCount: 1_000_000
+```
+
+To run the benchmark
+
+   ```shell
+   perftest run
+   ```
+
 ## Docker Usage Examples
+
 Here's a complete workflow using the Docker image to run performance tests on AWS:
 
 ### 1. Create a New Benchmark Project
@@ -264,7 +330,7 @@ Here's a complete workflow using the Docker image to run performance tests on AW
 docker run --rm -it -v "$(pwd):/workspace" hazelcast/simulator:latest perftest create --template hazelcast5-ec2 test
 ```
 
-### 2. Apply Infrastructure 
+### 2. Apply Infrastructure
 #### Provision AWS infrastructure (requires AWS credentials)
 ```bash
 docker run --rm -it \
@@ -311,7 +377,7 @@ Here's a complete workflow using the Docker image to run performance tests on ex
 docker run --rm -it -v "$(pwd):/workspace" hazelcast/simulator:latest perftest create --template hazelcast5-existing-cluster test
 ```
 
-### 2. Modify the Environment 
+### 2. Modify the Environment
 Edit the `inventory.yaml` file to specify your loadgenerator setup:
 - IP addresses and SSH users for `loadgenerators`
 
@@ -340,74 +406,6 @@ docker run --rm -it \
   -v "$(pwd)/test:/workspace" \
   hazelcast/simulator:latest perftest run
 ```
-
-### Docker Volume Mounts Explained
-
-- `-v "$(pwd)/test:/workspace"` - Mounts your test directory as the working directory inside the container
-- `-v ~/.aws:/root/.aws:ro` - Mounts your AWS credentials (read-only) for authentication
-
-### Available Docker Tags
-
-- `hazelcast/simulator:latest` - Latest stable release
-- See [Docker Hub](https://hub.docker.com/r/hazelcast/simulator/tags) for all available version tags
-
-### Interactive Docker Usage
-
-For interactive development and debugging:
-
-```bash
-# Start an interactive shell
-docker run --rm -it \
-  -v "$(pwd):/workspace" \
-  -v ~/.aws:/root/.aws:ro \
-  hazelcast/simulator:latest
-
-# Inside the container, you can run any simulator commands
-perftest --help
-inventory --help
-```
-
-## SSH to nodes
-
-To SSH into your remote nodes, the following command can be used from the test directory:
-
-```
-ssh -i key <username>@<ip>
-```
-
-## Running a test.
-
-In the generated benchmark directory, a `tests.yaml` file is created and it will contain something like this:
-
-```yaml
-     - name: write_only
-       duration: 300s
-       repetitions: 1
-       clients: 1
-       members: 1
-       driver: hazelcast5
-       version: maven=5.0
-       client_args: -Xms3g -Xmx3g
-       member_args: -Xms3g -Xmx3g
-       loadgenerator_hosts: loadgenerators
-       node_hosts: nodes
-       verify_enabled: False
-       performance_monitor_interval_seconds: 1
-       warmup_seconds: 0
-       cooldown_seconds: 0
-       test:
-         class: com.hazelcast.simulator.tests.map.IntByteMapTest
-         threadCount: 40
-         getProb: 0
-         putProb: 1
-         keyCount: 1_000_000
-```
-
-To run the benchmark
-
-   ```shell
-   perftest run
-   ```
 
 ## What's next
 
