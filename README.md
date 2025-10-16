@@ -104,6 +104,11 @@ docker pull hazelcast/simulator:latest
 docker run --rm -it -v "$(pwd):/workspace" -v ~/.aws:/root/.aws:ro hazelcast/simulator:latest
 ```
 
+> **Note:** Docker Volume Mounts Explained
+>
+> - `-v "$(pwd)/test:/workspace"` - Mounts your test directory as the working directory inside the container
+> - `-v ~/.aws:/root/.aws:ro` - Mounts your AWS credentials (read-only) for authentication
+
 #### Available Docker Tags
 
 - `hazelcast/simulator:latest` - Latest stable release
@@ -400,10 +405,6 @@ docker run --rm -it \
   -v "$(pwd)/test:/workspace" \
   hazelcast/simulator:latest perftest run
 ```
-#### Docker Volume Mounts Explained
-
-- `-v "$(pwd)/test:/workspace"` - Mounts your test directory as the working directory inside the container
-- `-v ~/.aws:/root/.aws:ro` - Mounts your AWS credentials (read-only) for authentication
 
 ## What's next
 
