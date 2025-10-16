@@ -172,7 +172,7 @@ The first step is to create a benchmark, which can be done using the `perftest` 
 Create a benchmark using a Docker command with a specific template:
 
 ```bash
-docker run --rm -it -v "$(pwd):/workspace" hazelcast/simulator:latest perftest create --template hazelcast5-ec2 test
+docker run --rm -it -v "$(pwd):/workspace" hazelcast/simulator:latest perftest create --template <templatename> myproject
 ```
 
 To see available templates:
