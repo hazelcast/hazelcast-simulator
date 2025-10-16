@@ -99,16 +99,10 @@ The easiest way to use Hazelcast Simulator is through our Docker image:
 docker pull hazelcast/simulator:latest
 ```
 
-#### For interactive development and debugging:
+#### See available commands:
 ```bash
-# Start an interactive shell
-docker run --rm -it -v "$(pwd):/workspace" -v ~/.aws:/root/.aws:ro hazelcast/simulator:latest bash
+docker run --rm -it -v "$(pwd):/workspace" -v ~/.aws:/root/.aws:ro hazelcast/simulator:latest
 ```
-
-#### Docker Volume Mounts Explained
-
-- `-v "$(pwd)/test:/workspace"` - Mounts your test directory as the working directory inside the container
-- `-v ~/.aws:/root/.aws:ro` - Mounts your AWS credentials (read-only) for authentication
 
 #### Available Docker Tags
 
@@ -169,16 +163,16 @@ The first step is to create a benchmark, which can be done using the `perftest` 
 
 ### Using Docker
 
-Create a benchmark using a Docker command with a specific template:
-
-```bash
-docker run --rm -it -v "$(pwd):/workspace" hazelcast/simulator:latest perftest create --template <templatename> myproject
-```
-
 To see available templates:
 
 ```bash
 docker run --rm -it -v "$(pwd):/workspace" hazelcast/simulator:latest perftest create --list
+```
+
+Create a benchmark using a Docker command with a specific template:
+
+```bash
+docker run --rm -it -v "$(pwd):/workspace" hazelcast/simulator:latest perftest create --template <templatename> myproject
 ```
 
 ### Using Local Installation
@@ -406,6 +400,10 @@ docker run --rm -it \
   -v "$(pwd)/test:/workspace" \
   hazelcast/simulator:latest perftest run
 ```
+#### Docker Volume Mounts Explained
+
+- `-v "$(pwd)/test:/workspace"` - Mounts your test directory as the working directory inside the container
+- `-v ~/.aws:/root/.aws:ro` - Mounts your AWS credentials (read-only) for authentication
 
 ## What's next
 
