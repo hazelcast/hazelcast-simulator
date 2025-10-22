@@ -65,7 +65,7 @@ public class PredicateValue1EntryBenchmark extends HazelcastTest {
     @TimeStep
     public void timeStep() throws Exception {
         String valueMatch = String.format("%010d", new Random().nextInt(entryCount));
-        Set<Map.Entry<Integer, IdentifiedDataSerializablePojo>> entries = map.entrySet(Predicates.equal("value", valueMatch));
+        Set<Map.Entry<Integer, IdentifiedDataSerializablePojo>> entries = map.entrySet(Predicates.equal("valueField", valueMatch));
         if (entries.size() != 1) {
             throw new Exception("wrong entry count");
         }
