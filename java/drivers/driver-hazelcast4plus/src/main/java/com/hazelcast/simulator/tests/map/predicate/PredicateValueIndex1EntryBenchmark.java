@@ -49,7 +49,7 @@ public class PredicateValueIndex1EntryBenchmark extends HazelcastTest {
 
     @Prepare(global = true)
     public void prepare() {
-        map.addIndex(IndexType.SORTED, "value");
+        map.addIndex(IndexType.SORTED, "valueField");
 
         Streamer<Integer, IdentifiedDataSerializablePojo> streamer = StreamerFactory.getInstance(map);
         Integer[] sampleArray = new Integer[arraySize];
@@ -68,7 +68,7 @@ public class PredicateValueIndex1EntryBenchmark extends HazelcastTest {
     @TimeStep
     public void timeStep() throws Exception {
         String valueMatch = String.format("%010d", new Random().nextInt(entryCount));
-        Set<Map.Entry<Integer, IdentifiedDataSerializablePojo>> entries = map.entrySet(Predicates.equal("value", valueMatch));
+        Set<Map.Entry<Integer, IdentifiedDataSerializablePojo>> entries = map.entrySet(Predicates.equal("valueField", valueMatch));
         if (entries.size() != 1) {
             throw new Exception("wrong entry count");
         }
