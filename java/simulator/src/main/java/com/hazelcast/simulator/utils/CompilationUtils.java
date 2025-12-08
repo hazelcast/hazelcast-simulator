@@ -6,11 +6,13 @@ import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
+import javax.tools.SimpleJavaFileObject;
 import javax.tools.ToolProvider;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Path;
 import java.security.PrivilegedAction;
 
 import static java.security.AccessController.doPrivileged;
@@ -22,6 +24,24 @@ public class CompilationUtils {
     private static final JavaCompiler COMPILER = ToolProvider.getSystemJavaCompiler();
 
     private CompilationUtils() {
+    }
+
+    public static JavaFileObject newJavaFileObject(Path input) {
+        JavaFileObject.Kind kind;
+        if (input.endsWith("java")) {
+            kind = JavaFileObject.Kind.SOURCE;
+        } else if (input.endsWith("class")) {
+            kind = JavaFileObject.Kind.CLASS;
+        } else {
+            throw new IllegalArgumentException("Unexpected file type: " + input);
+        }
+
+        return new SimpleJavaFileObject(input.toUri(), kind) {
+        };
+    }
+
+    public static Class<?> compile(Path file, String className, File targetDirectory) {
+        return compile(newJavaFileObject(file), className, targetDirectory);
     }
 
     public static Class<?> compile(JavaFileObject file, String className, File targetDirectory) {
