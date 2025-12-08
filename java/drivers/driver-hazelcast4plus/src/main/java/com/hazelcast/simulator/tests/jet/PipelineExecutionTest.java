@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.tests.jet;
 
+import com.hazelcast.config.UserCodeNamespaceConfig;
 import com.hazelcast.jet.Job;
 import com.hazelcast.jet.config.JobConfig;
 import com.hazelcast.jet.pipeline.Pipeline;
@@ -32,6 +33,8 @@ public class PipelineExecutionTest
      */
     public String pipelineSupplierClassName = pipelineSupplierPath.replace(".java", "");
 
+    public String ucnResourcesName = "SimulatorJobResources";
+
     /**
      * How long the worker should wait until the run finishes
      */
@@ -46,11 +49,15 @@ public class PipelineExecutionTest
         }
 
         Class<?> compilationOutput = CompilationUtils.compile(pipelineSupplierP, pipelineSupplierClassName, new File(""));
+        targetInstance.getConfig().getNamespacesConfig()
+                      .addNamespaceConfig(new UserCodeNamespaceConfig(ucnResourcesName).addClass(compilationOutput));
+
         Method getter = compilationOutput.getDeclaredMethod("get");
         Map<JobConfig, Pipeline> pipelines = (Map<JobConfig, Pipeline>) getter.invoke(
                 compilationOutput.getConstructor().newInstance());
 
         for (var entry : pipelines.entrySet()) {
+            entry.getKey().setUserCodeNamespace(ucnResourcesName);
             targetInstance.getJet().newJob(entry.getValue(), entry.getKey());
         }
     }
