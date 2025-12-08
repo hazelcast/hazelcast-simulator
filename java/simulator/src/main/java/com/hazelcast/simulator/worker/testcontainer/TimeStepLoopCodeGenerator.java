@@ -17,6 +17,7 @@
 package com.hazelcast.simulator.worker.testcontainer;
 
 import com.hazelcast.simulator.probes.LatencyProbe;
+import com.hazelcast.simulator.utils.CompilationUtils;
 import com.hazelcast.simulator.worker.metronome.EmptyMetronome;
 import com.hazelcast.simulator.worker.metronome.Metronome;
 import freemarker.ext.util.WrapperTemplateModel;
@@ -28,20 +29,12 @@ import freemarker.template.TemplateExceptionHandler;
 import freemarker.template.TemplateMethodModelEx;
 import freemarker.template.TemplateModelException;
 
-import javax.tools.Diagnostic;
-import javax.tools.DiagnosticCollector;
-import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.SimpleJavaFileObject;
-import javax.tools.ToolProvider;
 import java.io.File;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
-import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.security.PrivilegedAction;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,13 +42,9 @@ import java.util.Map;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
-import static java.security.AccessController.doPrivileged;
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 
 class TimeStepLoopCodeGenerator {
 
-    private final JavaCompiler javaCompiler = ToolProvider.getSystemJavaCompiler();
     private final File targetDirectory = new File(getUserDir(), "timestep-loop-classes");
 
     Class compile(
@@ -82,45 +71,7 @@ class TimeStepLoopCodeGenerator {
         }
         JavaFileObject file = createJavaFileObject(
                 className, executionGroup, metronomeClass, timeStepModel, probeClass, logFrequency, logRateMs, hasIterationCap);
-        return compile(javaCompiler, file, className);
-    }
-
-    Class compile(JavaCompiler compiler, JavaFileObject file, final String className) {
-        if (compiler == null) {
-            throw new IllegalStateException("Could not get Java compiler in TimeStepLoopCodeGenerator."
-                    + " You need to use a JDK to run Simulator! Version found: " + System.getProperty("java.version"));
-        }
-
-        DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
-        JavaCompiler.CompilationTask task = compiler.getTask(
-                null,
-                null,
-                diagnostics,
-                asList("-d", targetDirectory.getAbsolutePath()),
-                null,
-                singletonList(file));
-
-        boolean success = task.call();
-        if (!success) {
-            StringBuilder sb = new StringBuilder();
-            for (Diagnostic diagnostic : diagnostics.getDiagnostics()) {
-                sb.append("Error on line ")
-                        .append(diagnostic.getLineNumber())
-                        .append(" in ")
-                        .append(diagnostic)
-                        .append('\n');
-            }
-            throw new IllegalTestException(sb.toString());
-        }
-
-        return (Class) doPrivileged((PrivilegedAction) () -> {
-            try {
-                URLClassLoader classLoader = new URLClassLoader(new URL[]{targetDirectory.toURI().toURL()});
-                return (Class) classLoader.loadClass(className);
-            } catch (ClassNotFoundException | MalformedURLException e) {
-                throw new IllegalTestException(e.getMessage(), e);
-            }
-        });
+        return CompilationUtils.compile(file, className, targetDirectory);
     }
 
     private JavaFileObject createJavaFileObject(
