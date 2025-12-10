@@ -23,32 +23,45 @@ import java.util.Map;
 public class PipelineExecutionTest
         extends HazelcastTest {
 
-    /**
-     * Expected to implement Supplier<Map<JobConfig, Pipeline>>
-     */
-    public String pipelineSupplierPath = "PipelineSupplier.java";
+    private static final int MILLIS_IN_SECOND = 1000;
+    private static final String UPLOAD_DIR = "upload";
+    private static final String COMPILATION_OUTPUT_DIR = "compilation-output";
 
     /**
-     * Supplier class name in the source file
+     * Name of file contained in the "upload" directory which will be compiled and
+     * used to get the Pipelines we want to run. It is expected to be a standard Java
+     * class which implements Supplier<Map<JobConfig, Pipeline>>.
      */
-    public String pipelineSupplierClassName = pipelineSupplierPath.replace(".java", "");
+    public String pipelineSupplierFileName;
 
+    /**
+     * Name used for UCN which we will upload compiled resources to
+     */
     public String ucnResourcesName = "SimulatorJobResources";
 
     /**
-     * How long the worker should wait until the run finishes
+     * Wait after all jobs have completed for this amount of time, can be used to ensure
+     * final metric values output in diagnostics.
      */
-    public long waitTimeout = -1;
+    public long waitAfterJobCompletionSeconds = 0L;
 
     @Prepare(global = true)
     public void submitJobs()
             throws Exception {
-        Path pipelineSupplierP = Path.of(pipelineSupplierPath);
-        if (!Files.exists(pipelineSupplierP)) {
-            throw new FileNotFoundException(pipelineSupplierPath);
+        if (pipelineSupplierFileName == null) {
+            throw new IllegalStateException("Must set \"pipelineSupplierFileName\" attribute in tests.yaml");
         }
 
-        Class<?> compilationOutput = CompilationUtils.compile(pipelineSupplierP, pipelineSupplierClassName, new File(""));
+        Path pipelineSupplierP = Path.of(UPLOAD_DIR + "/" + pipelineSupplierFileName);
+        if (!Files.exists(pipelineSupplierP)) {
+            throw new FileNotFoundException(pipelineSupplierFileName);
+        }
+
+        File compilationOutputDir = new File(COMPILATION_OUTPUT_DIR);
+        compilationOutputDir.mkdir();
+
+        Class<?> compilationOutput = CompilationUtils.compile(pipelineSupplierP, getPipelineSupplierClassName(),
+                compilationOutputDir);
         targetInstance.getConfig().getNamespacesConfig()
                       .addNamespaceConfig(new UserCodeNamespaceConfig(ucnResourcesName).addClass(compilationOutput));
 
@@ -62,9 +75,22 @@ public class PipelineExecutionTest
         }
     }
 
+    private String getPipelineSupplierClassName() {
+        return pipelineSupplierFileName.replace(".java", "");
+    }
+
     @Run
     public void waitForFinish() {
         // Simply wait until all jobs to finish
+        logger.info("Joining jobs");
         targetInstance.getJet().getJobs().forEach(Job::join);
+        if (waitAfterJobCompletionSeconds > 0) {
+            logger.info("Waiting after jobs for {} seconds", waitAfterJobCompletionSeconds);
+            try {
+                Thread.sleep(waitAfterJobCompletionSeconds * MILLIS_IN_SECOND);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
     }
 }

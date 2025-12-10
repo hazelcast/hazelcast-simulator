@@ -100,6 +100,7 @@
         - '--include=log4j*'
         - '--include=slf4j-log4j12-*'
         - '--include=simulator-*'
+        - '--include=jsr305-*'
         - '--exclude=*'
     # for details about the naming
     # https://stackoverflow.com/questions/41571716/ansible-first-hostname-of-groups

@@ -9,9 +9,11 @@ import javax.tools.JavaFileObject;
 import javax.tools.SimpleJavaFileObject;
 import javax.tools.ToolProvider;
 import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.PrivilegedAction;
 
@@ -26,17 +28,24 @@ public class CompilationUtils {
     private CompilationUtils() {
     }
 
-    public static JavaFileObject newJavaFileObject(Path input) {
-        JavaFileObject.Kind kind;
-        if (input.endsWith("java")) {
-            kind = JavaFileObject.Kind.SOURCE;
-        } else if (input.endsWith("class")) {
-            kind = JavaFileObject.Kind.CLASS;
+    public static JavaFileObject.Kind kindOf(Path input) {
+        String pathString = input.toString();
+        if (pathString.endsWith("java")) {
+            return JavaFileObject.Kind.SOURCE;
+        } else if (pathString.endsWith("class")) {
+            return JavaFileObject.Kind.CLASS;
         } else {
             throw new IllegalArgumentException("Unexpected file type: " + input);
         }
+    }
 
-        return new SimpleJavaFileObject(input.toUri(), kind) {
+    public static JavaFileObject newJavaFileObject(Path input) {
+        return new SimpleJavaFileObject(input.toUri(), kindOf(input)) {
+            @Override
+            public CharSequence getCharContent(boolean ignoreEncodingErrors)
+                    throws IOException {
+                return Files.readString(input);
+            }
         };
     }
 
