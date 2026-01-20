@@ -19,12 +19,12 @@ env:
   PYTHON_VERSION: "3.11"
   DOCKER_PLATFORMS: linux/amd64,linux/arm64
   LOCAL_REGISTRY_IMAGE: localhost:5000/${{ vars.IMAGE_NAME }}:test
-  HZ_SNAPSHOT_INTERNAL_USERNAME: ${{ secrets.HZ_SNAPSHOT_INTERNAL_USERNAME }}
-  HZ_SNAPSHOT_INTERNAL_PASSWORD: ${{ secrets.HZ_SNAPSHOT_INTERNAL_PASSWORD }}
 jobs:
   docker-ci:
     name: Docker Build, Test, and Push
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
     services:
       # Local Docker registry for testing multi-platform images
       registry:
@@ -76,9 +76,10 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           cache: 'maven'
-          server-id: snapshot-internal
-          server-username: HZ_SNAPSHOT_INTERNAL_USERNAME
-          server-password: HZ_SNAPSHOT_INTERNAL_PASSWORD
+
+      - uses: hazelcast/docker-actions/setup-maven-snapshot-internal@master
+        with:
+          aws-role-to-assume: ${{ secrets.AWS_HAZELCAST_OIDC_GITHUB_ACTIONS_ROLE_ARN }}
           
       - name: Setup Python
         uses: actions/setup-python@v5
