@@ -100,7 +100,7 @@ def df_shift_time(df: pd.DataFrame, amount_seconds=None):
     if amount_seconds is None:
         amount_seconds = -df.index[0].timestamp()
 
-    df = df.shift(periods=amount_seconds, freq='S')
+    df = df.shift(periods=amount_seconds, freq='s')
     # filter out rows with a negative time.
     epoch = datetime(1970, 1, 1, 0, 0, 0)
     df = df[df.index >= epoch]
