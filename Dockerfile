@@ -51,9 +51,8 @@ RUN curl -fsSL https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/sh
 RUN python${PYTHON_VERSION} -m pip install --no-cache-dir awscli
 
 # Install Python dependencies
-COPY requirements.txt /tmp/requirements.txt
-RUN python${PYTHON_VERSION} -m pip install --no-cache-dir --break-system-packages --ignore-installed -r /tmp/requirements.txt && \
-    rm /tmp/requirements.txt
+RUN --mount=type=bind,source=requirements.txt,target=/tmp/requirements.txt \
+    python${PYTHON_VERSION} -m pip install --no-cache-dir --break-system-packages --ignore-installed -r /tmp/requirements.txt
 
 # Create simulator directory structure
 RUN mkdir -p /opt/simulator/lib /opt/simulator/drivers /opt/simulator/src /opt/simulator/templates /opt/simulator/conf /opt/simulator/playbooks /opt/simulator/bin /opt/simulator/user-lib
