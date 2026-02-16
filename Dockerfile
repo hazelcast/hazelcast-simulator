@@ -8,7 +8,6 @@ RUN apt-get update && apt-get install -y software-properties-common \
     && add-apt-repository ppa:deadsnakes/ppa \
     && apt-get update && apt-get install -y \
         wget \
-        maven \
         python${PYTHON_VERSION} \
         python${PYTHON_VERSION}-distutils \
         python3-pip \
@@ -41,6 +40,9 @@ RUN JAVA_HOME_PATH=$(find /usr/lib/jvm -name "temurin-17*" -type d | head -1) &&
     update-alternatives --set javac $JAVA_HOME_PATH/bin/javac && \
     echo "export JAVA_HOME=$JAVA_HOME_PATH" >> /etc/environment && \
     echo "export JAVA_HOME=$JAVA_HOME_PATH" >> /etc/bash.bashrc
+
+# Install Maven after JDK has been installed to avoid default JDK installation
+RUN apt-get update && apt-get install -y maven && rm -rf /var/lib/apt/lists/*
 
 # Install Terraform
 RUN curl -fsSL https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg && \
