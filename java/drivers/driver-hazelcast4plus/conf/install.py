@@ -64,9 +64,9 @@ def _get_artifact_ids(enterprise:bool, version:str):
 def _get_remote_repo(is_enterprise:bool, version:str):
     if not is_enterprise:
         if version.endswith("-SNAPSHOT"):
-            return "https://oss.sonatype.org/content/repositories/snapshots"
+            return "https://oss.sonatype.org/content/repositories/snapshots,snapshot-internal::::https://repository.hazelcast.com/snapshot-internal"
         else:
-            return "https://oss.sonatype.org/content/repositories/releases"
+            return "https://oss.sonatype.org/content/repositories/releases,https://repository.hazelcast.com/release"
     else:
         if version.endswith("-SNAPSHOT"):
             # maven ignores settings.xml authentication unless forced with fully qualified remoteRepositories construct
