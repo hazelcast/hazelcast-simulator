@@ -64,7 +64,9 @@ def _get_artifact_ids(enterprise:bool, version:str):
 def _get_remote_repo(is_enterprise:bool, version:str):
     if not is_enterprise:
         if version.endswith("-SNAPSHOT"):
-            return "https://oss.sonatype.org/content/repositories/snapshots,snapshot-internal::::https://repository.hazelcast.com/snapshot-internal"
+            return ("https://oss.sonatype.org/content/repositories/snapshots,"
+                    "snapshot-internal::::https://repository.hazelcast.com/snapshot-internal,"
+                    "snapshot-lab::::https://jenkins.hazelcast.com:8082/content/repositories/hazelcast-snapshot-internal")
         else:
             return "https://oss.sonatype.org/content/repositories/releases,https://repository.hazelcast.com/release"
     else:
