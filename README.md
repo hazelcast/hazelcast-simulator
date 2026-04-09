@@ -360,6 +360,9 @@ docker run --rm -it \
   hazelcast/simulator:latest perftest run
 ```
 
+You can optionally mount a local directory to persist Maven dependencies across `perftest run`: `-v "$(pwd)/mvnrepo:/root/.m2"`
+This stores the Maven repository locally and speeds up subsequent test runs by reusing downloaded dependencies.
+
 ### 6. Clean Up Infrastructure
 ```bash
 docker run --rm -it \
@@ -405,6 +408,9 @@ docker run --rm -it \
   -v "$(pwd)/test:/workspace" \
   hazelcast/simulator:latest perftest run
 ```
+
+You can optionally mount a local directory to persist Maven dependencies across `perftest run`: `-v "$(pwd)/mvnrepo:/root/.m2"`
+This stores the Maven repository locally and speeds up subsequent test runs by reusing downloaded dependencies.
 
 ## What's next
 
