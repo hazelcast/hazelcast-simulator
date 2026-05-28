@@ -79,7 +79,7 @@ jobs:
 
       - uses: hazelcast/docker-actions/setup-maven-snapshot-internal@master
         with:
-          aws-role-to-assume: ${{ secrets.AWS_HAZELCAST_OIDC_GITHUB_ACTIONS_ROLE_ARN }}
+          aws-role-to-assume: ${{ vars.AWS_HAZELCAST_OIDC_GITHUB_ACTIONS_ROLE_ARN }}
           
       - name: Setup Python
         uses: actions/setup-python@v5
