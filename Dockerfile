@@ -49,9 +49,6 @@ RUN curl -fsSL https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/sh
     echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/hashicorp.list && \
     apt-get update && apt-get install -y terraform && rm -rf /var/lib/apt/lists/*
 
-# Install AWS CLI
-RUN python${PYTHON_VERSION} -m pip install --no-cache-dir awscli
-
 # Install Python dependencies
 RUN --mount=type=bind,source=requirements.txt,target=/tmp/requirements.txt \
     python${PYTHON_VERSION} -m pip install --no-cache-dir --break-system-packages --ignore-installed -r /tmp/requirements.txt
@@ -148,7 +145,6 @@ RUN echo '#!/bin/bash' > /opt/simulator/bin/simulator-welcome && \
     echo 'echo "  Java: $(java -version 2>&1 | head -n1)"' >> /opt/simulator/bin/simulator-welcome && \
     echo 'echo "  Maven: $(mvn --version 2>&1 | head -n1)"' >> /opt/simulator/bin/simulator-welcome && \
     echo 'echo "  Terraform: $(terraform version 2>&1 | head -n1)"' >> /opt/simulator/bin/simulator-welcome && \
-    echo 'echo "  AWS CLI: $(aws --version 2>&1)"' >> /opt/simulator/bin/simulator-welcome && \
     echo 'echo ""' >> /opt/simulator/bin/simulator-welcome && \
     echo 'echo "Current directory: $(pwd)"' >> /opt/simulator/bin/simulator-welcome && \
     echo 'echo "==========================================="' >> /opt/simulator/bin/simulator-welcome

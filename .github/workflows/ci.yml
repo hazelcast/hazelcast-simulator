@@ -132,9 +132,6 @@ jobs:
           echo "Testing Terraform installation..."
           docker exec "${CONTAINER_ID}" terraform version
           
-          echo "Testing AWS CLI installation..."
-          docker exec "${CONTAINER_ID}" aws --version
-          
           echo "Testing simulator commands availability..."
           docker exec "${CONTAINER_ID}" which perftest
           docker exec "${CONTAINER_ID}" which inventory
