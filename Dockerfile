@@ -30,7 +30,6 @@ RUN apt-get update && apt-get install -y software-properties-common \
     && add-apt-repository -y universe \
     && apt-get update && apt-get install -y \
         wget \
-        maven \
         python${PYTHON_VERSION} \
         python${PYTHON_VERSION}-distutils \
         python3-pip \
@@ -79,6 +78,9 @@ RUN JAVA_HOME_PATH=$(find /usr/lib/jvm -name "temurin-17*" -type d | head -1) &&
     echo "export JAVA_HOME=$JAVA_HOME_PATH" >> /etc/environment && \
     echo "export JAVA_HOME=$JAVA_HOME_PATH" >> /etc/bash.bashrc
 
+# Install Maven after JDK has been installed to avoid default JDK installation
+RUN apt-get update && apt-get install -y maven && rm -rf /var/lib/apt/lists/*
+
 # Install Terraform
 RUN curl -fsSL https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg && \
     echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/hashicorp.list && \
@@ -117,9 +119,8 @@ RUN --mount=type=secret,id=maven_settings,target=/root/.m2/settings.xml,required
     fi
 
 # Install Python dependencies
-COPY requirements.txt /tmp/requirements.txt
-RUN python${PYTHON_VERSION} -m pip install --no-cache-dir --break-system-packages --ignore-installed -r /tmp/requirements.txt && \
-    rm /tmp/requirements.txt
+RUN --mount=type=bind,source=requirements.txt,target=/tmp/requirements.txt \
+    python${PYTHON_VERSION} -m pip install --no-cache-dir --break-system-packages --ignore-installed -r /tmp/requirements.txt
 
 # Create simulator directory structure
 RUN mkdir -p /opt/simulator/lib /opt/simulator/drivers /opt/simulator/src /opt/simulator/templates /opt/simulator/conf /opt/simulator/playbooks /opt/simulator/bin /opt/simulator/user-lib
