@@ -46,7 +46,7 @@ public class ${className} extends TimeStepLoop {
         final ThrottlingLogger throttlingLogger = new ThrottlingLogger(logger, ${logRateMs});
 </#if>
 
-<#if timeStepMethods?size gt 1>
+<#if timeStepMethods?size gt 1 && !sequential??>
         final byte[] probs  = this.timeStepProbabilities;
 </#if>
 
@@ -82,8 +82,11 @@ public class ${className} extends TimeStepLoop {
             ${method.name}Probe.recordValue(System.nanoTime() - startNanos);
     </#if>
 <#else>
-
+    <#if sequential??>
+            switch((int) (iteration % ${timeStepMethods?size})){
+    <#else>
             switch(probs[random.nextInt(probs.length)]){
+    </#if>
     <#list timeStepMethods as method>
         <#assign index = method?counter-1>
                 case ${index}:

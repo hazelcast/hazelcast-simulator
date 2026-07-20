@@ -42,6 +42,7 @@ import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.security.PrivilegedAction;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -66,7 +67,8 @@ class TimeStepLoopCodeGenerator {
             Class<? extends LatencyProbe> probeClass,
             long logFrequency,
             long logRateMs,
-            boolean hasIterationCap) {
+            boolean hasIterationCap,
+            boolean sequential) {
 
         ensureExistingDirectory(targetDirectory);
 
@@ -81,7 +83,7 @@ class TimeStepLoopCodeGenerator {
             className += testCaseId;
         }
         JavaFileObject file = createJavaFileObject(
-                className, executionGroup, metronomeClass, timeStepModel, probeClass, logFrequency, logRateMs, hasIterationCap);
+                className, executionGroup, metronomeClass, timeStepModel, probeClass, logFrequency, logRateMs, hasIterationCap, sequential);
         return compile(javaCompiler, file, className);
     }
 
@@ -123,7 +125,8 @@ class TimeStepLoopCodeGenerator {
         });
     }
 
-    private JavaFileObject createJavaFileObject(
+    // visible for tests
+    JavaFileObject createJavaFileObject(
             String className,
             String executionGroup,
             Class<? extends Metronome> metronomeClass,
@@ -131,7 +134,8 @@ class TimeStepLoopCodeGenerator {
             Class<? extends LatencyProbe> probeClass,
             long logFrequency,
             long logRateMs,
-            boolean hasIterationCap) {
+            boolean hasIterationCap,
+            boolean sequential) {
         try {
             Configuration cfg = new Configuration(Configuration.VERSION_2_3_24);
             cfg.setClassForTemplateLoading(this.getClass(), "/");
@@ -142,7 +146,11 @@ class TimeStepLoopCodeGenerator {
             Map<String, Object> root = new HashMap<>();
             root.put("testInstanceClass", getClassName(timeStepModel.getTestClass()));
             root.put("metronomeClass", getMetronomeClass(metronomeClass));
-            root.put("timeStepMethods", timeStepModel.getActiveTimeStepMethods(executionGroup));
+            List<Method> activeTimeStepMethods = timeStepModel.getActiveTimeStepMethods(executionGroup);
+            if (sequential) {
+                activeTimeStepMethods.sort(Comparator.comparing(Method::getName));
+            }
+            root.put("timeStepMethods", activeTimeStepMethods);
             root.put("probeClass", getClassName(probeClass));
             root.put("isStartNanos", new IsStartNanos(timeStepModel));
             root.put("isAssignableFrom", new IsAssignableFromMethod());
@@ -161,6 +169,9 @@ class TimeStepLoopCodeGenerator {
 
             if (hasIterationCap) {
                 root.put("hasIterationCap", "true");
+            }
+            if (sequential) {
+                root.put("sequential", "true");
             }
 
             Template temp = cfg.getTemplate("TimeStepLoop.ftl");

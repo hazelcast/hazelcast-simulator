@@ -153,6 +153,24 @@ public class LongByteArrayMapTest extends HazelcastTest {
         map.put(key, state.randomValue());
     }
 
+    /**
+     * {@link #deleteNewCurrent(ThreadState)} and {@link #setCurrent(ThreadState)} form a sequential scenario,
+     * that ensures that entry exists before delete (if filled during setup) and does not exist before insertion.
+     */
+    @TimeStep(prob = 0)
+    public void deleteNewCurrent(ThreadState state) {
+        var map = getRandomMap();
+        long key = state.newRandomCurrentKey();
+        map.delete(key);
+    }
+
+    @TimeStep(prob = 0)
+    public void setCurrent(ThreadState state) {
+        var map = getRandomMap();
+        long key = state.currentKey();
+        map.set(key, state.randomValue());
+    }
+
     @TimeStep(prob = 0.0)
     public CompletableFuture putAsync(ThreadState state) {
         return getRandomMap().putAsync(state.randomKey(), state.randomValue()).toCompletableFuture();
@@ -204,6 +222,7 @@ public class LongByteArrayMapTest extends HazelcastTest {
         public static final int HIGHEST_PROBABILITY = 100;
         private Pipelining<byte[]> pipeline;
         private int i;
+        private long currentKey = randomKey();
 
         private long fixedKeyOrRandom() {
             if (fixedKeyDomain > 0 && fixedKeyDomain < keyDomain && fixedKeyProbability > 0 &&
@@ -219,6 +238,14 @@ public class LongByteArrayMapTest extends HazelcastTest {
 
         private byte[] randomValue() {
             return values[randomInt(values.length)];
+        }
+
+        public long currentKey() {
+            return currentKey;
+        }
+
+        public long newRandomCurrentKey() {
+            return currentKey = randomKey();
         }
     }
 

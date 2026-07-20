@@ -79,6 +79,8 @@ class TimeStepRunner extends TestRunner {
             long iterations = binding.loadAsLong(toPropertyName(executionGroup, "iterations"), 0);
             runIterationMap.put(executionGroup, iterations);
 
+            boolean sequential = binding.loadAsBoolean(toPropertyName(executionGroup, "sequential"), false);
+
             Class loopClass = new TimeStepLoopCodeGenerator().compile(
                     testContainer.getTestCase().getId(),
                     executionGroup,
@@ -87,7 +89,8 @@ class TimeStepRunner extends TestRunner {
                     binding.getProbeClass(),
                     logFrequency,
                     logRateMs,
-                    iterations > 0);
+                    iterations > 0,
+                    sequential);
 
             loopClassMap.put(executionGroup, loopClass);
         }

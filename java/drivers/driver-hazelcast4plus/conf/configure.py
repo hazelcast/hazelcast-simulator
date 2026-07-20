@@ -17,7 +17,7 @@ def _configure_hazelcast_xml(nodes, args: DriverConfigureArgs, is_lite_member: b
     config = read_file(src_file)
 
     # configure <!--LICENSE-KEY-->
-    license_key = args.test.get("license_key")
+    license_key = args.test.get("license_key") or os.getenv("HZ_LICENSEKEY")
     if license_key is not None:
         license_key_config = f"<license-key>{license_key}</license-key>"
         config = config.replace("<!--LICENSE-KEY-->", license_key_config)
