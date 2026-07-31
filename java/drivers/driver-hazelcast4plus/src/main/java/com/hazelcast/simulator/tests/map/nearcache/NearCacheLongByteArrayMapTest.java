@@ -119,6 +119,10 @@ public class NearCacheLongByteArrayMapTest extends HazelcastTest {
         return assignKeyToIndex(getTargetInstances().size(), currentThread(), clientIndexForThread);
     }
 
+    //////////////////////////////
+    /// Member API
+    //////////////////////////////
+
     /**
      * {@link #populate(ThreadState)} and {@link #invalidate(ThreadState)} form a sequential scenario
      */
@@ -192,11 +196,40 @@ public class NearCacheLongByteArrayMapTest extends HazelcastTest {
         noopExecutor.submitToKeyOwner(new NoopCallableForKey(map.getName(), key), key).get();
     }
 
+
+    //////////////////////////////
+    /// Client API
+    //////////////////////////////
+
     // control
     @TimeStep(prob = 0)
     public byte[] get(ThreadState state) {
         return getRandomMap().get(state.randomKey());
     }
+
+    // client invocations
+    @TimeStep(prob = 0)
+    public void getAll(ThreadState state) throws ExecutionException, InterruptedException {
+        var map = getRandomMap();
+
+        state.newRandomCurrentKeyBatch(batchSize, keyToOwnerFn);
+        // seenKeys is a Set required by getAll
+        if (map.getAll(state.seenKeys).size() != batchSize) {
+            throw new IllegalStateException("key does not exists in IMap");
+        }
+    }
+
+    @TimeStep(prob = 0)
+    public void getAllAnyOwner(ThreadState state) throws ExecutionException, InterruptedException {
+        var map = getRandomMap();
+
+        state.newRandomCurrentKeyBatch(batchSize, ANY_OWNER_FN);
+        // seenKeys is a Set required by getAll
+        if (map.getAll(state.seenKeys).size() != batchSize) {
+            throw new IllegalStateException("key does not exists in IMap");
+        }
+    }
+
 
     @TimeStep(prob = 0)
     public void updateAllUsingEntryProcessor() {
