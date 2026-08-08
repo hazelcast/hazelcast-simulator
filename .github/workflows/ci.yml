@@ -59,6 +59,8 @@ jobs:
         uses: docker/login-action@v4
         env:
           DOCKERHUB_OIDC_CONNECTIONID: ${{ vars.DOCKERHUB_OIDC_CONNECTIONID }}
+          # We need the token to be kept alive until the image has finished building
+          DOCKERHUB_OIDC_EXPIREIN: 3600
         with:
           username: ${{ vars.DOCKERHUB_ORGANIZATION }}
 
