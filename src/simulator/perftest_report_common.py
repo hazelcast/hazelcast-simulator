@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import os
-from datetime import datetime, timezone
-
 import numpy as np
+import os
 import pandas as pd
+from datetime import datetime, timezone
 
 from simulator.log import info
 
@@ -38,6 +37,7 @@ class ReportConfig:
     worker_reporting = True
     compare_last = False
     long_label = False
+    combined_latency_plot = False
     preserve_time = False
     y_start_from_zero = False
     svg = False

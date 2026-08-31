@@ -334,6 +334,8 @@ def __report_hgrm(config: ReportConfig):
     __make_hgrm_latency_by_perc_dist_html(config, hgrm_files)
     # make_hgrm_histogram_plot(items)
     __make_latency_by_perc_dist_plot(config, hgrm_files)
+    if len(hgrm_files) > 1 and config.combined_latency_plot:
+        __make_latency_by_perc_dist_plot(config, sorted(hgrm_files), True)
 
 
 def __find_hgrm_files(config: ReportConfig, run_label):
@@ -358,11 +360,14 @@ def __find_hgrm_files(config: ReportConfig, run_label):
     return result
 
 
-def __make_latency_by_perc_dist_plot(config: ReportConfig, hgrm_files):
+def __make_latency_by_perc_dist_plot(config: ReportConfig, hgrm_files, combined = False):
+    first = True
     for hgrm_file_name in hgrm_files:
-        plt.figure(figsize=(config.image_width_px / config.image_dpi,
-                            config.image_height_px / config.image_dpi),
-                   dpi=config.image_dpi)
+        if not combined or first:
+            plt.figure(figsize=(config.image_width_px / config.image_dpi,
+                                config.image_height_px / config.image_dpi),
+                       dpi=config.image_dpi)
+        first = False
 
         for run_label, run_path in config.runs.items():
             dir = f"{config.report_dir}/hdr/{run_label}"
@@ -372,7 +377,8 @@ def __make_latency_by_perc_dist_plot(config: ReportConfig, hgrm_files):
                 continue
 
             df = __load_hgrm(hgrm_file)
-            plt.plot(df['1/(1-Percentile)'], df['Value'], label=run_label)
+            prefix = (Path(hgrm_file_name).stem.replace('_', ' ') + " " if combined else "")
+            plt.plot(df['1/(1-Percentile)'], df['Value'], label=prefix + run_label)
 
         plt.xscale('log')
 
@@ -391,10 +397,14 @@ def __make_latency_by_perc_dist_plot(config: ReportConfig, hgrm_files):
 
         plt.ylabel("Latency")
         plt.xlabel("Percentile")
-        plt.legend()
         plt.title(f"Latency distribution")
-        plt.grid()
         plt.gca().yaxis.set_major_formatter(FuncFormatter(format_us_time_ticks))
+
+        if combined and not first:
+            continue
+
+        plt.grid()
+        plt.legend()
 
         hgrm_file_path_no_ext = hgrm_file_name.rstrip(".hgrm")
         path = f"{config.report_dir}/latency/latency_distribution_{hgrm_file_path_no_ext}.png"
@@ -412,6 +422,21 @@ def __make_latency_by_perc_dist_plot(config: ReportConfig, hgrm_files):
         #     info(f"\tGenerating [{path}]")
         #     plotly_fig = tls.mpl_to_plotly(plt.gcf())
         #     plotly_fig.write_html(path)
+
+        plt.close()
+
+    if combined:
+        plt.grid()
+        plt.legend()
+        path = f"{config.report_dir}/latency/latency_distribution_combined.png"
+        mkdir(os.path.dirname(path))
+        info(f"\tGenerating [{path}]")
+        plt.savefig(path)
+
+        if config.svg:
+            path = f"{config.report_dir}/latency/latency_distribution_combined.svg"
+            info(f"\tGenerating [{path}]")
+            plt.savefig(path)
 
         plt.close()
 
