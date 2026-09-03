@@ -199,8 +199,10 @@ JVM_ARGS="-Dlog4j2.configurationFile=log4j.xml"
 
 if [ "${WORKER_TYPE}" = "member" ]; then
     JVM_OPTIONS=$member_args
+    TASKSET="${member_taskset:-}"
 else
     JVM_OPTIONS=$client_args
+    TASKSET="${client_taskset:-}"
 fi
 
 # Include the member/client-worker jvm options
@@ -208,7 +210,32 @@ JVM_ARGS="$JVM_OPTIONS $JVM_ARGS"
 
 MAIN=com.hazelcast.simulator.worker.Worker
 
-java -classpath "$CLASSPATH" ${JVM_ARGS} ${MAIN}
+if [[ -n "${TASKSET}" ]]; then
+    WRAPPER="taskset -c ${TASKSET}"
+    # avoid network IRQs on cores for the app
+    if [[ -f /etc/default/irqbalance ]]; then
+        if ! grep -Fxq "IRQBALANCE_BANNED_CPULIST=${TASKSET}" /etc/default/irqbalance; then
+             echo "irqbalance config not found. Check if network interrupts can interfere with application CPUs or use \`inventory irq_cpus --banned-cpus ${TASKSET}\`"
+        fi
+    fi
+fi
+
+${WRAPPER:-} java -classpath "$CLASSPATH" ${JVM_ARGS} ${MAIN} &
+
+if [ "${WORKER_TYPE}" = "member" ] && [[ -n "${async_profiler_duration_seconds:-}" ]]; then
+    log "INFO" "Waiting before starting asyncprofiler for ${async_profiler_delay:-2m}"
+    # we sleep as long as the system hasn't warmed up.
+    # it depends on the test how much warmup is actually needed; if it takes e.g. 5m for the data to be inserted, you need
+    # a warmup of at least 6m.
+    sleep "${async_profiler_delay:-2m}"
+
+    log "INFO" "Starting asyncprofiler for ${async_profiler_duration_seconds}s"
+    asprof collect -d ${async_profiler_duration_seconds} --jfrsync ${JAVA_HOME}/lib/jfr/default.jfc -f profile.jfr Worker
+    log "INFO" "asyncprofiler done with exit_code $?"
+fi
+
+# wait for worker to finish
+wait
 
 #########################################################################
 # Yourkit
