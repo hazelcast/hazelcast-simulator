@@ -27,6 +27,9 @@ public class CPMapPartitioned<K, V> {
         if (partitionCount <= 0) {
             throw new IllegalArgumentException("partitionCount must be > 0, was " + partitionCount);
         }
+        if (name.indexOf('@') >= 0) {
+            throw new IllegalArgumentException("name must not contain '@' as it denotes CP Group mapping, was " + name);
+        }
 
         this.partitions = new CPMap[partitionCount];
         for (int i = 0; i < partitionCount; i++) {
