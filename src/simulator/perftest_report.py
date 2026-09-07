@@ -6,12 +6,12 @@ import csv
 import glob
 import shutil
 
+from simulator.perftest_report_common import *
 from simulator.perftest_report_dstat import report_dstat, analyze_dstat
 from simulator.perftest_report_hdr import report_hdr, prepare_hdr, analyze_latency_history
+from simulator.perftest_report_html import HTMLReport
 from simulator.perftest_report_operations import report_operations, prepare_operation, analyze_operations
 from simulator.util import mkdir, exit_with_error
-from simulator.perftest_report_common import *
-from simulator.perftest_report_html import HTMLReport
 
 
 def prepare(config: ReportConfig):
@@ -220,6 +220,9 @@ class PerfTestReportCli:
         parser.add_argument('-ll', '--longLabel',
                             help='Include benchmark name in run label',
                             action='store_true')
+        parser.add_argument('-cl', '--combinedLatency',
+                            help='Produce plot with all latency distributions',
+                            action='store_true')
         parser.add_argument('--width',
                             nargs=1,
                             default=[1600],
@@ -247,6 +250,7 @@ class PerfTestReportCli:
         config.worker_reporting = args.full
         config.compare_last = args.last
         config.long_label = args.longLabel
+        config.combined_latency_plot = args.combinedLatency
         config.preserve_time = args.time
         config.y_start_from_zero = args.zero
         config.svg = args.svg
