@@ -18,31 +18,27 @@ package com.hazelcast.simulator.tests.cp.helpers;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.cp.CPMap;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 public class CPMapPartitioned<K, V> {
 
-    private final List<CPMap<K, V>> partitions;
+    private final CPMap<K, V>[] partitions;
 
+    @SuppressWarnings("unchecked")
     public CPMapPartitioned(HazelcastInstance instance, String name, int partitionCount) {
         if (partitionCount <= 0) {
             throw new IllegalArgumentException("partitionCount must be > 0, was " + partitionCount);
         }
 
-        List<CPMap<K, V>> newPartitions = new ArrayList<>(partitionCount);
+        this.partitions = new CPMap[partitionCount];
         for (int i = 0; i < partitionCount; i++) {
             String cpGroupName = name + "-" + i;
             String mapName = name + "@" + cpGroupName;
-            newPartitions.add(instance.getCPSubsystem().getMap(mapName));
+            partitions[i] = instance.getCPSubsystem().getMap(mapName);
         }
-        this.partitions = Collections.unmodifiableList(newPartitions);
     }
 
     private CPMap<K, V> getPartition(K key) {
-        int index = (key.hashCode() & Integer.MAX_VALUE) % partitions.size();
-        return partitions.get(index);
+        int index = (key.hashCode() & Integer.MAX_VALUE) % partitions.length;
+        return partitions[index];
     }
 
     public V put(K key, V value) {
