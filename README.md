@@ -560,8 +560,12 @@ should be conducted in.
 | `driver`                               | `hazelcast5`                                           | The Hazelcast Driver to use - for 5.0+ testing, this is either `hazelcast5` or `hazelcast-enterprise5` for OS or EE respectively                                                |
 | `version`                              | `maven=5.1`                                            | The Hazelcast version to use - typically provided by maven, i.e. `maven=5.3.0-SNAPSHOT`                                                                                         |
 | `client_args`                          | `-Xms3g -Xmx3g`                                        | The command-line Java parameters passed to all clients in this test suite                                                                                                       |
+| `client_taskset`                       | `0-7`                                                  | If nonempty, sets CPU cores avialable for client Java process using `taskset` command. Note: the same cores will be used for all worker processes if `clients > 1`              |
 | `member_args`                          | `-Xms3g -Xmx3g`                                        | The command-line Java parameters passed to all members in this test suite                                                                                                       |
+| `member_taskset`                       | `0-7`                                                  | If nonempty, set CPU cores avialable for member Java process using `taskset` command                                                                                            |
 | `performance_monitor_interval_seconds` | `1`                                                    | The interval of the Simulator performance monitor                                                                                                                               |
+| `async_profiler_duration_seconds`      | `120`                                                  | Non-empty value enables `asyncprofiler` for members with specified duration                                                                                                     |
+| `async_profiler_delay`                 | `2m`                                                   | Delay after which `asyncprofiler` will be attached. It should include time for warmup and for test initialization. Format is the same as for `sleep` command                    |
 | `verify_enabled`                       | `True`                                                 | Defines whether tests should be verified after completion or not (default true)                                                                                                 |
 | `warmup_seconds`                       | `0`                                                    | The number of seconds from the start of the test to exclude in reporting (only used for report generation)                                                                      |
 | `cooldown_seconds`                     | `0`                                                    | The number of seconds before the end of the test to exclude in reporting (only used for report generation)                                                                      |
@@ -658,7 +662,7 @@ and preload 1 million entries with a value size of exactly 10 KB, we would edit 
 ```yaml
   test:
     - class: com.hazelcast.simulator.tests.map.IntByteMapTest
-      # probabilites and thread count settings
+      # probabilities and thread count settings
       minSize: 10_000
       maxSize: 10_000
       keyCount: 1_000_000
@@ -1521,6 +1525,8 @@ Currently there is no support for dead code elimination.
 
 ## Profiling your Simulator Test
 
+### Java Flight Recorder
+
 To determine, for example, where the time is spent or other resources are being used, you want to profile your
 application.
 The recommended way to profile is using the Java Flight Recorder (JFR) which is only available in the Oracle JVMs. The
@@ -1547,6 +1553,30 @@ JFR_ARGS="-XX:+UnlockCommercialFeatures  \
 If these `JFR_ARGS` are added to the `client_args` and `member_args` properties of the `tests.yaml`, then both client
 and members will be configured with JFR. Once the Simulator test has completed, all artifacts including the JFR files
 are downloaded. The JFR files can be opened using the Java Mission Control command `jmc`.
+
+### Asyncprofiler
+
+[Asyncprofiler](https://github.com/async-profiler/async-profiler) collects more detailed profiles than JFR.
+
+In order to use asyncprofiler you must install it on the machines using the following command:
+
+```shell
+inventory install async_profiler
+```
+
+Simulator supports basic invocation of `asyncprofiler` out-of-the box. 
+It can be enabled by configuring `async_profiler_duration_seconds` and `async_profiler_delay` for your test.
+More advanced configuration is possible by adjusting `worker.sh` script.
+Asyncprofiler will be attached to all members. Note that it causes some small overhead.
+Profile will be written to `profiler.jfr` file and can be analysed by any tool supporting JFR files like Java Mission Control.
+
+It is recommended to add the following settings to `member_args`:
+```
+    -XX:+UnlockDiagnosticVMOptions
+    -XX:+DebugNonSafepoints
+```
+
+Asyncprofiler and JFR can be both enabled at the same time.
 
 ## GC analysis
 
@@ -1575,6 +1605,70 @@ benchmark
 numbers of the tests can be distorted due to partition migrations during the test. Especially with a large number of
 partitions
 and short tests, this can lead to a very big impact on the benchmark numbers.
+
+### Reserving CPUs
+
+When running benchmarks in cloud environments, larger machines can provide better performance stability and more predictable network throughput
+but may have so many CPU that generating sufficient load for stress or throughput test becomes impractical.
+In such case you may consider crating a larger instance with better network, but only assign subset of cores to member Java process using `member_taskset` property.
+Note that this is not a complete equivalent of running on smaller VM with fewer CPUs. Some activity (operating system, IRQS, network) can use additional cores.
+Be also mindful of HyperThreading and decide if you want to use sibling cores more resembling smaller VM but with lower performance or not use sibling cores which should result in better performance under significant load.
+
+You can use the following command to determine which CPUs are HyperThreading siblings:
+```shell
+lscpu -e=CPU,CORE,SOCKET,NODE
+```
+
+Example result on 36 vCPU machine with HyperThreading:
+```
+CPU CORE SOCKET NODE
+  0    0      0    0
+  1    1      0    0
+  2    2      0    0
+  3    3      0    0
+  4    4      0    0
+  5    5      0    0
+  6    6      0    0
+  7    7      0    0
+  8    8      0    0
+  9    9      0    0
+ 10   10      0    0
+ 11   11      0    0
+ 12   12      0    0
+ 13   13      0    0
+ 14   14      0    0
+ 15   15      0    0
+ 16   16      0    0
+ 17   17      0    0
+ 18    0      0    0
+ 19    1      0    0
+ 20    2      0    0
+ 21    3      0    0
+ 22    4      0    0
+ 23    5      0    0
+ 24    6      0    0
+ 25    7      0    0
+ 26    8      0    0
+ 27    9      0    0
+ 28   10      0    0
+ 29   11      0    0
+ 30   12      0    0
+ 31   13      0    0
+ 32   14      0    0
+ 33   15      0    0
+ 34   16      0    0
+ 35   17      0    0
+```
+
+To get configuration resembling 4 CPUs with HT (8 vCPUs) you can use `member_taskset: 9-12,27-30`. If you want to avoid HyperThreading you can use `member_taskset: 0-7`.
+Even more advanced configuration can be achieved by customizing `worker.sh` script.
+
+Additional factor are network IRQs which can use significant CPU fraction under high load. The IRQs are assigned to CPUs by `irqbalance` service without taking into account `taskset` or application CPU load.
+To make the load more equal you can prevent `irqbalance` from using CPUs intended for the member by invoking 
+```shell
+inventory irq_cpus --banned-cpus <taskset>
+```
+for example: `inventory irq_cpus --banned-cpus 9-12,27-30`.
 
 ## Enabling Diagnostics
 

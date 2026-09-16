@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
+import argparse
 import os
 import sys
-import argparse
 from os import path
 
-from simulator.inventory_terraform import terraform_import, terraform_destroy, terraform_apply
 from simulator.inventory_lab import lab_apply, lab_destroy
-from simulator.util import load_yaml_file, exit_with_error, simulator_home, shell, now_seconds
+from simulator.inventory_terraform import terraform_import, terraform_destroy, terraform_apply
 from simulator.log import info, log_header
 from simulator.ssh import new_key
+from simulator.util import load_yaml_file, exit_with_error, simulator_home, shell, now_seconds
 
 inventory_plan_path = 'inventory_plan.yaml'
 
@@ -182,7 +182,7 @@ class InventoryInstallCli:
                                          description='Install Async Profiler')
         parser.add_argument("--url",
                             help="The url to the async profiler binary",
-                            default="https://github.com/async-profiler/async-profiler/releases/download/v3.0/async-profiler-3.0-linux-x64.tar.gz")
+                            default="https://github.com/async-profiler/async-profiler/releases/download/v4.5/async-profiler-4.5-linux-x64.tar.gz")
         parser.add_argument("--hosts",
                             help="The target hosts.",
                             default="all:!mc")
@@ -510,6 +510,32 @@ class InventoryClearLatenciesCli:
 
         log_header("Clearing Latencies: Done")
 
+class InventoryIrqBannedCpus:
+
+    def __init__(self, argv):
+        parser = argparse.ArgumentParser(
+            formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+            description='Configures CPUs for IRQs on member nodes'
+        )
+        parser.add_argument("--banned-cpus", help="List of banned cpus in the same format as for taskset command", required=True)
+
+        args = parser.parse_args(argv)
+
+        self.banned_cpus = args.banned_cpus
+
+        cmd = f"ansible-playbook --inventory inventory.yaml -l nodes {simulator_home}/playbooks/irq.yaml"
+
+        # Add variables to the command
+        cmd += f" -e banned_cpus='{self.banned_cpus}'"
+
+        # Execute the command
+        info(f"Running command: {cmd}")
+        exitcode = shell(cmd)
+        if exitcode != 0:
+            exit_with_error(f"Failed to configure CPUs for IRQs, exitcode={exitcode}, command=[{cmd}])")
+
+        log_header("Configuring CPUs for IRQs: Done")
+
 class InventoryCli:
 
     def __init__(self):
@@ -556,6 +582,8 @@ class InventoryCli:
     def clear_latencies(self, argv):
         InventoryClearLatenciesCli(argv)
 
+    def irq_cpus(self, argv):
+        InventoryIrqBannedCpus(argv)
 
 if __name__ == '__main__':
     InventoryCli()

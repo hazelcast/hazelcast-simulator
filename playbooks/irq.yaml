@@ -1,0 +1,29 @@
+---
+- name: Configure irqbalance CPU exclusion
+  hosts: all
+  become: true
+
+  tasks:
+    - name: Determine irqbalance configuration file
+      ansible.builtin.set_fact:
+        irqbalance_config: >-
+          {{
+            '/etc/sysconfig/irqbalance'
+            if ansible_os_family == 'RedHat'
+            else '/etc/default/irqbalance'
+          }}
+
+    - name: Configure IRQBALANCE_BANNED_CPULIST
+      ansible.builtin.lineinfile:
+        path: "{{ irqbalance_config }}"
+        regexp: '^#?\s*IRQBALANCE_BANNED_CPULIST='
+        line: 'IRQBALANCE_BANNED_CPULIST="{{ banned_cpus }}"'
+        create: true
+        mode: '0644'
+      notify: Restart irqbalance
+
+  handlers:
+    - name: Restart irqbalance
+      ansible.builtin.systemd:
+        name: irqbalance
+        state: restarted
