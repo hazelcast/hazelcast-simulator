@@ -1,6 +1,8 @@
 name: CI - Build, Test, and Push Docker Image
 
 on:
+  schedule:
+    - cron: "0 0 1 * *" # Monthly to refresh dependencies
   push:
     branches: master
     tags: 'v*'
