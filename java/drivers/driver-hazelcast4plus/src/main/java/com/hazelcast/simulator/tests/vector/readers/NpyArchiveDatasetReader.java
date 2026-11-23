@@ -1,6 +1,5 @@
 package com.hazelcast.simulator.tests.vector.readers;
 
-import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonParser;
 import com.hazelcast.simulator.tests.vector.DatasetReader;

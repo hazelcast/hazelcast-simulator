@@ -15,7 +15,6 @@
  */
 package com.hazelcast.simulator.tests.map.helpers;
 
-import javax.annotation.Nonnull;
 import java.io.Serializable;
 import java.util.Objects;
 import java.util.Random;
@@ -82,7 +81,7 @@ public class Employee implements Serializable, Comparable<Employee> {
     }
 
     @Override
-    public int compareTo(@Nonnull Employee employee) {
+    public int compareTo(Employee employee) {
         return id - employee.id;
     }
 
