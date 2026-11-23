@@ -41,6 +41,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.assignKeyToIndex;
