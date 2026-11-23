@@ -28,6 +28,7 @@ import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.StartNanos;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
+import com.hazelcast.simulator.utils.HazelcastUtils;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 
@@ -199,6 +200,20 @@ public class LongByteArrayMapTest extends HazelcastTest {
     public void updateAllUsingEntryProcessor() {
         IMap<Long, byte[]> map = getRandomMap();
         map.executeOnEntries(new UpdateEntryProcessor((byte) 1));
+    }
+
+    /**
+     * executeOnEntries has actually async backups (as other multi-partition operations)
+     * This variant waits for all backups to complete to measure more accurately full time
+     * required for the operation on IMap with backups.
+     */
+    @TimeStep(prob = 0)
+    public void updateAllUsingEntryProcessorSafe() throws ExecutionException, InterruptedException {
+        IMap<Long, byte[]> map = getRandomMap();
+        map.executeOnEntries(new UpdateEntryProcessor((byte) 1));
+        // wait for all backups to finish
+        // executeOnEntries has async backups
+        HazelcastUtils.waitForClusterSafeState(targetInstance);
     }
 
     @TimeStep(prob = 0)
