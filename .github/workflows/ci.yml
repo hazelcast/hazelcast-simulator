@@ -98,6 +98,12 @@ jobs:
           ./build
         timeout-minutes: 15  # Prevents infinite hangs on Maven dependency resolution failures
 
+      - name: Run Java tests
+        id: java-tests
+        working-directory: java
+        run: |
+          mvn verify
+
       - name: Build and push multi-platform image to local registry
         id: multiplatform-build
         uses: docker/build-push-action@v5
@@ -209,6 +215,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Step Results" >> $GITHUB_STEP_SUMMARY
           echo "- **Java Build**: $(get_status '${{ steps.java-build.outcome }}')" >> $GITHUB_STEP_SUMMARY
+          echo "- **Java Tests**: $(get_status '${{ steps.java-test.outcome }}')" >> $GITHUB_STEP_SUMMARY
           echo "- **Multi-Platform Build**: $(get_status '${{ steps.multiplatform-build.outcome }}')" >> $GITHUB_STEP_SUMMARY
           echo "- **Container Smoke Tests**: $(get_status '${{ steps.smoke-tests.outcome }}')" >> $GITHUB_STEP_SUMMARY
           if [ "${{ github.event_name }}" != "pull_request" ]; then
