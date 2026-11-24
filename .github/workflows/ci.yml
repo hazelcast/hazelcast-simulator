@@ -100,7 +100,7 @@ jobs:
 
       - name: Build and push multi-platform image to local registry
         id: multiplatform-build
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: .
           platforms: ${{ env.DOCKER_PLATFORMS }}
