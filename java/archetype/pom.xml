@@ -39,7 +39,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-resources-plugin</artifactId>
-                    <version>${maven.resources.plugin.version}</version>
+                    <version>3.5.0</version>
                     <configuration>
                         <escapeString>\</escapeString>
                     </configuration>
