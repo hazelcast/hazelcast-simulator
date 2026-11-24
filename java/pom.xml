@@ -95,7 +95,7 @@
         <maven.surefire.plugin.version>3.1.2</maven.surefire.plugin.version>
         <maven.checkstyle.plugin.version>3.3.0</maven.checkstyle.plugin.version>
         <maven.sonar.plugin.version>3.3.0.603</maven.sonar.plugin.version>
-        <maven.jacoco.plugin.version>0.8.10</maven.jacoco.plugin.version>
+        <maven.jacoco.plugin.version>0.8.16</maven.jacoco.plugin.version>
 
         <maven.git-commit-id.plugin.version>4.9.10</maven.git-commit-id.plugin.version>
         <maven.versions.plugin.version>2.16.1</maven.versions.plugin.version>
