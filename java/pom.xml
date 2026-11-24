@@ -101,7 +101,6 @@
         <maven.git-commit-id.plugin.version>4.9.10</maven.git-commit-id.plugin.version>
         <maven.versions.plugin.version>2.16.1</maven.versions.plugin.version>
 
-        <maven.release.plugin.version>3.3.1</maven.release.plugin.version>
         <maven.scm.provider.gitexe.version>1.9.4</maven.scm.provider.gitexe.version>
         <maven-dependency-plugin.version>3.6.0</maven-dependency-plugin.version>
     </properties>
@@ -237,7 +236,7 @@
             </plugin>
             <plugin>
                 <artifactId>maven-release-plugin</artifactId>
-                <version>${maven.release.plugin.version}</version>
+                <version>3.3.1</version>
                 <dependencies>
                     <dependency>
                         <groupId>org.apache.maven.scm</groupId>
