@@ -2,6 +2,7 @@
 
 import os
 import shutil
+from pathlib import Path
 
 
 def mvn_clean_install():
@@ -32,31 +33,44 @@ for driver_dir_name in os.listdir("java/drivers"):
     print(src_driver_dir)
     os.mkdir(f"drivers/{driver_dir_name}")
     target_dir = f"{src_driver_dir}/target"
-    os.system(f"cp {target_dir}/*.jar drivers/{driver_dir_name}")
+
+    for jar in Path(target_dir).glob("*.jar"):
+        shutil.copy2(jar, target_driver_dir)
 
     if os.path.isdir(f"{src_driver_dir}/conf"):
-        os.system(f"cp -r {src_driver_dir}/conf {target_driver_dir}")
+        shutil.copytree(f"{src_driver_dir}/conf", f"{target_driver_dir}/conf")
 
         if os.path.exists(f"{target_driver_dir}/conf/install"):
-            os.system(f"chmod +x {target_driver_dir}/conf/install")
+            Path(f"{target_driver_dir}/conf/install").chmod(
+                Path(f"{target_driver_dir}/conf/install").stat().st_mode | 0o111
+            )
 
         if os.path.exists(f"{target_driver_dir}/conf/configure"):
-            os.system(f"chmod +x {target_driver_dir}/conf/configure")
+            Path(f"{target_driver_dir}/conf/configure").chmod(
+                Path(f"{target_driver_dir}/conf/configure").stat().st_mode | 0o111
+            )
 
 make_empty_dir("lib")
-os.system(f"cp java/simulator/target/*.jar lib/")
-os.system(f"cp java/extra/* lib/")
-os.system(f"rm drivers/driver-hazelcast4plus/hazelcast-*.jar")
 
-os.system(f"rm -fr drivers/driver-hazelcast4")
-os.system(f"cp -r drivers/driver-hazelcast4plus drivers/driver-hazelcast4")
-os.system(f"rm -fr drivers/driver-hazelcast-enterprise4")
-os.system(f"cp -r drivers/driver-hazelcast4plus drivers/driver-hazelcast-enterprise4")
+for jar in Path("java/simulator/target").glob("*.jar"):
+    shutil.copy2(jar, "lib")
 
-os.system(f"rm -fr drivers/driver-hazelcast5")
-os.system(f"cp -r drivers/driver-hazelcast4plus drivers/driver-hazelcast5")
-os.system(f"rm -fr drivers/driver-hazelcast-enterprise5")
-os.system(f"cp -r drivers/driver-hazelcast4plus drivers/driver-hazelcast-enterprise5")
+for file in Path("java/extra").iterdir():
+    shutil.copy2(file, "lib") if file.is_file() else shutil.copytree(file, Path("lib") / file.name)
 
-os.system(f"rm -fr drivers/driver-hazelcast4plus")
+for jar in Path("drivers/driver-hazelcast4plus").glob("hazelcast-*.jar"):
+    jar.unlink()
 
+shutil.rmtree("drivers/driver-hazelcast4", ignore_errors=True)
+shutil.copytree("drivers/driver-hazelcast4plus", "drivers/driver-hazelcast4")
+
+shutil.rmtree("drivers/driver-hazelcast-enterprise4", ignore_errors=True)
+shutil.copytree("drivers/driver-hazelcast4plus", "drivers/driver-hazelcast-enterprise4")
+
+shutil.rmtree("drivers/driver-hazelcast5", ignore_errors=True)
+shutil.copytree("drivers/driver-hazelcast4plus", "drivers/driver-hazelcast5")
+
+shutil.rmtree("drivers/driver-hazelcast-enterprise5", ignore_errors=True)
+shutil.copytree("drivers/driver-hazelcast4plus", "drivers/driver-hazelcast-enterprise5")
+
+shutil.rmtree("drivers/driver-hazelcast4plus")
