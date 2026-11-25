@@ -82,7 +82,7 @@
 
         <activemq.version>5.15.11</activemq.version>
 
-        <disruptor.version>3.4.3</disruptor.version>
+        <disruptor.version>4.0.0</disruptor.version>
 
         <maven.compiler.plugin.version>3.12.1</maven.compiler.plugin.version>
         <maven.source.plugin.version>3.3.0</maven.source.plugin.version>
