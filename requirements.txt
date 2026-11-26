@@ -19,7 +19,7 @@ numpy==1.26.4
 packaging==24.1
 pandas==2.2.2
 pillow==10.4.0
-plotly==5.24.0
+plotly==7.1.0
 pycparser==2.22
 pyparsing==3.1.4
 python-dateutil==2.9.0.post0
