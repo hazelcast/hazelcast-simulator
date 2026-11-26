@@ -85,6 +85,7 @@
         - '--include=activemq-client*'
         - '--include=geronimo-jms*'
         - '--include=geronimo-j2ee*'
+        - '--include=jakarta.jms-api*'
         - '--include=slf4j-api*'
         - '--include=hawtbuf-*'
         - '--include=affinity*'
