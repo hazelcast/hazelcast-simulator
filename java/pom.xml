@@ -71,7 +71,7 @@
 
         <freemarker.version>2.3.29</freemarker.version>
         <gson.version>2.15.0</gson.version>
-        <hdr-histogram.version>2.1.12</hdr-histogram.version>
+        <hdr-histogram.version>2.2.2</hdr-histogram.version>
         <jopt.version>5.0.4</jopt.version>
 
         <httpclient.version>4.5.14</httpclient.version>
